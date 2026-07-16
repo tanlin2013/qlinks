@@ -174,3 +174,134 @@ def test_pure_kinetic_sequence_matches_beta_zero_energy_exactly() -> None:
     assert all(np.isclose(value, 0.0) for value in scaling.energy_densities)
     assert match.is_matched
     assert witness_certificate.is_infinite_sequence_witness
+
+
+def test_frozen_product_tile_certifies_true_two_dimensional_sequence() -> None:
+    from qlinks.caging import (
+        FactorizedLocalQDMPadding,
+        SquareQDMBiperiodicProductTile,
+        certify_square_qdm_biperiodic_product_sequence,
+    )
+
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    frozen_config = np.asarray(
+        [
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+        ],
+        dtype=np.int64,
+    )
+    padding = FactorizedLocalQDMPadding(
+        block_ids=(),
+        exterior_link_ids=np.arange(model.lattice.num_links, dtype=np.int64),
+        exterior_config=frozen_config,
+    )
+    tile = SquareQDMBiperiodicProductTile(
+        model=model,
+        blocks=(),
+        padding=padding,
+    )
+
+    certificate = certify_square_qdm_biperiodic_product_sequence(tile)
+
+    assert certificate.is_certified
+    assert certificate.is_true_2d_sequence
+    assert certificate.minimum_proven_repeats == (1, 1)
+    assert certificate.formal_support_size(7, 9) == 1
+    assert np.isclose(certificate.energy_density, 0.0)
+    assert certificate.winding_sector_for_repeats(2, 3) == (6, -4)
+    assert len(certificate.finite_checks) == 9
+    assert all(check.is_certified for check in certificate.finite_checks)
+
+
+def test_repeatable_stripe_is_diagnosed_as_transverse_seam_failure() -> None:
+    from qlinks.caging import (
+        SquareQDMBiperiodicProductTile,
+        diagnose_square_qdm_biperiodic_repeatability,
+    )
+
+    model, certified, context = _stripe_cage_fixture()
+    tile = SquareQDMBiperiodicProductTile.from_padding(
+        model,
+        context.blocks,
+        certified.reports[REPEATABLE_X_REPORT_INDEX].padding,
+    )
+
+    diagnosis = diagnose_square_qdm_biperiodic_repeatability(
+        tile,
+        check_smaller_repeats=False,
+    )
+
+    assert not diagnosis.is_certified
+    assert len(diagnosis.failed_checks) == 1
+    failed = diagnosis.failed_checks[0]
+    assert failed.seam_diagnostics.max_site_constraint_residuals["internal"] == 0
+    assert failed.seam_diagnostics.flippable_inert_patterns["internal"] == 0
+    assert failed.seam_diagnostics.max_site_constraint_residuals["y_seam"] > 0
+    assert failed.seam_diagnostics.flippable_inert_patterns["y_seam"] > 0
+
+
+def test_direct_biperiodic_search_reports_failure_mechanisms() -> None:
+    from qlinks.caging import (
+        SquareQDMBiperiodicTileSearchConfig,
+        search_square_qdm_biperiodic_product_tiles,
+    )
+
+    model, _certified, context = _stripe_cage_fixture()
+    result = search_square_qdm_biperiodic_product_tiles(
+        model,
+        context.blocks,
+        config=SquareQDMBiperiodicTileSearchConfig(
+            min_blocks=2,
+            max_blocks=2,
+            max_padding_attempts=8,
+            max_paddings_per_packing=1,
+            max_results=8,
+            verification_repeats=3,
+            check_smaller_repeats=False,
+            require_kinetic_separation=False,
+        ),
+    )
+
+    assert result.n_padding_candidates_examined > 0
+    assert result.records
+    assert not result.certified_records
+    assert result.failure_counts
+    assert all(record.failure_reason is not None for record in result.failed_records)

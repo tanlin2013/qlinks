@@ -397,3 +397,75 @@ an exact infinite cage sequence, an exactly matched beta-zero energy density,
 and an operator-norm-normalized local cage witness with nonzero same-sector
 thermal weight.  The nonzero-potential model remains a finite-temperature
 extension rather than an established beta-zero result.
+
+Bi-periodic product-tile certification
+--------------------------------------
+
+A one-axis sequence such as ``(4n) x 4`` is only a fixed-width thermodynamic
+limit.  The bi-periodic API tests whether one finite product tile can be
+repeated with two independent integers ``nx`` and ``ny``::
+
+   from qlinks.caging import (
+       SquareQDMBiperiodicProductTile,
+       diagnose_square_qdm_biperiodic_repeatability,
+   )
+
+   tile = SquareQDMBiperiodicProductTile.from_padding(
+       model,
+       block_pool,
+       padding,
+   )
+   diagnosis = diagnose_square_qdm_biperiodic_repeatability(tile)
+
+The default certificate checks all arrays with ``1 <= nx, ny <= 3``.  The
+``3 x 3`` array contains every range-one local environment: tile interiors,
+x seams, y seams, and four-tile corners.  The one- and two-tile tori are checked
+separately because their periodic identifications can create exceptional short
+rings.  If all checks pass, coordinate translation and uniform couplings prove
+an exact family for every pair of positive repeat counts.
+
+The returned seam diagnostics distinguish:
+
+* support-dependent dimer charge at x/y seams or corners;
+* nominally inert seam plaquettes that become flippable;
+* leakage or nonclosure of a single coherent block;
+* support-dependent winding labels.
+
+This distinction is essential for the known square-QDM stripe cage: its tile
+interior closes, but transverse repetition changes the boundary dimer charge.
+The result is therefore a precise local obstruction, rather than a large-system
+residual.
+
+Direct finite-tile search
+-------------------------
+
+A pool of already discovered local cage blocks can be searched directly for a
+periodic exterior and then subjected to the bi-periodic certificate::
+
+   from qlinks.caging import (
+       SquareQDMBiperiodicTileSearchConfig,
+       search_square_qdm_biperiodic_product_tiles,
+   )
+
+   search = search_square_qdm_biperiodic_product_tiles(
+       model,
+       block_pool,
+       config=SquareQDMBiperiodicTileSearchConfig(
+           min_blocks=2,
+           max_blocks=4,
+           require_kinetic_separation=False,
+           max_tile_support_size=4096,
+       ),
+   )
+
+Only the finite reference-tile product support is materialized, with an
+explicit ``max_tile_support_size`` bound.  The exponentially larger support of
+the repeated two-dimensional state is never formed.  Failed candidates are
+retained and grouped by failure mechanism, allowing a systematic finite-period
+no-go scan instead of repeatedly enlarging a global active region.
+
+This product-tile layer is intentionally independent of a tensor-network
+backend.  If finite static gluing fails at moderate periods, the boundary
+signatures and local action maps produced here should become the physical and
+virtual data supplied to an established tensor-network library rather than a
+new contraction engine implemented inside qlinks.
