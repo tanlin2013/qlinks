@@ -24,6 +24,7 @@ understand compact and regional cage states.
    installation
    workflow
    thermodynamic_eth
+   tensor_network
    examples
    development_status
 

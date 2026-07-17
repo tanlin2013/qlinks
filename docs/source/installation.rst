@@ -19,6 +19,7 @@ Optional features are split into extras:
    pip install "qlinks[drawing]"       # pyvis, plotly, igraph, pycairo
    pip install "qlinks[distributed]"   # Ray helpers
    pip install "qlinks[storage]"       # HDF5 and parquet-oriented IO
+   pip install "qlinks[tn]"            # quimb tensor-network backend
 
 Install from source
 -------------------
