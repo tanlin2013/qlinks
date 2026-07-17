@@ -2,12 +2,16 @@ import numpy as np
 import scipy.sparse as sp
 
 from qlinks.caging import (
+    cage_compatibility_hierarchy_from_hamiltonians,
     combine_perturbations_from_coefficients,
     diagnose_cage_stability,
+    estimate_power_law_exponent,
     linearized_cage_obstruction_from_hamiltonians,
     partition_cage_hamiltonian,
     random_cage_stability_ensemble,
     scan_cage_stability_branch,
+    scan_support_eigenstate_branch,
+    subspace_complement_basis,
     subspace_principal_overlaps,
     subspace_projector_distance,
 )
@@ -56,6 +60,39 @@ def _toy_problem() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.n
 
     cage_state = np.array([1.0, -1.0], dtype=np.complex128) / np.sqrt(2.0)
     return base, strong, structural, incompatible, cage_state
+
+
+def _nonintegrable_tangent_problem() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    cage_state = np.array([1.0, -1.0], dtype=np.complex128) / np.sqrt(2.0)
+    orthogonal_state = np.array([1.0, 1.0], dtype=np.complex128) / np.sqrt(2.0)
+    basis_change = np.column_stack([cage_state, orthogonal_state])
+
+    base_internal_local = np.diag([0.0, 1.0]).astype(np.complex128)
+    perturbation_internal_local = np.array(
+        [[0.0, -1.0], [-1.0, 0.0]],
+        dtype=np.complex128,
+    )
+    base_boundary_local = np.array(
+        [[0.0, 1.0], [0.0, 0.0]],
+        dtype=np.complex128,
+    )
+    perturbation_boundary_local = np.array(
+        [[-1.0, 1.0], [0.0, 0.0]],
+        dtype=np.complex128,
+    )
+
+    base_internal = basis_change @ base_internal_local @ basis_change.conj().T
+    perturbation_internal = basis_change @ perturbation_internal_local @ basis_change.conj().T
+    base_boundary = base_boundary_local @ basis_change.conj().T
+    perturbation_boundary = perturbation_boundary_local @ basis_change.conj().T
+
+    base = _assemble_hamiltonian(base_boundary, internal=base_internal)
+    perturbation = _assemble_hamiltonian(
+        perturbation_boundary,
+        internal=perturbation_internal,
+        external=np.zeros((2, 2), dtype=np.complex128),
+    )
+    return base, perturbation, cage_state
 
 
 def test_partition_cage_hamiltonian_handles_sparse_matrix() -> None:
@@ -188,3 +225,53 @@ def test_subspace_comparison_handles_rotation_and_dimension_change() -> None:
     assert np.allclose(overlaps, [1.0 / np.sqrt(2.0)])
     assert np.isclose(subspace_projector_distance(basis_a, basis_b), 1.0 / np.sqrt(2.0))
     assert np.isclose(subspace_projector_distance(basis_a, basis_full), 1.0)
+
+
+def test_compatibility_hierarchy_detects_tangent_only_direction() -> None:
+    base, perturbation, cage_state = _nonintegrable_tangent_problem()
+    hierarchy = cage_compatibility_hierarchy_from_hamiltonians(
+        base,
+        (perturbation,),
+        support=(0, 1),
+        cage_state=cage_state,
+        coefficient_field="real",
+        tolerance=1.0e-12,
+    )
+
+    assert hierarchy.first_order.compatible_dimension == 1
+    assert hierarchy.fixed_state.compatible_dimension == 0
+    assert hierarchy.tangent_only_dimension == 1
+    assert hierarchy.fixed_subspace_inclusion_residual < 1.0e-12
+
+
+def test_support_eigenstate_branch_exposes_quadratic_leakage() -> None:
+    base, perturbation, cage_state = _nonintegrable_tangent_problem()
+    parameters = np.array([0.0, 1.0e-5, 2.0e-5, 5.0e-5, 1.0e-4, 2.0e-4, 5.0e-4, 1.0e-3])
+    branch = scan_support_eigenstate_branch(
+        base,
+        perturbation,
+        support=(0, 1),
+        parameters=parameters,
+        reference_state=cage_state,
+        tolerance=1.0e-14,
+    )
+    exponent = estimate_power_law_exponent(
+        branch.parameters,
+        branch.boundary_residuals,
+        minimum_residual=1.0e-16,
+    )
+
+    assert branch.exact_cage_flags[0]
+    assert not np.any(branch.exact_cage_flags[1:])
+    assert exponent is not None
+    assert np.isclose(exponent, 2.0, atol=1.0e-2)
+
+
+def test_subspace_complement_basis_returns_parent_orthogonal_remainder() -> None:
+    parent = np.eye(3, dtype=np.complex128)[:, :2]
+    child = np.array([[1.0], [0.0], [0.0]], dtype=np.complex128)
+    complement = subspace_complement_basis(parent, child, tolerance=1.0e-12)
+
+    assert complement.shape == (3, 1)
+    assert np.linalg.norm(child.conj().T @ complement) < 1.0e-12
+    assert np.isclose(abs(complement[1, 0]), 1.0)

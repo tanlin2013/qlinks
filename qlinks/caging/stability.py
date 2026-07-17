@@ -318,6 +318,133 @@ class LinearizedCageObstructionReport:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class FixedCageStateCompatibilityReport:
+    """Exact affine perturbation space that preserves one cage vector.
+
+    A coefficient vector belongs to this space when its perturbation ``V``
+    satisfies both ``delta_B phi = 0`` and
+    ``(I - |phi><phi|) delta_A phi = 0``.  Therefore the same compact vector
+    remains an exact eigenstate of ``H0 + lambda V`` for every ``lambda``.
+    """
+
+    coefficient_field: CoefficientField
+    n_parameters: int
+    action_matrix: npt.NDArray[np.complex128]
+    constraint_matrix: npt.NDArray[np.float64] | npt.NDArray[np.complex128]
+    singular_values: npt.NDArray[np.float64]
+    rank: int
+    compatible_dimension: int
+    compatible_coefficient_basis: npt.NDArray[np.float64] | npt.NDArray[np.complex128]
+    perturbation_residuals: npt.NDArray[np.float64]
+    tolerance: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "coefficient_field": self.coefficient_field,
+            "n_parameters": self.n_parameters,
+            "constraint_dimension": int(self.constraint_matrix.shape[0]),
+            "rank": self.rank,
+            "compatible_dimension": self.compatible_dimension,
+            "singular_values": tuple(float(value) for value in self.singular_values),
+            "perturbation_residuals": tuple(float(value) for value in self.perturbation_residuals),
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CageCompatibilityHierarchyReport:
+    """Compare first-order continuation with exact fixed-state compatibility."""
+
+    first_order: LinearizedCageObstructionReport
+    fixed_state: FixedCageStateCompatibilityReport
+    tangent_only_coefficient_basis: npt.NDArray[np.float64] | npt.NDArray[np.complex128]
+    fixed_subspace_inclusion_residual: float
+
+    @property
+    def tangent_only_dimension(self) -> int:
+        """Number of first-order directions not preserving the state exactly."""
+        return int(self.tangent_only_coefficient_basis.shape[1])
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "n_parameters": self.first_order.n_parameters,
+            "first_order_compatible_dimension": self.first_order.compatible_dimension,
+            "fixed_state_compatible_dimension": self.fixed_state.compatible_dimension,
+            "tangent_only_dimension": self.tangent_only_dimension,
+            "fixed_subspace_inclusion_residual": self.fixed_subspace_inclusion_residual,
+            "tolerance": self.first_order.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SupportEigenstateBranchPoint:
+    """One support-local eigenstate tracked even after exact caging is lost."""
+
+    parameter: float
+    state: npt.NDArray[np.complex128]
+    energy: complex
+    overlap_with_previous: float
+    overlap_with_reference: float
+    boundary_residual: float
+    internal_eigen_residual: float
+    full_residual: float
+    boundary_nullity: int
+    invariant_cage_dimension: int
+    interference_gap: float | None
+    exact_cage: bool
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "parameter": self.parameter,
+            "energy": self.energy,
+            "overlap_with_previous": self.overlap_with_previous,
+            "overlap_with_reference": self.overlap_with_reference,
+            "boundary_residual": self.boundary_residual,
+            "internal_eigen_residual": self.internal_eigen_residual,
+            "full_residual": self.full_residual,
+            "boundary_nullity": self.boundary_nullity,
+            "invariant_cage_dimension": self.invariant_cage_dimension,
+            "interference_gap": self.interference_gap,
+            "exact_cage": self.exact_cage,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SupportEigenstateBranchReport:
+    """Continuation of an internal eigenstate with its boundary leakage."""
+
+    support: tuple[int, ...]
+    points: tuple[SupportEigenstateBranchPoint, ...]
+    tolerance: float
+
+    @property
+    def parameters(self) -> npt.NDArray[np.float64]:
+        return np.asarray([point.parameter for point in self.points], dtype=np.float64)
+
+    @property
+    def boundary_residuals(self) -> npt.NDArray[np.float64]:
+        return np.asarray(
+            [point.boundary_residual for point in self.points],
+            dtype=np.float64,
+        )
+
+    @property
+    def full_residuals(self) -> npt.NDArray[np.float64]:
+        return np.asarray([point.full_residual for point in self.points], dtype=np.float64)
+
+    @property
+    def exact_cage_flags(self) -> npt.NDArray[np.bool_]:
+        return np.asarray([point.exact_cage for point in self.points], dtype=np.bool_)
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "support_size": len(self.support),
+            "tolerance": self.tolerance,
+            "points": tuple(point.to_summary_dict() for point in self.points),
+        }
+
+
 def partition_cage_hamiltonian(
     hamiltonian: object,
     support: Sequence[int] | npt.NDArray[np.integer],
@@ -561,6 +688,98 @@ def scan_cage_stability_branch(
     return CageBranchReport(
         support=tuple(int(index) for index in support_array),
         reference_dimension=int(reference_basis.shape[1]),
+        points=tuple(points),
+        tolerance=tolerance,
+    )
+
+
+def scan_support_eigenstate_branch(
+    base_hamiltonian: object,
+    perturbation: object,
+    support: Sequence[int] | npt.NDArray[np.integer],
+    parameters: Sequence[float] | npt.NDArray[np.floating],
+    *,
+    reference_state: npt.ArrayLike,
+    tolerance: float = 1e-10,
+    max_power: int | None = None,
+    stabilization_rounds: int = 1,
+) -> SupportEigenstateBranchReport:
+    """Track the nearest support-local eigenstate and measure its leakage.
+
+    Unlike :func:`scan_cage_stability_branch`, this continuation does not stop
+    when the exact invariant cage subspace disappears.  At every parameter it
+    follows the closest eigenspace of the internal support block. Within a
+    degenerate eigenspace it selects the state with minimum boundary leakage,
+    then reports ``||B phi||``. A first-order-compatible but non-integrable
+    direction is therefore visible through a residual that starts at
+    quadratic or higher order.
+    """
+    _validate_same_matrix_shape(base_hamiltonian, perturbation)
+    parameter_array = np.asarray(parameters, dtype=np.float64).reshape(-1)
+    if parameter_array.size == 0:
+        raise ValueError("parameters must contain at least one value.")
+
+    base_blocks = partition_cage_hamiltonian(base_hamiltonian, support)
+    support_array = base_blocks.support
+    normalized_reference_state = _normalized_local_state(
+        reference_state,
+        support=support_array,
+        hilbert_size=base_blocks.hilbert_size,
+        tolerance=tolerance,
+    )
+    previous_state = normalized_reference_state
+    points: list[SupportEigenstateBranchPoint] = []
+
+    for parameter in parameter_array:
+        hamiltonian = base_hamiltonian + float(parameter) * perturbation
+        diagnostic = diagnose_cage_stability(
+            hamiltonian,
+            support_array,
+            tolerance=tolerance,
+            max_power=max_power,
+            stabilization_rounds=stabilization_rounds,
+        )
+        blocks = partition_cage_hamiltonian(hamiltonian, support_array)
+        internal_matrix = as_dense_array(blocks.internal)
+        boundary_matrix = as_dense_array(blocks.boundary)
+
+        state, energy = _minimum_leakage_internal_eigenstate(
+            internal_matrix,
+            boundary_matrix,
+            reference_state=previous_state,
+            tolerance=tolerance,
+        )
+        overlap = np.vdot(previous_state, state)
+        if abs(overlap) > tolerance:
+            state = state * np.exp(-1j * np.angle(overlap))
+
+        energy = complex(np.vdot(state, internal_matrix @ state))
+        boundary_residual = float(np.linalg.norm(boundary_matrix @ state))
+        internal_eigen_residual = float(np.linalg.norm(internal_matrix @ state - energy * state))
+        full_residual = float(np.hypot(boundary_residual, internal_eigen_residual))
+        overlap_with_previous = float(abs(np.vdot(previous_state, state)))
+        overlap_with_reference = float(abs(np.vdot(normalized_reference_state, state)))
+
+        points.append(
+            SupportEigenstateBranchPoint(
+                parameter=float(parameter),
+                state=state,
+                energy=energy,
+                overlap_with_previous=overlap_with_previous,
+                overlap_with_reference=overlap_with_reference,
+                boundary_residual=boundary_residual,
+                internal_eigen_residual=internal_eigen_residual,
+                full_residual=full_residual,
+                boundary_nullity=diagnostic.boundary_nullity,
+                invariant_cage_dimension=diagnostic.invariant_cage_dimension,
+                interference_gap=diagnostic.interference_gap,
+                exact_cage=(full_residual <= tolerance),
+            )
+        )
+        previous_state = state
+
+    return SupportEigenstateBranchReport(
+        support=tuple(int(index) for index in support_array),
         points=tuple(points),
         tolerance=tolerance,
     )
@@ -894,6 +1113,113 @@ def linearized_cage_obstruction(
     )
 
 
+def fixed_cage_state_compatibility(
+    boundary_matrix: object,
+    cage_state: npt.ArrayLike,
+    boundary_perturbations: Sequence[object],
+    *,
+    internal_perturbations: Sequence[object],
+    coefficient_field: CoefficientField = "real",
+    tolerance: float = 1e-10,
+) -> FixedCageStateCompatibilityReport:
+    """Find perturbation combinations that preserve one cage vector exactly.
+
+    For an affine deformation ``H(lambda) = H0 + lambda V``, the compact state
+    remains an exact eigenvector for every ``lambda`` precisely when
+
+    ``delta_B phi = 0`` and
+    ``(I - |phi><phi|) delta_A phi = 0``.
+
+    The returned coefficient nullspace imposes these conditions collectively;
+    individual perturbation terms need not preserve the state on their own.
+    """
+    if coefficient_field not in {"real", "complex"}:
+        raise ValueError("coefficient_field must be 'real' or 'complex'.")
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    if len(boundary_perturbations) == 0:
+        raise ValueError("boundary_perturbations must contain at least one matrix.")
+    if len(internal_perturbations) != len(boundary_perturbations):
+        raise ValueError(
+            "internal_perturbations must have the same length as boundary_perturbations."
+        )
+
+    boundary = as_dense_array(boundary_matrix)
+    if boundary.ndim != 2:
+        raise ValueError("boundary_matrix must be 2D.")
+    state = np.asarray(cage_state, dtype=np.complex128).reshape(-1)
+    if state.size != boundary.shape[1]:
+        raise ValueError("cage_state length must match the boundary column count.")
+    state_norm = float(np.linalg.norm(state))
+    if state_norm <= tolerance:
+        raise ValueError("cage_state must have nonzero norm.")
+    state = state / state_norm
+
+    dense_boundary_perturbations = tuple(
+        as_dense_array(perturbation) for perturbation in boundary_perturbations
+    )
+    dense_internal_perturbations = tuple(
+        as_dense_array(perturbation) for perturbation in internal_perturbations
+    )
+    if any(perturbation.shape != boundary.shape for perturbation in dense_boundary_perturbations):
+        raise ValueError("every boundary perturbation must match boundary_matrix.shape.")
+    if any(
+        perturbation.shape != (state.size, state.size)
+        for perturbation in dense_internal_perturbations
+    ):
+        raise ValueError("every internal perturbation must be square with size cage_state.size.")
+
+    orthogonal_projector = np.eye(state.size, dtype=np.complex128) - np.outer(
+        state,
+        state.conj(),
+    )
+    action_columns = []
+    for boundary_perturbation, internal_perturbation in zip(
+        dense_boundary_perturbations,
+        dense_internal_perturbations,
+        strict=True,
+    ):
+        action_columns.append(
+            np.concatenate(
+                [
+                    boundary_perturbation @ state,
+                    orthogonal_projector @ (internal_perturbation @ state),
+                ]
+            )
+        )
+    action_matrix = np.column_stack(action_columns).astype(np.complex128, copy=False)
+    if coefficient_field == "real":
+        constraint_matrix: npt.NDArray[np.float64] | npt.NDArray[np.complex128]
+        constraint_matrix = np.vstack([action_matrix.real, action_matrix.imag])
+    else:
+        constraint_matrix = action_matrix
+
+    singular_values = scipy_linalg.svdvals(constraint_matrix).astype(
+        np.float64,
+        copy=False,
+    )
+    rank = int(np.sum(singular_values > tolerance))
+    compatible_basis = nullspace_svd(constraint_matrix, tolerance=tolerance)
+    if coefficient_field == "real":
+        compatible_basis = np.real_if_close(compatible_basis, tol=1000).real
+
+    return FixedCageStateCompatibilityReport(
+        coefficient_field=coefficient_field,
+        n_parameters=len(boundary_perturbations),
+        action_matrix=action_matrix,
+        constraint_matrix=constraint_matrix,
+        singular_values=singular_values,
+        rank=rank,
+        compatible_dimension=int(compatible_basis.shape[1]),
+        compatible_coefficient_basis=compatible_basis,
+        perturbation_residuals=np.linalg.norm(action_matrix, axis=0).astype(
+            np.float64,
+            copy=False,
+        ),
+        tolerance=tolerance,
+    )
+
+
 def linearized_cage_obstruction_from_hamiltonians(
     base_hamiltonian: object,
     perturbations: Sequence[object],
@@ -924,6 +1250,96 @@ def linearized_cage_obstruction_from_hamiltonians(
         internal_perturbations=[blocks.internal for blocks in perturbation_blocks],
         coefficient_field=coefficient_field,
         tolerance=tolerance,
+    )
+
+
+def fixed_cage_state_compatibility_from_hamiltonians(
+    base_hamiltonian: object,
+    perturbations: Sequence[object],
+    support: Sequence[int] | npt.NDArray[np.integer],
+    cage_state: npt.ArrayLike,
+    *,
+    coefficient_field: CoefficientField = "real",
+    tolerance: float = 1e-10,
+) -> FixedCageStateCompatibilityReport:
+    """Build the exact fixed-state compatibility space from full matrices."""
+    base_blocks = partition_cage_hamiltonian(base_hamiltonian, support)
+    perturbation_blocks = []
+    for perturbation in perturbations:
+        _validate_same_matrix_shape(base_hamiltonian, perturbation)
+        perturbation_blocks.append(partition_cage_hamiltonian(perturbation, support))
+
+    local_state = _normalized_local_state(
+        cage_state,
+        support=base_blocks.support,
+        hilbert_size=base_blocks.hilbert_size,
+        tolerance=tolerance,
+    )
+    return fixed_cage_state_compatibility(
+        base_blocks.boundary,
+        local_state,
+        [blocks.boundary for blocks in perturbation_blocks],
+        internal_perturbations=[blocks.internal for blocks in perturbation_blocks],
+        coefficient_field=coefficient_field,
+        tolerance=tolerance,
+    )
+
+
+def cage_compatibility_hierarchy_from_hamiltonians(
+    base_hamiltonian: object,
+    perturbations: Sequence[object],
+    support: Sequence[int] | npt.NDArray[np.integer],
+    cage_state: npt.ArrayLike,
+    *,
+    coefficient_field: CoefficientField = "real",
+    tolerance: float = 1e-10,
+) -> CageCompatibilityHierarchyReport:
+    """Compare infinitesimal continuation and exact affine compatibility."""
+    first_order = linearized_cage_obstruction_from_hamiltonians(
+        base_hamiltonian,
+        perturbations,
+        support,
+        cage_state,
+        coefficient_field=coefficient_field,
+        tolerance=tolerance,
+    )
+    fixed_state = fixed_cage_state_compatibility_from_hamiltonians(
+        base_hamiltonian,
+        perturbations,
+        support,
+        cage_state,
+        coefficient_field=coefficient_field,
+        tolerance=tolerance,
+    )
+
+    first_order_basis = np.asarray(first_order.compatible_coefficient_basis)
+    fixed_state_basis = np.asarray(fixed_state.compatible_coefficient_basis)
+    tangent_only_basis = subspace_complement_basis(
+        first_order_basis,
+        fixed_state_basis,
+        tolerance=tolerance,
+    )
+    first_order_orthonormal = _orthonormal_columns(first_order_basis)
+    fixed_state_orthonormal = _orthonormal_columns(fixed_state_basis)
+    if fixed_state_orthonormal.shape[1] == 0:
+        inclusion_residual = 0.0
+    else:
+        inclusion_residual = float(
+            np.linalg.norm(
+                fixed_state_orthonormal
+                - first_order_orthonormal
+                @ (first_order_orthonormal.conj().T @ fixed_state_orthonormal)
+            )
+        )
+
+    if coefficient_field == "real":
+        tangent_only_basis = np.real_if_close(tangent_only_basis, tol=1000).real
+
+    return CageCompatibilityHierarchyReport(
+        first_order=first_order,
+        fixed_state=fixed_state,
+        tangent_only_coefficient_basis=tangent_only_basis,
+        fixed_subspace_inclusion_residual=inclusion_residual,
     )
 
 
@@ -961,6 +1377,86 @@ def subspace_principal_overlaps(
         return np.zeros(0, dtype=np.float64)
     overlaps = scipy_linalg.svdvals(orthonormal_a.conj().T @ orthonormal_b)
     return np.clip(overlaps.real, 0.0, 1.0).astype(np.float64, copy=False)
+
+
+def subspace_complement_basis(
+    parent_basis: npt.ArrayLike,
+    child_basis: npt.ArrayLike,
+    *,
+    tolerance: float = 1e-10,
+) -> npt.NDArray[np.complex128]:
+    """Return the part of ``span(parent_basis)`` orthogonal to ``child_basis``.
+
+    ``child_basis`` is required to lie inside the parent subspace up to the
+    supplied tolerance. Empty column bases are supported.
+    """
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    parent_array = np.asarray(parent_basis, dtype=np.complex128)
+    child_array = np.asarray(child_basis, dtype=np.complex128)
+    if parent_array.ndim == 1:
+        parent_array = parent_array[:, np.newaxis]
+    if child_array.ndim == 1:
+        child_array = child_array[:, np.newaxis]
+    if parent_array.ndim != 2 or child_array.ndim != 2:
+        raise ValueError("parent_basis and child_basis must be vectors or 2D column bases.")
+    if parent_array.shape[0] != child_array.shape[0]:
+        raise ValueError("parent_basis and child_basis must have the same row count.")
+
+    parent_orthonormal = _orthonormal_columns(parent_array)
+    child_orthonormal = _orthonormal_columns(child_array)
+    if child_orthonormal.shape[1] == 0:
+        return parent_orthonormal
+    if parent_orthonormal.shape[1] == 0:
+        raise ValueError("a nonempty child subspace cannot lie inside an empty parent subspace.")
+
+    child_projection = parent_orthonormal @ (parent_orthonormal.conj().T @ child_orthonormal)
+    inclusion_residual = float(np.linalg.norm(child_orthonormal - child_projection))
+    if inclusion_residual > tolerance * max(1.0, float(np.linalg.norm(child_orthonormal))):
+        raise ValueError("child_basis is not contained in parent_basis within tolerance.")
+
+    complement_coordinates = nullspace_svd(
+        child_orthonormal.conj().T @ parent_orthonormal,
+        tolerance=tolerance,
+    )
+    return (parent_orthonormal @ complement_coordinates).astype(
+        np.complex128,
+        copy=False,
+    )
+
+
+def estimate_power_law_exponent(
+    parameters: npt.ArrayLike,
+    residuals: npt.ArrayLike,
+    *,
+    minimum_parameter: float = 0.0,
+    minimum_residual: float = 0.0,
+) -> float | None:
+    """Estimate ``residual ~ |parameter|**p`` by a log-log fit."""
+    parameter_array = np.abs(np.asarray(parameters, dtype=np.float64).reshape(-1))
+    residual_array = np.asarray(residuals, dtype=np.float64).reshape(-1)
+    if parameter_array.size != residual_array.size:
+        raise ValueError("parameters and residuals must have the same length.")
+    mask = (
+        np.isfinite(parameter_array)
+        & np.isfinite(residual_array)
+        & (parameter_array > minimum_parameter)
+        & (residual_array > minimum_residual)
+    )
+    if np.count_nonzero(mask) < 2:
+        return None
+    design = np.column_stack(
+        [
+            np.log(parameter_array[mask]),
+            np.ones(np.count_nonzero(mask), dtype=np.float64),
+        ]
+    )
+    exponent, _intercept = np.linalg.lstsq(
+        design,
+        np.log(residual_array[mask]),
+        rcond=None,
+    )[0]
+    return float(exponent)
 
 
 def subspace_projector_distance(
@@ -1116,6 +1612,84 @@ def _cage_eigensystem(
     column_norms = np.linalg.norm(cage_eigenvectors, axis=0)
     cage_eigenvectors = cage_eigenvectors / column_norms[np.newaxis, :]
     return eigenvalues, cage_eigenvectors, is_hermitian
+
+
+def _minimum_leakage_internal_eigenstate(
+    internal_matrix: npt.NDArray[np.complex128],
+    boundary_matrix: npt.NDArray[np.complex128],
+    *,
+    reference_state: npt.NDArray[np.complex128],
+    tolerance: float,
+) -> tuple[npt.NDArray[np.complex128], complex]:
+    """Select the least-leaking state in the closest internal eigenspace."""
+    hermiticity_scale = max(1.0, float(np.linalg.norm(internal_matrix)))
+    is_hermitian = (
+        np.linalg.norm(internal_matrix - internal_matrix.conj().T) <= tolerance * hermiticity_scale
+    )
+    if not is_hermitian:
+        eigenvalues, eigenvectors = np.linalg.eig(internal_matrix)
+        overlaps = np.abs(eigenvectors.conj().T @ reference_state)
+        selected_index = int(np.argmax(overlaps))
+        state = eigenvectors[:, selected_index]
+        state = state / np.linalg.norm(state)
+        return state.astype(np.complex128, copy=False), complex(eigenvalues[selected_index])
+
+    eigenvalues, eigenvectors = np.linalg.eigh(0.5 * (internal_matrix + internal_matrix.conj().T))
+    energy_scale = max(1.0, float(np.max(np.abs(eigenvalues))))
+    best_state: npt.NDArray[np.complex128] | None = None
+    best_energy = 0.0
+    best_projection_overlap = -1.0
+    best_boundary_residual = np.inf
+
+    group_start = 0
+    while group_start < eigenvalues.size:
+        group_end = group_start + 1
+        while (
+            group_end < eigenvalues.size
+            and abs(eigenvalues[group_end] - eigenvalues[group_start]) <= tolerance * energy_scale
+        ):
+            group_end += 1
+
+        eigenspace = eigenvectors[:, group_start:group_end]
+        reference_coordinates = eigenspace.conj().T @ reference_state
+        projection_overlap = float(np.linalg.norm(reference_coordinates))
+
+        leakage_gram = (boundary_matrix @ eigenspace).conj().T @ (boundary_matrix @ eigenspace)
+        leakage_eigenvalues, leakage_eigenvectors = np.linalg.eigh(
+            0.5 * (leakage_gram + leakage_gram.conj().T)
+        )
+        minimum_leakage_eigenvalue = float(max(0.0, leakage_eigenvalues[0]))
+        minimum_mask = leakage_eigenvalues <= minimum_leakage_eigenvalue + tolerance * max(
+            1.0, float(np.max(np.abs(leakage_eigenvalues)))
+        )
+        minimum_leakage_basis = leakage_eigenvectors[:, minimum_mask]
+        projected_reference = minimum_leakage_basis.conj().T @ reference_coordinates
+        if np.linalg.norm(projected_reference) > tolerance:
+            local_state = minimum_leakage_basis @ (
+                projected_reference / np.linalg.norm(projected_reference)
+            )
+        else:
+            local_state = minimum_leakage_basis[:, 0]
+        state = eigenspace @ local_state
+        state = state / np.linalg.norm(state)
+        boundary_residual = float(np.linalg.norm(boundary_matrix @ state))
+
+        is_better = projection_overlap > best_projection_overlap + tolerance
+        is_tied_and_less_leaky = (
+            abs(projection_overlap - best_projection_overlap) <= tolerance
+            and boundary_residual < best_boundary_residual
+        )
+        if is_better or is_tied_and_less_leaky:
+            best_state = state.astype(np.complex128, copy=False)
+            best_energy = float(eigenvalues[group_start])
+            best_projection_overlap = projection_overlap
+            best_boundary_residual = boundary_residual
+
+        group_start = group_end
+
+    if best_state is None:  # pragma: no cover - internal matrix is nonempty
+        raise RuntimeError("could not select an internal support eigenstate.")
+    return best_state, complex(best_energy)
 
 
 def _matched_cage_eigensubspace(
