@@ -50,6 +50,10 @@ from qlinks.visualizer.stochastic_schrodinger_graph import (
     TrajectoryNodeColorRule,
     as_stochastic_trajectory,
 )
+from qlinks.visualizer.tensor_network import (
+    SquareQDMTensorNetworkVisualizer,
+    SquareQDMTensorNetworkVisualStyle,
+)
 
 __all__ = [
     "AutomorphismBackend",
@@ -76,6 +80,8 @@ __all__ = [
     "QuantumDiskConfigurationVisualizer",
     "QuantumDiskVisualStyle",
     "SiteLabelStyle",
+    "SquareQDMTensorNetworkVisualStyle",
+    "SquareQDMTensorNetworkVisualizer",
     "StochasticSchrodingerGraphVisualizer",
     "StochasticSchrodingerTrajectory",
     "TrajectoryNodeColorRule",

@@ -157,3 +157,71 @@ def test_quimb_optimizer_can_be_constructed_for_exact_cluster_loss() -> None:
     )
 
     assert type(optimizer).__name__ == "TNOptimizer"
+
+
+@pytest.mark.skipif(not quimb_available(), reason="quimb is not installed")
+def test_compact_autograd_optimizer_uses_only_allowed_entries() -> None:
+    from qlinks.caging import autograd_available
+
+    if not autograd_available():
+        pytest.skip("autograd is not installed")
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    model = SquareQDMModel(
+        lx=6,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    problem = build_square_qdm_peps_finite_cluster_problem(model, ansatz.tile_basis)
+    initial = problem.perturb_parameters(ansatz.parameters, scale=1.0e-2, seed=0)
+    loss, gradient = problem.loss_and_gradient_autograd(initial)
+    optimizer = problem.make_quimb_optimizer(initial, progbar=False)
+
+    assert optimizer.d == ansatz.tile_basis.n_entries == 108
+    assert np.isclose(loss, problem.loss(initial))
+    assert np.linalg.norm(gradient) > 0.0
+
+
+@pytest.mark.skipif(not quimb_available(), reason="quimb is not installed")
+def test_short_autograd_optimization_reduces_exact_variance() -> None:
+    from qlinks.caging import autograd_available
+
+    if not autograd_available():
+        pytest.skip("autograd is not installed")
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    model = SquareQDMModel(
+        lx=6,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    problem = build_square_qdm_peps_finite_cluster_problem(model, ansatz.tile_basis)
+    result = problem.optimize_with_quimb(
+        ansatz.parameters,
+        max_steps=2,
+        noise_scale=1.0e-2,
+        seed=0,
+        progbar=False,
+    )
+
+    assert result.metadata["optimizer_dimension"] == 108
+    assert result.final_loss < result.initial_loss
+    assert result.to_ansatz(ansatz.tile_basis).n_parameters == 108

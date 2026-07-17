@@ -7,13 +7,14 @@ import sys
 
 import numpy as np
 
-if np.lib.NumpyVersion(np.__version__) >= "2.5.0":
+if np.lib.NumpyVersion(np.__version__) >= "2.4.0":
     raise RuntimeError(
-        "The TN environment requires NumPy < 2.5 for Numba 0.66; "
+        "The TN environment requires NumPy < 2.4 for Numba 0.62; "
         f"found NumPy {np.__version__}. Regenerate poetry.lock with the "
-        "project constraint numpy>=2.2,<2.5."
+        "locked TN dependency constraints."
     )
 
+import autograd
 import llvmlite
 import numba
 import quimb
@@ -27,6 +28,7 @@ def main() -> None:
     print(f"qlinks: {qlinks.__version__}")
     print(f"numpy: {np.__version__}")
     print(f"quimb: {quimb.__version__}")
+    print(f"autograd: {getattr(autograd, '__version__', 'installed')}")
     print(f"numba: {numba.__version__}")
     print(f"llvmlite: {llvmlite.__version__}")
 

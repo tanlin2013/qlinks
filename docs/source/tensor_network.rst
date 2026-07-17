@@ -7,9 +7,16 @@ Install the optional backend with:
 
    pip install "qlinks[tn]"
 
-``quimb`` is used for tensor representation, contraction, and automatic-
-differentiation optimization.  qlinks remains responsible for constructing the
-constrained local basis and the exact finite-cluster Hamiltonian objective.
+The ``tn`` extra installs ``quimb`` for tensor-network objects and contractions,
+``autograd`` for the default differentiable optimizer, and the compatible
+``numba``/``llvmlite`` runtime.  The tensor extra currently supports Python
+3.11--3.13.  This upper bound is deliberate: Python 3.13 can use binary
+``llvmlite`` wheels on Intel macOS, whereas Python 3.14 would require a custom
+LLVM source build.
+
+qlinks remains responsible for the constrained local basis, winding-sector
+Hamiltonian, and exact finite-cluster residual.  quimb supplies parametrized
+tensors and optimization infrastructure.
 
 Rectangular vertex tensor
 -------------------------
@@ -85,8 +92,8 @@ available:
        n_tiles_y=3,
    )
 
-Exact finite-cluster objective
-------------------------------
+Compact Autograd optimization
+-----------------------------
 
 Candidate tensors can first be optimized against an exact qlinks Hamiltonian on
 a small torus:
@@ -108,25 +115,65 @@ a small torus:
        model,
        tile_basis,
    )
-   report = problem.diagnose(ansatz.parameters)
 
-The loss is the energy variance,
+The loss is the normalized energy variance,
 
 .. math::
 
-   \mathcal L(A)
-   = \left\|\left(H-\langle H\rangle_A\right)|\Psi(A)\rangle\right\|^2.
+   \mathcal V_H(A)
+   = \frac{\langle\Psi(A)|(H-\langle H\rangle_A)^2|\Psi(A)\rangle}
+           {\langle\Psi(A)|\Psi(A)\rangle}.
 
-A quimb optimizer can be constructed with:
+Only the 108 structurally allowed tensor entries are varied.  The dense tensor
+contains many more entries, but quimb's parametrized tensor maps the compact
+vector into that masked array before contraction.
+
+The sparse singlet initialization is a stationary point, so activate the
+boundary-compatible sectors with a small perturbation:
 
 .. code-block:: python
 
-   optimizer = problem.make_quimb_optimizer(
+   initial = problem.perturb_parameters(
        ansatz.parameters,
-       autodiff_backend="AUTO",
-       optimizer="L-BFGS-B",
+       scale=1.0e-2,
+       seed=0,
+   )
+   loss, gradient = problem.loss_and_gradient_autograd(initial)
+
+A short optimization is then:
+
+.. code-block:: python
+
+   result = problem.optimize_with_quimb(
+       ansatz.parameters,
+       max_steps=20,
+       noise_scale=1.0e-2,
+       seed=0,
+       autodiff_backend="autograd",
    )
 
-The automatic-differentiation backend is selected by quimb.  JAX or PyTorch can
-be installed separately when optimization, rather than contraction alone, is
-required.
+``result`` contains the initial and final exact residual reports, compact
+parameters, and the complete function-evaluation history.  A reduced variance
+is only a discovery signal.  An exact cage candidate must reach zero residual,
+remain stable across larger clusters, and admit a local PEPS eigenstate
+certificate.
+
+Visualization
+-------------
+
+The tensor visualizer draws the repeated graph, local boundary-resolved dimer
+entries, parameter magnitudes, and optimization history:
+
+.. code-block:: python
+
+   from qlinks.visualizer import SquareQDMTensorNetworkVisualizer
+
+   visualizer = SquareQDMTensorNetworkVisualizer(tile_basis)
+   visualizer.plot_network(n_tiles_x=3, n_tiles_y=2)
+   visualizer.plot_entry(0)
+   visualizer.plot_parameter_magnitudes(result.optimized_parameters)
+   visualizer.plot_optimization_history(result)
+
+A complete interactive demonstration is provided in
+``experimental/notebooks/tensor_network.ipynb``.  The padding notebook now ends
+at the boundary-resolved handoff and does not duplicate the PEPS optimization.

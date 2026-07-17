@@ -17,6 +17,7 @@ on small qlinks bases for residual diagnostics and optimizer prototyping.
 
 from __future__ import annotations
 
+import importlib.util
 from dataclasses import dataclass, field
 from typing import Any, Literal, Mapping, Sequence
 
@@ -30,6 +31,11 @@ from qlinks.caging.singlet_product import (
 )
 
 SquareQDMTileTensorParameterization = Literal["entry", "physical"]
+
+
+def autograd_available() -> bool:
+    """Return whether the optional Autograd optimization backend is installed."""
+    return importlib.util.find_spec("autograd") is not None
 
 
 def _require_quimb() -> Any:
@@ -383,6 +389,65 @@ class SquareQDMPEPSResidualReport:
 
 
 @dataclass(frozen=True, slots=True)
+class SquareQDMPEPSOptimizationResult:
+    """Result of an exact small-cluster PEPS optimization."""
+
+    initial_parameters: npt.NDArray[np.float64]
+    optimized_parameters: npt.NDArray[np.float64]
+    loss_history: tuple[float, ...]
+    initial_report: SquareQDMPEPSResidualReport
+    final_report: SquareQDMPEPSResidualReport
+    requested_steps: int
+    optimizer: str
+    autodiff_backend: str
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        initial = np.asarray(self.initial_parameters, dtype=np.float64).reshape(-1)
+        optimized = np.asarray(self.optimized_parameters, dtype=np.float64).reshape(-1)
+        if initial.shape != optimized.shape:
+            raise ValueError("initial_parameters and optimized_parameters must align.")
+        object.__setattr__(self, "initial_parameters", initial.copy())
+        object.__setattr__(self, "optimized_parameters", optimized.copy())
+        object.__setattr__(self, "loss_history", tuple(float(value) for value in self.loss_history))
+        object.__setattr__(self, "requested_steps", int(self.requested_steps))
+        object.__setattr__(self, "metadata", dict(self.metadata))
+
+    @property
+    def initial_loss(self) -> float:
+        return float(self.initial_report.energy_variance)
+
+    @property
+    def final_loss(self) -> float:
+        return float(self.final_report.energy_variance)
+
+    @property
+    def improved(self) -> bool:
+        return self.final_loss < self.initial_loss
+
+    @property
+    def reached_exact_state(self) -> bool:
+        tolerance = float(self.metadata.get("exact_tolerance", 1.0e-10))
+        return self.final_report.residual <= tolerance
+
+    def to_ansatz(
+        self,
+        tile_basis: SquareQDMRectangularTileTensorBasis,
+    ) -> SquareQDMPEPSAnsatz:
+        """Return the optimized parameters as a reusable PEPS ansatz."""
+        return SquareQDMPEPSAnsatz(
+            tile_basis=tile_basis,
+            parameters=self.optimized_parameters.astype(np.complex128),
+            parameterization="entry",
+            metadata={
+                **dict(self.metadata),
+                "source": "finite_cluster_optimization",
+                "final_energy_variance": self.final_loss,
+            },
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class SquareQDMPEPSFiniteClusterProblem:
     """Exact small-torus objective for one translational PEPS unit tensor."""
 
@@ -497,36 +562,128 @@ class SquareQDMPEPSFiniteClusterProblem:
         report = self.diagnose(parameters)
         return float(report.residual**2)
 
+    def perturb_parameters(
+        self,
+        parameters: npt.ArrayLike,
+        *,
+        scale: float = 1.0e-2,
+        seed: int | None = 0,
+        normalize: bool = True,
+    ) -> npt.NDArray[np.float64]:
+        """Add a reproducible real perturbation to escape sparse stationary points.
+
+        The exact singlet-core tensor has only two nonzero entries and is a
+        stationary point of the variance within the enlarged PEPS manifold.
+        A small perturbation activates the boundary-compatible halo entries and
+        produces a useful Autograd search direction.
+        """
+        values = np.asarray(parameters, dtype=np.complex128).reshape(-1)
+        if values.size != self.tile_basis.n_entries:
+            raise ValueError(f"parameters must have size {self.tile_basis.n_entries}.")
+        if np.max(np.abs(values.imag), initial=0.0) > self.tolerance:
+            raise ValueError("The Autograd prototype currently optimizes real parameters only.")
+        if scale < 0.0:
+            raise ValueError("scale must be non-negative.")
+        real_values = np.asarray(values.real, dtype=np.float64)
+        if scale > 0.0:
+            rng = np.random.default_rng(seed)
+            real_values = real_values + float(scale) * rng.normal(size=real_values.size)
+        if normalize:
+            norm = float(np.linalg.norm(real_values))
+            if norm == 0.0:
+                raise ValueError("Cannot normalize the zero parameter vector.")
+            real_values = real_values / norm
+        return np.asarray(real_values, dtype=np.float64)
+
+    def loss_and_gradient_autograd(
+        self,
+        parameters: npt.ArrayLike,
+    ) -> tuple[float, npt.NDArray[np.float64]]:
+        """Evaluate the exact variance and its gradient using Autograd."""
+        if not autograd_available():
+            raise ImportError(
+                "autograd is not installed. Install qlinks with the 'tn' extra, "
+                "for example `pip install 'qlinks[tn]'`."
+            )
+        import autograd.numpy as anp  # type: ignore[import-not-found]
+        from autograd import value_and_grad  # type: ignore[import-not-found]
+
+        values = np.asarray(parameters, dtype=np.complex128).reshape(-1)
+        if values.size != self.tile_basis.n_entries:
+            raise ValueError(f"parameters must have size {self.tile_basis.n_entries}.")
+        if np.max(np.abs(values.imag), initial=0.0) > self.tolerance:
+            raise ValueError("The Autograd prototype currently optimizes real parameters only.")
+        parameter_indices = np.asarray(self.entry_parameter_indices, dtype=np.int64)
+        hamiltonian = anp.asarray(self.hamiltonian.toarray().real)
+
+        def objective(compact_parameters: Any) -> Any:
+            state = anp.prod(compact_parameters[parameter_indices], axis=1)
+            norm_squared = anp.sum(state * state) + 1.0e-30
+            h_state = anp.dot(hamiltonian, state)
+            energy = anp.sum(state * h_state) / norm_squared
+            residual = h_state - energy * state
+            return anp.sum(residual * residual) / norm_squared
+
+        loss, gradient = value_and_grad(objective)(np.asarray(values.real, dtype=np.float64))
+        return float(loss), np.asarray(gradient, dtype=np.float64)
+
     def make_quimb_optimizer(
         self,
         parameters: npt.ArrayLike,
         *,
-        autodiff_backend: str = "AUTO",
+        autodiff_backend: str = "autograd",
         optimizer: str = "L-BFGS-B",
         progbar: bool = True,
         loss_target: float | None = None,
         **backend_options: object,
     ) -> object:
-        """Create a quimb ``TNOptimizer`` for the exact finite-cluster loss.
+        """Create a compact quimb ``TNOptimizer`` for the exact variance.
 
-        Quimb supplies the tensor parameter container and automatic
-        differentiation.  The objective is evaluated against the exact qlinks
-        constrained Hamiltonian, making this suitable for small-cluster unit
-        tests and for discovering candidate unit tensors before moving to
-        approximate thermodynamic contractions.
+        Only the locally allowed tensor entries are variational.  Quimb's
+        :class:`~quimb.tensor.PTensor` embeds the compact vector into the dense
+        ``urdlp`` tensor, reducing the optimization dimension from the full
+        tensor size to ``tile_basis.n_entries`` (108 for the 3-by-2 tile).
+
+        The current Autograd path is real-valued.  Complex tensors can later be
+        handled through a JAX or PyTorch backend with an explicit real/imaginary
+        parameter split.
         """
         qtn = _require_quimb()
+        if autodiff_backend.lower() == "autograd" and not autograd_available():
+            raise ImportError(
+                "autograd is not installed. Install qlinks with the 'tn' extra, "
+                "for example `pip install 'qlinks[tn]'`."
+            )
         values = np.asarray(parameters, dtype=np.complex128).reshape(-1)
         if values.size != self.tile_basis.n_entries:
             raise ValueError(f"parameters must have size {self.tile_basis.n_entries}.")
-        data = self.tile_basis.tensor_data_from_parameters(values)
-        tensor = qtn.Tensor(
-            data=data,
+        if np.max(np.abs(values.imag), initial=0.0) > self.tolerance:
+            raise ValueError("The current compact optimizer accepts real parameters only.")
+
+        tensor_shape = self.tile_basis.tensor_shape
+        coordinates = self.tile_basis.entry_coordinates
+        flat_coordinates = np.ravel_multi_index(
+            tuple(coordinates[:, axis] for axis in range(5)),
+            tensor_shape,
+        )
+        entry_index_map = np.zeros(int(np.prod(tensor_shape)), dtype=np.int64)
+        structural_mask = np.zeros(int(np.prod(tensor_shape)), dtype=np.float64)
+        entry_index_map[flat_coordinates] = np.arange(self.tile_basis.n_entries)
+        structural_mask[flat_coordinates] = 1.0
+        entry_index_map = entry_index_map.reshape(tensor_shape)
+        structural_mask = structural_mask.reshape(tensor_shape)
+
+        def compact_to_tensor(compact_parameters: Any) -> Any:
+            return compact_parameters[entry_index_map] * structural_mask
+
+        tensor = qtn.PTensor(
+            compact_to_tensor,
+            np.asarray(values.real, dtype=np.float64),
             inds=("up", "right", "down", "left", "physical"),
             tags={"UNIT_CELL"},
         )
         network = qtn.TensorNetwork([tensor])
-        dense_hamiltonian = np.asarray(self.hamiltonian.toarray(), dtype=np.complex128)
+        dense_hamiltonian = np.asarray(self.hamiltonian.toarray().real, dtype=np.float64)
         return qtn.TNOptimizer(
             network,
             _quimb_exact_cluster_loss,
@@ -541,6 +698,62 @@ class SquareQDMPEPSFiniteClusterProblem:
             **backend_options,
         )
 
+    def optimize_with_quimb(
+        self,
+        parameters: npt.ArrayLike,
+        *,
+        max_steps: int = 20,
+        noise_scale: float = 1.0e-2,
+        seed: int | None = 0,
+        autodiff_backend: str = "autograd",
+        optimizer: str = "L-BFGS-B",
+        progbar: bool = False,
+        loss_target: float | None = None,
+        exact_tolerance: float = 1.0e-10,
+        **backend_options: object,
+    ) -> SquareQDMPEPSOptimizationResult:
+        """Optimize the shared unit tensor against the exact cluster variance."""
+        if max_steps <= 0:
+            raise ValueError("max_steps must be positive.")
+        initial_parameters = self.perturb_parameters(
+            parameters,
+            scale=noise_scale,
+            seed=seed,
+            normalize=True,
+        )
+        initial_report = self.diagnose(initial_parameters)
+        optimizer_object = self.make_quimb_optimizer(
+            initial_parameters,
+            autodiff_backend=autodiff_backend,
+            optimizer=optimizer,
+            progbar=progbar,
+            loss_target=loss_target,
+            **backend_options,
+        )
+        optimized_network = optimizer_object.optimize(int(max_steps))
+        optimized_parameters = np.asarray(
+            optimized_network["UNIT_CELL"].params,
+            dtype=np.float64,
+        ).reshape(-1)
+        final_report = self.diagnose(optimized_parameters)
+        return SquareQDMPEPSOptimizationResult(
+            initial_parameters=initial_parameters,
+            optimized_parameters=optimized_parameters,
+            loss_history=tuple(float(value) for value in optimizer_object.losses),
+            initial_report=initial_report,
+            final_report=final_report,
+            requested_steps=int(max_steps),
+            optimizer=str(optimizer),
+            autodiff_backend=str(autodiff_backend),
+            metadata={
+                "exact_tolerance": float(exact_tolerance),
+                "noise_scale": float(noise_scale),
+                "seed": seed,
+                "optimizer_dimension": int(getattr(optimizer_object, "d", -1)),
+                "n_function_evaluations": len(optimizer_object.losses),
+            },
+        )
+
 
 def _quimb_exact_cluster_loss(
     tensor_network: object,
@@ -548,7 +761,7 @@ def _quimb_exact_cluster_loss(
     tensor_coordinates: Any,
     hamiltonian: Any,
 ) -> Any:
-    """Backend-generic loss used by :meth:`make_quimb_optimizer`."""
+    """Autodiff-compatible real variance used by the compact optimizer."""
     import autoray as ar
 
     unit_tensor = tensor_network["UNIT_CELL"].data
@@ -567,11 +780,11 @@ def _quimb_exact_cluster_loss(
         state = selected if state is None else state * selected
     if state is None:
         state = ar.do("ones", (n_basis,), like=unit_tensor)
-    norm_squared = ar.do("real", ar.do("vdot", state, state))
+    norm_squared = ar.do("sum", state * state) + 1.0e-30
     h_state = hamiltonian @ state
-    energy = ar.do("vdot", state, h_state) / norm_squared
+    energy = ar.do("sum", state * h_state) / norm_squared
     residual = h_state - energy * state
-    return ar.do("real", ar.do("vdot", residual, residual)) / norm_squared
+    return ar.do("sum", residual * residual) / norm_squared
 
 
 def build_square_qdm_rectangular_tile_tensor_basis(
