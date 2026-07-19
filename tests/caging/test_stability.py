@@ -404,3 +404,26 @@ def test_regional_chiral_kernel_span_finds_uncaptured_collective_mode() -> None:
     assert report.target_dimension == 3
     assert report.captured_target_dimension == 2
     assert report.uncaptured_target_dimension == 1
+
+
+def test_regional_cage_quotient_isolates_collective_direction() -> None:
+    from qlinks.caging import regional_cage_quotient
+
+    hamiltonian = np.zeros((6, 6), dtype=np.complex128)
+    hamiltonian[4, 0] = hamiltonian[0, 4] = 1.0
+    hamiltonian[4, 1] = hamiltonian[1, 4] = 1.0
+    hamiltonian[5, 2] = hamiltonian[2, 5] = 1.0
+    hamiltonian[5, 3] = hamiltonian[3, 5] = 1.0
+    local_a = np.array([1.0, -1.0, 0.0, 0.0, 0.0, 0.0]) / np.sqrt(2.0)
+    local_b = np.array([0.0, 0.0, 1.0, -1.0, 0.0, 0.0]) / np.sqrt(2.0)
+    collective = np.array([1.0, 1.0, -1.0, -1.0, 0.0, 0.0]) / 2.0
+    report = regional_cage_quotient(
+        hamiltonian,
+        ((0, 1), (2, 3)),
+        np.column_stack([local_a, local_b, collective]),
+        tolerance=1.0e-12,
+    )
+    assert report.intersection_dimension == 2
+    assert report.quotient_dimension == 1
+    assert report.inclusion_residual < 1.0e-12
+    assert abs(np.vdot(report.quotient_basis[:, 0], collective)) > 1.0 - 1.0e-12

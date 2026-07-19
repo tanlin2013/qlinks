@@ -2347,3 +2347,91 @@ def regional_chiral_kernel_span(
         target_projector_residual=residual,
         tolerance=tolerance,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class RegionalCageQuotientReport:
+    """Relative quotient of a target cage manifold by regional kernels.
+
+    The quotient is represented canonically by the component of the target
+    manifold orthogonal to the regional-kernel span.  It is therefore
+    basis-independent up to a unitary rotation within the quotient itself.
+    """
+
+    target_dimension: int
+    regional_span_dimension: int
+    intersection_dimension: int
+    quotient_dimension: int
+    inclusion_residual: float
+    quotient_basis: npt.NDArray[np.complex128]
+    quotient_projector: npt.NDArray[np.complex128]
+    tolerance: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "target_dimension": self.target_dimension,
+            "regional_span_dimension": self.regional_span_dimension,
+            "intersection_dimension": self.intersection_dimension,
+            "quotient_dimension": self.quotient_dimension,
+            "inclusion_residual": self.inclusion_residual,
+            "tolerance": self.tolerance,
+        }
+
+
+def regional_cage_quotient(
+    hamiltonian: object,
+    regions: Sequence[Sequence[int]],
+    target_manifold: npt.ArrayLike,
+    *,
+    tolerance: float = 1e-10,
+) -> RegionalCageQuotientReport:
+    """Construct ``target_manifold / regional_kernel_span`` numerically.
+
+    The function first embeds every regional right kernel in the full Hilbert
+    space, then projects the target manifold onto the orthogonal complement of
+    their span.  If the regional span is contained in the target manifold, the
+    resulting dimension is the usual quotient dimension.  ``inclusion_residual``
+    diagnoses violations of that containment.
+    """
+    matrix = as_dense_array(hamiltonian)
+    target = np.asarray(target_manifold, dtype=np.complex128)
+    if target.ndim == 1:
+        target = target[:, None]
+    if target.ndim != 2 or target.shape[0] != matrix.shape[0]:
+        raise ValueError("target_manifold must have one row per Hilbert state.")
+    target_basis = scipy_linalg.orth(target, rcond=tolerance)
+    embedded: list[npt.NDArray[np.complex128]] = []
+    for raw_region in regions:
+        support = tuple(sorted({int(index) for index in raw_region}))
+        if not support:
+            raise ValueError("each region must contain at least one index.")
+        blocks = partition_cage_hamiltonian(matrix, support)
+        kernel = nullspace_svd(as_dense_array(blocks.boundary), tolerance=tolerance)
+        for column in range(kernel.shape[1]):
+            vector = np.zeros(matrix.shape[0], dtype=np.complex128)
+            vector[np.asarray(support, dtype=np.int64)] = kernel[:, column]
+            embedded.append(vector)
+    if embedded:
+        regional_basis = scipy_linalg.orth(np.column_stack(embedded), rcond=tolerance)
+    else:
+        regional_basis = np.zeros((matrix.shape[0], 0), dtype=np.complex128)
+    target_projector = target_basis @ target_basis.conj().T
+    inclusion_residual = float(
+        np.linalg.norm((np.eye(matrix.shape[0]) - target_projector) @ regional_basis)
+    )
+    regional_projector = regional_basis @ regional_basis.conj().T
+    quotient_raw = (np.eye(matrix.shape[0]) - regional_projector) @ target_basis
+    quotient_basis = scipy_linalg.orth(quotient_raw, rcond=tolerance)
+    quotient_projector = quotient_basis @ quotient_basis.conj().T
+    overlaps = subspace_principal_overlaps(target_basis, regional_basis)
+    intersection = int(np.sum(overlaps >= 1.0 - tolerance))
+    return RegionalCageQuotientReport(
+        target_dimension=int(target_basis.shape[1]),
+        regional_span_dimension=int(regional_basis.shape[1]),
+        intersection_dimension=intersection,
+        quotient_dimension=int(quotient_basis.shape[1]),
+        inclusion_residual=inclusion_residual,
+        quotient_basis=quotient_basis,
+        quotient_projector=quotient_projector,
+        tolerance=tolerance,
+    )
