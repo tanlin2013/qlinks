@@ -5359,3 +5359,448 @@ def diagnose_real_local_sign_obstruction(
         obstruction_witness=obstruction_witness,
         local_sign_solution=sign_solution,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class LaurentPolynomialRootMode:
+    """Kernel multiplicity of a Laurent constraint symbol at one root of unity."""
+
+    repeat_count: int
+    momentum_index: int
+    primitive_order: int
+    root: complex
+    kernel_dimension: int
+    free_dimension: int
+    torsion_dimension: int
+    singular_gap: float | None
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "repeat_count": self.repeat_count,
+            "momentum_index": self.momentum_index,
+            "primitive_order": self.primitive_order,
+            "root": self.root,
+            "kernel_dimension": self.kernel_dimension,
+            "free_dimension": self.free_dimension,
+            "torsion_dimension": self.torsion_dimension,
+            "singular_gap": self.singular_gap,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LaurentPolynomialPeriodicPoint:
+    """Periodic-kernel dimensions of a Laurent module at one repetition count."""
+
+    repeat_count: int
+    total_kernel_dimension: int
+    free_kernel_dimension: int
+    torsion_kernel_dimension: int
+    root_modes: tuple[LaurentPolynomialRootMode, ...]
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "repeat_count": self.repeat_count,
+            "total_kernel_dimension": self.total_kernel_dimension,
+            "free_kernel_dimension": self.free_kernel_dimension,
+            "torsion_kernel_dimension": self.torsion_kernel_dimension,
+            "nonzero_torsion_root_count": sum(
+                mode.torsion_dimension > 0 for mode in self.root_modes
+            ),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LaurentPolynomialTorsionOrder:
+    """Total torsion multiplicity carried by primitive roots of one order."""
+
+    primitive_order: int
+    multiplicity: int
+    primitive_root_count: int
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "primitive_order": self.primitive_order,
+            "multiplicity": self.multiplicity,
+            "primitive_root_count": self.primitive_root_count,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LaurentPolynomialConstraintModuleReport:
+    """Free and root-of-unity torsion data of a finite-range Laurent module.
+
+    A translation-invariant finite-range constraint family is represented by
+
+    ``B(z) = sum_d z**d B_d``
+
+    over the Laurent ring ``C[z, z**-1]``.  The generic kernel dimension is the
+    rank of the free module.  Additional kernel vectors occurring only at roots
+    of unity are torsion modes on periodic systems.  Their primitive root orders
+    are discrete and remain fixed until a determinantal factor changes.
+
+    The calculation is numerical but uses only the small Bloch symbol.  It is
+    exact up to ``tolerance`` for the supplied coefficient matrices and sampled
+    roots of unity.
+    """
+
+    n_rows: int
+    n_columns: int
+    displacements: tuple[int, ...]
+    generic_rank: int
+    free_kernel_rank: int
+    generic_rank_sample_count: int
+    generic_rank_is_stable: bool
+    periodic_points: tuple[LaurentPolynomialPeriodicPoint, ...]
+    torsion_orders: tuple[LaurentPolynomialTorsionOrder, ...]
+    tolerance: float
+
+    @property
+    def has_free_generators(self) -> bool:
+        return self.free_kernel_rank > 0
+
+    @property
+    def has_root_of_unity_torsion(self) -> bool:
+        return any(entry.multiplicity > 0 for entry in self.torsion_orders)
+
+    @property
+    def module_label(self) -> str:
+        if self.has_free_generators and self.has_root_of_unity_torsion:
+            return "free_plus_root_of_unity_torsion"
+        if self.has_free_generators:
+            return "free"
+        if self.has_root_of_unity_torsion:
+            return "root_of_unity_torsion"
+        return "trivial_kernel"
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "n_rows": self.n_rows,
+            "n_columns": self.n_columns,
+            "displacements": self.displacements,
+            "generic_rank": self.generic_rank,
+            "free_kernel_rank": self.free_kernel_rank,
+            "generic_rank_sample_count": self.generic_rank_sample_count,
+            "generic_rank_is_stable": self.generic_rank_is_stable,
+            "module_label": self.module_label,
+            "torsion_orders": tuple(entry.to_summary_dict() for entry in self.torsion_orders),
+            "periodic_points": tuple(point.to_summary_dict() for point in self.periodic_points),
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LaurentDimensionDivisibilityViolation:
+    """Violation of root-set inclusion between two periodic lengths."""
+
+    divisor_repeat_count: int
+    multiple_repeat_count: int
+    divisor_torsion_dimension: int
+    multiple_torsion_dimension: int
+
+    def to_summary_dict(self) -> dict[str, int]:
+        return {
+            "divisor_repeat_count": self.divisor_repeat_count,
+            "multiple_repeat_count": self.multiple_repeat_count,
+            "divisor_torsion_dimension": self.divisor_torsion_dimension,
+            "multiple_torsion_dimension": self.multiple_torsion_dimension,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LaurentPeriodicDimensionConsistencyReport:
+    """Necessary Laurent-module consistency test for observed periodic nullities.
+
+    For a fixed Laurent symbol, every root of ``z**N - 1`` is also a root of
+    ``z**M - 1`` whenever ``N`` divides ``M``.  After subtracting the extensive
+    free contribution, periodic torsion dimensions must therefore be monotone
+    under divisibility.  On a divisor-closed data set, Möbius inversion also
+    gives non-negative primitive-order multiplicities.
+
+    Passing these tests is necessary, not sufficient, for the data to come from
+    one fixed finite-range translation-invariant Laurent module.
+    """
+
+    repeat_counts: tuple[int, ...]
+    observed_dimensions: tuple[int, ...]
+    assumed_free_rank: int
+    torsion_dimensions: tuple[int, ...]
+    divisibility_violations: tuple[LaurentDimensionDivisibilityViolation, ...]
+    primitive_order_multiplicities: tuple[tuple[int, int], ...]
+    incomplete_primitive_orders: tuple[int, ...]
+
+    @property
+    def has_negative_torsion_dimension(self) -> bool:
+        return any(value < 0 for value in self.torsion_dimensions)
+
+    @property
+    def has_negative_primitive_multiplicity(self) -> bool:
+        return any(value < 0 for _order, value in self.primitive_order_multiplicities)
+
+    @property
+    def passes_necessary_conditions(self) -> bool:
+        return bool(
+            not self.has_negative_torsion_dimension
+            and not self.divisibility_violations
+            and not self.has_negative_primitive_multiplicity
+        )
+
+    @property
+    def obstruction_label(self) -> str:
+        if self.has_negative_torsion_dimension:
+            return "below_free_rank"
+        if self.divisibility_violations:
+            return "divisibility_violation"
+        if self.has_negative_primitive_multiplicity:
+            return "negative_primitive_multiplicity"
+        if self.incomplete_primitive_orders:
+            return "passes_partial_necessary_tests"
+        return "passes_necessary_tests"
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "repeat_counts": self.repeat_counts,
+            "observed_dimensions": self.observed_dimensions,
+            "assumed_free_rank": self.assumed_free_rank,
+            "torsion_dimensions": self.torsion_dimensions,
+            "divisibility_violations": tuple(
+                violation.to_summary_dict() for violation in self.divisibility_violations
+            ),
+            "primitive_order_multiplicities": self.primitive_order_multiplicities,
+            "incomplete_primitive_orders": self.incomplete_primitive_orders,
+            "passes_necessary_conditions": self.passes_necessary_conditions,
+            "obstruction_label": self.obstruction_label,
+        }
+
+
+def _normalize_laurent_coefficient_terms(
+    coefficient_terms: Sequence[tuple[int, object]],
+) -> tuple[tuple[int, npt.NDArray[np.complex128]], ...]:
+    if not coefficient_terms:
+        raise ValueError("coefficient_terms must not be empty.")
+    combined: dict[int, npt.NDArray[np.complex128]] = {}
+    shape: tuple[int, int] | None = None
+    for raw_displacement, raw_matrix in coefficient_terms:
+        displacement = int(raw_displacement)
+        matrix = np.asarray(as_dense_array(raw_matrix), dtype=np.complex128)
+        if matrix.ndim != 2:
+            raise ValueError("every Laurent coefficient must be a matrix.")
+        if shape is None:
+            shape = matrix.shape
+        elif matrix.shape != shape:
+            raise ValueError("every Laurent coefficient must have the same shape.")
+        if not np.all(np.isfinite(matrix)):
+            raise ValueError("Laurent coefficients must contain finite values.")
+        if displacement in combined:
+            combined[displacement] = combined[displacement] + matrix
+        else:
+            combined[displacement] = matrix.copy()
+    return tuple(sorted(combined.items()))
+
+
+def laurent_polynomial_constraint_symbol(
+    coefficient_terms: Sequence[tuple[int, object]],
+    z: complex,
+) -> npt.NDArray[np.complex128]:
+    """Evaluate ``sum_d z**d B_d`` for one nonzero complex translation value."""
+    point = complex(z)
+    if not np.isfinite(point.real) or not np.isfinite(point.imag) or point == 0.0:
+        raise ValueError("z must be a finite nonzero complex number.")
+    normalized = _normalize_laurent_coefficient_terms(coefficient_terms)
+    symbol = np.zeros_like(normalized[0][1], dtype=np.complex128)
+    for displacement, matrix in normalized:
+        symbol += point**displacement * matrix
+    return symbol
+
+
+def _laurent_symbol_rank_gap(
+    symbol: npt.NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> tuple[int, int, float | None]:
+    singular_values = scipy_linalg.svdvals(symbol)
+    rank = int(np.sum(singular_values > tolerance))
+    nullity = int(symbol.shape[1] - rank)
+    positive = singular_values[singular_values > tolerance]
+    gap = None if positive.size == 0 else float(np.min(positive))
+    return rank, nullity, gap
+
+
+def _primitive_root_key(momentum_index: int, repeat_count: int) -> tuple[int, int]:
+    divisor = int(np.gcd(momentum_index, repeat_count))
+    order = repeat_count // divisor
+    numerator = (momentum_index // divisor) % order
+    return order, numerator
+
+
+def diagnose_laurent_polynomial_constraint_module(
+    coefficient_terms: Sequence[tuple[int, object]],
+    repeat_counts: Sequence[int] | npt.NDArray[np.integer],
+    *,
+    generic_sample_count: int = 12,
+    tolerance: float = 1e-10,
+) -> LaurentPolynomialConstraintModuleReport:
+    """Diagnose free and root-of-unity torsion sectors of ``B(z)``.
+
+    ``generic_sample_count`` non-root-of-unity complex points are used to find
+    the maximum symbol rank, which equals the rank over ``C(z)`` away from a
+    nongeneric algebraic set.  Periodic kernels are then evaluated exactly at
+    every root of unity for the requested repetition counts.
+    """
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    if generic_sample_count < 3:
+        raise ValueError("generic_sample_count must be at least three.")
+    normalized = _normalize_laurent_coefficient_terms(coefficient_terms)
+    counts = tuple(int(value) for value in np.asarray(repeat_counts).reshape(-1))
+    if not counts or any(value <= 0 for value in counts):
+        raise ValueError("repeat_counts must contain positive values.")
+    if len(set(counts)) != len(counts):
+        raise ValueError("repeat_counts must not contain duplicates.")
+
+    sample_ranks: list[int] = []
+    for sample_index in range(generic_sample_count):
+        radius = 0.71 if sample_index % 2 == 0 else 1.37
+        angle = np.sqrt(2.0) * (sample_index + 1)
+        z = radius * np.exp(1.0j * angle)
+        symbol = laurent_polynomial_constraint_symbol(normalized, z)
+        rank, _nullity, _gap = _laurent_symbol_rank_gap(symbol, tolerance=tolerance)
+        sample_ranks.append(rank)
+    generic_rank = max(sample_ranks)
+    n_rows, n_columns = normalized[0][1].shape
+    free_rank = n_columns - generic_rank
+    generic_rank_is_stable = sample_ranks.count(generic_rank) >= generic_sample_count // 2
+
+    periodic_points: list[LaurentPolynomialPeriodicPoint] = []
+    root_torsion: dict[tuple[int, int], int] = {}
+    for repeat_count in counts:
+        root_modes: list[LaurentPolynomialRootMode] = []
+        total_kernel = 0
+        for momentum_index in range(repeat_count):
+            root = np.exp(2.0j * np.pi * momentum_index / repeat_count)
+            symbol = laurent_polynomial_constraint_symbol(normalized, root)
+            _rank, nullity, gap = _laurent_symbol_rank_gap(symbol, tolerance=tolerance)
+            torsion = max(0, nullity - free_rank)
+            order, numerator = _primitive_root_key(momentum_index, repeat_count)
+            key = (order, numerator)
+            previous = root_torsion.get(key)
+            if previous is not None and previous != torsion:
+                raise ValueError(
+                    "inconsistent numerical nullity for the same primitive root; "
+                    "increase tolerance or inspect symbol conditioning."
+                )
+            root_torsion[key] = torsion
+            total_kernel += nullity
+            root_modes.append(
+                LaurentPolynomialRootMode(
+                    repeat_count=repeat_count,
+                    momentum_index=momentum_index,
+                    primitive_order=order,
+                    root=complex(root),
+                    kernel_dimension=nullity,
+                    free_dimension=free_rank,
+                    torsion_dimension=torsion,
+                    singular_gap=gap,
+                )
+            )
+        periodic_points.append(
+            LaurentPolynomialPeriodicPoint(
+                repeat_count=repeat_count,
+                total_kernel_dimension=total_kernel,
+                free_kernel_dimension=repeat_count * free_rank,
+                torsion_kernel_dimension=total_kernel - repeat_count * free_rank,
+                root_modes=tuple(root_modes),
+            )
+        )
+
+    by_order: dict[int, list[int]] = defaultdict(list)
+    for (order, _numerator), multiplicity in root_torsion.items():
+        if multiplicity > 0:
+            by_order[order].append(multiplicity)
+    torsion_orders = tuple(
+        LaurentPolynomialTorsionOrder(
+            primitive_order=order,
+            multiplicity=int(sum(multiplicities)),
+            primitive_root_count=len(multiplicities),
+        )
+        for order, multiplicities in sorted(by_order.items())
+    )
+    return LaurentPolynomialConstraintModuleReport(
+        n_rows=n_rows,
+        n_columns=n_columns,
+        displacements=tuple(displacement for displacement, _matrix in normalized),
+        generic_rank=generic_rank,
+        free_kernel_rank=free_rank,
+        generic_rank_sample_count=generic_sample_count,
+        generic_rank_is_stable=generic_rank_is_stable,
+        periodic_points=tuple(periodic_points),
+        torsion_orders=torsion_orders,
+        tolerance=tolerance,
+    )
+
+
+def diagnose_laurent_periodic_dimension_consistency(
+    repeat_counts: Sequence[int] | npt.NDArray[np.integer],
+    observed_dimensions: Sequence[int] | npt.NDArray[np.integer],
+    *,
+    assumed_free_rank: int = 0,
+) -> LaurentPeriodicDimensionConsistencyReport:
+    """Test necessary fixed-symbol constraints on observed periodic dimensions."""
+    counts = tuple(int(value) for value in np.asarray(repeat_counts).reshape(-1))
+    dimensions = tuple(int(value) for value in np.asarray(observed_dimensions).reshape(-1))
+    if not counts or len(counts) != len(dimensions):
+        raise ValueError("repeat_counts and observed_dimensions must have equal nonzero length.")
+    if any(value <= 0 for value in counts):
+        raise ValueError("repeat_counts must be positive.")
+    if any(value < 0 for value in dimensions):
+        raise ValueError("observed_dimensions must be non-negative.")
+    if len(set(counts)) != len(counts):
+        raise ValueError("repeat_counts must not contain duplicates.")
+    if assumed_free_rank < 0:
+        raise ValueError("assumed_free_rank must be non-negative.")
+
+    ordered = sorted(zip(counts, dimensions, strict=True))
+    counts = tuple(item[0] for item in ordered)
+    dimensions = tuple(item[1] for item in ordered)
+    torsion = tuple(
+        dimension - repeat_count * assumed_free_rank
+        for repeat_count, dimension in zip(counts, dimensions, strict=True)
+    )
+    torsion_by_count = dict(zip(counts, torsion, strict=True))
+
+    violations: list[LaurentDimensionDivisibilityViolation] = []
+    for divisor_count, divisor_torsion in zip(counts, torsion, strict=True):
+        for multiple_count, multiple_torsion in zip(counts, torsion, strict=True):
+            if multiple_count <= divisor_count or multiple_count % divisor_count:
+                continue
+            if multiple_torsion < divisor_torsion:
+                violations.append(
+                    LaurentDimensionDivisibilityViolation(
+                        divisor_repeat_count=divisor_count,
+                        multiple_repeat_count=multiple_count,
+                        divisor_torsion_dimension=divisor_torsion,
+                        multiple_torsion_dimension=multiple_torsion,
+                    )
+                )
+
+    primitive: dict[int, int] = {}
+    incomplete: list[int] = []
+    for repeat_count in counts:
+        proper_divisors = tuple(
+            divisor for divisor in range(1, repeat_count) if repeat_count % divisor == 0
+        )
+        if any(divisor not in torsion_by_count for divisor in proper_divisors):
+            incomplete.append(repeat_count)
+            continue
+        primitive[repeat_count] = torsion_by_count[repeat_count] - sum(
+            primitive[divisor] for divisor in proper_divisors
+        )
+
+    return LaurentPeriodicDimensionConsistencyReport(
+        repeat_counts=counts,
+        observed_dimensions=dimensions,
+        assumed_free_rank=int(assumed_free_rank),
+        torsion_dimensions=torsion,
+        divisibility_violations=tuple(violations),
+        primitive_order_multiplicities=tuple(sorted(primitive.items())),
+        incomplete_primitive_orders=tuple(incomplete),
+    )
