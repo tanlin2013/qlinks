@@ -313,3 +313,41 @@ def test_summarize_cage_record_stability_compares_preferred_representatives():
     assert summaries[1].requires_collective_cancellation is True
     assert np.isclose(summaries[0].inverse_participation_ratio, 0.5)
     assert summaries[0].formal_compatible_dimension == summaries[1].formal_compatible_dimension
+
+
+def test_fixed_manifold_compatibility_allows_internal_rotation() -> None:
+    from qlinks.caging import fixed_cage_manifold_compatibility
+
+    boundary = np.zeros((1, 3), dtype=np.complex128)
+    manifold = np.eye(3, dtype=np.complex128)[:, :2]
+    rotate_inside = np.array(
+        [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+        dtype=np.complex128,
+    )
+    couple_outside = np.array(
+        [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]],
+        dtype=np.complex128,
+    )
+    report = fixed_cage_manifold_compatibility(
+        boundary,
+        manifold,
+        (np.zeros_like(boundary), np.zeros_like(boundary)),
+        internal_perturbations=(rotate_inside, couple_outside),
+        tolerance=1.0e-12,
+    )
+    assert report.manifold_dimension == 2
+    assert report.compatible_dimension == 1
+    np.testing.assert_allclose(np.abs(report.compatible_coefficient_basis[:, 0]), [1.0, 0.0])
+
+
+def test_chiral_index_separates_index_and_paired_zero_modes() -> None:
+    from qlinks.caging import diagnose_chiral_index
+
+    block = np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]], dtype=np.complex128)
+    report = diagnose_chiral_index(block, trim_isolated_rows=False, tolerance=1.0e-12)
+    assert report.kernel_plus_dimension == 2
+    assert report.kernel_minus_dimension == 1
+    assert report.index == 1
+    assert report.index_protected_plus_zero_modes == 1
+    assert report.paired_zero_mode_count == 1
+    assert np.isclose(report.singular_gap, 1.0)

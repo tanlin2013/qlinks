@@ -1937,3 +1937,216 @@ def _aggregate_random_samples(
             np.median([sample.minimum_principal_overlap for sample in selected])
         ),
     )
+
+
+@dataclass(frozen=True, slots=True)
+class FixedCageManifoldCompatibilityReport:
+    """Exact perturbation space preserving a cage subspace as a whole.
+
+    The basis vectors may rotate inside the manifold.  A perturbation is
+    compatible when it neither leaks through the support boundary nor couples
+    the selected manifold to its orthogonal complement inside the support.
+    """
+
+    coefficient_field: CoefficientField
+    manifold_dimension: int
+    n_parameters: int
+    action_matrix: npt.NDArray[np.complex128]
+    constraint_matrix: npt.NDArray[np.float64] | npt.NDArray[np.complex128]
+    singular_values: npt.NDArray[np.float64]
+    rank: int
+    compatible_dimension: int
+    compatible_coefficient_basis: npt.NDArray[np.float64] | npt.NDArray[np.complex128]
+    perturbation_residuals: npt.NDArray[np.float64]
+    tolerance: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "manifold_dimension": self.manifold_dimension,
+            "n_parameters": self.n_parameters,
+            "compatible_dimension": self.compatible_dimension,
+            "rank": self.rank,
+            "perturbation_residuals": tuple(float(x) for x in self.perturbation_residuals),
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ChiralIndexReport:
+    """Finite-dimensional chiral index diagnostic for an off-diagonal block.
+
+    For ``K = [[0, A^†], [A, 0]]``, the index is
+    ``dim ker(A) - dim ker(A^†) = n_plus - n_minus``.  Only the signed index is
+    stable under arbitrary chiral-symmetric rank-preserving deformations; any
+    additional paired zero modes are interference-protected rather than
+    index-protected.
+    """
+
+    n_plus: int
+    n_minus: int
+    rank: int
+    kernel_plus_dimension: int
+    kernel_minus_dimension: int
+    index: int
+    index_protected_plus_zero_modes: int
+    index_protected_minus_zero_modes: int
+    paired_zero_mode_count: int
+    singular_gap: float | None
+    tolerance: float
+
+    @property
+    def total_zero_mode_count(self) -> int:
+        return self.kernel_plus_dimension + self.kernel_minus_dimension
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "n_plus": self.n_plus,
+            "n_minus": self.n_minus,
+            "rank": self.rank,
+            "kernel_plus_dimension": self.kernel_plus_dimension,
+            "kernel_minus_dimension": self.kernel_minus_dimension,
+            "index": self.index,
+            "index_protected_plus_zero_modes": self.index_protected_plus_zero_modes,
+            "index_protected_minus_zero_modes": self.index_protected_minus_zero_modes,
+            "paired_zero_mode_count": self.paired_zero_mode_count,
+            "singular_gap": self.singular_gap,
+            "tolerance": self.tolerance,
+        }
+
+
+def fixed_cage_manifold_compatibility(
+    boundary_matrix: object,
+    manifold_basis: npt.ArrayLike,
+    boundary_perturbations: Sequence[object],
+    *,
+    internal_perturbations: Sequence[object],
+    coefficient_field: CoefficientField = "real",
+    tolerance: float = 1e-10,
+) -> FixedCageManifoldCompatibilityReport:
+    """Find affine perturbations preserving an entire cage manifold exactly."""
+    if coefficient_field not in {"real", "complex"}:
+        raise ValueError("coefficient_field must be 'real' or 'complex'.")
+    if len(boundary_perturbations) == 0:
+        raise ValueError("boundary_perturbations must contain at least one matrix.")
+    if len(internal_perturbations) != len(boundary_perturbations):
+        raise ValueError("internal_perturbations must match boundary_perturbations.")
+    boundary = as_dense_array(boundary_matrix)
+    raw_basis = np.asarray(manifold_basis, dtype=np.complex128)
+    if raw_basis.ndim != 2 or raw_basis.shape[0] != boundary.shape[1]:
+        raise ValueError("manifold_basis must have one row per support configuration.")
+    basis, _ = np.linalg.qr(raw_basis)
+    if basis.shape[1] == 0:
+        raise ValueError("manifold_basis must contain at least one vector.")
+    complement = nullspace_svd(basis.conj().T, tolerance=tolerance)
+    columns = []
+    for delta_b, delta_a in zip(boundary_perturbations, internal_perturbations, strict=True):
+        dense_b = as_dense_array(delta_b)
+        dense_a = as_dense_array(delta_a)
+        if dense_b.shape != boundary.shape:
+            raise ValueError("boundary perturbation shape mismatch.")
+        if dense_a.shape != (boundary.shape[1], boundary.shape[1]):
+            raise ValueError("internal perturbation shape mismatch.")
+        columns.append(
+            np.concatenate(
+                [
+                    (dense_b @ basis).reshape(-1),
+                    (complement.conj().T @ dense_a @ basis).reshape(-1),
+                ]
+            )
+        )
+    action = np.column_stack(columns).astype(np.complex128, copy=False)
+    constraint = np.vstack([action.real, action.imag]) if coefficient_field == "real" else action
+    singular_values = scipy_linalg.svdvals(constraint).astype(np.float64, copy=False)
+    rank = int(np.sum(singular_values > tolerance))
+    compatible = nullspace_svd(constraint, tolerance=tolerance)
+    if coefficient_field == "real":
+        compatible = np.real_if_close(compatible, tol=1000).real
+    return FixedCageManifoldCompatibilityReport(
+        coefficient_field=coefficient_field,
+        manifold_dimension=int(basis.shape[1]),
+        n_parameters=len(boundary_perturbations),
+        action_matrix=action,
+        constraint_matrix=constraint,
+        singular_values=singular_values,
+        rank=rank,
+        compatible_dimension=int(compatible.shape[1]),
+        compatible_coefficient_basis=compatible,
+        perturbation_residuals=np.linalg.norm(action, axis=0).astype(np.float64),
+        tolerance=tolerance,
+    )
+
+
+def fixed_cage_manifold_compatibility_from_hamiltonians(
+    base_hamiltonian: object,
+    perturbations: Sequence[object],
+    *,
+    support: Sequence[int],
+    manifold_states: npt.ArrayLike,
+    coefficient_field: CoefficientField = "real",
+    tolerance: float = 1e-10,
+) -> FixedCageManifoldCompatibilityReport:
+    """Hamiltonian wrapper for :func:`fixed_cage_manifold_compatibility`."""
+    blocks = partition_cage_hamiltonian(base_hamiltonian, support)
+    support_array = np.asarray(blocks.support, dtype=np.int64)
+    states = np.asarray(manifold_states, dtype=np.complex128)
+    if states.ndim != 2:
+        raise ValueError("manifold_states must be a matrix with states in columns.")
+    if states.shape[0] == blocks.hilbert_size:
+        local_states = states[support_array, :]
+    elif states.shape[0] == support_array.size:
+        local_states = states
+    else:
+        raise ValueError("manifold_states row count must match Hilbert or support size.")
+    perturbation_blocks = tuple(partition_cage_hamiltonian(p, support) for p in perturbations)
+    return fixed_cage_manifold_compatibility(
+        blocks.boundary,
+        local_states,
+        tuple(item.boundary for item in perturbation_blocks),
+        internal_perturbations=tuple(item.internal for item in perturbation_blocks),
+        coefficient_field=coefficient_field,
+        tolerance=tolerance,
+    )
+
+
+def diagnose_chiral_index(
+    off_diagonal_block: object,
+    *,
+    trim_isolated_rows: bool = True,
+    trim_isolated_columns: bool = False,
+    tolerance: float = 1e-10,
+) -> ChiralIndexReport:
+    """Diagnose index-protected and paired zero modes of a chiral block ``A``.
+
+    Isolated rows are removed by default because a support-to-boundary block
+    often includes complementary configurations that are not adjacent to the
+    selected support.  Their trivial zero modes should not be mistaken for a
+    chiral index of the interference network.
+    """
+    matrix = as_dense_array(off_diagonal_block)
+    if matrix.ndim != 2:
+        raise ValueError("off_diagonal_block must be 2D.")
+    if trim_isolated_rows:
+        matrix = matrix[np.linalg.norm(matrix, axis=1) > tolerance, :]
+    if trim_isolated_columns:
+        matrix = matrix[:, np.linalg.norm(matrix, axis=0) > tolerance]
+    singular_values = scipy_linalg.svdvals(matrix).astype(np.float64, copy=False)
+    rank = int(np.sum(singular_values > tolerance))
+    n_minus, n_plus = matrix.shape
+    kernel_plus = int(n_plus - rank)
+    kernel_minus = int(n_minus - rank)
+    index = int(kernel_plus - kernel_minus)
+    nonzero = singular_values[singular_values > tolerance]
+    gap = None if nonzero.size == 0 else float(np.min(nonzero))
+    return ChiralIndexReport(
+        n_plus=int(n_plus),
+        n_minus=int(n_minus),
+        rank=rank,
+        kernel_plus_dimension=kernel_plus,
+        kernel_minus_dimension=kernel_minus,
+        index=index,
+        index_protected_plus_zero_modes=max(index, 0),
+        index_protected_minus_zero_modes=max(-index, 0),
+        paired_zero_mode_count=min(kernel_plus, kernel_minus),
+        singular_gap=gap,
+        tolerance=tolerance,
+    )
