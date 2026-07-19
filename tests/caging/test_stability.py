@@ -427,3 +427,37 @@ def test_regional_cage_quotient_isolates_collective_direction() -> None:
     assert report.quotient_dimension == 1
     assert report.inclusion_residual < 1.0e-12
     assert abs(np.vdot(report.quotient_basis[:, 0], collective)) > 1.0 - 1.0e-12
+
+
+def test_signed_boundary_holonomy_detects_z2_cycle_sign() -> None:
+    from qlinks.caging.stability import diagnose_signed_boundary_holonomy
+
+    positive = np.asarray([[1.0, 1.0], [1.0, 1.0]])
+    negative = np.asarray([[1.0, 1.0], [1.0, -1.0]])
+
+    positive_report = diagnose_signed_boundary_holonomy(positive)
+    negative_report = diagnose_signed_boundary_holonomy(negative)
+
+    assert positive_report.cycle_rank == 1
+    assert positive_report.sign_signature == (1,)
+    assert negative_report.cycle_rank == 1
+    assert negative_report.sign_signature == (-1,)
+    assert negative_report.negative_cycle_count == 1
+
+
+def test_relative_mod2_cycle_quotients_regional_cycles() -> None:
+    from qlinks.caging.stability import diagnose_relative_mod2_cycles
+
+    boundary = np.asarray([[1.0, 1.0], [1.0, 1.0]])
+
+    separated = diagnose_relative_mod2_cycles(boundary, regions=((0,), (1,)))
+    covered = diagnose_relative_mod2_cycles(boundary, regions=((0, 1),))
+
+    assert separated.full_cycle_dimension == 1
+    assert separated.regional_cycle_span_dimension == 0
+    assert separated.relative_cycle_dimension == 1
+    assert separated.relative_cycle_basis.shape == (1, 4)
+
+    assert covered.full_cycle_dimension == 1
+    assert covered.regional_cycle_span_dimension == 1
+    assert covered.relative_cycle_dimension == 0

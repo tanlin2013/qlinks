@@ -2435,3 +2435,294 @@ def regional_cage_quotient(
         quotient_projector=quotient_projector,
         tolerance=tolerance,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class SignedBoundaryCycle:
+    """Gauge-invariant signed holonomy on one bipartite boundary cycle."""
+
+    rows: tuple[int, ...]
+    columns: tuple[int, ...]
+    edge_indices: tuple[int, ...]
+    sign: int
+    log_absolute_holonomy: float
+
+
+@dataclass(frozen=True, slots=True)
+class SignedBoundaryHolonomyReport:
+    """Discrete and continuous cycle data of a support-to-boundary map."""
+
+    n_rows: int
+    n_columns: int
+    n_edges: int
+    n_components: int
+    cycle_rank: int
+    positive_cycle_count: int
+    negative_cycle_count: int
+    zero_edge_count: int
+    cycles: tuple[SignedBoundaryCycle, ...]
+    tolerance: float
+
+    @property
+    def sign_signature(self) -> tuple[int, ...]:
+        return tuple(cycle.sign for cycle in self.cycles)
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "n_rows": self.n_rows,
+            "n_columns": self.n_columns,
+            "n_edges": self.n_edges,
+            "n_components": self.n_components,
+            "cycle_rank": self.cycle_rank,
+            "positive_cycle_count": self.positive_cycle_count,
+            "negative_cycle_count": self.negative_cycle_count,
+            "zero_edge_count": self.zero_edge_count,
+            "sign_signature": self.sign_signature,
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class RelativeMod2CycleReport:
+    """Relative cycle space of a full boundary graph modulo regional cycles."""
+
+    full_cycle_dimension: int
+    regional_cycle_span_dimension: int
+    relative_cycle_dimension: int
+    n_edges: int
+    n_regions: int
+    full_cycle_basis: npt.NDArray[np.uint8]
+    regional_cycle_basis: npt.NDArray[np.uint8]
+    relative_cycle_basis: npt.NDArray[np.uint8]
+    edge_labels: tuple[tuple[int, int], ...]
+    tolerance: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "full_cycle_dimension": self.full_cycle_dimension,
+            "regional_cycle_span_dimension": self.regional_cycle_span_dimension,
+            "relative_cycle_dimension": self.relative_cycle_dimension,
+            "n_edges": self.n_edges,
+            "n_regions": self.n_regions,
+            "tolerance": self.tolerance,
+        }
+
+
+def _boundary_edge_labels(
+    boundary: npt.NDArray[np.complex128], tolerance: float
+) -> tuple[tuple[int, int], ...]:
+    return tuple(
+        (int(row), int(column))
+        for row, column in zip(*np.nonzero(np.abs(boundary) > tolerance), strict=True)
+    )
+
+
+def _fundamental_bipartite_cycles(
+    boundary: npt.NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> tuple[tuple[tuple[str, int], ...], ...]:
+    """Return a deterministic fundamental cycle basis of a bipartite graph."""
+    import networkx as nx
+
+    graph = nx.Graph()
+    for row in range(boundary.shape[0]):
+        graph.add_node(("r", row))
+    for column in range(boundary.shape[1]):
+        graph.add_node(("c", column))
+    for row, column in _boundary_edge_labels(boundary, tolerance):
+        graph.add_edge(("r", row), ("c", column))
+    cycles: list[tuple[tuple[str, int], ...]] = []
+    for component in sorted(
+        nx.connected_components(graph), key=lambda nodes: min(nodes) if nodes else ("", -1)
+    ):
+        subgraph = graph.subgraph(component)
+        root = min(component) if component else None
+        for cycle in nx.cycle_basis(subgraph, root=root):
+            if cycle:
+                start = min(range(len(cycle)), key=lambda index: cycle[index])
+                rotated = cycle[start:] + cycle[:start]
+                reversed_cycle = [rotated[0], *reversed(rotated[1:])]
+                canonical = min(tuple(rotated), tuple(reversed_cycle))
+                cycles.append(canonical)
+    return tuple(sorted(cycles))
+
+
+def diagnose_signed_boundary_holonomy(
+    boundary: object,
+    *,
+    tolerance: float = 1e-10,
+) -> SignedBoundaryHolonomyReport:
+    """Compute real signed holonomies on a fundamental cycle basis.
+
+    Row and column rescalings cancel from the alternating cycle product.  The
+    sign is therefore a discrete gauge invariant as long as no active edge
+    crosses zero.  Complex-valued matrices are rejected because their natural
+    invariant is a U(1) phase rather than a Z2 sign.
+    """
+    import networkx as nx
+
+    matrix = np.asarray(as_dense_array(boundary), dtype=np.complex128)
+    if matrix.ndim != 2:
+        raise ValueError("boundary must be a matrix.")
+    if np.max(np.abs(matrix.imag), initial=0.0) > tolerance:
+        raise ValueError("signed holonomy requires a real boundary matrix.")
+    real = matrix.real
+    edge_labels = _boundary_edge_labels(matrix, tolerance)
+    edge_to_index = {edge: index for index, edge in enumerate(edge_labels)}
+    cycles_raw = _fundamental_bipartite_cycles(matrix, tolerance=tolerance)
+    cycles: list[SignedBoundaryCycle] = []
+    for nodes in cycles_raw:
+        values: list[float] = []
+        cycle_edges: list[int] = []
+        rows: list[int] = []
+        columns: list[int] = []
+        for index, node in enumerate(nodes):
+            next_node = nodes[(index + 1) % len(nodes)]
+            if node[0] == "r":
+                row, column = node[1], next_node[1]
+            else:
+                row, column = next_node[1], node[1]
+            values.append(float(real[row, column]))
+            cycle_edges.append(edge_to_index[(row, column)])
+            if node[0] == "r":
+                rows.append(node[1])
+            else:
+                columns.append(node[1])
+        numerator = values[0::2]
+        denominator = values[1::2]
+        sign = int(np.prod(np.sign(numerator)) * np.prod(np.sign(denominator)))
+        log_abs = float(np.sum(np.log(np.abs(numerator))) - np.sum(np.log(np.abs(denominator))))
+        cycles.append(
+            SignedBoundaryCycle(
+                rows=tuple(rows),
+                columns=tuple(columns),
+                edge_indices=tuple(cycle_edges),
+                sign=sign,
+                log_absolute_holonomy=log_abs,
+            )
+        )
+    graph = nx.Graph()
+    graph.add_nodes_from(("r", row) for row in range(matrix.shape[0]))
+    graph.add_nodes_from(("c", column) for column in range(matrix.shape[1]))
+    graph.add_edges_from((("r", row), ("c", column)) for row, column in edge_labels)
+    components = nx.number_connected_components(graph)
+    cycle_rank = len(edge_labels) - graph.number_of_nodes() + components
+    return SignedBoundaryHolonomyReport(
+        n_rows=matrix.shape[0],
+        n_columns=matrix.shape[1],
+        n_edges=len(edge_labels),
+        n_components=components,
+        cycle_rank=int(cycle_rank),
+        positive_cycle_count=sum(cycle.sign > 0 for cycle in cycles),
+        negative_cycle_count=sum(cycle.sign < 0 for cycle in cycles),
+        zero_edge_count=int(np.sum(np.abs(real) <= tolerance)),
+        cycles=tuple(cycles),
+        tolerance=tolerance,
+    )
+
+
+def _gf2_row_reduce(matrix: npt.NDArray[np.uint8]) -> tuple[npt.NDArray[np.uint8], tuple[int, ...]]:
+    reduced = np.asarray(matrix, dtype=np.uint8).copy() % 2
+    if reduced.ndim != 2:
+        raise ValueError("GF(2) matrix must be two-dimensional.")
+    pivots: list[int] = []
+    row = 0
+    for column in range(reduced.shape[1]):
+        candidates = np.flatnonzero(reduced[row:, column])
+        if candidates.size == 0:
+            continue
+        pivot = row + int(candidates[0])
+        reduced[[row, pivot]] = reduced[[pivot, row]]
+        for other in range(reduced.shape[0]):
+            if other != row and reduced[other, column]:
+                reduced[other] ^= reduced[row]
+        pivots.append(column)
+        row += 1
+        if row == reduced.shape[0]:
+            break
+    return reduced[:row], tuple(pivots)
+
+
+def _cycle_incidence_basis(
+    boundary: npt.NDArray[np.complex128],
+    edge_to_index: dict[tuple[int, int], int],
+    *,
+    tolerance: float,
+) -> npt.NDArray[np.uint8]:
+    cycles = _fundamental_bipartite_cycles(boundary, tolerance=tolerance)
+    vectors = np.zeros((len(cycles), len(edge_to_index)), dtype=np.uint8)
+    for cycle_index, nodes in enumerate(cycles):
+        for index, node in enumerate(nodes):
+            next_node = nodes[(index + 1) % len(nodes)]
+            if node[0] == "r":
+                edge = (node[1], next_node[1])
+            else:
+                edge = (next_node[1], node[1])
+            vectors[cycle_index, edge_to_index[edge]] ^= 1
+    reduced, _ = _gf2_row_reduce(vectors)
+    return reduced
+
+
+def diagnose_relative_mod2_cycles(
+    boundary: object,
+    regions: Sequence[Sequence[int]],
+    *,
+    tolerance: float = 1e-10,
+) -> RelativeMod2CycleReport:
+    """Compute full boundary cycles modulo cycles internal to support regions.
+
+    ``regions`` contain column indices of the supplied boundary matrix.  Every
+    regional graph includes those columns and all incident boundary rows.  The
+    resulting quotient is a graph invariant over GF(2); it does not by itself
+    identify which quotient cycles participate in a particular cage vector.
+    """
+    matrix = np.asarray(as_dense_array(boundary), dtype=np.complex128)
+    if matrix.ndim != 2:
+        raise ValueError("boundary must be a matrix.")
+    edge_labels = _boundary_edge_labels(matrix, tolerance)
+    edge_to_index = {edge: index for index, edge in enumerate(edge_labels)}
+    full_basis = _cycle_incidence_basis(matrix, edge_to_index, tolerance=tolerance)
+    regional_vectors: list[npt.NDArray[np.uint8]] = []
+    for raw_region in regions:
+        columns = tuple(sorted({int(column) for column in raw_region}))
+        if any(column < 0 or column >= matrix.shape[1] for column in columns):
+            raise IndexError("regional column index is outside the boundary matrix.")
+        regional = np.zeros_like(matrix)
+        regional[:, columns] = matrix[:, columns]
+        basis = _cycle_incidence_basis(regional, edge_to_index, tolerance=tolerance)
+        regional_vectors.extend(basis)
+    if regional_vectors:
+        regional_basis, _ = _gf2_row_reduce(np.asarray(regional_vectors, dtype=np.uint8))
+    else:
+        regional_basis = np.zeros((0, len(edge_labels)), dtype=np.uint8)
+    combined = np.vstack((regional_basis, full_basis))
+    combined_reduced, _ = _gf2_row_reduce(combined)
+    relative_dimension = combined_reduced.shape[0] - regional_basis.shape[0]
+    quotient_rows: list[npt.NDArray[np.uint8]] = []
+    current = regional_basis.copy()
+    current_rank = current.shape[0]
+    for vector in full_basis:
+        candidate = np.vstack((current, vector[None, :]))
+        reduced, _ = _gf2_row_reduce(candidate)
+        if reduced.shape[0] > current_rank:
+            quotient_rows.append(vector.copy())
+            current = reduced
+            current_rank = reduced.shape[0]
+    relative_basis = (
+        np.asarray(quotient_rows, dtype=np.uint8)
+        if quotient_rows
+        else np.zeros((0, len(edge_labels)), dtype=np.uint8)
+    )
+    return RelativeMod2CycleReport(
+        full_cycle_dimension=int(full_basis.shape[0]),
+        regional_cycle_span_dimension=int(regional_basis.shape[0]),
+        relative_cycle_dimension=int(relative_dimension),
+        n_edges=len(edge_labels),
+        n_regions=len(regions),
+        full_cycle_basis=full_basis,
+        regional_cycle_basis=regional_basis,
+        relative_cycle_basis=relative_basis,
+        edge_labels=edge_labels,
+        tolerance=tolerance,
+    )
