@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass
 from typing import Literal, Sequence
 
@@ -9,7 +10,15 @@ import scipy.linalg as scipy_linalg
 import scipy.sparse as scipy_sparse
 
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
+from qlinks.caging.local_search import (
+    _qdm_flip_transition_from_action,
+    _qdm_global_plaquette_actions,
+)
 from qlinks.caging.nullspace import as_dense_array, nullspace_svd
+from qlinks.caging.periodic_sequence import (
+    SquareQDMPeriodicProductInstance,
+    SquareQDMPeriodicProductUnitCell,
+)
 
 CoefficientField = Literal["real", "complex"]
 
@@ -3413,5 +3422,580 @@ def scan_periodic_boundary_cancellation_scaling(
             displacement for displacement, _coupling in normalized_couplings
         ),
         points=tuple(scaling_points),
+        tolerance=tolerance,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class QDMExplicitProductSupport:
+    """Materialized finite support of a factorized periodic QDM cage.
+
+    This object is intentionally limited to moderate product supports.  It is
+    used to verify the physical finite-size boundary map without enumerating the
+    full constrained Hilbert space.
+    """
+
+    configs: npt.NDArray[np.int64]
+    amplitudes: npt.NDArray[np.complex128]
+    block_support_indices: npt.NDArray[np.int64]
+
+    def __post_init__(self) -> None:
+        configs = np.asarray(self.configs, dtype=np.int64)
+        amplitudes = np.asarray(self.amplitudes, dtype=np.complex128)
+        indices = np.asarray(self.block_support_indices, dtype=np.int64)
+        if configs.ndim != 2:
+            raise ValueError("configs must be two-dimensional.")
+        if amplitudes.ndim != 1 or amplitudes.size != configs.shape[0]:
+            raise ValueError("amplitudes must have one entry per support config.")
+        if indices.ndim != 2 or indices.shape[0] != configs.shape[0]:
+            raise ValueError("block_support_indices must align with configs.")
+        norm = float(np.linalg.norm(amplitudes))
+        if norm == 0.0:
+            raise ValueError("amplitudes must have nonzero norm.")
+        object.__setattr__(self, "configs", configs.copy())
+        object.__setattr__(self, "amplitudes", amplitudes / norm)
+        object.__setattr__(self, "block_support_indices", indices.copy())
+
+    @property
+    def support_size(self) -> int:
+        return int(self.configs.shape[0])
+
+    @property
+    def n_blocks(self) -> int:
+        return int(self.block_support_indices.shape[1])
+
+
+@dataclass(frozen=True, slots=True)
+class QDMExplicitSupportBoundaryMap:
+    """One-hop QDM boundary map built from an explicit support only."""
+
+    support_configs: npt.NDArray[np.int64]
+    shell_configs: npt.NDArray[np.int64]
+    boundary: scipy_sparse.csr_matrix
+
+    @property
+    def support_size(self) -> int:
+        return int(self.support_configs.shape[0])
+
+    @property
+    def shell_size(self) -> int:
+        return int(self.shell_configs.shape[0])
+
+    @property
+    def n_transitions(self) -> int:
+        return int(self.boundary.nnz)
+
+
+@dataclass(frozen=True, slots=True)
+class QDMLocalKineticCompatibilityReport:
+    """Compatibility of independent plaquette kinetic couplings for one state."""
+
+    plaquette_ids: tuple[int, ...]
+    obstruction_matrix: npt.NDArray[np.complex128]
+    singular_values: npt.NDArray[np.float64]
+    rank: int
+    compatible_dimension: int
+    active_plaquette_ids: tuple[int, ...]
+    equal_coupling_pairs: tuple[tuple[int, int], ...]
+    singular_gap: float | None
+    tolerance: float
+
+    @property
+    def compatible_fraction(self) -> float:
+        if not self.plaquette_ids:
+            return 1.0
+        return float(self.compatible_dimension / len(self.plaquette_ids))
+
+    @property
+    def constraint_density(self) -> float:
+        if not self.plaquette_ids:
+            return 0.0
+        return float(self.rank / len(self.plaquette_ids))
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "n_plaquette_terms": len(self.plaquette_ids),
+            "n_active_leakage_plaquettes": len(self.active_plaquette_ids),
+            "rank": self.rank,
+            "compatible_dimension": self.compatible_dimension,
+            "compatible_fraction": self.compatible_fraction,
+            "constraint_density": self.constraint_density,
+            "equal_coupling_pairs": self.equal_coupling_pairs,
+            "singular_gap": self.singular_gap,
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class QDMLocalPotentialCompatibilityReport:
+    """Uniform-on-support test for independent plaquette potential couplings."""
+
+    plaquette_ids: tuple[int, ...]
+    obstruction_matrix: npt.NDArray[np.complex128]
+    rank: int
+    compatible_dimension: int
+    varying_plaquette_ids: tuple[int, ...]
+    tolerance: float
+
+    @property
+    def compatible_fraction(self) -> float:
+        if not self.plaquette_ids:
+            return 1.0
+        return float(self.compatible_dimension / len(self.plaquette_ids))
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "n_plaquette_terms": len(self.plaquette_ids),
+            "rank": self.rank,
+            "compatible_dimension": self.compatible_dimension,
+            "compatible_fraction": self.compatible_fraction,
+            "varying_plaquette_ids": self.varying_plaquette_ids,
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class QDMPhysicalCancellationScalingPoint:
+    """Exact finite-support cancellation data for one periodic product member."""
+
+    repeats: int
+    system_size: tuple[int, int]
+    n_blocks: int
+    support_size: int
+    shell_size: int
+    n_boundary_transitions: int
+    boundary_rank: int
+    boundary_nullity: int
+    interference_gap: float | None
+    product_state_boundary_residual: float
+    product_state_kernel_weight: float
+    kinetic_compatibility: QDMLocalKineticCompatibilityReport
+    potential_compatibility: QDMLocalPotentialCompatibilityReport
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "repeats": self.repeats,
+            "system_size": self.system_size,
+            "n_blocks": self.n_blocks,
+            "support_size": self.support_size,
+            "shell_size": self.shell_size,
+            "n_boundary_transitions": self.n_boundary_transitions,
+            "boundary_rank": self.boundary_rank,
+            "boundary_nullity": self.boundary_nullity,
+            "interference_gap": self.interference_gap,
+            "product_state_boundary_residual": self.product_state_boundary_residual,
+            "product_state_kernel_weight": self.product_state_kernel_weight,
+            "kinetic_compatible_dimension": (self.kinetic_compatibility.compatible_dimension),
+            "kinetic_constraint_rank": self.kinetic_compatibility.rank,
+            "kinetic_compatible_fraction": (self.kinetic_compatibility.compatible_fraction),
+            "kinetic_equal_coupling_pairs": (self.kinetic_compatibility.equal_coupling_pairs),
+            "potential_compatible_dimension": (self.potential_compatibility.compatible_dimension),
+            "potential_constraint_rank": self.potential_compatibility.rank,
+            "potential_compatible_fraction": (self.potential_compatibility.compatible_fraction),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class QDMPhysicalCancellationScalingReport:
+    """Physical finite-size scaling for a certified periodic QDM product cage."""
+
+    repeat_axis: str
+    unit_cell_size: tuple[int, int]
+    support_size_per_unit_cell: int
+    points: tuple[QDMPhysicalCancellationScalingPoint, ...]
+    tolerance: float
+
+    @property
+    def repeat_counts(self) -> npt.NDArray[np.int64]:
+        return np.asarray([point.repeats for point in self.points], dtype=np.int64)
+
+    @property
+    def boundary_nullities(self) -> npt.NDArray[np.int64]:
+        return np.asarray([point.boundary_nullity for point in self.points], dtype=np.int64)
+
+    @property
+    def interference_gaps(self) -> npt.NDArray[np.float64]:
+        return np.asarray(
+            [
+                np.nan if point.interference_gap is None else point.interference_gap
+                for point in self.points
+            ],
+            dtype=np.float64,
+        )
+
+    @property
+    def kinetic_constraint_ranks(self) -> npt.NDArray[np.int64]:
+        return np.asarray(
+            [point.kinetic_compatibility.rank for point in self.points],
+            dtype=np.int64,
+        )
+
+    @property
+    def kinetic_compatible_fractions(self) -> npt.NDArray[np.float64]:
+        return np.asarray(
+            [point.kinetic_compatibility.compatible_fraction for point in self.points],
+            dtype=np.float64,
+        )
+
+    @property
+    def has_unique_product_kernel(self) -> bool:
+        return bool(
+            self.points
+            and all(
+                point.boundary_nullity == 1
+                and point.product_state_kernel_weight >= 1.0 - 10.0 * self.tolerance
+                for point in self.points
+            )
+        )
+
+    @property
+    def interference_gap_exponent(self) -> float | None:
+        return estimate_power_law_exponent(
+            self.repeat_counts,
+            self.interference_gaps,
+        )
+
+    @property
+    def kinetic_constraint_rank_exponent(self) -> float | None:
+        return estimate_power_law_exponent(
+            self.repeat_counts,
+            self.kinetic_constraint_ranks,
+        )
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "repeat_axis": self.repeat_axis,
+            "unit_cell_size": self.unit_cell_size,
+            "support_size_per_unit_cell": self.support_size_per_unit_cell,
+            "has_unique_product_kernel": self.has_unique_product_kernel,
+            "interference_gap_exponent": self.interference_gap_exponent,
+            "kinetic_constraint_rank_exponent": (self.kinetic_constraint_rank_exponent),
+            "points": tuple(point.to_summary_dict() for point in self.points),
+            "tolerance": self.tolerance,
+        }
+
+
+def materialize_square_qdm_periodic_product_support(
+    instance: SquareQDMPeriodicProductInstance,
+    *,
+    max_support_size: int = 4096,
+) -> QDMExplicitProductSupport:
+    """Materialize a moderate finite periodic-product support exactly."""
+    if max_support_size < 1:
+        raise ValueError("max_support_size must be positive.")
+    support_size = int(instance.formal_support_size)
+    if support_size > max_support_size:
+        raise ValueError(
+            "formal product support exceeds max_support_size: "
+            f"{support_size} > {max_support_size}."
+        )
+
+    blocks = tuple(instance.blocks)
+    support_ranges = tuple(range(int(block.support_size)) for block in blocks)
+    support_tuples = tuple(itertools.product(*support_ranges))
+    n_links = int(instance.model.lattice.num_links)
+    configs = np.zeros((support_size, n_links), dtype=np.int64)
+    amplitudes = np.ones(support_size, dtype=np.complex128)
+    block_indices = np.zeros((support_size, len(blocks)), dtype=np.int64)
+    exterior_ids = np.asarray(instance.padding.exterior_link_ids, dtype=np.int64)
+    exterior_config = np.asarray(instance.padding.exterior_config, dtype=np.int64)
+
+    for row_index, support_tuple in enumerate(support_tuples):
+        if exterior_ids.size:
+            configs[row_index, exterior_ids] = exterior_config
+        for block_position, (block, support_index) in enumerate(
+            zip(blocks, support_tuple, strict=True)
+        ):
+            index = int(support_index)
+            configs[row_index, np.asarray(block.link_ids, dtype=np.int64)] = block.support_configs[
+                index
+            ]
+            amplitudes[row_index] *= complex(block.amplitudes[index])
+            block_indices[row_index, block_position] = index
+
+    keys = {tuple(int(value) for value in row) for row in configs}
+    if len(keys) != support_size:
+        raise ValueError("materialized product support contains duplicate configurations.")
+    return QDMExplicitProductSupport(
+        configs=configs,
+        amplitudes=amplitudes,
+        block_support_indices=block_indices,
+    )
+
+
+def build_qdm_explicit_support_boundary(
+    model: object,
+    support_configs: object,
+) -> QDMExplicitSupportBoundaryMap:
+    """Build the support-to-exterior QDM kinetic map without a global basis."""
+    configs = np.asarray(support_configs, dtype=np.int64)
+    if configs.ndim != 2:
+        raise ValueError("support_configs must be two-dimensional.")
+    support_key_set = {tuple(int(value) for value in row) for row in configs}
+    if len(support_key_set) != configs.shape[0]:
+        raise ValueError("support_configs must not contain duplicates.")
+
+    raw_entries: list[tuple[tuple[int, ...], int, complex]] = []
+    shell_keys: set[tuple[int, ...]] = set()
+    for source_index, source_config in enumerate(configs):
+        for action in _qdm_global_plaquette_actions(model):
+            transition = _qdm_flip_transition_from_action(source_config, action)
+            if transition is None:
+                continue
+            final_config, coefficient = transition
+            final_key = tuple(int(value) for value in final_config)
+            if final_key in support_key_set:
+                continue
+            shell_keys.add(final_key)
+            raw_entries.append((final_key, source_index, complex(coefficient)))
+
+    ordered_shell_keys = tuple(sorted(shell_keys))
+    row_by_key = {key: row for row, key in enumerate(ordered_shell_keys)}
+    rows = [row_by_key[key] for key, _column, _value in raw_entries]
+    columns = [column for _key, column, _value in raw_entries]
+    values = [value for _key, _column, value in raw_entries]
+    boundary = scipy_sparse.coo_matrix(
+        (values, (rows, columns)),
+        shape=(len(ordered_shell_keys), configs.shape[0]),
+        dtype=np.complex128,
+    ).tocsr()
+    shell_configs = (
+        np.asarray(ordered_shell_keys, dtype=np.int64)
+        if ordered_shell_keys
+        else np.empty((0, configs.shape[1]), dtype=np.int64)
+    )
+    return QDMExplicitSupportBoundaryMap(
+        support_configs=configs.copy(),
+        shell_configs=shell_configs,
+        boundary=boundary,
+    )
+
+
+def _sparse_boundary_singular_data(
+    boundary: scipy_sparse.csr_matrix,
+    *,
+    tolerance: float,
+) -> tuple[int, int, float | None, npt.NDArray[np.complex128]]:
+    # Direct SVD is deliberately used here.  Forming B^\dagger B squares the
+    # condition number and turned exact cancellation modes into spurious
+    # singular values of order sqrt(machine epsilon) in the QDM examples.
+    dense = np.asarray(boundary.toarray(), dtype=np.complex128)
+    _left, singular_values, right_vectors_h = scipy_linalg.svd(
+        dense,
+        full_matrices=boundary.shape[0] < boundary.shape[1],
+    )
+    rank = int(np.sum(singular_values > tolerance))
+    nullity = int(boundary.shape[1] - rank)
+    kernel = right_vectors_h.conj().T[:, rank:].astype(np.complex128, copy=False)
+    positive = singular_values[singular_values > tolerance]
+    gap = None if positive.size == 0 else float(np.min(positive))
+    return rank, nullity, gap, kernel
+
+
+def diagnose_qdm_local_kinetic_compatibility(
+    model: object,
+    support_configs: object,
+    state: object,
+    *,
+    boundary_map: QDMExplicitSupportBoundaryMap | None = None,
+    tolerance: float = 1e-10,
+) -> QDMLocalKineticCompatibilityReport:
+    """Find multiplicative plaquette-kinetic perturbations preserving one cage.
+
+    Each coefficient independently rescales the kinetic operator already stored
+    on one model plaquette.  For the uniform unit-coupling QDM this is the usual
+    additive local-coupling basis.
+    """
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    configs = np.asarray(support_configs, dtype=np.int64)
+    amplitudes = np.asarray(state, dtype=np.complex128).reshape(-1)
+    if amplitudes.size != configs.shape[0]:
+        raise ValueError("state size must match support_configs rows.")
+    norm = float(np.linalg.norm(amplitudes))
+    if norm == 0.0:
+        raise ValueError("state must have nonzero norm.")
+    amplitudes = amplitudes / norm
+    boundary_report = (
+        build_qdm_explicit_support_boundary(model, configs)
+        if boundary_map is None
+        else boundary_map
+    )
+    support_keys = {tuple(int(value) for value in row) for row in configs}
+    shell_row_by_key = {
+        tuple(int(value) for value in row): index
+        for index, row in enumerate(boundary_report.shell_configs)
+    }
+    actions = tuple(_qdm_global_plaquette_actions(model))
+    obstruction = np.zeros(
+        (boundary_report.shell_size, len(actions)),
+        dtype=np.complex128,
+    )
+    for source_config, amplitude in zip(configs, amplitudes, strict=True):
+        for action_index, action in enumerate(actions):
+            transition = _qdm_flip_transition_from_action(source_config, action)
+            if transition is None:
+                continue
+            final_config, coefficient = transition
+            final_key = tuple(int(value) for value in final_config)
+            if final_key in support_keys:
+                continue
+            obstruction[shell_row_by_key[final_key], action_index] += complex(
+                coefficient
+            ) * complex(amplitude)
+
+    singular_values = scipy_linalg.svdvals(obstruction)
+    rank = int(np.sum(singular_values > tolerance))
+    column_norms = np.linalg.norm(obstruction, axis=0)
+    active_indices = tuple(int(index) for index in np.flatnonzero(column_norms > tolerance))
+    equal_pairs: list[tuple[int, int]] = []
+    used: set[int] = set()
+    for left in active_indices:
+        if left in used:
+            continue
+        left_column = obstruction[:, left]
+        for right in active_indices:
+            if right <= left or right in used:
+                continue
+            right_column = obstruction[:, right]
+            scale = max(
+                1.0,
+                float(np.linalg.norm(left_column)),
+                float(np.linalg.norm(right_column)),
+            )
+            if np.linalg.norm(left_column + right_column) <= tolerance * scale:
+                equal_pairs.append(
+                    (
+                        int(actions[left].plaquette_id),
+                        int(actions[right].plaquette_id),
+                    )
+                )
+                used.add(left)
+                used.add(right)
+                break
+
+    positive = singular_values[singular_values > tolerance]
+    return QDMLocalKineticCompatibilityReport(
+        plaquette_ids=tuple(int(action.plaquette_id) for action in actions),
+        obstruction_matrix=obstruction,
+        singular_values=np.asarray(singular_values, dtype=np.float64),
+        rank=rank,
+        compatible_dimension=int(len(actions) - rank),
+        active_plaquette_ids=tuple(int(actions[index].plaquette_id) for index in active_indices),
+        equal_coupling_pairs=tuple(equal_pairs),
+        singular_gap=None if positive.size == 0 else float(np.min(positive)),
+        tolerance=tolerance,
+    )
+
+
+def diagnose_qdm_local_potential_compatibility(
+    model: object,
+    support_configs: object,
+    *,
+    tolerance: float = 1e-10,
+) -> QDMLocalPotentialCompatibilityReport:
+    """Find plaquette-potential perturbations uniform on an explicit support."""
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    configs = np.asarray(support_configs, dtype=np.int64)
+    if configs.ndim != 2:
+        raise ValueError("support_configs must be two-dimensional.")
+    actions = tuple(_qdm_global_plaquette_actions(model))
+    activity = np.zeros((configs.shape[0], len(actions)), dtype=np.complex128)
+    for row_index, config in enumerate(configs):
+        for action_index, action in enumerate(actions):
+            if _qdm_flip_transition_from_action(config, action) is not None:
+                activity[row_index, action_index] = 1.0
+    obstruction = activity - activity[:1]
+    singular_values = scipy_linalg.svdvals(obstruction)
+    rank = int(np.sum(singular_values > tolerance))
+    varying = tuple(
+        int(actions[index].plaquette_id)
+        for index in np.flatnonzero(np.linalg.norm(obstruction, axis=0) > tolerance)
+    )
+    return QDMLocalPotentialCompatibilityReport(
+        plaquette_ids=tuple(int(action.plaquette_id) for action in actions),
+        obstruction_matrix=obstruction,
+        rank=rank,
+        compatible_dimension=int(len(actions) - rank),
+        varying_plaquette_ids=varying,
+        tolerance=tolerance,
+    )
+
+
+def scan_square_qdm_periodic_product_cancellation_scaling(
+    unit_cell: SquareQDMPeriodicProductUnitCell,
+    repeat_counts: Sequence[int] | npt.NDArray[np.integer],
+    *,
+    max_support_size: int = 1024,
+    tolerance: float = 1e-10,
+) -> QDMPhysicalCancellationScalingReport:
+    """Extract exact physical boundary maps for finite periodic embeddings.
+
+    Unlike :func:`scan_periodic_boundary_cancellation_scaling`, this routine
+    materializes the tensor-product support of the actual square-QDM sequence.
+    It is therefore restricted to moderate repeats but includes every physical
+    plaquette flip and every seam transition of the finite torus.
+    """
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    counts = tuple(int(value) for value in np.asarray(repeat_counts).reshape(-1))
+    if not counts or any(value <= 0 for value in counts):
+        raise ValueError("repeat_counts must contain positive integers.")
+    if len(set(counts)) != len(counts):
+        raise ValueError("repeat_counts must not contain duplicates.")
+
+    points: list[QDMPhysicalCancellationScalingPoint] = []
+    for repeats in counts:
+        instance = unit_cell.instantiate(repeats)
+        support = materialize_square_qdm_periodic_product_support(
+            instance,
+            max_support_size=max_support_size,
+        )
+        boundary_map = build_qdm_explicit_support_boundary(
+            instance.model,
+            support.configs,
+        )
+        rank, nullity, gap, kernel = _sparse_boundary_singular_data(
+            boundary_map.boundary,
+            tolerance=tolerance,
+        )
+        boundary_residual = float(np.linalg.norm(boundary_map.boundary @ support.amplitudes))
+        kernel_weight = float(np.linalg.norm(kernel.conj().T @ support.amplitudes) ** 2)
+        kinetic = diagnose_qdm_local_kinetic_compatibility(
+            instance.model,
+            support.configs,
+            support.amplitudes,
+            boundary_map=boundary_map,
+            tolerance=tolerance,
+        )
+        potential = diagnose_qdm_local_potential_compatibility(
+            instance.model,
+            support.configs,
+            tolerance=tolerance,
+        )
+        points.append(
+            QDMPhysicalCancellationScalingPoint(
+                repeats=repeats,
+                system_size=(int(instance.model.lx), int(instance.model.ly)),
+                n_blocks=len(instance.blocks),
+                support_size=support.support_size,
+                shell_size=boundary_map.shell_size,
+                n_boundary_transitions=boundary_map.n_transitions,
+                boundary_rank=rank,
+                boundary_nullity=nullity,
+                interference_gap=gap,
+                product_state_boundary_residual=boundary_residual,
+                product_state_kernel_weight=kernel_weight,
+                kinetic_compatibility=kinetic,
+                potential_compatibility=potential,
+            )
+        )
+
+    return QDMPhysicalCancellationScalingReport(
+        repeat_axis=str(unit_cell.repeat_axis),
+        unit_cell_size=(int(unit_cell.model.lx), int(unit_cell.model.ly)),
+        support_size_per_unit_cell=int(unit_cell.support_size_per_unit_cell),
+        points=tuple(points),
         tolerance=tolerance,
     )

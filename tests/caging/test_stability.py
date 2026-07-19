@@ -636,3 +636,98 @@ def test_periodic_boundary_scaling_rejects_coupling_that_breaks_regional_circuit
             coupling_terms=((0, bad_coupling),),
             tolerance=1.0e-12,
         )
+
+
+def _physical_square_qdm_periodic_cage_unit_cell():
+    from qlinks.caging import (
+        LocalQDMCageSearchConfig,
+        RobustQDMLocalCageSearchConfig,
+        SquareQDMPeriodicProductUnitCell,
+        robust_qdm_local_cage_search,
+    )
+    from qlinks.models import SquareQDMModel
+
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    config = RobustQDMLocalCageSearchConfig(
+        local_config=LocalQDMCageSearchConfig(
+            halo_layers=0,
+            boundary_mode="relaxed",
+            prune_inactive_local_basis_states=True,
+            tolerance=1.0e-10,
+            degenerate_basis_strategy="ipr",
+            ipr_random_seed=1234,
+        ),
+        region_strategies=("stripe",),
+        stripe_widths=(1,),
+        stripe_directions=(0, 1),
+        max_regions_per_strategy=None,
+        block_signatures=((0, 2),),
+        max_records_per_region=2,
+        min_blocks=2,
+        max_blocks=None,
+        max_product_support_size=2048,
+        max_paddings_per_stage=100,
+        max_paddings_per_packing=10,
+        include_sectors=True,
+        padding_stages=("static",),
+        tolerance=1.0e-9,
+        store_full_states=False,
+    )
+    certified, context = robust_qdm_local_cage_search(
+        model,
+        config=config,
+        return_context=True,
+    )
+    return SquareQDMPeriodicProductUnitCell.from_padding(
+        model,
+        context.blocks,
+        certified.reports[4].padding,
+        repeat_axis="x",
+    )
+
+
+def test_physical_periodic_product_cancellation_scaling_uses_actual_qdm_flips() -> None:
+    from qlinks.caging import scan_square_qdm_periodic_product_cancellation_scaling
+
+    report = scan_square_qdm_periodic_product_cancellation_scaling(
+        _physical_square_qdm_periodic_cage_unit_cell(),
+        (1, 2, 3),
+        max_support_size=64,
+        tolerance=1.0e-9,
+    )
+
+    assert report.has_unique_product_kernel
+    np.testing.assert_array_equal(report.boundary_nullities, [1, 1, 1])
+    np.testing.assert_allclose(report.interference_gaps, 2.0)
+    np.testing.assert_array_equal(report.kinetic_constraint_ranks, [2, 4, 6])
+    np.testing.assert_allclose(report.kinetic_compatible_fractions, 7.0 / 8.0)
+    assert np.isclose(report.interference_gap_exponent, 0.0, atol=1.0e-12)
+    assert np.isclose(report.kinetic_constraint_rank_exponent, 1.0, atol=1.0e-12)
+    for point in report.points:
+        assert point.product_state_boundary_residual < 1.0e-12
+        assert point.product_state_kernel_weight > 1.0 - 1.0e-12
+        assert point.potential_compatibility.rank == 0
+        assert point.kinetic_compatibility.rank == 2 * point.repeats
+        assert len(point.kinetic_compatibility.equal_coupling_pairs) == 2 * point.repeats
+
+
+def test_periodic_product_support_materialization_respects_size_cap() -> None:
+    import pytest
+
+    from qlinks.caging import materialize_square_qdm_periodic_product_support
+
+    instance = _physical_square_qdm_periodic_cage_unit_cell().instantiate(3)
+    with pytest.raises(ValueError, match="exceeds max_support_size"):
+        materialize_square_qdm_periodic_product_support(
+            instance,
+            max_support_size=63,
+        )
