@@ -351,3 +351,56 @@ def test_chiral_index_separates_index_and_paired_zero_modes() -> None:
     assert report.index_protected_plus_zero_modes == 1
     assert report.paired_zero_mode_count == 1
     assert np.isclose(report.singular_gap, 1.0)
+
+
+def test_locality_restricted_chiral_profile_detects_regional_zero_mode() -> None:
+    from qlinks.caging import diagnose_locality_restricted_chiral_profile
+
+    hamiltonian = np.array(
+        [
+            [0.0, 0.0, 1.0, 1.0],
+            [0.0, 0.0, 1.0, 1.0],
+            [1.0, 1.0, 0.0, 0.0],
+            [1.0, 1.0, 0.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    state = np.array([1.0, -1.0, 0.0, 0.0], dtype=np.complex128) / np.sqrt(2.0)
+    report = diagnose_locality_restricted_chiral_profile(
+        hamiltonian,
+        ((0, 1),),
+        target_state=state,
+        tolerance=1.0e-12,
+    )
+
+    assert report.n_regional_target_zero_modes == 1
+    assert report.entries[0].chiral_index.kernel_plus_dimension == 1
+    assert report.entries[0].chiral_index.index_protected_plus_zero_modes == 0
+    assert report.entries[0].chiral_index.paired_zero_mode_count == 1
+    assert report.entries[0].target_boundary_residual < 1.0e-12
+
+
+def test_regional_chiral_kernel_span_finds_uncaptured_collective_mode() -> None:
+    from qlinks.caging import regional_chiral_kernel_span
+
+    hamiltonian = np.zeros((6, 6), dtype=np.complex128)
+    hamiltonian[4, 0] = hamiltonian[0, 4] = 1.0
+    hamiltonian[4, 1] = hamiltonian[1, 4] = 1.0
+    hamiltonian[5, 2] = hamiltonian[2, 5] = 1.0
+    hamiltonian[5, 3] = hamiltonian[3, 5] = 1.0
+    local_a = np.array([1.0, -1.0, 0.0, 0.0, 0.0, 0.0]) / np.sqrt(2.0)
+    local_b = np.array([0.0, 0.0, 1.0, -1.0, 0.0, 0.0]) / np.sqrt(2.0)
+    collective = np.array([1.0, 1.0, -1.0, -1.0, 0.0, 0.0]) / 2.0
+    target = np.column_stack([local_a, local_b, collective])
+
+    report = regional_chiral_kernel_span(
+        hamiltonian,
+        ((0, 1), (2, 3)),
+        target,
+        tolerance=1.0e-12,
+    )
+
+    assert report.regional_span_dimension == 2
+    assert report.target_dimension == 3
+    assert report.captured_target_dimension == 2
+    assert report.uncaptured_target_dimension == 1

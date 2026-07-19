@@ -2150,3 +2150,200 @@ def diagnose_chiral_index(
         singular_gap=gap,
         tolerance=tolerance,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class RegionalChiralIndexEntry:
+    """Chiral-index and zero-mode data for one selected support region."""
+
+    region_index: int
+    support: tuple[int, ...]
+    active_boundary_size: int
+    chiral_index: ChiralIndexReport
+    target_weight: float | None
+    target_boundary_residual: float | None
+    target_is_regional_zero_mode: bool | None
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "region_index": self.region_index,
+            "support_size": len(self.support),
+            "active_boundary_size": self.active_boundary_size,
+            "index": self.chiral_index.index,
+            "kernel_plus_dimension": self.chiral_index.kernel_plus_dimension,
+            "kernel_minus_dimension": self.chiral_index.kernel_minus_dimension,
+            "index_protected_plus_zero_modes": (self.chiral_index.index_protected_plus_zero_modes),
+            "paired_zero_mode_count": self.chiral_index.paired_zero_mode_count,
+            "target_weight": self.target_weight,
+            "target_boundary_residual": self.target_boundary_residual,
+            "target_is_regional_zero_mode": self.target_is_regional_zero_mode,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LocalityRestrictedChiralProfileReport:
+    """Regional chiral profile for a state under a prescribed locality cover."""
+
+    entries: tuple[RegionalChiralIndexEntry, ...]
+    covered_support: tuple[int, ...]
+    uncovered_target_weight: float | None
+    n_regional_target_zero_modes: int
+    tolerance: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "n_regions": len(self.entries),
+            "covered_support_size": len(self.covered_support),
+            "uncovered_target_weight": self.uncovered_target_weight,
+            "n_regional_target_zero_modes": self.n_regional_target_zero_modes,
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class RegionalChiralKernelSpanReport:
+    """Basis-independent overlap of a target manifold with regional kernels."""
+
+    n_regions: int
+    regional_raw_kernel_dimension: int
+    regional_span_dimension: int
+    target_dimension: int
+    principal_overlaps: npt.NDArray[np.float64]
+    captured_target_dimension: int
+    uncaptured_target_dimension: int
+    target_projector_residual: float
+    tolerance: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "n_regions": self.n_regions,
+            "regional_raw_kernel_dimension": self.regional_raw_kernel_dimension,
+            "regional_span_dimension": self.regional_span_dimension,
+            "target_dimension": self.target_dimension,
+            "principal_overlaps": tuple(float(x) for x in self.principal_overlaps),
+            "captured_target_dimension": self.captured_target_dimension,
+            "uncaptured_target_dimension": self.uncaptured_target_dimension,
+            "target_projector_residual": self.target_projector_residual,
+            "tolerance": self.tolerance,
+        }
+
+
+def diagnose_locality_restricted_chiral_profile(
+    hamiltonian: object,
+    regions: Sequence[Sequence[int]],
+    *,
+    target_state: npt.ArrayLike | None = None,
+    tolerance: float = 1e-10,
+) -> LocalityRestrictedChiralProfileReport:
+    """Diagnose chiral zero modes separately on prescribed support regions.
+
+    The regions define the locality restriction.  For each region, the function
+    forms the support-to-complement block and computes its finite-dimensional
+    chiral index.  If ``target_state`` is supplied, its projection onto each
+    region is tested against that regional boundary map.
+    """
+    matrix = as_dense_array(hamiltonian)
+    if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
+        raise ValueError("hamiltonian must be a square matrix.")
+    state = None
+    if target_state is not None:
+        state = np.asarray(target_state, dtype=np.complex128).reshape(-1)
+        if state.size != matrix.shape[0]:
+            raise ValueError("target_state size must match the Hilbert dimension.")
+    entries: list[RegionalChiralIndexEntry] = []
+    covered: set[int] = set()
+    n_regional_zero_modes = 0
+    for region_index, raw_region in enumerate(regions):
+        support = tuple(sorted({int(index) for index in raw_region}))
+        if not support:
+            raise ValueError("each region must contain at least one index.")
+        covered.update(support)
+        blocks = partition_cage_hamiltonian(matrix, support)
+        chiral = diagnose_chiral_index(blocks.boundary, tolerance=tolerance)
+        active_boundary_size = int(
+            np.sum(np.linalg.norm(as_dense_array(blocks.boundary), axis=1) > tolerance)
+        )
+        weight = residual = None
+        is_zero = None
+        if state is not None:
+            local = state[np.asarray(support, dtype=np.int64)]
+            weight = float(np.vdot(local, local).real)
+            residual = float(np.linalg.norm(as_dense_array(blocks.boundary) @ local))
+            is_zero = bool(weight > tolerance and residual <= tolerance)
+            n_regional_zero_modes += int(is_zero)
+        entries.append(
+            RegionalChiralIndexEntry(
+                region_index=region_index,
+                support=support,
+                active_boundary_size=active_boundary_size,
+                chiral_index=chiral,
+                target_weight=weight,
+                target_boundary_residual=residual,
+                target_is_regional_zero_mode=is_zero,
+            )
+        )
+    uncovered_weight = None
+    if state is not None:
+        mask = np.ones(state.size, dtype=bool)
+        if covered:
+            mask[np.asarray(sorted(covered), dtype=np.int64)] = False
+        uncovered_weight = float(np.vdot(state[mask], state[mask]).real)
+    return LocalityRestrictedChiralProfileReport(
+        entries=tuple(entries),
+        covered_support=tuple(sorted(covered)),
+        uncovered_target_weight=uncovered_weight,
+        n_regional_target_zero_modes=n_regional_zero_modes,
+        tolerance=tolerance,
+    )
+
+
+def regional_chiral_kernel_span(
+    hamiltonian: object,
+    regions: Sequence[Sequence[int]],
+    target_manifold: npt.ArrayLike,
+    *,
+    tolerance: float = 1e-10,
+) -> RegionalChiralKernelSpanReport:
+    """Compare a target manifold with the direct span of regional chiral kernels."""
+    matrix = as_dense_array(hamiltonian)
+    if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
+        raise ValueError("hamiltonian must be a square matrix.")
+    target = np.asarray(target_manifold, dtype=np.complex128)
+    if target.ndim == 1:
+        target = target[:, None]
+    if target.ndim != 2 or target.shape[0] != matrix.shape[0]:
+        raise ValueError("target_manifold must have one row per Hilbert state.")
+    target_basis, _ = np.linalg.qr(target)
+    embedded: list[npt.NDArray[np.complex128]] = []
+    raw_dimension = 0
+    for raw_region in regions:
+        support = tuple(sorted({int(index) for index in raw_region}))
+        if not support:
+            raise ValueError("each region must contain at least one index.")
+        blocks = partition_cage_hamiltonian(matrix, support)
+        kernel = nullspace_svd(as_dense_array(blocks.boundary), tolerance=tolerance)
+        raw_dimension += int(kernel.shape[1])
+        for column in range(kernel.shape[1]):
+            vector = np.zeros(matrix.shape[0], dtype=np.complex128)
+            vector[np.asarray(support, dtype=np.int64)] = kernel[:, column]
+            embedded.append(vector)
+    if embedded:
+        regional_matrix = np.column_stack(embedded)
+        regional_basis = scipy_linalg.orth(regional_matrix, rcond=tolerance)
+    else:
+        regional_basis = np.zeros((matrix.shape[0], 0), dtype=np.complex128)
+    overlaps = subspace_principal_overlaps(target_basis, regional_basis)
+    captured = int(np.sum(overlaps >= 1.0 - tolerance))
+    projector = regional_basis @ regional_basis.conj().T
+    residual = float(np.linalg.norm((np.eye(matrix.shape[0]) - projector) @ target_basis))
+    return RegionalChiralKernelSpanReport(
+        n_regions=len(regions),
+        regional_raw_kernel_dimension=raw_dimension,
+        regional_span_dimension=int(regional_basis.shape[1]),
+        target_dimension=int(target_basis.shape[1]),
+        principal_overlaps=overlaps,
+        captured_target_dimension=captured,
+        uncaptured_target_dimension=int(target_basis.shape[1] - captured),
+        target_projector_residual=residual,
+        tolerance=tolerance,
+    )
