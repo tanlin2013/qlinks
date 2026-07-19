@@ -461,3 +461,48 @@ def test_relative_mod2_cycle_quotients_regional_cycles() -> None:
     assert covered.full_cycle_dimension == 1
     assert covered.regional_cycle_span_dimension == 1
     assert covered.relative_cycle_dimension == 0
+
+
+def test_boundary_cancellation_matroid_isolates_weighted_collective_class() -> None:
+    from qlinks.caging import diagnose_boundary_cancellation_matroid
+
+    boundary = np.asarray([[1.0, 1.0, 1.0, 1.0]], dtype=np.complex128)
+    report = diagnose_boundary_cancellation_matroid(
+        boundary,
+        regions=((0, 1), (2, 3)),
+        tolerance=1.0e-12,
+    )
+    collective = np.asarray([1.0, 1.0, -1.0, -1.0], dtype=np.complex128) / 2.0
+
+    assert report.rank == 1
+    assert report.dependency_dimension == 3
+    assert report.regional_dependency_span_dimension == 2
+    assert report.relative_dependency_dimension == 1
+    assert report.regional_circuit_count == 2
+    assert report.inclusion_residual < 1.0e-12
+    assert report.edge_flow_conservation_residual < 1.0e-12
+    assert abs(np.vdot(report.relative_dependency_basis[:, 0], collective)) > 1.0 - 1.0e-12
+
+
+def test_boundary_cancellation_matroid_scan_detects_relative_rank_jump() -> None:
+    from qlinks.caging import scan_boundary_cancellation_matroid
+
+    base = np.asarray(
+        [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]],
+        dtype=np.complex128,
+    )
+    perturbation = np.asarray(
+        [[0.0, 0.0, 0.0, 0.0], [1.0, 1.0, -1.0, -1.0]],
+        dtype=np.complex128,
+    )
+    branch = scan_boundary_cancellation_matroid(
+        base,
+        perturbation,
+        regions=((0, 1), (2, 3)),
+        parameters=(0.0, 1.0e-3, 1.0),
+        tolerance=1.0e-12,
+    )
+
+    np.testing.assert_array_equal(branch.dependency_dimensions, [3, 2, 2])
+    np.testing.assert_array_equal(branch.regional_dimensions, [2, 2, 2])
+    np.testing.assert_array_equal(branch.relative_dimensions, [1, 0, 0])

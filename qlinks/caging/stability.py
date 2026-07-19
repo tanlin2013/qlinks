@@ -2726,3 +2726,348 @@ def diagnose_relative_mod2_cycles(
         edge_labels=edge_labels,
         tolerance=tolerance,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class BoundaryCancellationCircuitEntry:
+    """One regional dependency of the weighted boundary-column matroid."""
+
+    region_index: int
+    columns: tuple[int, ...]
+    rank: int
+    dependency_dimension: int
+    singular_gap: float | None
+    is_circuit: bool
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "region_index": self.region_index,
+            "columns": self.columns,
+            "rank": self.rank,
+            "dependency_dimension": self.dependency_dimension,
+            "singular_gap": self.singular_gap,
+            "is_circuit": self.is_circuit,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class BoundaryCancellationMatroidReport:
+    """Weighted dependency quotient of a boundary matrix modulo local circuits.
+
+    The columns of the boundary matrix represent a linear matroid.  Its
+    dependency space is the cage kernel.  Regional kernels generate a local
+    dependency subspace, and the remaining quotient records collective
+    cancellation classes that cannot be assembled from those regional
+    dependencies.
+    """
+
+    n_rows: int
+    n_columns: int
+    rank: int
+    dependency_dimension: int
+    singular_gap: float | None
+    regional_entries: tuple[BoundaryCancellationCircuitEntry, ...]
+    regional_dependency_span_dimension: int
+    intersection_dimension: int
+    relative_dependency_dimension: int
+    inclusion_residual: float
+    full_dependency_basis: npt.NDArray[np.complex128]
+    regional_dependency_basis: npt.NDArray[np.complex128]
+    relative_dependency_basis: npt.NDArray[np.complex128]
+    relative_edge_flow_basis: npt.NDArray[np.complex128]
+    edge_labels: tuple[tuple[int, int], ...]
+    edge_flow_conservation_residual: float
+    tolerance: float
+
+    @property
+    def regional_circuit_count(self) -> int:
+        return sum(entry.is_circuit for entry in self.regional_entries)
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "n_rows": self.n_rows,
+            "n_columns": self.n_columns,
+            "rank": self.rank,
+            "dependency_dimension": self.dependency_dimension,
+            "singular_gap": self.singular_gap,
+            "regional_dependency_dimensions": tuple(
+                entry.dependency_dimension for entry in self.regional_entries
+            ),
+            "regional_dependency_span_dimension": (self.regional_dependency_span_dimension),
+            "regional_circuit_count": self.regional_circuit_count,
+            "intersection_dimension": self.intersection_dimension,
+            "relative_dependency_dimension": self.relative_dependency_dimension,
+            "inclusion_residual": self.inclusion_residual,
+            "edge_flow_conservation_residual": (self.edge_flow_conservation_residual),
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class BoundaryCancellationMatroidBranchPoint:
+    """One parameter point in a weighted dependency-quotient scan."""
+
+    parameter: float
+    report: BoundaryCancellationMatroidReport
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {"parameter": self.parameter, **self.report.to_summary_dict()}
+
+
+@dataclass(frozen=True, slots=True)
+class BoundaryCancellationMatroidBranchReport:
+    """Integer dependency data tracked along a boundary-matrix deformation."""
+
+    points: tuple[BoundaryCancellationMatroidBranchPoint, ...]
+    tolerance: float
+
+    @property
+    def parameters(self) -> npt.NDArray[np.float64]:
+        return np.asarray([point.parameter for point in self.points], dtype=np.float64)
+
+    @property
+    def dependency_dimensions(self) -> npt.NDArray[np.int64]:
+        return np.asarray(
+            [point.report.dependency_dimension for point in self.points],
+            dtype=np.int64,
+        )
+
+    @property
+    def regional_dimensions(self) -> npt.NDArray[np.int64]:
+        return np.asarray(
+            [point.report.regional_dependency_span_dimension for point in self.points],
+            dtype=np.int64,
+        )
+
+    @property
+    def relative_dimensions(self) -> npt.NDArray[np.int64]:
+        return np.asarray(
+            [point.report.relative_dependency_dimension for point in self.points],
+            dtype=np.int64,
+        )
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "tolerance": self.tolerance,
+            "points": tuple(point.to_summary_dict() for point in self.points),
+        }
+
+
+def _orthonormal_basis_absolute(
+    matrix: npt.NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> npt.NDArray[np.complex128]:
+    if matrix.ndim != 2:
+        raise ValueError("matrix must be 2D.")
+    if matrix.shape[1] == 0:
+        return np.zeros((matrix.shape[0], 0), dtype=np.complex128)
+    left_vectors, singular_values, _right_vectors_h = scipy_linalg.svd(
+        matrix,
+        full_matrices=False,
+    )
+    rank = int(np.sum(singular_values > tolerance))
+    return left_vectors[:, :rank].astype(np.complex128, copy=False)
+
+
+def _matrix_singular_gap(
+    matrix: npt.NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> float | None:
+    singular_values = scipy_linalg.svdvals(matrix)
+    nonzero = singular_values[singular_values > tolerance]
+    if nonzero.size == 0:
+        return None
+    return float(np.min(nonzero))
+
+
+def _is_column_circuit(
+    matrix: npt.NDArray[np.complex128],
+    columns: tuple[int, ...],
+    *,
+    tolerance: float,
+) -> bool:
+    if not columns:
+        return False
+    submatrix = matrix[:, np.asarray(columns, dtype=np.int64)]
+    if nullspace_svd(submatrix, tolerance=tolerance).shape[1] != 1:
+        return False
+    for removed in range(len(columns)):
+        reduced_columns = columns[:removed] + columns[removed + 1 :]
+        reduced = matrix[:, np.asarray(reduced_columns, dtype=np.int64)]
+        if nullspace_svd(reduced, tolerance=tolerance).shape[1] != 0:
+            return False
+    return True
+
+
+def diagnose_boundary_cancellation_matroid(
+    boundary_matrix: object,
+    regions: Sequence[Sequence[int]],
+    *,
+    tolerance: float = 1e-10,
+) -> BoundaryCancellationMatroidReport:
+    """Diagnose weighted global dependencies modulo regional circuits.
+
+    ``regions`` contains boundary-matrix column indices.  Every regional right
+    kernel is embedded in the full column space.  Their span is quotiented from
+    the complete right kernel, reducing the unweighted graph-cycle problem to
+    cancellation relations that satisfy the actual matrix amplitudes.
+    """
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    boundary = as_dense_array(boundary_matrix)
+    if boundary.ndim != 2:
+        raise ValueError("boundary_matrix must be 2D.")
+
+    n_rows, n_columns = boundary.shape
+    full_basis = nullspace_svd(boundary, tolerance=tolerance)
+    rank = n_columns - full_basis.shape[1]
+    regional_vectors: list[npt.NDArray[np.complex128]] = []
+    regional_entries: list[BoundaryCancellationCircuitEntry] = []
+
+    for region_index, raw_columns in enumerate(regions):
+        columns = tuple(sorted({int(column) for column in raw_columns}))
+        if not columns:
+            raise ValueError("each region must contain at least one column.")
+        if columns[0] < 0 or columns[-1] >= n_columns:
+            raise ValueError("regional column index is outside boundary_matrix.")
+        submatrix = boundary[:, np.asarray(columns, dtype=np.int64)]
+        kernel = nullspace_svd(submatrix, tolerance=tolerance)
+        regional_entries.append(
+            BoundaryCancellationCircuitEntry(
+                region_index=region_index,
+                columns=columns,
+                rank=len(columns) - int(kernel.shape[1]),
+                dependency_dimension=int(kernel.shape[1]),
+                singular_gap=_matrix_singular_gap(submatrix, tolerance=tolerance),
+                is_circuit=_is_column_circuit(
+                    boundary,
+                    columns,
+                    tolerance=tolerance,
+                ),
+            )
+        )
+        for kernel_column in range(kernel.shape[1]):
+            embedded = np.zeros(n_columns, dtype=np.complex128)
+            embedded[np.asarray(columns, dtype=np.int64)] = kernel[:, kernel_column]
+            regional_vectors.append(embedded)
+
+    if regional_vectors:
+        regional_basis = _orthonormal_basis_absolute(
+            np.column_stack(regional_vectors),
+            tolerance=tolerance,
+        )
+    else:
+        regional_basis = np.zeros((n_columns, 0), dtype=np.complex128)
+
+    if full_basis.shape[1] == 0:
+        inclusion_residual = float(np.linalg.norm(regional_basis))
+        intersection_dimension = 0
+        relative_basis = np.zeros((n_columns, 0), dtype=np.complex128)
+    else:
+        full_projector = full_basis @ full_basis.conj().T
+        inclusion_residual = float(
+            np.linalg.norm((np.eye(n_columns) - full_projector) @ regional_basis)
+        )
+        overlaps = subspace_principal_overlaps(full_basis, regional_basis)
+        intersection_dimension = int(np.sum(overlaps >= 1.0 - tolerance))
+        regional_projector = regional_basis @ regional_basis.conj().T
+        relative_basis = _orthonormal_basis_absolute(
+            (np.eye(n_columns) - regional_projector) @ full_basis,
+            tolerance=tolerance,
+        )
+
+    edge_labels = _boundary_edge_labels(boundary, tolerance)
+    relative_edge_flows = np.zeros(
+        (len(edge_labels), relative_basis.shape[1]),
+        dtype=np.complex128,
+    )
+    for edge_index, (row, column) in enumerate(edge_labels):
+        relative_edge_flows[edge_index, :] = boundary[row, column] * relative_basis[column, :]
+    row_sums = np.zeros(
+        (n_rows, relative_basis.shape[1]),
+        dtype=np.complex128,
+    )
+    for edge_index, (row, _column) in enumerate(edge_labels):
+        row_sums[row, :] += relative_edge_flows[edge_index, :]
+
+    return BoundaryCancellationMatroidReport(
+        n_rows=n_rows,
+        n_columns=n_columns,
+        rank=rank,
+        dependency_dimension=int(full_basis.shape[1]),
+        singular_gap=_matrix_singular_gap(boundary, tolerance=tolerance),
+        regional_entries=tuple(regional_entries),
+        regional_dependency_span_dimension=int(regional_basis.shape[1]),
+        intersection_dimension=intersection_dimension,
+        relative_dependency_dimension=int(relative_basis.shape[1]),
+        inclusion_residual=inclusion_residual,
+        full_dependency_basis=full_basis,
+        regional_dependency_basis=regional_basis,
+        relative_dependency_basis=relative_basis,
+        relative_edge_flow_basis=relative_edge_flows,
+        edge_labels=edge_labels,
+        edge_flow_conservation_residual=float(np.linalg.norm(row_sums)),
+        tolerance=tolerance,
+    )
+
+
+def boundary_cancellation_matroid_from_hamiltonian(
+    hamiltonian: object,
+    support: Sequence[int],
+    regions: Sequence[Sequence[int]],
+    *,
+    tolerance: float = 1e-10,
+) -> BoundaryCancellationMatroidReport:
+    """Hamiltonian wrapper using global Hilbert-space indices for regions."""
+    blocks = partition_cage_hamiltonian(hamiltonian, support)
+    column_by_index = {
+        int(basis_index): column for column, basis_index in enumerate(blocks.support)
+    }
+    regional_columns: list[tuple[int, ...]] = []
+    for raw_region in regions:
+        try:
+            regional_columns.append(
+                tuple(column_by_index[int(basis_index)] for basis_index in raw_region)
+            )
+        except KeyError as error:
+            raise ValueError("every regional index must belong to support.") from error
+    return diagnose_boundary_cancellation_matroid(
+        blocks.boundary,
+        regional_columns,
+        tolerance=tolerance,
+    )
+
+
+def scan_boundary_cancellation_matroid(
+    base_boundary: object,
+    perturbation_boundary: object,
+    regions: Sequence[Sequence[int]],
+    parameters: Sequence[float] | npt.NDArray[np.floating],
+    *,
+    tolerance: float = 1e-10,
+) -> BoundaryCancellationMatroidBranchReport:
+    """Track the weighted dependency quotient along an affine deformation."""
+    base = as_dense_array(base_boundary)
+    perturbation = as_dense_array(perturbation_boundary)
+    if base.shape != perturbation.shape:
+        raise ValueError("base_boundary and perturbation_boundary must have equal shapes.")
+    parameter_array = np.asarray(parameters, dtype=np.float64).reshape(-1)
+    if parameter_array.size == 0:
+        raise ValueError("parameters must contain at least one value.")
+    points = tuple(
+        BoundaryCancellationMatroidBranchPoint(
+            parameter=float(parameter),
+            report=diagnose_boundary_cancellation_matroid(
+                base + float(parameter) * perturbation,
+                regions,
+                tolerance=tolerance,
+            ),
+        )
+        for parameter in parameter_array
+    )
+    return BoundaryCancellationMatroidBranchReport(
+        points=points,
+        tolerance=tolerance,
+    )
