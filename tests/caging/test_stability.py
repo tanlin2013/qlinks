@@ -731,3 +731,102 @@ def test_periodic_product_support_materialization_respects_size_cap() -> None:
             instance,
             max_support_size=63,
         )
+
+
+def test_real_local_sign_obstruction_is_global_phase_invariant() -> None:
+    from qlinks.caging import diagnose_real_local_sign_obstruction
+
+    a = (0, 0, 0)
+    b = (1, 1, 1)
+    words = (
+        (a, a),
+        (b, b),
+        (a, b),
+    )
+    amplitudes = np.array([1.0, -1.0, 1.0], dtype=np.complex128)
+
+    report = diagnose_real_local_sign_obstruction(
+        words,
+        amplitudes,
+        window_size=1,
+        tolerance=1.0e-12,
+    )
+    flipped = diagnose_real_local_sign_obstruction(
+        words,
+        -amplitudes,
+        window_size=1,
+        tolerance=1.0e-12,
+    )
+
+    assert report.is_obstructed
+    assert report.obstruction_dimension == 1
+    assert flipped.obstruction_dimension == report.obstruction_dimension
+    assert report.obstruction_witness is not None
+    assert int(np.sum(report.obstruction_witness)) > 0
+
+
+def test_collective_square_qdm_local_grammar_has_only_product_kernel_at_8x4() -> None:
+    from qlinks.caging import (
+        CageSearchConfig,
+        CageSearcher,
+        scan_square_qdm_collective_locality_extension,
+    )
+    from qlinks.models import SquareQDMModel
+
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    build = model.build(
+        basis_solver="dfs",
+        builder="sparse",
+        backend="scipy",
+        sort_basis=True,
+    )
+    search = CageSearcher.from_model_build_result(
+        build,
+        config=CageSearchConfig(
+            search_type="type1",
+            tolerance=1.0e-10,
+            degenerate_basis_strategy="ipr",
+            ipr_n_restarts=32,
+            ipr_candidate_count=32,
+            ipr_random_seed=1234,
+        ),
+    ).run()
+    collective = search[(0, 4), 8]
+    support_configs = np.asarray(
+        [build.basis.state(int(index)) for index in collective.support],
+        dtype=np.int64,
+    )
+
+    report = scan_square_qdm_collective_locality_extension(
+        model,
+        support_configs,
+        _physical_square_qdm_periodic_cage_unit_cell(),
+        ((3, 8),),
+        max_words=1_000,
+        max_product_support_size=32,
+        dense_column_limit=512,
+        maximum_nullity=8,
+        ipr_restarts=32,
+        tolerance=1.0e-9,
+    )
+    point = report.points[0]
+
+    assert point.support_size == 192
+    assert point.boundary_nullity == 4
+    assert point.nullity_is_resolved
+    assert point.product_translation_span_dimension == 4
+    assert point.kernel_product_intersection_dimension == 4
+    assert point.collective_quotient_dimension == 0
+    assert point.kernel_is_exhausted_by_product_translations
+    assert point.product_containment_residual < 1.0e-8
+    np.testing.assert_allclose(point.principal_overlaps, 1.0, atol=1.0e-8)
+    assert point.localized_support_sizes == (16, 16, 16, 16)
