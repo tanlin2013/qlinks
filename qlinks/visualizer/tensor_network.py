@@ -12,8 +12,11 @@ from matplotlib.axes import Axes
 from matplotlib.patches import Circle, Rectangle
 
 from qlinks.caging.tensor_network import (
+    SquareQDMChiralParityRule,
     SquareQDMPEPSOptimizationResult,
     SquareQDMRectangularTileTensorBasis,
+    SquareQDMType1PEPSOptimizationResult,
+    SquareQDMType1PEPSResidualReport,
 )
 
 
@@ -260,4 +263,69 @@ class SquareQDMTensorNetworkVisualizer:
         axis.set_ylabel(r"Energy variance $\mathcal{V}_H$")
         axis.set_title(title or "PEPS finite-cluster optimization")
         axis.grid(alpha=0.25)
+        return axis
+
+    def plot_type1_components(
+        self,
+        report: SquareQDMType1PEPSResidualReport,
+        *,
+        ax: Axes | None = None,
+        title: str | None = None,
+    ) -> Axes:
+        """Compare the separated type-1 PEPS objective components."""
+        _, axis = _axes(ax, figsize=(6.2, 3.8))
+        labels = ("Kinetic interference", "Potential variance", "Discarded chirality")
+        values = (
+            report.kinetic_interference_density,
+            report.potential_variance_density,
+            report.discarded_chiral_weight,
+        )
+        axis.bar(np.arange(len(labels)), values)
+        axis.set_xticks(np.arange(len(labels)), labels, rotation=15, ha="right")
+        axis.set_ylabel("Normalized diagnostic")
+        axis.set_title(title or "Type-1 cage conditions")
+        axis.grid(axis="y", alpha=0.25)
+        return axis
+
+    def plot_type1_optimization_history(
+        self,
+        result: SquareQDMType1PEPSOptimizationResult | Sequence[float],
+        *,
+        ax: Axes | None = None,
+        log_scale: bool = True,
+        title: str | None = None,
+    ) -> Axes:
+        """Plot the chiral-projected type-1 objective during optimization."""
+        if isinstance(result, SquareQDMType1PEPSOptimizationResult):
+            losses = np.asarray(result.loss_history, dtype=np.float64)
+        else:
+            losses = np.asarray(tuple(result), dtype=np.float64)
+        if losses.size == 0:
+            raise ValueError("At least one loss value is required.")
+        _, axis = _axes(ax, figsize=(6.0, 3.8))
+        axis.plot(np.arange(losses.size), losses, marker="o", markersize=3)
+        if log_scale and np.all(losses > 0.0):
+            axis.set_yscale("log")
+        axis.set_xlabel("Function evaluation")
+        axis.set_ylabel("Type-1 objective density")
+        axis.set_title(title or "Type-1 PEPS optimization")
+        axis.grid(alpha=0.25)
+        return axis
+
+    def plot_chiral_physical_charges(
+        self,
+        rule: SquareQDMChiralParityRule,
+        model: object,
+        *,
+        ax: Axes | None = None,
+        title: str | None = None,
+    ) -> Axes:
+        """Show the native ``Z2`` charge of each compressed physical state."""
+        charges = rule.tile_physical_charges(model, self.tile_basis)
+        _, axis = _axes(ax, figsize=(8.0, 3.2))
+        axis.scatter(np.arange(charges.size), charges, s=18)
+        axis.set_yticks((0, 1), ("C=+", "C=-"))
+        axis.set_xlabel("Compressed physical-state index")
+        axis.set_title(title or "Tile-local chiral charges")
+        axis.grid(axis="x", alpha=0.15)
         return axis

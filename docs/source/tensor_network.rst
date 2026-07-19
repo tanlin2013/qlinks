@@ -177,3 +177,95 @@ entries, parameter magnitudes, and optimization history:
 A complete interactive demonstration is provided in
 ``experimental/notebooks/tensor_network.ipynb``.  The padding notebook now ends
 at the boundary-resolved handoff and does not duplicate the PEPS optimization.
+
+Type-1 chiral specialization
+---------------------------
+
+A generic variance search asks the optimizer to rediscover the defining cage
+mechanism.  The type-1 PEPS problem instead encodes the Fock-space chiral
+structure explicitly.  If ``C`` anticommutes with the kinetic term and commutes
+with the diagonal potential, a state on one chiral subset obeys
+
+.. math::
+
+   \operatorname{Var}(H)
+   = \frac{\|K|\Psi_+\rangle\|^2}{\langle\Psi_+|\Psi_+\rangle}
+   + \operatorname{Var}_{\Psi_+}(V).
+
+The two non-negative terms are precisely the type-1 conditions: destructive
+kinetic interference on the empty bipartite subset and uniform potential on
+the occupied support.
+
+Build the separated objective with:
+
+.. code-block:: python
+
+   from qlinks.caging import build_square_qdm_type1_peps_problem
+
+   type1_problem = build_square_qdm_type1_peps_problem(
+       model,
+       tile_basis,
+       reference_parameters=ansatz.parameters,
+   )
+   report = type1_problem.diagnose(ansatz.parameters)
+
+   print(report.kinetic_interference_density)
+   print(report.potential_variance_density)
+   print(report.discarded_chiral_weight)
+
+The PEPS amplitudes are projected exactly onto one kinetic-graph bipartite
+subset before the objective is evaluated.  Existing finite type-1 cage records
+can select the same subset and potential value directly:
+
+.. code-block:: python
+
+   type1_problem = build_square_qdm_type1_peps_problem(
+       model,
+       tile_basis,
+       cage_record=record,
+   )
+
+The chiral coloring is also reconstructed as a linear link-occupation parity.
+For the ``3 x 2`` square-QDM tile, qlinks finds a tile-periodic rule with 12
+local link coefficients.  This assigns a ``Z2`` charge to each of the 71
+compressed physical states.
+
+Native chiral PEPS
+------------------
+
+The finite-basis projector has a native tensor-network counterpart.  Each
+virtual leg is augmented by one ``Z2`` charge bit, and tensor entries obey local
+charge conservation.  Contracting a closed torus cancels all virtual charges,
+so only the selected global chiral subset survives.  The charge-resolved tensor
+shares the original 108 variational amplitudes:
+
+.. code-block:: python
+
+   from qlinks.caging import SquareQDMChiralPEPSAnsatz
+
+   chiral_ansatz = SquareQDMChiralPEPSAnsatz.from_type1_problem(
+       type1_problem,
+       ansatz.parameters,
+   )
+   chiral_tn = chiral_ansatz.to_quimb_tensor_network(
+       n_tiles_x=2,
+       n_tiles_y=2,
+   )
+
+For the ``3 x 2`` tile, the charge-augmented tensor has shape
+``(16, 8, 16, 8, 71)`` and 864 nonzero structural entries, but still only 108
+independent parameters.
+
+The dedicated visualizer separates the physical mechanisms:
+
+.. code-block:: python
+
+   visualizer.plot_type1_components(report)
+   visualizer.plot_chiral_physical_charges(
+       type1_problem.parity_rule,
+       model,
+   )
+
+The next analytical target is a local tensor equation equivalent to
+``B psi_+(A) = 0`` together with zero potential variance, valid independently
+of the finite torus used during optimization.

@@ -1108,3 +1108,938 @@ def build_square_qdm_peps_finite_cluster_problem(
             "builder": builder,
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# Type-1 chiral PEPS specialization
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMChiralParityRule:
+    """Linear ``Z2`` representation of the Fock-space chiral operator.
+
+    The rule assigns a parity
+
+    ``q(config) = offset + link_coefficients @ config (mod 2)``.
+
+    Every nonzero kinetic matrix element must connect configurations with
+    opposite parity.  The corresponding chiral sign is ``(-1)**q``.  A linear
+    rule is especially useful for tensor networks because the physical links
+    are partitioned between tiles, so the global parity becomes a sum of local
+    physical charges.
+    """
+
+    link_coefficients: npt.NDArray[np.int8]
+    offset: int = 0
+    n_edge_equations: int = 0
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        coefficients = np.asarray(self.link_coefficients, dtype=np.int8).reshape(-1) % 2
+        object.__setattr__(self, "link_coefficients", coefficients.copy())
+        object.__setattr__(self, "offset", int(self.offset) % 2)
+        object.__setattr__(self, "n_edge_equations", int(self.n_edge_equations))
+        object.__setattr__(self, "metadata", dict(self.metadata))
+
+    def labels(self, basis_states: npt.ArrayLike) -> npt.NDArray[np.int8]:
+        states = np.asarray(basis_states, dtype=np.int8)
+        if states.ndim != 2 or states.shape[1] != self.link_coefficients.size:
+            raise ValueError("basis_states must align with the chiral link coefficients.")
+        values = (states @ self.link_coefficients.astype(np.int64) + self.offset) % 2
+        return np.asarray(values, dtype=np.int8)
+
+    def signs(self, basis_states: npt.ArrayLike) -> npt.NDArray[np.int8]:
+        return np.asarray(1 - 2 * self.labels(basis_states), dtype=np.int8)
+
+    def validate_kinetic_matrix(
+        self,
+        basis_states: npt.ArrayLike,
+        kinetic_matrix: object,
+        *,
+        tolerance: float = 1.0e-12,
+    ) -> bool:
+        labels = self.labels(basis_states)
+        kinetic = scipy_sparse.coo_array(kinetic_matrix)
+        active = np.abs(kinetic.data) > float(tolerance)
+        rows = kinetic.row[active]
+        cols = kinetic.col[active]
+        off_diagonal = rows != cols
+        if not np.any(off_diagonal):
+            return True
+        return bool(np.all(labels[rows[off_diagonal]] != labels[cols[off_diagonal]]))
+
+    def tile_physical_charges(
+        self,
+        model: object,
+        tile_basis: SquareQDMRectangularTileTensorBasis,
+    ) -> npt.NDArray[np.int8]:
+        """Return local physical ``Z2`` charges when the rule is tile-periodic.
+
+        Raises:
+            ValueError: If equivalent owned links in translated tiles carry
+                different chiral coefficients.  In that case a larger or
+                multi-tensor unit cell is required for a native symmetric PEPS.
+        """
+        lx, ly = _square_dimensions(model)
+        if lx % tile_basis.tile_lx or ly % tile_basis.tile_ly:
+            raise ValueError("Model dimensions must be multiples of the tile dimensions.")
+        lattice = model.lattice
+        reference: list[int] | None = None
+        for tile_y in range(ly // tile_basis.tile_ly):
+            for tile_x in range(lx // tile_basis.tile_lx):
+                coefficients = []
+                origin_x = tile_x * tile_basis.tile_lx
+                origin_y = tile_y * tile_basis.tile_ly
+                for relative_x, relative_y, kind in tile_basis.owned_link_keys:
+                    site = _site_id(lattice, origin_x + relative_x, origin_y + relative_y)
+                    link_id = _outgoing_link_id(lattice, site, kind)
+                    coefficients.append(int(self.link_coefficients[link_id]))
+                if reference is None:
+                    reference = coefficients
+                elif coefficients != reference:
+                    raise ValueError(
+                        "The inferred chiral rule is not periodic under the selected tile; "
+                        "use a larger or multi-tensor unit cell."
+                    )
+        assert reference is not None
+        local_coefficients = np.asarray(reference, dtype=np.int8)
+        return np.asarray(
+            (tile_basis.physical_configurations @ local_coefficients.astype(np.int64)) % 2,
+            dtype=np.int8,
+        )
+
+
+def _solve_gf2_linear_system(
+    matrix: npt.NDArray[np.int8],
+    rhs: npt.NDArray[np.int8],
+) -> npt.NDArray[np.int8]:
+    """Return one solution of ``matrix @ x = rhs`` over GF(2)."""
+    a = np.asarray(matrix, dtype=np.int8).copy() % 2
+    b = np.asarray(rhs, dtype=np.int8).reshape(-1, 1).copy() % 2
+    if a.ndim != 2 or a.shape[0] != b.shape[0]:
+        raise ValueError("GF(2) matrix and right-hand side do not align.")
+    augmented = np.concatenate((a, b), axis=1)
+    n_rows, n_columns = a.shape
+    pivot_columns: list[int] = []
+    pivot_row = 0
+    for column in range(n_columns):
+        candidates = np.flatnonzero(augmented[pivot_row:, column])
+        if candidates.size == 0:
+            continue
+        selected = pivot_row + int(candidates[0])
+        if selected != pivot_row:
+            augmented[[pivot_row, selected]] = augmented[[selected, pivot_row]]
+        for row in range(n_rows):
+            if row != pivot_row and augmented[row, column]:
+                augmented[row] ^= augmented[pivot_row]
+        pivot_columns.append(column)
+        pivot_row += 1
+        if pivot_row == n_rows:
+            break
+    inconsistent = np.all(augmented[:, :n_columns] == 0, axis=1) & (augmented[:, n_columns] != 0)
+    if np.any(inconsistent):
+        raise ValueError(
+            "No linear occupation-parity representation of the chiral operator exists."
+        )
+    solution = np.zeros(n_columns, dtype=np.int8)
+    for row, column in enumerate(pivot_columns):
+        solution[column] = augmented[row, n_columns]
+    return solution
+
+
+def infer_square_qdm_chiral_parity_rule(
+    basis_states: npt.ArrayLike,
+    kinetic_matrix: object,
+    *,
+    reference_labels: npt.ArrayLike | None = None,
+    reference_state_indices: Sequence[int] = (),
+    reference_label: int = 0,
+    tolerance: float = 1.0e-12,
+) -> SquareQDMChiralParityRule:
+    """Infer a linear link-occupation representation of the chiral operator.
+
+    Each distinct kinetic transition contributes the GF(2) equation
+    ``a @ (config_i xor config_j) = 1``.  Free coefficients are fixed to zero,
+    yielding one deterministic solution.  The global offset is then aligned to
+    either ``reference_state_indices`` or supplied graph bipartition labels.
+    """
+    states = np.asarray(basis_states, dtype=np.int8)
+    if states.ndim != 2:
+        raise ValueError("basis_states must be two-dimensional.")
+    kinetic = scipy_sparse.coo_array(kinetic_matrix)
+    active = (np.abs(kinetic.data) > float(tolerance)) & (kinetic.row < kinetic.col)
+    deltas = {
+        np.packbits(
+            np.asarray(states[row] != states[column], dtype=np.uint8)
+        ).tobytes(): np.asarray(states[row] != states[column], dtype=np.int8)
+        for row, column in zip(kinetic.row[active], kinetic.col[active], strict=False)
+    }
+    if not deltas:
+        raise ValueError("The kinetic graph has no nonzero transitions.")
+    equation_matrix = np.stack(tuple(deltas.values()), axis=0)
+    coefficients = _solve_gf2_linear_system(
+        equation_matrix,
+        np.ones(equation_matrix.shape[0], dtype=np.int8),
+    )
+    raw_labels = np.asarray((states @ coefficients.astype(np.int64)) % 2, dtype=np.int8)
+    offset = 0
+    if reference_state_indices:
+        indices = np.asarray(tuple(int(index) for index in reference_state_indices), dtype=np.int64)
+        if np.any(indices < 0) or np.any(indices >= states.shape[0]):
+            raise IndexError("reference_state_indices contains an invalid basis index.")
+        required_offsets = raw_labels[indices] ^ (int(reference_label) % 2)
+        if np.unique(required_offsets).size != 1:
+            raise ValueError("Reference states do not lie in one inferred chiral sector.")
+        offset = int(required_offsets[0])
+    elif reference_labels is not None:
+        graph_labels = np.asarray(reference_labels, dtype=np.int8).reshape(-1) % 2
+        if graph_labels.size != states.shape[0]:
+            raise ValueError("reference_labels must align with basis_states.")
+        kinetic_csr = scipy_sparse.csr_array(kinetic_matrix)
+        active_vertices = np.diff(kinetic_csr.indptr) > 0
+        offsets = raw_labels[active_vertices] ^ graph_labels[active_vertices]
+        if offsets.size and np.unique(offsets).size == 1:
+            offset = int(offsets[0])
+    rule = SquareQDMChiralParityRule(
+        link_coefficients=coefficients,
+        offset=offset,
+        n_edge_equations=equation_matrix.shape[0],
+        metadata={"n_basis_states": states.shape[0]},
+    )
+    if not rule.validate_kinetic_matrix(states, kinetic_matrix, tolerance=tolerance):
+        raise RuntimeError("The inferred parity rule does not anticommute with the kinetic matrix.")
+    return rule
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMType1PEPSResidualReport:
+    """Separated type-1 cage diagnostics for one finite-cluster PEPS state."""
+
+    norm_before_projection: float
+    norm_after_projection: float
+    retained_chiral_weight: float
+    discarded_chiral_weight: float
+    target_chiral_label: int
+    kinetic_interference_norm: float
+    kinetic_interference_density: float
+    potential_mean: float
+    potential_variance: float
+    potential_variance_density: float
+    total_variance: float
+    objective: float
+    max_interference_residual: float
+    n_nonzero_interference_targets: int
+    nonzero_projected_amplitudes: int
+    hilbert_dimension: int
+    target_potential_value: float | None = None
+    target_potential_residual: float | None = None
+
+    @property
+    def is_nonzero(self) -> bool:
+        return self.norm_after_projection > 0.0
+
+    @property
+    def satisfies_type1(self) -> bool:
+        return self.kinetic_interference_norm <= 1.0e-10 and self.potential_variance <= 1.0e-10
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMType1PEPSOptimizationResult:
+    """Result of a quimb optimization of the type-1 separated objective."""
+
+    initial_parameters: npt.NDArray[np.float64]
+    optimized_parameters: npt.NDArray[np.float64]
+    loss_history: tuple[float, ...]
+    initial_report: SquareQDMType1PEPSResidualReport
+    final_report: SquareQDMType1PEPSResidualReport
+    requested_steps: int
+    optimizer: str
+    autodiff_backend: str
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        initial = np.asarray(self.initial_parameters, dtype=np.float64).reshape(-1)
+        optimized = np.asarray(self.optimized_parameters, dtype=np.float64).reshape(-1)
+        if initial.shape != optimized.shape:
+            raise ValueError("initial_parameters and optimized_parameters must align.")
+        object.__setattr__(self, "initial_parameters", initial.copy())
+        object.__setattr__(self, "optimized_parameters", optimized.copy())
+        object.__setattr__(self, "loss_history", tuple(float(value) for value in self.loss_history))
+        object.__setattr__(self, "requested_steps", int(self.requested_steps))
+        object.__setattr__(self, "metadata", dict(self.metadata))
+
+    @property
+    def improved(self) -> bool:
+        return self.final_report.objective < self.initial_report.objective
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMType1PEPSFiniteClusterProblem:
+    """Type-1 specialization of the finite-cluster constrained PEPS problem.
+
+    The underlying PEPS generates amplitudes on the complete constrained basis.
+    Before any objective is evaluated, the state is projected exactly onto one
+    bipartite subset of the kinetic graph.  The loss then contains only the two
+    defining type-1 conditions: kinetic destructive interference and uniform
+    diagonal potential on the retained support.
+    """
+
+    base_problem: SquareQDMPEPSFiniteClusterProblem
+    kinetic_matrix: scipy_sparse.csr_array
+    potential_values: npt.NDArray[np.float64]
+    chiral_labels: npt.NDArray[np.int8]
+    target_chiral_label: int
+    parity_rule: SquareQDMChiralParityRule | None = None
+    potential_weight: float = 1.0
+    target_potential_value: float | None = None
+    tolerance: float = 1.0e-10
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        kinetic = scipy_sparse.csr_array(self.kinetic_matrix, dtype=np.complex128)
+        potential = np.asarray(self.potential_values, dtype=np.float64).reshape(-1)
+        labels = np.asarray(self.chiral_labels, dtype=np.int8).reshape(-1) % 2
+        dimension = self.base_problem.hilbert_dimension
+        if kinetic.shape != (dimension, dimension):
+            raise ValueError("kinetic_matrix must match the base PEPS problem.")
+        if potential.size != dimension or labels.size != dimension:
+            raise ValueError("potential_values and chiral_labels must match the basis.")
+        if self.potential_weight < 0.0:
+            raise ValueError("potential_weight must be non-negative.")
+        object.__setattr__(self, "kinetic_matrix", kinetic)
+        object.__setattr__(self, "potential_values", potential.copy())
+        object.__setattr__(self, "chiral_labels", labels.copy())
+        object.__setattr__(self, "target_chiral_label", int(self.target_chiral_label) % 2)
+        object.__setattr__(self, "potential_weight", float(self.potential_weight))
+        object.__setattr__(self, "tolerance", float(self.tolerance))
+        object.__setattr__(self, "metadata", dict(self.metadata))
+
+    @property
+    def tile_basis(self) -> SquareQDMRectangularTileTensorBasis:
+        return self.base_problem.tile_basis
+
+    @property
+    def n_plaquettes(self) -> int:
+        return int(self.metadata["n_plaquettes"])
+
+    @property
+    def chiral_mask(self) -> npt.NDArray[np.float64]:
+        return np.asarray(self.chiral_labels == self.target_chiral_label, dtype=np.float64)
+
+    def projected_state_vector(
+        self,
+        parameters: npt.ArrayLike,
+        *,
+        normalize: bool = True,
+    ) -> npt.NDArray[np.complex128]:
+        raw = self.base_problem.state_vector(parameters, normalize=False)
+        state = raw * self.chiral_mask
+        if normalize:
+            norm = float(np.linalg.norm(state))
+            if norm == 0.0:
+                raise ValueError("The PEPS has zero weight in the selected chiral sector.")
+            state = state / norm
+        return np.asarray(state, dtype=np.complex128)
+
+    def diagnose(self, parameters: npt.ArrayLike) -> SquareQDMType1PEPSResidualReport:
+        raw = self.base_problem.state_vector(parameters, normalize=False)
+        raw_norm = float(np.linalg.norm(raw))
+        projected = raw * self.chiral_mask
+        projected_norm = float(np.linalg.norm(projected))
+        if raw_norm == 0.0 or projected_norm == 0.0:
+            return SquareQDMType1PEPSResidualReport(
+                norm_before_projection=raw_norm,
+                norm_after_projection=projected_norm,
+                retained_chiral_weight=0.0,
+                discarded_chiral_weight=1.0,
+                target_chiral_label=self.target_chiral_label,
+                kinetic_interference_norm=float("inf"),
+                kinetic_interference_density=float("inf"),
+                potential_mean=0.0,
+                potential_variance=float("inf"),
+                potential_variance_density=float("inf"),
+                total_variance=float("inf"),
+                objective=float("inf"),
+                max_interference_residual=float("inf"),
+                n_nonzero_interference_targets=0,
+                nonzero_projected_amplitudes=0,
+                hilbert_dimension=self.base_problem.hilbert_dimension,
+                target_potential_value=self.target_potential_value,
+                target_potential_residual=None,
+            )
+        retained_weight = float((projected_norm / raw_norm) ** 2)
+        state = projected / projected_norm
+        kinetic_state = np.asarray(self.kinetic_matrix @ state, dtype=np.complex128)
+        kinetic_norm_squared = float(np.vdot(kinetic_state, kinetic_state).real)
+        probabilities = np.abs(state) ** 2
+        potential_mean = float(np.sum(probabilities * self.potential_values))
+        potential_variance = float(
+            np.sum(probabilities * (self.potential_values - potential_mean) ** 2)
+        )
+        h_state = kinetic_state + self.potential_values * state
+        energy = complex(np.vdot(state, h_state))
+        total_variance = max(
+            0.0,
+            float(np.vdot(h_state, h_state).real - abs(energy) ** 2),
+        )
+        objective = (
+            kinetic_norm_squared / self.n_plaquettes
+            + self.potential_weight * potential_variance / self.n_plaquettes
+        )
+        target_residual = None
+        if self.target_potential_value is not None:
+            target_residual = float(
+                np.sum(
+                    probabilities
+                    * (self.potential_values - float(self.target_potential_value)) ** 2
+                )
+            )
+        return SquareQDMType1PEPSResidualReport(
+            norm_before_projection=raw_norm,
+            norm_after_projection=projected_norm,
+            retained_chiral_weight=retained_weight,
+            discarded_chiral_weight=max(0.0, 1.0 - retained_weight),
+            target_chiral_label=self.target_chiral_label,
+            kinetic_interference_norm=kinetic_norm_squared,
+            kinetic_interference_density=kinetic_norm_squared / self.n_plaquettes,
+            potential_mean=potential_mean,
+            potential_variance=potential_variance,
+            potential_variance_density=potential_variance / self.n_plaquettes,
+            total_variance=total_variance,
+            objective=objective,
+            max_interference_residual=float(np.max(np.abs(kinetic_state), initial=0.0)),
+            n_nonzero_interference_targets=int(
+                np.count_nonzero(np.abs(kinetic_state) > self.tolerance)
+            ),
+            nonzero_projected_amplitudes=int(np.count_nonzero(np.abs(projected) > self.tolerance)),
+            hilbert_dimension=self.base_problem.hilbert_dimension,
+            target_potential_value=self.target_potential_value,
+            target_potential_residual=target_residual,
+        )
+
+    def loss(self, parameters: npt.ArrayLike) -> float:
+        return float(self.diagnose(parameters).objective)
+
+    def loss_and_gradient_autograd(
+        self,
+        parameters: npt.ArrayLike,
+    ) -> tuple[float, npt.NDArray[np.float64]]:
+        if not autograd_available():
+            raise ImportError("autograd is required; install qlinks with the 'tn' extra.")
+        import autograd.numpy as anp  # type: ignore[import-not-found]
+        from autograd import value_and_grad  # type: ignore[import-not-found]
+
+        values = np.asarray(parameters, dtype=np.complex128).reshape(-1)
+        if values.size != self.tile_basis.n_entries:
+            raise ValueError(f"parameters must have size {self.tile_basis.n_entries}.")
+        if np.max(np.abs(values.imag), initial=0.0) > self.tolerance:
+            raise ValueError("The Autograd prototype currently optimizes real parameters only.")
+        parameter_indices = np.asarray(self.base_problem.entry_parameter_indices, dtype=np.int64)
+        kinetic = anp.asarray(self.kinetic_matrix.toarray().real)
+        potential = anp.asarray(self.potential_values)
+        mask = anp.asarray(self.chiral_mask)
+        n_plaquettes = float(self.n_plaquettes)
+        potential_weight = float(self.potential_weight)
+
+        def objective(compact_parameters: Any) -> Any:
+            state = anp.prod(compact_parameters[parameter_indices], axis=1) * mask
+            norm_squared = anp.sum(state * state) + 1.0e-30
+            kinetic_state = anp.dot(kinetic, state)
+            kinetic_loss = anp.sum(kinetic_state * kinetic_state) / norm_squared
+            probabilities = state * state / norm_squared
+            potential_mean = anp.sum(probabilities * potential)
+            potential_variance = anp.sum(
+                probabilities * (potential - potential_mean) * (potential - potential_mean)
+            )
+            return (kinetic_loss + potential_weight * potential_variance) / n_plaquettes
+
+        loss, gradient = value_and_grad(objective)(np.asarray(values.real, dtype=np.float64))
+        return float(loss), np.asarray(gradient, dtype=np.float64)
+
+    def make_quimb_optimizer(
+        self,
+        parameters: npt.ArrayLike,
+        *,
+        autodiff_backend: str = "autograd",
+        optimizer: str = "L-BFGS-B",
+        progbar: bool = True,
+        loss_target: float | None = None,
+        **backend_options: object,
+    ) -> object:
+        qtn = _require_quimb()
+        values = np.asarray(parameters, dtype=np.complex128).reshape(-1)
+        if values.size != self.tile_basis.n_entries:
+            raise ValueError(f"parameters must have size {self.tile_basis.n_entries}.")
+        if np.max(np.abs(values.imag), initial=0.0) > self.tolerance:
+            raise ValueError("The current compact optimizer accepts real parameters only.")
+        tensor_shape = self.tile_basis.tensor_shape
+        coordinates = self.tile_basis.entry_coordinates
+        flat_coordinates = np.ravel_multi_index(
+            tuple(coordinates[:, axis] for axis in range(5)), tensor_shape
+        )
+        entry_index_map = np.zeros(int(np.prod(tensor_shape)), dtype=np.int64)
+        structural_mask = np.zeros(int(np.prod(tensor_shape)), dtype=np.float64)
+        entry_index_map[flat_coordinates] = np.arange(self.tile_basis.n_entries)
+        structural_mask[flat_coordinates] = 1.0
+        entry_index_map = entry_index_map.reshape(tensor_shape)
+        structural_mask = structural_mask.reshape(tensor_shape)
+
+        def compact_to_tensor(compact_parameters: Any) -> Any:
+            return compact_parameters[entry_index_map] * structural_mask
+
+        tensor = qtn.PTensor(
+            compact_to_tensor,
+            np.asarray(values.real, dtype=np.float64),
+            inds=("up", "right", "down", "left", "physical"),
+            tags={"UNIT_CELL"},
+        )
+        network = qtn.TensorNetwork([tensor])
+        return qtn.TNOptimizer(
+            network,
+            _quimb_type1_cluster_loss,
+            loss_constants={
+                "tensor_coordinates": self.base_problem.tensor_coordinates,
+                "kinetic": np.asarray(self.kinetic_matrix.toarray().real, dtype=np.float64),
+                "potential": np.asarray(self.potential_values, dtype=np.float64),
+                "chiral_mask": self.chiral_mask,
+                "n_plaquettes": float(self.n_plaquettes),
+                "potential_weight": float(self.potential_weight),
+            },
+            autodiff_backend=autodiff_backend,
+            optimizer=optimizer,
+            progbar=progbar,
+            loss_target=loss_target,
+            **backend_options,
+        )
+
+    def optimize_with_quimb(
+        self,
+        parameters: npt.ArrayLike,
+        *,
+        max_steps: int = 20,
+        noise_scale: float = 1.0e-2,
+        seed: int | None = 0,
+        autodiff_backend: str = "autograd",
+        optimizer: str = "L-BFGS-B",
+        progbar: bool = False,
+        loss_target: float | None = None,
+        **backend_options: object,
+    ) -> SquareQDMType1PEPSOptimizationResult:
+        initial_parameters = self.base_problem.perturb_parameters(
+            parameters, scale=noise_scale, seed=seed, normalize=True
+        )
+        initial_report = self.diagnose(initial_parameters)
+        optimizer_object = self.make_quimb_optimizer(
+            initial_parameters,
+            autodiff_backend=autodiff_backend,
+            optimizer=optimizer,
+            progbar=progbar,
+            loss_target=loss_target,
+            **backend_options,
+        )
+        optimized_network = optimizer_object.optimize(int(max_steps))
+        optimized_parameters = np.asarray(
+            optimized_network["UNIT_CELL"].params, dtype=np.float64
+        ).reshape(-1)
+        return SquareQDMType1PEPSOptimizationResult(
+            initial_parameters=initial_parameters,
+            optimized_parameters=optimized_parameters,
+            loss_history=tuple(float(value) for value in optimizer_object.losses),
+            initial_report=initial_report,
+            final_report=self.diagnose(optimized_parameters),
+            requested_steps=int(max_steps),
+            optimizer=str(optimizer),
+            autodiff_backend=str(autodiff_backend),
+            metadata={"noise_scale": float(noise_scale), "seed": seed},
+        )
+
+
+def _quimb_type1_cluster_loss(
+    tensor_network: object,
+    *,
+    tensor_coordinates: Any,
+    kinetic: Any,
+    potential: Any,
+    chiral_mask: Any,
+    n_plaquettes: float,
+    potential_weight: float,
+) -> Any:
+    """Autodiff-compatible type-1 kinetic-plus-potential objective."""
+    import autoray as ar
+
+    unit_tensor = tensor_network["UNIT_CELL"].data
+    n_basis = int(tensor_coordinates.shape[0])
+    n_tiles = int(tensor_coordinates.shape[1])
+    state = None
+    for tile_index in range(n_tiles):
+        coordinates = tensor_coordinates[:, tile_index, :]
+        selected = unit_tensor[
+            coordinates[:, 0],
+            coordinates[:, 1],
+            coordinates[:, 2],
+            coordinates[:, 3],
+            coordinates[:, 4],
+        ]
+        state = selected if state is None else state * selected
+    if state is None:
+        state = ar.do("ones", (n_basis,), like=unit_tensor)
+    state = state * chiral_mask
+    norm_squared = ar.do("sum", state * state) + 1.0e-30
+    kinetic_state = kinetic @ state
+    kinetic_loss = ar.do("sum", kinetic_state * kinetic_state) / norm_squared
+    probabilities = state * state / norm_squared
+    potential_mean = ar.do("sum", probabilities * potential)
+    potential_delta = potential - potential_mean
+    potential_variance = ar.do("sum", probabilities * potential_delta * potential_delta)
+    return (kinetic_loss + potential_weight * potential_variance) / n_plaquettes
+
+
+def build_square_qdm_type1_peps_problem(
+    model: object,
+    tile_basis: SquareQDMRectangularTileTensorBasis,
+    *,
+    target_chiral_label: int | None = None,
+    reference_parameters: npt.ArrayLike | None = None,
+    cage_record: Any | None = None,
+    potential_weight: float = 1.0,
+    infer_parity_rule: bool = True,
+    basis_solver: str = "dfs",
+    builder: str = "sparse",
+    tolerance: float = 1.0e-10,
+) -> SquareQDMType1PEPSFiniteClusterProblem:
+    """Build the finite-cluster type-1 PEPS objective.
+
+    ``cage_record`` may be an existing type-1 :class:`CageRecord`; its support
+    fixes the occupied chiral subset and records the exact potential value of
+    the finite cage.  Otherwise, ``reference_parameters`` can select the sector
+    carrying the larger PEPS norm.  If neither is supplied, sector zero is used.
+    """
+    from qlinks.caging.search import bipartition_labels
+
+    base_problem = build_square_qdm_peps_finite_cluster_problem(
+        model,
+        tile_basis,
+        basis_solver=basis_solver,
+        builder=builder,
+        tolerance=tolerance,
+    )
+    build_result = model.build(basis_solver=basis_solver, builder=builder)
+    kinetic = scipy_sparse.csr_array(build_result.kinetic, dtype=np.complex128)
+    if build_result.potential is None:
+        potential_values = np.zeros(base_problem.hilbert_dimension, dtype=np.float64)
+    else:
+        potential_values = np.asarray(
+            scipy_sparse.csr_array(build_result.potential).diagonal().real,
+            dtype=np.float64,
+        )
+    labels = np.asarray(bipartition_labels(kinetic), dtype=np.int8)
+    target_potential_value: float | None = None
+    reference_indices: tuple[int, ...] = ()
+    if cage_record is not None:
+        kappa = int(cage_record.kappa)
+        if kappa != 0:
+            raise ValueError("A type-1 PEPS seed requires a cage record with kappa=0.")
+        support = np.asarray(cage_record.support, dtype=np.int64).reshape(-1)
+        if support.size == 0 or np.any(support < 0) or np.any(support >= labels.size):
+            raise ValueError("The cage record support does not match the finite-cluster basis.")
+        support_labels = np.unique(labels[support])
+        if support_labels.size != 1:
+            raise ValueError("The cage record does not lie in one chiral subset.")
+        inferred_label = int(support_labels[0])
+        if target_chiral_label is not None and int(target_chiral_label) % 2 != inferred_label:
+            raise ValueError("target_chiral_label conflicts with the cage record support.")
+        target_chiral_label = inferred_label
+        support_potential = potential_values[support]
+        if np.max(np.abs(support_potential - support_potential[0]), initial=0.0) > tolerance:
+            raise ValueError("The cage record does not have uniform potential on its support.")
+        target_potential_value = float(support_potential[0])
+        reference_indices = tuple(int(index) for index in support)
+    elif target_chiral_label is None and reference_parameters is not None:
+        raw = base_problem.state_vector(reference_parameters, normalize=False)
+        weights = (
+            float(np.sum(np.abs(raw[labels == 0]) ** 2)),
+            float(np.sum(np.abs(raw[labels == 1]) ** 2)),
+        )
+        target_chiral_label = int(weights[1] > weights[0])
+    if target_chiral_label is None:
+        target_chiral_label = 0
+
+    parity_rule = None
+    if infer_parity_rule:
+        parity_reference_indices = reference_indices
+        if not parity_reference_indices:
+            matching_indices = np.flatnonzero(labels == int(target_chiral_label))
+            if matching_indices.size == 0:
+                raise ValueError("The requested chiral subset is empty.")
+            parity_reference_indices = (int(matching_indices[0]),)
+        try:
+            parity_rule = infer_square_qdm_tile_chiral_parity_rule(
+                model,
+                base_problem.basis_states,
+                kinetic,
+                tile_basis,
+                reference_labels=labels,
+                reference_state_indices=parity_reference_indices,
+                reference_label=0,
+                tolerance=tolerance,
+            )
+        except ValueError:
+            parity_rule = infer_square_qdm_chiral_parity_rule(
+                base_problem.basis_states,
+                kinetic,
+                reference_labels=labels,
+                reference_state_indices=parity_reference_indices,
+                reference_label=0,
+                tolerance=tolerance,
+            )
+
+    return SquareQDMType1PEPSFiniteClusterProblem(
+        base_problem=base_problem,
+        kinetic_matrix=kinetic,
+        potential_values=potential_values,
+        chiral_labels=labels,
+        target_chiral_label=int(target_chiral_label),
+        parity_rule=parity_rule,
+        potential_weight=potential_weight,
+        target_potential_value=target_potential_value,
+        tolerance=tolerance,
+        metadata={
+            "n_plaquettes": len(model.plaquette_ids()),
+            "model_shape": _square_dimensions(model),
+            "source_cage_record": cage_record is not None,
+        },
+    )
+
+
+def infer_square_qdm_tile_chiral_parity_rule(
+    model: object,
+    basis_states: npt.ArrayLike,
+    kinetic_matrix: object,
+    tile_basis: SquareQDMRectangularTileTensorBasis,
+    *,
+    reference_labels: npt.ArrayLike | None = None,
+    reference_state_indices: Sequence[int] = (),
+    reference_label: int = 0,
+    tolerance: float = 1.0e-12,
+) -> SquareQDMChiralParityRule:
+    """Infer a chiral parity rule constrained to repeat with the PEPS tile.
+
+    The unknown GF(2) coefficients live only on the tile's owned-link keys.
+    Global links whose source coordinates differ by a tile translation share
+    one coefficient.  Existence of a solution means the chiral operator can be
+    encoded natively with the chosen one-tensor unit cell.
+    """
+    states = np.asarray(basis_states, dtype=np.int8)
+    if states.ndim != 2:
+        raise ValueError("basis_states must be two-dimensional.")
+    lx, ly = _square_dimensions(model)
+    if lx % tile_basis.tile_lx or ly % tile_basis.tile_ly:
+        raise ValueError("Model dimensions must be multiples of the tile dimensions.")
+    key_to_variable = {tuple(key): index for index, key in enumerate(tile_basis.owned_link_keys)}
+    global_to_local = np.empty(states.shape[1], dtype=np.int64)
+    lattice = model.lattice
+    for link_id, link in enumerate(lattice.links):
+        source = lattice.sites[int(link.source)]
+        cell_x, cell_y = (int(source.cell[0]), int(source.cell[1]))
+        key = (
+            cell_x % tile_basis.tile_lx,
+            cell_y % tile_basis.tile_ly,
+            str(link.kind),
+        )
+        try:
+            global_to_local[link_id] = key_to_variable[key]
+        except KeyError as error:
+            raise ValueError(
+                f"Global link {link_id} has no matching tile-owned key {key}."
+            ) from error
+
+    kinetic = scipy_sparse.coo_array(kinetic_matrix)
+    active = (np.abs(kinetic.data) > float(tolerance)) & (kinetic.row < kinetic.col)
+    equation_rows: dict[bytes, npt.NDArray[np.int8]] = {}
+    for row, column in zip(kinetic.row[active], kinetic.col[active], strict=False):
+        local_row = np.zeros(tile_basis.owned_link_ids.size, dtype=np.int8)
+        for link_id in np.flatnonzero(states[row] != states[column]):
+            local_row[global_to_local[int(link_id)]] ^= 1
+        equation_rows[local_row.tobytes()] = local_row
+    if not equation_rows:
+        raise ValueError("The kinetic graph has no nonzero transitions.")
+    equation_matrix = np.stack(tuple(equation_rows.values()), axis=0)
+    local_coefficients = _solve_gf2_linear_system(
+        equation_matrix,
+        np.ones(equation_matrix.shape[0], dtype=np.int8),
+    )
+    global_coefficients = local_coefficients[global_to_local]
+    raw_labels = np.asarray(
+        (states @ global_coefficients.astype(np.int64)) % 2,
+        dtype=np.int8,
+    )
+    offset = 0
+    if reference_state_indices:
+        indices = np.asarray(tuple(int(index) for index in reference_state_indices), dtype=np.int64)
+        required_offsets = raw_labels[indices] ^ (int(reference_label) % 2)
+        if np.unique(required_offsets).size != 1:
+            raise ValueError("Reference states do not lie in one tile-periodic chiral sector.")
+        offset = int(required_offsets[0])
+    elif reference_labels is not None:
+        graph_labels = np.asarray(reference_labels, dtype=np.int8).reshape(-1) % 2
+        kinetic_csr = scipy_sparse.csr_array(kinetic_matrix)
+        active_vertices = np.diff(kinetic_csr.indptr) > 0
+        offsets = raw_labels[active_vertices] ^ graph_labels[active_vertices]
+        if offsets.size and np.unique(offsets).size == 1:
+            offset = int(offsets[0])
+    rule = SquareQDMChiralParityRule(
+        link_coefficients=global_coefficients,
+        offset=offset,
+        n_edge_equations=equation_matrix.shape[0],
+        metadata={
+            "n_basis_states": states.shape[0],
+            "tile_shape": tile_basis.tile_shape,
+            "tile_periodic": True,
+            "local_link_coefficients": tuple(int(value) for value in local_coefficients),
+        },
+    )
+    if not rule.validate_kinetic_matrix(states, kinetic_matrix, tolerance=tolerance):
+        raise RuntimeError("The inferred tile-periodic parity rule is invalid.")
+    return rule
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMChiralPEPSAnsatz:
+    """Native ``Z2``-symmetric PEPS for one selected type-1 chiral subset.
+
+    Each original virtual index is augmented by one parity bit.  For every
+    locally allowed QDM tensor entry, the four parity bits are summed modulo
+    two and constrained to equal the tile physical chiral charge.  On a closed
+    torus all virtual charges cancel pairwise, so the PEPS has support only in
+    the globally even sector of the inferred chiral operator.  The parity-rule
+    offset is chosen by :func:`build_square_qdm_type1_peps_problem` so that this
+    even sector is precisely the selected type-1 subset.
+
+    The additional charge configurations do not introduce new variational
+    parameters: all eight parity-compatible copies of an allowed structural
+    entry share the same compact amplitude.
+    """
+
+    tile_basis: SquareQDMRectangularTileTensorBasis
+    parameters: npt.NDArray[np.complex128]
+    physical_charges: npt.NDArray[np.int8]
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        parameters = np.asarray(self.parameters, dtype=np.complex128).reshape(-1)
+        charges = np.asarray(self.physical_charges, dtype=np.int8).reshape(-1) % 2
+        if parameters.size != self.tile_basis.n_entries:
+            raise ValueError(f"parameters must have size {self.tile_basis.n_entries}.")
+        if charges.size != self.tile_basis.physical_dimension:
+            raise ValueError(
+                f"physical_charges must have size {self.tile_basis.physical_dimension}."
+            )
+        object.__setattr__(self, "parameters", parameters.copy())
+        object.__setattr__(self, "physical_charges", charges.copy())
+        object.__setattr__(self, "metadata", dict(self.metadata))
+
+    @classmethod
+    def from_type1_problem(
+        cls,
+        problem: SquareQDMType1PEPSFiniteClusterProblem,
+        parameters: npt.ArrayLike,
+    ) -> SquareQDMChiralPEPSAnsatz:
+        """Build the native chiral tensor associated with a finite problem."""
+        if problem.parity_rule is None:
+            raise ValueError("The type-1 problem has no inferred chiral parity rule.")
+        charges = problem.parity_rule.tile_physical_charges(
+            problem.base_problem.model,
+            problem.tile_basis,
+        )
+        return cls(
+            tile_basis=problem.tile_basis,
+            parameters=np.asarray(parameters, dtype=np.complex128),
+            physical_charges=charges,
+            metadata={
+                "source": "type1_problem",
+                "target_graph_chiral_label": problem.target_chiral_label,
+                "parity_rule_offset": problem.parity_rule.offset,
+            },
+        )
+
+    @property
+    def n_parameters(self) -> int:
+        return int(self.parameters.size)
+
+    @property
+    def tensor_shape(self) -> tuple[int, int, int, int, int]:
+        base = self.tile_basis.tensor_shape
+        return (2 * base[0], 2 * base[1], 2 * base[2], 2 * base[3], base[4])
+
+    @property
+    def n_nonzero_tensor_entries(self) -> int:
+        return 8 * self.tile_basis.n_entries
+
+    def tensor_data(self) -> npt.NDArray[np.complex128]:
+        """Return the dense charge-augmented ``urdlp`` tensor."""
+        data = np.zeros(self.tensor_shape, dtype=np.complex128)
+        for entry_index, coordinate in enumerate(self.tile_basis.entry_coordinates):
+            up, right, down, left, physical = (int(value) for value in coordinate)
+            physical_charge = int(self.physical_charges[physical])
+            for charge_pattern in range(16):
+                charges = tuple((charge_pattern >> axis) & 1 for axis in range(4))
+                if (sum(charges) % 2) != physical_charge:
+                    continue
+                charge_up, charge_right, charge_down, charge_left = charges
+                data[
+                    2 * up + charge_up,
+                    2 * right + charge_right,
+                    2 * down + charge_down,
+                    2 * left + charge_left,
+                    physical,
+                ] = self.parameters[entry_index]
+        return data
+
+    @staticmethod
+    def charge_degeneracy(*, n_tiles_x: int, n_tiles_y: int) -> int:
+        """Return the constant virtual-charge multiplicity on a periodic torus."""
+        if n_tiles_x <= 0 or n_tiles_y <= 0:
+            raise ValueError("n_tiles_x and n_tiles_y must be positive.")
+        n_tensors = int(n_tiles_x) * int(n_tiles_y)
+        return 1 << (n_tensors + 1)
+
+    def to_quimb_tensor_network(
+        self,
+        *,
+        n_tiles_x: int,
+        n_tiles_y: int,
+        tags: str | Sequence[str] | None = ("QLINKS", "TYPE1", "UNIT_CELL"),
+    ) -> object:
+        """Build a periodic quimb network with explicit chiral charge bonds."""
+        if n_tiles_x <= 0 or n_tiles_y <= 0:
+            raise ValueError("n_tiles_x and n_tiles_y must be positive.")
+        qtn = _require_quimb()
+        if tags is None:
+            global_tags: tuple[str, ...] = ()
+        elif isinstance(tags, str):
+            global_tags = (tags,)
+        else:
+            global_tags = tuple(str(tag) for tag in tags)
+        data = self.tensor_data()
+        tensors = []
+        for tile_y in range(int(n_tiles_y)):
+            for tile_x in range(int(n_tiles_x)):
+                up = f"chiral_bond_y_{tile_x}_{tile_y}"
+                right = f"chiral_bond_x_{tile_x}_{tile_y}"
+                down = f"chiral_bond_y_{tile_x}_{(tile_y - 1) % int(n_tiles_y)}"
+                left = f"chiral_bond_x_{(tile_x - 1) % int(n_tiles_x)}_{tile_y}"
+                physical = f"physical_{tile_x}_{tile_y}"
+                tensors.append(
+                    qtn.Tensor(
+                        data=data.copy(),
+                        inds=(up, right, down, left, physical),
+                        tags=(
+                            *global_tags,
+                            f"I{tile_y},{tile_x}",
+                            f"X{tile_y}",
+                            f"Y{tile_x}",
+                        ),
+                    )
+                )
+        return qtn.TensorNetwork(tensors, virtual=True)

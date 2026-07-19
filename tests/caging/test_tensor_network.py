@@ -225,3 +225,247 @@ def test_short_autograd_optimization_reduces_exact_variance() -> None:
     assert result.metadata["optimizer_dimension"] == 108
     assert result.final_loss < result.initial_loss
     assert result.to_ansatz(ansatz.tile_basis).n_parameters == 108
+
+
+def test_tile_periodic_chiral_rule_anticommutes_with_square_qdm_kinetic_term() -> None:
+    from qlinks.caging import (
+        build_square_qdm_type1_peps_problem,
+        infer_square_qdm_tile_chiral_parity_rule,
+    )
+    from qlinks.caging.search import bipartition_labels
+
+    basis = _tile_basis()
+    model = SquareQDMModel(
+        lx=6,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    build_result = model.build()
+    states = np.asarray(build_result.basis.states, dtype=np.int8)
+    graph_labels = bipartition_labels(build_result.kinetic)
+    rule = infer_square_qdm_tile_chiral_parity_rule(
+        model,
+        states,
+        build_result.kinetic,
+        basis,
+        reference_labels=graph_labels,
+    )
+
+    assert rule.validate_kinetic_matrix(states, build_result.kinetic)
+    assert rule.metadata["tile_periodic"] is True
+    assert rule.n_edge_equations == 6
+    charges = rule.tile_physical_charges(model, basis)
+    assert charges.shape == (basis.physical_dimension,)
+    assert set(np.unique(charges)) == {0, 1}
+
+    problem = build_square_qdm_type1_peps_problem(model, basis)
+    assert problem.parity_rule is not None
+    assert problem.parity_rule.metadata["tile_periodic"] is True
+
+
+def test_type1_peps_objective_separates_kinetic_and_potential_conditions() -> None:
+    from qlinks.caging import build_square_qdm_type1_peps_problem
+
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    model = SquareQDMModel(
+        lx=6,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    problem = build_square_qdm_type1_peps_problem(
+        model,
+        ansatz.tile_basis,
+        reference_parameters=ansatz.parameters,
+    )
+    report = problem.diagnose(ansatz.parameters)
+
+    assert np.isclose(report.retained_chiral_weight, 1.0)
+    assert np.isclose(report.discarded_chiral_weight, 0.0)
+    assert np.isclose(report.kinetic_interference_norm, 3.0)
+    assert np.isclose(report.kinetic_interference_density, 3.0 / 24.0)
+    assert np.isclose(report.potential_variance, 0.0)
+    assert np.isclose(report.total_variance, report.kinetic_interference_norm)
+    assert np.isclose(report.objective, report.kinetic_interference_density)
+    assert report.n_nonzero_interference_targets == 48
+
+
+def test_type1_problem_accepts_an_existing_type1_cage_record() -> None:
+    from qlinks.caging import (
+        CageSearchConfig,
+        CageSearcher,
+        build_square_qdm_type1_peps_problem,
+    )
+
+    host = SquareQDMModel(
+        lx=6,
+        ly=6,
+        boundary_condition="periodic",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    tile_basis = build_square_qdm_rectangular_tile_tensor_basis(
+        host,
+        tile_shape=(2, 2),
+        origin=(2, 2),
+    )
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    build_result = model.build()
+    cages = CageSearcher.from_model_build_result(
+        build_result,
+        config=CageSearchConfig(search_type="type1"),
+    ).run()
+    record = cages[(0, 4), 0]
+    problem = build_square_qdm_type1_peps_problem(
+        model,
+        tile_basis,
+        cage_record=record,
+    )
+
+    assert problem.target_chiral_label in {0, 1}
+    assert np.isclose(problem.target_potential_value, 4.0)
+    assert np.unique(problem.chiral_labels[record.support]).tolist() == [
+        problem.target_chiral_label
+    ]
+    assert problem.parity_rule is not None
+    assert problem.parity_rule.metadata["tile_periodic"] is True
+
+
+@pytest.mark.skipif(not quimb_available(), reason="quimb is not installed")
+def test_type1_autograd_loss_matches_separated_diagnostic() -> None:
+    from qlinks.caging import autograd_available, build_square_qdm_type1_peps_problem
+
+    if not autograd_available():
+        pytest.skip("autograd is not installed")
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    model = SquareQDMModel(
+        lx=6,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    problem = build_square_qdm_type1_peps_problem(
+        model,
+        ansatz.tile_basis,
+        reference_parameters=ansatz.parameters,
+    )
+    initial = problem.base_problem.perturb_parameters(
+        ansatz.parameters,
+        scale=1.0e-2,
+        seed=0,
+    )
+    loss, gradient = problem.loss_and_gradient_autograd(initial)
+
+    assert np.isclose(loss, problem.loss(initial))
+    assert gradient.shape == (ansatz.tile_basis.n_entries,)
+    assert np.linalg.norm(gradient) > 0.0
+
+
+@pytest.mark.skipif(not quimb_available(), reason="quimb is not installed")
+def test_native_chiral_peps_projects_the_global_fock_subset() -> None:
+    from qlinks.caging import (
+        SquareQDMChiralPEPSAnsatz,
+        build_square_qdm_type1_peps_problem,
+    )
+
+    basis = _tile_basis()
+    sector_model = SquareQDMModel(
+        lx=6,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    problem = build_square_qdm_type1_peps_problem(sector_model, basis)
+    ansatz = SquareQDMChiralPEPSAnsatz.from_type1_problem(
+        problem,
+        np.ones(basis.n_entries),
+    )
+    network = ansatz.to_quimb_tensor_network(n_tiles_x=2, n_tiles_y=2)
+    norm_squared = float(network.norm(squared=True, optimize="greedy").real)
+
+    unrestricted_model = SquareQDMModel(
+        lx=6,
+        ly=4,
+        boundary_condition="periodic",
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    unrestricted_states = np.asarray(unrestricted_model.build_basis().states, dtype=np.int8)
+    even_count = int(np.count_nonzero(problem.parity_rule.labels(unrestricted_states) == 0))
+    degeneracy = ansatz.charge_degeneracy(n_tiles_x=2, n_tiles_y=2)
+
+    assert ansatz.tensor_shape == (16, 8, 16, 8, 71)
+    assert ansatz.n_nonzero_tensor_entries == 8 * basis.n_entries
+    assert np.isclose(norm_squared, even_count * degeneracy**2)
+
+
+@pytest.mark.skipif(not quimb_available(), reason="quimb is not installed")
+def test_short_type1_quimb_optimization_reduces_the_separated_objective() -> None:
+    from qlinks.caging import autograd_available, build_square_qdm_type1_peps_problem
+
+    if not autograd_available():
+        pytest.skip("autograd is not installed")
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    model = SquareQDMModel(
+        lx=6,
+        ly=2,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    problem = build_square_qdm_type1_peps_problem(
+        model,
+        ansatz.tile_basis,
+        reference_parameters=ansatz.parameters,
+    )
+    result = problem.optimize_with_quimb(
+        ansatz.parameters,
+        max_steps=1,
+        noise_scale=1.0e-2,
+        seed=0,
+        progbar=False,
+    )
+
+    assert result.improved
+    assert result.final_report.objective < result.initial_report.objective
