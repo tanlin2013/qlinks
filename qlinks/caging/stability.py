@@ -172,6 +172,43 @@ class CageBranchReport:
 
 
 @dataclass(frozen=True, slots=True)
+class CageRecordStabilitySummary:
+    """Record-wise stability data for a preferred basis of a degenerate cage manifold."""
+
+    record_index: int
+    signature: tuple[int, int]
+    support_size: int
+    inverse_participation_ratio: float
+    classification_label: str | None
+    n_collective_cancellation_source_probes: int | None
+    formal_compatible_dimension: int
+    exact_fixed_state_dimension: int
+    tangent_only_dimension: int
+
+    @property
+    def requires_collective_cancellation(self) -> bool | None:
+        if self.n_collective_cancellation_source_probes is None:
+            return None
+        return self.n_collective_cancellation_source_probes > 0
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "record_index": self.record_index,
+            "signature": self.signature,
+            "support_size": self.support_size,
+            "inverse_participation_ratio": self.inverse_participation_ratio,
+            "classification_label": self.classification_label,
+            "n_collective_cancellation_source_probes": (
+                self.n_collective_cancellation_source_probes
+            ),
+            "requires_collective_cancellation": self.requires_collective_cancellation,
+            "formal_compatible_dimension": self.formal_compatible_dimension,
+            "exact_fixed_state_dimension": self.exact_fixed_state_dimension,
+            "tangent_only_dimension": self.tangent_only_dimension,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class RandomCageStabilitySample:
     """One random multi-parameter deformation sample."""
 
@@ -1790,6 +1827,66 @@ def _continued_cage_eigenstate(
 
     selected_energy = complex(np.vdot(selected_state, internal_matrix @ selected_state))
     return selected_state, selected_energy
+
+
+def summarize_cage_record_stability(
+    base_hamiltonian: object,
+    perturbations: Sequence[object],
+    records: Sequence[object],
+    *,
+    classification_reports: Sequence[object] | None = None,
+    coefficient_field: CoefficientField = "real",
+    tolerance: float = 1e-10,
+) -> tuple[CageRecordStabilitySummary, ...]:
+    """Compare preferred cage representatives inside one degenerate manifold.
+
+    The records are intentionally treated as a chosen basis, such as the output
+    of the IPR degenerate-basis strategy.  Manifold-level statements remain
+    basis independent, whereas the returned record-wise quantities diagnose
+    whether one preferred localized representative is more fragile than the
+    others.
+    """
+    if classification_reports is not None and len(classification_reports) != len(records):
+        raise ValueError("classification_reports length must match records.")
+
+    summaries: list[CageRecordStabilitySummary] = []
+    for record_index, record in enumerate(records):
+        state = np.asarray(record.local_state, dtype=np.complex128).reshape(-1)
+        norm = float(np.linalg.norm(state))
+        if norm <= tolerance:
+            raise ValueError("record local_state must have nonzero norm.")
+        state = state / norm
+        hierarchy = cage_compatibility_hierarchy_from_hamiltonians(
+            base_hamiltonian,
+            perturbations,
+            record.support,
+            state,
+            coefficient_field=coefficient_field,
+            tolerance=tolerance,
+        )
+        classification = (
+            None if classification_reports is None else classification_reports[record_index]
+        )
+        summaries.append(
+            CageRecordStabilitySummary(
+                record_index=record_index,
+                signature=tuple(int(value) for value in record.signature),
+                support_size=int(np.asarray(record.support).size),
+                inverse_participation_ratio=float(np.sum(np.abs(state) ** 4)),
+                classification_label=(
+                    None if classification is None else str(classification.label)
+                ),
+                n_collective_cancellation_source_probes=(
+                    None
+                    if classification is None
+                    else int(classification.n_collective_cancellation_source_probes)
+                ),
+                formal_compatible_dimension=hierarchy.first_order.compatible_dimension,
+                exact_fixed_state_dimension=hierarchy.fixed_state.compatible_dimension,
+                tangent_only_dimension=hierarchy.tangent_only_dimension,
+            )
+        )
+    return tuple(summaries)
 
 
 def _matrix_linear_combination(

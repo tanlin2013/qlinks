@@ -275,3 +275,41 @@ def test_subspace_complement_basis_returns_parent_orthogonal_remainder() -> None
     assert complement.shape == (3, 1)
     assert np.linalg.norm(child.conj().T @ complement) < 1.0e-12
     assert np.isclose(abs(complement[1, 0]), 1.0)
+
+
+def test_summarize_cage_record_stability_compares_preferred_representatives():
+    from types import SimpleNamespace
+
+    from qlinks.caging import summarize_cage_record_stability
+
+    base, strong, structural, incompatible, cage_state = _toy_problem()
+    records = (
+        SimpleNamespace(
+            local_state=cage_state,
+            support=np.array([0, 1], dtype=np.int64),
+            signature=(0, 4),
+        ),
+        SimpleNamespace(
+            local_state=cage_state,
+            support=np.array([0, 1], dtype=np.int64),
+            signature=(0, 4),
+        ),
+    )
+    classifications = (
+        SimpleNamespace(label="regional_candidate", n_collective_cancellation_source_probes=0),
+        SimpleNamespace(label="extended_candidate", n_collective_cancellation_source_probes=3),
+    )
+
+    summaries = summarize_cage_record_stability(
+        base,
+        (strong, structural, incompatible),
+        records,
+        classification_reports=classifications,
+        tolerance=1.0e-12,
+    )
+
+    assert len(summaries) == 2
+    assert summaries[0].requires_collective_cancellation is False
+    assert summaries[1].requires_collective_cancellation is True
+    assert np.isclose(summaries[0].inverse_participation_ratio, 0.5)
+    assert summaries[0].formal_compatible_dimension == summaries[1].formal_compatible_dimension

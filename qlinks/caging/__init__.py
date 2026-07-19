@@ -267,6 +267,7 @@ from qlinks.caging.stability import (
     CageBranchReport,
     CageCompatibilityHierarchyReport,
     CageHamiltonianBlocks,
+    CageRecordStabilitySummary,
     CageStabilityDiagnostic,
     CoefficientField,
     FixedCageStateCompatibilityReport,
@@ -292,6 +293,7 @@ from qlinks.caging.stability import (
     subspace_complement_basis,
     subspace_principal_overlaps,
     subspace_projector_distance,
+    summarize_cage_record_stability,
 )
 from qlinks.caging.strip_transfer import (
     SquareQDMBetaZeroEnergyDensityEvaluation,
@@ -378,6 +380,7 @@ __all__ = [
     "CageHamiltonianBlocks",
     "CageLocalStructureReport",
     "CageRecord",
+    "CageRecordStabilitySummary",
     "CageRecordView",
     "CageRegionSupport",
     "CageSearchConfig",
@@ -690,6 +693,7 @@ __all__ = [
     "subspace_complement_basis",
     "subspace_principal_overlaps",
     "subspace_projector_distance",
+    "summarize_cage_record_stability",
     "support_key_for_zero_report",
     "support_key_from_mask",
     "type1_candidates_from_bipartite_self_loops",
