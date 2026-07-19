@@ -4180,6 +4180,167 @@ class QDMLocalGrammarExtensionReport:
 
 
 @dataclass(frozen=True, slots=True)
+class CyclicAmplitudeBondProfile:
+    """Exact finite-state bond-rank profile of a cyclic column amplitude.
+
+    The rank at a cut is the Schmidt rank of the sparse amplitude tensor after
+    grouping the columns to the left and right of that cut.  The maximum cut
+    rank is the minimal exact open-boundary MPS bond dimension for this finite
+    state.  A periodic MPS of bond dimension ``D`` has Schmidt rank at most
+    ``D**2``, giving the reported rigorous lower bound.
+    """
+
+    length: int
+    support_size: int
+    alphabet_size: int
+    cut_ranks: tuple[int, ...]
+    maximum_cut_rank: int
+    periodic_bond_dimension_lower_bound: int
+    translation_support_closed: bool
+    translation_eigenvalue: complex | None
+    translation_residual: float | None
+    tolerance: float
+
+    @property
+    def exact_open_bond_dimension(self) -> int:
+        return self.maximum_cut_rank
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "length": self.length,
+            "support_size": self.support_size,
+            "alphabet_size": self.alphabet_size,
+            "cut_ranks": self.cut_ranks,
+            "exact_open_bond_dimension": self.exact_open_bond_dimension,
+            "periodic_bond_dimension_lower_bound": (self.periodic_bond_dimension_lower_bound),
+            "translation_support_closed": self.translation_support_closed,
+            "translation_eigenvalue": self.translation_eigenvalue,
+            "translation_residual": self.translation_residual,
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMTransferSectorMultiplicity:
+    """Multiplicity of one lattice-momentum sector in a finite bond space."""
+
+    momentum_x_index: int
+    momentum_y_index: int
+    momentum_x: float
+    momentum_y: float
+    kernel_multiplicity: int
+    reference_multiplicity: int
+    relative_multiplicity: int
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "momentum_x_index": self.momentum_x_index,
+            "momentum_y_index": self.momentum_y_index,
+            "momentum_x": self.momentum_x,
+            "momentum_y": self.momentum_y,
+            "kernel_multiplicity": self.kernel_multiplicity,
+            "reference_multiplicity": self.reference_multiplicity,
+            "relative_multiplicity": self.relative_multiplicity,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMFiniteBondTransferInvariantReport:
+    """Discrete spatial representation carried by a fixed-width cage kernel.
+
+    The exact boundary kernel is treated as a finite transfer/bond space.  The
+    reference subspace may contain known compact or regional cage modes.  The
+    quotient then carries a basis-independent representation of the commuting
+    translations.  Momentum-sector multiplicities are integers and can change
+    only when the kernel/reference dimensions change or the spatial symmetry is
+    broken.
+
+    This is a physical symmetry representation, not automatically a virtual
+    projective (SPT) invariant.  ``group_relation_residual`` explicitly checks
+    that the quotient realizes the ordinary square-lattice relations.
+    """
+
+    system_size: tuple[int, int]
+    support_size: int
+    kernel_dimension: int
+    reference_dimension: int
+    relative_dimension: int
+    reference_containment_residual: float
+    kernel_symmetry_residual: float
+    reference_symmetry_residual: float
+    relative_symmetry_residual: float
+    translation_commutator_residual: float
+    group_relation_residual: float
+    sectors: tuple[SquareQDMTransferSectorMultiplicity, ...]
+    quotient_translation_x_character: complex | None
+    quotient_translation_y_character: complex | None
+    quotient_reflection_x_character: complex | None
+    quotient_reflection_y_character: complex | None
+    quotient_quarter_turn_character: complex | None
+    tolerance: float
+
+    @property
+    def relative_trivial_sector_dimension(self) -> int:
+        for sector in self.sectors:
+            if sector.momentum_x_index == 0 and sector.momentum_y_index == 0:
+                return sector.relative_multiplicity
+        return 0
+
+    @property
+    def relative_sector_signature(self) -> tuple[tuple[int, int, int], ...]:
+        return tuple(
+            (
+                sector.momentum_x_index,
+                sector.momentum_y_index,
+                sector.relative_multiplicity,
+            )
+            for sector in self.sectors
+            if sector.relative_multiplicity
+        )
+
+    @property
+    def has_one_dimensional_trivial_spatial_quotient(self) -> bool:
+        if self.relative_dimension != 1 or self.relative_trivial_sector_dimension != 1:
+            return False
+        characters = (
+            self.quotient_translation_x_character,
+            self.quotient_translation_y_character,
+            self.quotient_reflection_x_character,
+            self.quotient_reflection_y_character,
+            self.quotient_quarter_turn_character,
+        )
+        return all(
+            value is None or abs(value - 1.0) <= 10.0 * self.tolerance for value in characters
+        )
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "system_size": self.system_size,
+            "support_size": self.support_size,
+            "kernel_dimension": self.kernel_dimension,
+            "reference_dimension": self.reference_dimension,
+            "relative_dimension": self.relative_dimension,
+            "relative_trivial_sector_dimension": self.relative_trivial_sector_dimension,
+            "relative_sector_signature": self.relative_sector_signature,
+            "reference_containment_residual": self.reference_containment_residual,
+            "kernel_symmetry_residual": self.kernel_symmetry_residual,
+            "reference_symmetry_residual": self.reference_symmetry_residual,
+            "relative_symmetry_residual": self.relative_symmetry_residual,
+            "translation_commutator_residual": self.translation_commutator_residual,
+            "group_relation_residual": self.group_relation_residual,
+            "quotient_translation_x_character": self.quotient_translation_x_character,
+            "quotient_translation_y_character": self.quotient_translation_y_character,
+            "quotient_reflection_x_character": self.quotient_reflection_x_character,
+            "quotient_reflection_y_character": self.quotient_reflection_y_character,
+            "quotient_quarter_turn_character": self.quotient_quarter_turn_character,
+            "has_one_dimensional_trivial_spatial_quotient": (
+                self.has_one_dimensional_trivial_spatial_quotient
+            ),
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class RealLocalSignObstructionReport:
     """Mod-two obstruction to a real finite-range local sign factorization.
 
@@ -4266,6 +4427,74 @@ def square_qdm_column_words(
             symbols.append((incoming, outgoing, vertical))
         words.append(tuple(symbols))
     return tuple(words)
+
+
+def diagnose_cyclic_amplitude_bond_profile(
+    column_words: Sequence[SquareQDMColumnWord],
+    amplitudes: object,
+    *,
+    tolerance: float = 1e-10,
+) -> CyclicAmplitudeBondProfile:
+    """Compute exact finite-state bond ranks of a cyclic column amplitude."""
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    words = tuple(tuple(word) for word in column_words)
+    if not words:
+        raise ValueError("column_words must not be empty.")
+    length = len(words[0])
+    if length < 2 or any(len(word) != length for word in words):
+        raise ValueError("all column words must have the same length of at least two.")
+    if len(set(words)) != len(words):
+        raise ValueError("column_words must not contain duplicates.")
+    vector = np.asarray(amplitudes, dtype=np.complex128).reshape(-1)
+    if vector.size != len(words):
+        raise ValueError("amplitudes must have one entry per column word.")
+    if float(np.linalg.norm(vector)) <= tolerance:
+        raise ValueError("amplitudes must contain a nonzero state.")
+
+    cut_ranks: list[int] = []
+    for cut in range(1, length):
+        prefixes = tuple(sorted({word[:cut] for word in words}))
+        suffixes = tuple(sorted({word[cut:] for word in words}))
+        prefix_index = {prefix: index for index, prefix in enumerate(prefixes)}
+        suffix_index = {suffix: index for index, suffix in enumerate(suffixes)}
+        matrix = np.zeros((len(prefixes), len(suffixes)), dtype=np.complex128)
+        for word, amplitude in zip(words, vector, strict=True):
+            matrix[prefix_index[word[:cut]], suffix_index[word[cut:]]] += amplitude
+        singular_values = scipy_linalg.svdvals(matrix)
+        cut_ranks.append(int(np.sum(singular_values > tolerance)))
+
+    maximum_rank = max(cut_ranks)
+    periodic_lower_bound = int(np.ceil(np.sqrt(maximum_rank)))
+    amplitude_by_word = dict(zip(words, vector, strict=True))
+    shifted_words = tuple(word[1:] + word[:1] for word in words)
+    support_closed = all(word in amplitude_by_word for word in shifted_words)
+    translation_eigenvalue: complex | None = None
+    translation_residual: float | None = None
+    if support_closed:
+        shifted_vector = np.asarray(
+            [amplitude_by_word[word] for word in shifted_words],
+            dtype=np.complex128,
+        )
+        norm_squared = float(np.vdot(vector, vector).real)
+        translation_eigenvalue = complex(np.vdot(vector, shifted_vector) / norm_squared)
+        translation_residual = float(
+            np.linalg.norm(shifted_vector - translation_eigenvalue * vector) / np.sqrt(norm_squared)
+        )
+
+    alphabet = {symbol for word in words for symbol in word}
+    return CyclicAmplitudeBondProfile(
+        length=length,
+        support_size=len(words),
+        alphabet_size=len(alphabet),
+        cut_ranks=tuple(cut_ranks),
+        maximum_cut_rank=maximum_rank,
+        periodic_bond_dimension_lower_bound=periodic_lower_bound,
+        translation_support_closed=support_closed,
+        translation_eigenvalue=translation_eigenvalue,
+        translation_residual=translation_residual,
+        tolerance=tolerance,
+    )
 
 
 def infer_square_qdm_cyclic_column_grammar(
@@ -4492,6 +4721,329 @@ def _translate_square_qdm_configs(
         target_id = link_lookup[((int(x) + dx) % lx, (int(y) + dy) % ly, str(link.kind))]
         translated[:, target_id] = configs[:, int(link.id)]
     return translated
+
+
+def _reflect_square_qdm_configs(
+    model: object,
+    configs: npt.NDArray[np.int64],
+    *,
+    axis: Literal["x", "y"],
+) -> npt.NDArray[np.int64]:
+    """Reflect square-QDM link configurations about a lattice coordinate axis."""
+    if axis not in {"x", "y"}:
+        raise ValueError("axis must be 'x' or 'y'.")
+    link_lookup: dict[tuple[int, int, str], int] = {}
+    for link in model.lattice.links:
+        x, y = model.lattice.sites[int(link.source)].cell
+        link_lookup[(int(x), int(y), str(link.kind))] = int(link.id)
+    reflected = np.zeros_like(configs)
+    lx = int(model.lattice.lx)
+    ly = int(model.lattice.ly)
+    for link in model.lattice.links:
+        x, y = model.lattice.sites[int(link.source)].cell
+        kind = str(link.kind)
+        if axis == "x":
+            target = (
+                ((-int(x) - 1) % lx, int(y), kind)
+                if kind == "x"
+                else ((-int(x)) % lx, int(y), kind)
+            )
+        else:
+            target = (
+                (int(x), (-int(y)) % ly, kind)
+                if kind == "x"
+                else (int(x), (-int(y) - 1) % ly, kind)
+            )
+        reflected[:, link_lookup[target]] = configs[:, int(link.id)]
+    return reflected
+
+
+def _quarter_turn_square_qdm_configs(
+    model: object,
+    configs: npt.NDArray[np.int64],
+) -> npt.NDArray[np.int64]:
+    """Rotate square-QDM link configurations counterclockwise by ninety degrees."""
+    lx = int(model.lattice.lx)
+    ly = int(model.lattice.ly)
+    if lx != ly:
+        raise ValueError("a quarter turn requires a square torus.")
+    link_lookup: dict[tuple[int, int, str], int] = {}
+    for link in model.lattice.links:
+        x, y = model.lattice.sites[int(link.source)].cell
+        link_lookup[(int(x), int(y), str(link.kind))] = int(link.id)
+    rotated = np.zeros_like(configs)
+    for link in model.lattice.links:
+        x, y = model.lattice.sites[int(link.source)].cell
+        kind = str(link.kind)
+        if kind == "x":
+            target = ((-int(y)) % lx, int(x) % ly, "y")
+        else:
+            target = ((-int(y) - 1) % lx, int(x) % ly, "x")
+        rotated[:, link_lookup[target]] = configs[:, int(link.id)]
+    return rotated
+
+
+def _support_symmetry_permutation(
+    support_configs: npt.NDArray[np.int64],
+    transformed_configs: npt.NDArray[np.int64],
+    *,
+    name: str,
+) -> npt.NDArray[np.int64]:
+    row_by_config = {
+        tuple(int(value) for value in config): row_index
+        for row_index, config in enumerate(support_configs)
+    }
+    if len(row_by_config) != support_configs.shape[0]:
+        raise ValueError("support_configs must not contain duplicates.")
+    permutation: list[int] = []
+    for config in transformed_configs:
+        row_index = row_by_config.get(tuple(int(value) for value in config))
+        if row_index is None:
+            raise ValueError(f"support is not invariant under {name}.")
+        permutation.append(row_index)
+    return np.asarray(permutation, dtype=np.int64)
+
+
+def _subspace_symmetry_representation(
+    basis: npt.NDArray[np.complex128],
+    permutation: npt.NDArray[np.int64],
+) -> tuple[npt.NDArray[np.complex128], float]:
+    if basis.shape[1] == 0:
+        return np.zeros((0, 0), dtype=np.complex128), 0.0
+    transformed = np.zeros_like(basis)
+    transformed[permutation, :] = basis
+    representation = basis.conj().T @ transformed
+    residual = float(np.linalg.norm(transformed - basis @ representation))
+    return np.asarray(representation, dtype=np.complex128), residual
+
+
+def _translation_sector_multiplicities(
+    translation_x: npt.NDArray[np.complex128],
+    translation_y: npt.NDArray[np.complex128],
+    *,
+    lx: int,
+    ly: int,
+    tolerance: float,
+) -> dict[tuple[int, int], int]:
+    dimension = int(translation_x.shape[0])
+    if dimension == 0:
+        return {}
+    powers_x = [np.linalg.matrix_power(translation_x, power) for power in range(lx)]
+    powers_y = [np.linalg.matrix_power(translation_y, power) for power in range(ly)]
+    multiplicities: dict[tuple[int, int], int] = {}
+    for momentum_x_index in range(lx):
+        for momentum_y_index in range(ly):
+            projector = np.zeros((dimension, dimension), dtype=np.complex128)
+            for shift_x in range(lx):
+                for shift_y in range(ly):
+                    phase = np.exp(
+                        -2j
+                        * np.pi
+                        * (momentum_x_index * shift_x / lx + momentum_y_index * shift_y / ly)
+                    )
+                    projector += phase * (powers_x[shift_x] @ powers_y[shift_y])
+            projector /= lx * ly
+            singular_values = scipy_linalg.svdvals(projector)
+            multiplicity = int(np.sum(singular_values > 10.0 * tolerance))
+            if multiplicity:
+                multiplicities[(momentum_x_index, momentum_y_index)] = multiplicity
+    return multiplicities
+
+
+def _one_dimensional_character(
+    representation: npt.NDArray[np.complex128] | None,
+) -> complex | None:
+    if representation is None or representation.shape != (1, 1):
+        return None
+    return complex(representation[0, 0])
+
+
+def diagnose_square_qdm_finite_bond_transfer_invariant(
+    model: object,
+    support_configs: object,
+    kernel_basis: npt.ArrayLike,
+    reference_basis: npt.ArrayLike | None = None,
+    *,
+    tolerance: float = 1e-10,
+) -> SquareQDMFiniteBondTransferInvariantReport:
+    """Resolve a fixed-width cage kernel and its quotient into momentum sectors.
+
+    The kernel is interpreted as the finite transfer/bond space admitted by the
+    local support language.  ``reference_basis`` typically contains translated
+    compact cages.  The relative momentum multiplicities are basis independent.
+    """
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    configs = np.asarray(support_configs, dtype=np.int64)
+    if configs.ndim != 2:
+        raise ValueError("support_configs must be two-dimensional.")
+    if configs.shape[1] != int(model.lattice.num_links):
+        raise ValueError("support_configs width must match model links.")
+    kernel = _orthonormal_basis_absolute(
+        np.asarray(kernel_basis, dtype=np.complex128),
+        tolerance=tolerance,
+    )
+    if kernel.shape[0] != configs.shape[0]:
+        raise ValueError("kernel_basis row count must match support_configs.")
+    if reference_basis is None:
+        reference = np.zeros((configs.shape[0], 0), dtype=np.complex128)
+    else:
+        reference = _orthonormal_basis_absolute(
+            np.asarray(reference_basis, dtype=np.complex128),
+            tolerance=tolerance,
+        )
+        if reference.shape[0] != configs.shape[0]:
+            raise ValueError("reference_basis row count must match support_configs.")
+    reference_projection = kernel @ (kernel.conj().T @ reference)
+    containment_residual = float(np.linalg.norm(reference - reference_projection))
+    if containment_residual > tolerance * max(1.0, float(np.linalg.norm(reference))):
+        raise ValueError("reference_basis is not contained in kernel_basis within tolerance.")
+    relative = subspace_complement_basis(kernel, reference, tolerance=10.0 * tolerance)
+
+    lx = int(model.lattice.lx)
+    ly = int(model.lattice.ly)
+    transformed_by_name = {
+        "translation_x": _translate_square_qdm_configs(model, configs, dx=1, dy=0),
+        "translation_y": _translate_square_qdm_configs(model, configs, dx=0, dy=1),
+        "reflection_x": _reflect_square_qdm_configs(model, configs, axis="x"),
+        "reflection_y": _reflect_square_qdm_configs(model, configs, axis="y"),
+    }
+    if lx == ly:
+        transformed_by_name["quarter_turn"] = _quarter_turn_square_qdm_configs(
+            model,
+            configs,
+        )
+    permutations = {
+        name: _support_symmetry_permutation(configs, transformed, name=name)
+        for name, transformed in transformed_by_name.items()
+    }
+
+    def representations(
+        basis: npt.NDArray[np.complex128],
+    ) -> tuple[dict[str, npt.NDArray[np.complex128]], float]:
+        values: dict[str, npt.NDArray[np.complex128]] = {}
+        residual = 0.0
+        for name, permutation in permutations.items():
+            representation, current_residual = _subspace_symmetry_representation(
+                basis,
+                permutation,
+            )
+            values[name] = representation
+            residual = max(residual, current_residual)
+        return values, residual
+
+    kernel_representations, kernel_residual = representations(kernel)
+    reference_representations, reference_residual = representations(reference)
+    relative_representations, relative_residual = representations(relative)
+
+    kernel_multiplicities = _translation_sector_multiplicities(
+        kernel_representations["translation_x"],
+        kernel_representations["translation_y"],
+        lx=lx,
+        ly=ly,
+        tolerance=tolerance,
+    )
+    reference_multiplicities = _translation_sector_multiplicities(
+        reference_representations["translation_x"],
+        reference_representations["translation_y"],
+        lx=lx,
+        ly=ly,
+        tolerance=tolerance,
+    )
+    relative_multiplicities = _translation_sector_multiplicities(
+        relative_representations["translation_x"],
+        relative_representations["translation_y"],
+        lx=lx,
+        ly=ly,
+        tolerance=tolerance,
+    )
+    sector_keys = sorted(
+        set(kernel_multiplicities) | set(reference_multiplicities) | set(relative_multiplicities)
+    )
+    sectors = tuple(
+        SquareQDMTransferSectorMultiplicity(
+            momentum_x_index=momentum_x_index,
+            momentum_y_index=momentum_y_index,
+            momentum_x=float(2.0 * np.pi * momentum_x_index / lx),
+            momentum_y=float(2.0 * np.pi * momentum_y_index / ly),
+            kernel_multiplicity=kernel_multiplicities.get(
+                (momentum_x_index, momentum_y_index),
+                0,
+            ),
+            reference_multiplicity=reference_multiplicities.get(
+                (momentum_x_index, momentum_y_index),
+                0,
+            ),
+            relative_multiplicity=relative_multiplicities.get(
+                (momentum_x_index, momentum_y_index),
+                0,
+            ),
+        )
+        for momentum_x_index, momentum_y_index in sector_keys
+    )
+
+    quotient_tx = relative_representations["translation_x"]
+    quotient_ty = relative_representations["translation_y"]
+    quotient_rx = relative_representations["reflection_x"]
+    quotient_ry = relative_representations["reflection_y"]
+    translation_commutator = float(
+        np.linalg.norm(quotient_tx @ quotient_ty - quotient_ty @ quotient_tx)
+    )
+    relation_residuals = [translation_commutator]
+    identity = np.eye(relative.shape[1], dtype=np.complex128)
+    if relative.shape[1]:
+        relation_residuals.extend(
+            [
+                float(np.linalg.norm(quotient_rx @ quotient_rx - identity)),
+                float(np.linalg.norm(quotient_ry @ quotient_ry - identity)),
+                float(
+                    np.linalg.norm(
+                        quotient_rx @ quotient_tx @ quotient_rx.conj().T - quotient_tx.conj().T
+                    )
+                ),
+                float(
+                    np.linalg.norm(
+                        quotient_ry @ quotient_ty @ quotient_ry.conj().T - quotient_ty.conj().T
+                    )
+                ),
+            ]
+        )
+        quarter_turn = relative_representations.get("quarter_turn")
+        if quarter_turn is not None:
+            relation_residuals.extend(
+                [
+                    float(np.linalg.norm(np.linalg.matrix_power(quarter_turn, 4) - identity)),
+                    float(
+                        np.linalg.norm(
+                            quarter_turn @ quotient_tx @ quarter_turn.conj().T - quotient_ty
+                        )
+                    ),
+                ]
+            )
+    group_relation_residual = max(relation_residuals, default=0.0)
+
+    return SquareQDMFiniteBondTransferInvariantReport(
+        system_size=(lx, ly),
+        support_size=int(configs.shape[0]),
+        kernel_dimension=int(kernel.shape[1]),
+        reference_dimension=int(reference.shape[1]),
+        relative_dimension=int(relative.shape[1]),
+        reference_containment_residual=containment_residual,
+        kernel_symmetry_residual=kernel_residual,
+        reference_symmetry_residual=reference_residual,
+        relative_symmetry_residual=relative_residual,
+        translation_commutator_residual=translation_commutator,
+        group_relation_residual=group_relation_residual,
+        sectors=sectors,
+        quotient_translation_x_character=_one_dimensional_character(quotient_tx),
+        quotient_translation_y_character=_one_dimensional_character(quotient_ty),
+        quotient_reflection_x_character=_one_dimensional_character(quotient_rx),
+        quotient_reflection_y_character=_one_dimensional_character(quotient_ry),
+        quotient_quarter_turn_character=_one_dimensional_character(
+            relative_representations.get("quarter_turn")
+        ),
+        tolerance=tolerance,
+    )
 
 
 def _periodic_product_translation_span(

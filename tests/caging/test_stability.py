@@ -830,3 +830,71 @@ def test_collective_square_qdm_local_grammar_has_only_product_kernel_at_8x4() ->
     assert point.product_containment_residual < 1.0e-8
     np.testing.assert_allclose(point.principal_overlaps, 1.0, atol=1.0e-8)
     assert point.localized_support_sizes == (16, 16, 16, 16)
+
+
+def test_cyclic_amplitude_bond_profile_detects_exact_schmidt_rank() -> None:
+    from qlinks.caging import diagnose_cyclic_amplitude_bond_profile
+
+    zero = (0, 0, 0)
+    one = (1, 1, 1)
+    words = (
+        (zero, zero, zero, zero),
+        (one, one, one, one),
+    )
+    report = diagnose_cyclic_amplitude_bond_profile(
+        words,
+        np.asarray([1.0, -1.0], dtype=np.complex128) / np.sqrt(2.0),
+        tolerance=1.0e-12,
+    )
+
+    assert report.cut_ranks == (2, 2, 2)
+    assert report.exact_open_bond_dimension == 2
+    assert report.periodic_bond_dimension_lower_bound == 2
+    assert report.translation_support_closed
+    assert np.isclose(report.translation_eigenvalue, 1.0)
+    assert report.translation_residual is not None
+    assert report.translation_residual < 1.0e-12
+
+
+def test_square_qdm_finite_bond_transfer_invariant_resolves_trivial_sector() -> None:
+    from qlinks.caging import diagnose_square_qdm_finite_bond_transfer_invariant
+    from qlinks.models import SquareQDMModel
+
+    model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=1.0,
+    )
+    build = model.build(
+        basis_solver="dfs",
+        builder="sparse",
+        backend="scipy",
+        sort_basis=True,
+    )
+    support_configs = np.asarray(
+        [build.basis.state(index) for index in range(build.hamiltonian.shape[0])],
+        dtype=np.int64,
+    )
+    uniform = np.ones((support_configs.shape[0], 1), dtype=np.complex128)
+    uniform /= np.linalg.norm(uniform)
+
+    report = diagnose_square_qdm_finite_bond_transfer_invariant(
+        model,
+        support_configs,
+        uniform,
+        tolerance=1.0e-10,
+    )
+
+    assert report.kernel_dimension == 1
+    assert report.reference_dimension == 0
+    assert report.relative_dimension == 1
+    assert report.relative_trivial_sector_dimension == 1
+    assert report.has_one_dimensional_trivial_spatial_quotient
+    assert report.relative_sector_signature == ((0, 0, 1),)
+    assert report.kernel_symmetry_residual < 1.0e-10
+    assert report.group_relation_residual < 1.0e-10
