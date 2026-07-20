@@ -1427,6 +1427,83 @@ class SquareQDMType1PEPSFiniteClusterProblem:
     def chiral_mask(self) -> npt.NDArray[np.float64]:
         return np.asarray(self.chiral_labels == self.target_chiral_label, dtype=np.float64)
 
+    @property
+    def target_basis_indices(self) -> npt.NDArray[np.int64]:
+        """Indices of configurations in the occupied type-1 chiral subset."""
+        return np.asarray(
+            np.flatnonzero(self.chiral_labels == self.target_chiral_label),
+            dtype=np.int64,
+        )
+
+    @property
+    def opposite_basis_indices(self) -> npt.NDArray[np.int64]:
+        """Indices of configurations on the empty opposite chiral subset."""
+        return np.asarray(
+            np.flatnonzero(self.chiral_labels != self.target_chiral_label),
+            dtype=np.int64,
+        )
+
+    @property
+    def target_entry_parameter_indices(self) -> npt.NDArray[np.int64]:
+        """Compact tensor entries needed only for the occupied chiral block."""
+        return np.asarray(
+            self.base_problem.entry_parameter_indices[self.target_basis_indices],
+            dtype=np.int64,
+        )
+
+    @property
+    def target_tensor_coordinates(self) -> npt.NDArray[np.int64]:
+        """Dense tensor coordinates needed only for the occupied chiral block."""
+        return np.asarray(
+            self.base_problem.tensor_coordinates[self.target_basis_indices],
+            dtype=np.int64,
+        )
+
+    @property
+    def target_potential_values(self) -> npt.NDArray[np.float64]:
+        return np.asarray(self.potential_values[self.target_basis_indices], dtype=np.float64)
+
+    @property
+    def kinetic_interference_matrix(self) -> scipy_sparse.csr_array:
+        """Rectangular type-1 map ``B: H_target -> H_opposite``.
+
+        This is the block that must annihilate the occupied-subset amplitude
+        vector.  Storing and applying this rectangular block avoids forming a
+        full projected wavefunction or multiplying by the complete kinetic
+        matrix during optimization.
+        """
+        return scipy_sparse.csr_array(
+            self.kinetic_matrix[
+                self.opposite_basis_indices[:, None],
+                self.target_basis_indices,
+            ],
+            dtype=np.complex128,
+        )
+
+    def native_state_vector(
+        self,
+        parameters: npt.ArrayLike,
+        *,
+        normalize: bool = True,
+    ) -> npt.NDArray[np.complex128]:
+        """Evaluate amplitudes directly in the occupied chiral block.
+
+        Unlike :meth:`projected_state_vector`, this never constructs amplitudes
+        on the opposite Fock-space subset and then discards them.  It is the
+        finite-cluster counterpart of contracting the native ``Z2``-symmetric
+        PEPS in a fixed total-charge sector.
+        """
+        values = np.asarray(parameters, dtype=np.complex128).reshape(-1)
+        if values.size != self.tile_basis.n_entries:
+            raise ValueError(f"parameters must have size {self.tile_basis.n_entries}.")
+        state = np.prod(values[self.target_entry_parameter_indices], axis=1)
+        if normalize:
+            norm = float(np.linalg.norm(state))
+            if norm == 0.0:
+                raise ValueError("The PEPS is zero in the selected chiral sector.")
+            state = state / norm
+        return np.asarray(state, dtype=np.complex128)
+
     def projected_state_vector(
         self,
         parameters: npt.ArrayLike,
@@ -1441,6 +1518,76 @@ class SquareQDMType1PEPSFiniteClusterProblem:
                 raise ValueError("The PEPS has zero weight in the selected chiral sector.")
             state = state / norm
         return np.asarray(state, dtype=np.complex128)
+
+    def diagnose_native(
+        self,
+        parameters: npt.ArrayLike,
+    ) -> SquareQDMType1PEPSResidualReport:
+        """Diagnose the native occupied-block state without post-projection."""
+        state = self.native_state_vector(parameters, normalize=False)
+        state_norm = float(np.linalg.norm(state))
+        if state_norm == 0.0:
+            return SquareQDMType1PEPSResidualReport(
+                norm_before_projection=0.0,
+                norm_after_projection=0.0,
+                retained_chiral_weight=1.0,
+                discarded_chiral_weight=0.0,
+                target_chiral_label=self.target_chiral_label,
+                kinetic_interference_norm=float("inf"),
+                kinetic_interference_density=float("inf"),
+                potential_mean=0.0,
+                potential_variance=float("inf"),
+                potential_variance_density=float("inf"),
+                total_variance=float("inf"),
+                objective=float("inf"),
+                max_interference_residual=float("inf"),
+                n_nonzero_interference_targets=0,
+                nonzero_projected_amplitudes=0,
+                hilbert_dimension=self.base_problem.hilbert_dimension,
+                target_potential_value=self.target_potential_value,
+                target_potential_residual=None,
+            )
+        state = state / state_norm
+        interference = np.asarray(
+            self.kinetic_interference_matrix @ state,
+            dtype=np.complex128,
+        )
+        kinetic_norm_squared = float(np.vdot(interference, interference).real)
+        probabilities = np.abs(state) ** 2
+        potential = self.target_potential_values
+        potential_mean = float(np.sum(probabilities * potential))
+        potential_variance = float(np.sum(probabilities * (potential - potential_mean) ** 2))
+        objective = (
+            kinetic_norm_squared / self.n_plaquettes
+            + self.potential_weight * potential_variance / self.n_plaquettes
+        )
+        target_residual = None
+        if self.target_potential_value is not None:
+            target_residual = float(
+                np.sum(probabilities * (potential - float(self.target_potential_value)) ** 2)
+            )
+        return SquareQDMType1PEPSResidualReport(
+            norm_before_projection=state_norm,
+            norm_after_projection=state_norm,
+            retained_chiral_weight=1.0,
+            discarded_chiral_weight=0.0,
+            target_chiral_label=self.target_chiral_label,
+            kinetic_interference_norm=kinetic_norm_squared,
+            kinetic_interference_density=kinetic_norm_squared / self.n_plaquettes,
+            potential_mean=potential_mean,
+            potential_variance=potential_variance,
+            potential_variance_density=potential_variance / self.n_plaquettes,
+            total_variance=kinetic_norm_squared + potential_variance,
+            objective=objective,
+            max_interference_residual=float(np.max(np.abs(interference), initial=0.0)),
+            n_nonzero_interference_targets=int(
+                np.count_nonzero(np.abs(interference) > self.tolerance)
+            ),
+            nonzero_projected_amplitudes=int(np.count_nonzero(np.abs(state) > self.tolerance)),
+            hilbert_dimension=self.base_problem.hilbert_dimension,
+            target_potential_value=self.target_potential_value,
+            target_potential_residual=target_residual,
+        )
 
     def diagnose(self, parameters: npt.ArrayLike) -> SquareQDMType1PEPSResidualReport:
         raw = self.base_problem.state_vector(parameters, normalize=False)
@@ -1519,7 +1666,7 @@ class SquareQDMType1PEPSFiniteClusterProblem:
         )
 
     def loss(self, parameters: npt.ArrayLike) -> float:
-        return float(self.diagnose(parameters).objective)
+        return float(self.diagnose_native(parameters).objective)
 
     def loss_and_gradient_autograd(
         self,
@@ -1535,17 +1682,16 @@ class SquareQDMType1PEPSFiniteClusterProblem:
             raise ValueError(f"parameters must have size {self.tile_basis.n_entries}.")
         if np.max(np.abs(values.imag), initial=0.0) > self.tolerance:
             raise ValueError("The Autograd prototype currently optimizes real parameters only.")
-        parameter_indices = np.asarray(self.base_problem.entry_parameter_indices, dtype=np.int64)
-        kinetic = anp.asarray(self.kinetic_matrix.toarray().real)
-        potential = anp.asarray(self.potential_values)
-        mask = anp.asarray(self.chiral_mask)
+        parameter_indices = np.asarray(self.target_entry_parameter_indices, dtype=np.int64)
+        interference = anp.asarray(self.kinetic_interference_matrix.toarray().real)
+        potential = anp.asarray(self.target_potential_values)
         n_plaquettes = float(self.n_plaquettes)
         potential_weight = float(self.potential_weight)
 
         def objective(compact_parameters: Any) -> Any:
-            state = anp.prod(compact_parameters[parameter_indices], axis=1) * mask
+            state = anp.prod(compact_parameters[parameter_indices], axis=1)
             norm_squared = anp.sum(state * state) + 1.0e-30
-            kinetic_state = anp.dot(kinetic, state)
+            kinetic_state = anp.dot(interference, state)
             kinetic_loss = anp.sum(kinetic_state * kinetic_state) / norm_squared
             probabilities = state * state / norm_squared
             potential_mean = anp.sum(probabilities * potential)
@@ -1599,10 +1745,12 @@ class SquareQDMType1PEPSFiniteClusterProblem:
             network,
             _quimb_type1_cluster_loss,
             loss_constants={
-                "tensor_coordinates": self.base_problem.tensor_coordinates,
-                "kinetic": np.asarray(self.kinetic_matrix.toarray().real, dtype=np.float64),
-                "potential": np.asarray(self.potential_values, dtype=np.float64),
-                "chiral_mask": self.chiral_mask,
+                "tensor_coordinates": self.target_tensor_coordinates,
+                "kinetic": np.asarray(
+                    self.kinetic_interference_matrix.toarray().real,
+                    dtype=np.float64,
+                ),
+                "potential": np.asarray(self.target_potential_values, dtype=np.float64),
                 "n_plaquettes": float(self.n_plaquettes),
                 "potential_weight": float(self.potential_weight),
             },
@@ -1629,7 +1777,7 @@ class SquareQDMType1PEPSFiniteClusterProblem:
         initial_parameters = self.base_problem.perturb_parameters(
             parameters, scale=noise_scale, seed=seed, normalize=True
         )
-        initial_report = self.diagnose(initial_parameters)
+        initial_report = self.diagnose_native(initial_parameters)
         optimizer_object = self.make_quimb_optimizer(
             initial_parameters,
             autodiff_backend=autodiff_backend,
@@ -1647,7 +1795,7 @@ class SquareQDMType1PEPSFiniteClusterProblem:
             optimized_parameters=optimized_parameters,
             loss_history=tuple(float(value) for value in optimizer_object.losses),
             initial_report=initial_report,
-            final_report=self.diagnose(optimized_parameters),
+            final_report=self.diagnose_native(optimized_parameters),
             requested_steps=int(max_steps),
             optimizer=str(optimizer),
             autodiff_backend=str(autodiff_backend),
@@ -1661,7 +1809,6 @@ def _quimb_type1_cluster_loss(
     tensor_coordinates: Any,
     kinetic: Any,
     potential: Any,
-    chiral_mask: Any,
     n_plaquettes: float,
     potential_weight: float,
 ) -> Any:
@@ -1684,7 +1831,6 @@ def _quimb_type1_cluster_loss(
         state = selected if state is None else state * selected
     if state is None:
         state = ar.do("ones", (n_basis,), like=unit_tensor)
-    state = state * chiral_mask
     norm_squared = ar.do("sum", state * state) + 1.0e-30
     kinetic_state = kinetic @ state
     kinetic_loss = ar.do("sum", kinetic_state * kinetic_state) / norm_squared
@@ -1693,6 +1839,474 @@ def _quimb_type1_cluster_loss(
     potential_delta = potential - potential_mean
     potential_variance = ar.do("sum", probabilities * potential_delta * potential_delta)
     return (kinetic_loss + potential_weight * potential_variance) / n_plaquettes
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMType1ClusterValidationRecord:
+    """Type-1 diagnostics for one member of a shared-tensor cluster family."""
+
+    label: str
+    n_plaquettes: int
+    report: SquareQDMType1PEPSResidualReport
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMType1ClusterValidationReport:
+    """Cross-cluster type-1 diagnostics for one common PEPS tensor."""
+
+    records: tuple[SquareQDMType1ClusterValidationRecord, ...]
+    aggregation_power: float = 4.0
+    potential_weight: float = 1.0
+    cluster_weights: Mapping[str, float] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if not self.records:
+            raise ValueError("At least one cluster validation record is required.")
+        if self.aggregation_power < 1.0:
+            raise ValueError("aggregation_power must be at least one.")
+        if self.potential_weight < 0.0:
+            raise ValueError("potential_weight must be non-negative.")
+        labels = tuple(record.label for record in self.records)
+        if len(set(labels)) != len(labels):
+            raise ValueError("Cluster validation labels must be unique.")
+        weights = {label: float(self.cluster_weights.get(label, 1.0)) for label in labels}
+        if any(weight <= 0.0 for weight in weights.values()):
+            raise ValueError("All cluster weights must be positive.")
+        object.__setattr__(self, "aggregation_power", float(self.aggregation_power))
+        object.__setattr__(self, "potential_weight", float(self.potential_weight))
+        object.__setattr__(self, "cluster_weights", weights)
+
+    @property
+    def by_label(self) -> dict[str, SquareQDMType1ClusterValidationRecord]:
+        return {record.label: record for record in self.records}
+
+    def _aggregate(self, attribute: str) -> float:
+        power = self.aggregation_power
+        weighted = 0.0
+        total_weight = 0.0
+        for record in self.records:
+            weight = self.cluster_weights[record.label]
+            value = float(getattr(record.report, attribute))
+            weighted += weight * max(value, 0.0) ** power
+            total_weight += weight
+        return float((weighted / total_weight) ** (1.0 / power))
+
+    @property
+    def kinetic_aggregate(self) -> float:
+        return self._aggregate("kinetic_interference_density")
+
+    @property
+    def potential_aggregate(self) -> float:
+        return self._aggregate("potential_variance_density")
+
+    @property
+    def objective(self) -> float:
+        return self.kinetic_aggregate + self.potential_weight * self.potential_aggregate
+
+    @property
+    def max_kinetic_interference_density(self) -> float:
+        return max(record.report.kinetic_interference_density for record in self.records)
+
+    @property
+    def max_potential_variance_density(self) -> float:
+        return max(record.report.potential_variance_density for record in self.records)
+
+    @property
+    def worst_cluster_label(self) -> str:
+        return max(
+            self.records,
+            key=lambda record: (
+                record.report.kinetic_interference_density
+                + self.potential_weight * record.report.potential_variance_density
+            ),
+        ).label
+
+    @property
+    def satisfies_type1_on_all_clusters(self) -> bool:
+        return all(record.report.satisfies_type1 for record in self.records)
+
+
+def validate_square_qdm_type1_peps_on_clusters(
+    parameters: npt.ArrayLike,
+    problems: Mapping[str, SquareQDMType1PEPSFiniteClusterProblem],
+    *,
+    aggregation_power: float = 4.0,
+    potential_weight: float = 1.0,
+    cluster_weights: Mapping[str, float] | None = None,
+) -> SquareQDMType1ClusterValidationReport:
+    """Evaluate one shared tensor with native type-1 blocks on many tori."""
+    if not problems:
+        raise ValueError("At least one type-1 cluster problem is required.")
+    records = tuple(
+        SquareQDMType1ClusterValidationRecord(
+            label=str(label),
+            n_plaquettes=problem.n_plaquettes,
+            report=problem.diagnose_native(parameters),
+        )
+        for label, problem in problems.items()
+    )
+    return SquareQDMType1ClusterValidationReport(
+        records=records,
+        aggregation_power=aggregation_power,
+        potential_weight=potential_weight,
+        cluster_weights={} if cluster_weights is None else cluster_weights,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMType1PEPSJointOptimizationResult:
+    """Joint optimization result for separated type-1 losses across clusters."""
+
+    initial_parameters: npt.NDArray[np.float64]
+    optimized_parameters: npt.NDArray[np.float64]
+    loss_history: tuple[float, ...]
+    initial_validation: SquareQDMType1ClusterValidationReport
+    final_validation: SquareQDMType1ClusterValidationReport
+    requested_steps: int
+    optimizer: str
+    autodiff_backend: str
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        initial = np.asarray(self.initial_parameters, dtype=np.float64).reshape(-1)
+        optimized = np.asarray(self.optimized_parameters, dtype=np.float64).reshape(-1)
+        if initial.shape != optimized.shape:
+            raise ValueError("initial_parameters and optimized_parameters must align.")
+        object.__setattr__(self, "initial_parameters", initial.copy())
+        object.__setattr__(self, "optimized_parameters", optimized.copy())
+        object.__setattr__(self, "loss_history", tuple(float(value) for value in self.loss_history))
+        object.__setattr__(self, "requested_steps", int(self.requested_steps))
+        object.__setattr__(self, "metadata", dict(self.metadata))
+
+    @property
+    def improved(self) -> bool:
+        return self.final_validation.objective < self.initial_validation.objective
+
+
+@dataclass(frozen=True, slots=True)
+class SquareQDMType1PEPSJointClusterProblem:
+    """One native type-1 tensor optimized on several finite clusters at once.
+
+    Kinetic interference and potential nonuniformity are aggregated separately
+    across clusters and combined only after each component has been converted
+    to a smooth ``p``-norm.  This prevents a low-potential-error cluster from
+    masking a large kinetic leakage, or vice versa.
+    """
+
+    problems: Mapping[str, SquareQDMType1PEPSFiniteClusterProblem]
+    aggregation_power: float = 4.0
+    potential_weight: float = 1.0
+    cluster_weights: Mapping[str, float] = field(default_factory=dict)
+    tolerance: float = 1.0e-10
+
+    def __post_init__(self) -> None:
+        problems = {str(label): problem for label, problem in self.problems.items()}
+        if not problems:
+            raise ValueError("At least one type-1 cluster problem is required.")
+        if self.aggregation_power < 1.0:
+            raise ValueError("aggregation_power must be at least one.")
+        if self.potential_weight < 0.0:
+            raise ValueError("potential_weight must be non-negative.")
+        first = next(iter(problems.values()))
+        reference_coordinates = first.tile_basis.entry_coordinates
+        reference_charges = None
+        if first.parity_rule is not None:
+            reference_charges = first.parity_rule.tile_physical_charges(
+                first.base_problem.model,
+                first.tile_basis,
+            )
+        for label, problem in problems.items():
+            if problem.tile_basis.n_entries != first.tile_basis.n_entries or not np.array_equal(
+                problem.tile_basis.entry_coordinates,
+                reference_coordinates,
+            ):
+                raise ValueError(
+                    f"Cluster {label!r} does not use the same compact PEPS tensor basis."
+                )
+            if reference_charges is not None and problem.parity_rule is not None:
+                charges = problem.parity_rule.tile_physical_charges(
+                    problem.base_problem.model,
+                    problem.tile_basis,
+                )
+                if not np.array_equal(charges, reference_charges):
+                    raise ValueError(
+                        f"Cluster {label!r} uses a different tile-local chiral charge rule."
+                    )
+        weights = {label: float(self.cluster_weights.get(label, 1.0)) for label in problems}
+        if any(weight <= 0.0 for weight in weights.values()):
+            raise ValueError("All cluster weights must be positive.")
+        object.__setattr__(self, "problems", problems)
+        object.__setattr__(self, "aggregation_power", float(self.aggregation_power))
+        object.__setattr__(self, "potential_weight", float(self.potential_weight))
+        object.__setattr__(self, "cluster_weights", weights)
+        object.__setattr__(self, "tolerance", float(self.tolerance))
+
+    @property
+    def tile_basis(self) -> SquareQDMRectangularTileTensorBasis:
+        return next(iter(self.problems.values())).tile_basis
+
+    def diagnose(self, parameters: npt.ArrayLike) -> SquareQDMType1ClusterValidationReport:
+        return validate_square_qdm_type1_peps_on_clusters(
+            parameters,
+            self.problems,
+            aggregation_power=self.aggregation_power,
+            potential_weight=self.potential_weight,
+            cluster_weights=self.cluster_weights,
+        )
+
+    def loss(self, parameters: npt.ArrayLike) -> float:
+        return float(self.diagnose(parameters).objective)
+
+    def loss_and_gradient_autograd(
+        self,
+        parameters: npt.ArrayLike,
+    ) -> tuple[float, npt.NDArray[np.float64]]:
+        if not autograd_available():
+            raise ImportError("autograd is required; install qlinks with the 'tn' extra.")
+        import autograd.numpy as anp  # type: ignore[import-not-found]
+        from autograd import value_and_grad  # type: ignore[import-not-found]
+
+        values = np.asarray(parameters, dtype=np.complex128).reshape(-1)
+        if values.size != self.tile_basis.n_entries:
+            raise ValueError(f"parameters must have size {self.tile_basis.n_entries}.")
+        if np.max(np.abs(values.imag), initial=0.0) > self.tolerance:
+            raise ValueError("The Autograd prototype currently optimizes real parameters only.")
+        cluster_data = tuple(
+            (
+                anp.asarray(problem.target_entry_parameter_indices),
+                anp.asarray(problem.kinetic_interference_matrix.toarray().real),
+                anp.asarray(problem.target_potential_values),
+                float(problem.n_plaquettes),
+                float(self.cluster_weights[label]),
+            )
+            for label, problem in self.problems.items()
+        )
+        power = float(self.aggregation_power)
+        potential_weight = float(self.potential_weight)
+        total_weight = float(sum(self.cluster_weights.values()))
+        aggregate_epsilon = 1.0e-32
+
+        def objective(compact_parameters: Any) -> Any:
+            kinetic_terms = []
+            potential_terms = []
+            weights = []
+            for parameter_indices, interference, potential, n_plaquettes, weight in cluster_data:
+                state = anp.prod(compact_parameters[parameter_indices], axis=1)
+                norm_squared = anp.sum(state * state) + 1.0e-30
+                residual = anp.dot(interference, state)
+                kinetic_density = anp.sum(residual * residual) / norm_squared / n_plaquettes
+                probabilities = state * state / norm_squared
+                potential_mean = anp.sum(probabilities * potential)
+                delta = potential - potential_mean
+                potential_density = anp.sum(probabilities * delta * delta) / n_plaquettes
+                kinetic_terms.append(kinetic_density)
+                potential_terms.append(potential_density)
+                weights.append(weight)
+            weight_array = anp.asarray(weights)
+            kinetic_array = anp.stack(kinetic_terms)
+            potential_array = anp.stack(potential_terms)
+            kinetic_aggregate = (
+                anp.sum(weight_array * kinetic_array**power) / total_weight + aggregate_epsilon
+            ) ** (1.0 / power) - aggregate_epsilon ** (1.0 / power)
+            potential_aggregate = (
+                anp.sum(weight_array * potential_array**power) / total_weight + aggregate_epsilon
+            ) ** (1.0 / power) - aggregate_epsilon ** (1.0 / power)
+            return kinetic_aggregate + potential_weight * potential_aggregate
+
+        loss, gradient = value_and_grad(objective)(np.asarray(values.real, dtype=np.float64))
+        return float(loss), np.asarray(gradient, dtype=np.float64)
+
+    def make_quimb_optimizer(
+        self,
+        parameters: npt.ArrayLike,
+        *,
+        autodiff_backend: str = "autograd",
+        optimizer: str = "L-BFGS-B",
+        progbar: bool = True,
+        loss_target: float | None = None,
+        **backend_options: object,
+    ) -> object:
+        qtn = _require_quimb()
+        values = np.asarray(parameters, dtype=np.complex128).reshape(-1)
+        if values.size != self.tile_basis.n_entries:
+            raise ValueError(f"parameters must have size {self.tile_basis.n_entries}.")
+        if np.max(np.abs(values.imag), initial=0.0) > self.tolerance:
+            raise ValueError("The current compact optimizer accepts real parameters only.")
+        tensor_shape = self.tile_basis.tensor_shape
+        coordinates = self.tile_basis.entry_coordinates
+        flat_coordinates = np.ravel_multi_index(
+            tuple(coordinates[:, axis] for axis in range(5)), tensor_shape
+        )
+        entry_index_map = np.zeros(int(np.prod(tensor_shape)), dtype=np.int64)
+        structural_mask = np.zeros(int(np.prod(tensor_shape)), dtype=np.float64)
+        entry_index_map[flat_coordinates] = np.arange(self.tile_basis.n_entries)
+        structural_mask[flat_coordinates] = 1.0
+        entry_index_map = entry_index_map.reshape(tensor_shape)
+        structural_mask = structural_mask.reshape(tensor_shape)
+
+        def compact_to_tensor(compact_parameters: Any) -> Any:
+            return compact_parameters[entry_index_map] * structural_mask
+
+        tensor = qtn.PTensor(
+            compact_to_tensor,
+            np.asarray(values.real, dtype=np.float64),
+            inds=("up", "right", "down", "left", "physical"),
+            tags={"UNIT_CELL"},
+        )
+        network = qtn.TensorNetwork([tensor])
+        cluster_data = tuple(
+            {
+                "tensor_coordinates": problem.target_tensor_coordinates,
+                "kinetic": np.asarray(
+                    problem.kinetic_interference_matrix.toarray().real,
+                    dtype=np.float64,
+                ),
+                "potential": np.asarray(problem.target_potential_values, dtype=np.float64),
+                "n_plaquettes": float(problem.n_plaquettes),
+                "weight": float(self.cluster_weights[label]),
+            }
+            for label, problem in self.problems.items()
+        )
+        return qtn.TNOptimizer(
+            network,
+            _quimb_type1_joint_cluster_loss,
+            loss_constants={
+                "cluster_data": cluster_data,
+                "aggregation_power": float(self.aggregation_power),
+                "potential_weight": float(self.potential_weight),
+            },
+            autodiff_backend=autodiff_backend,
+            optimizer=optimizer,
+            progbar=progbar,
+            loss_target=loss_target,
+            **backend_options,
+        )
+
+    def optimize_with_quimb(
+        self,
+        parameters: npt.ArrayLike,
+        *,
+        max_steps: int = 20,
+        noise_scale: float = 1.0e-2,
+        seed: int | None = 0,
+        autodiff_backend: str = "autograd",
+        optimizer: str = "L-BFGS-B",
+        progbar: bool = False,
+        loss_target: float | None = None,
+        **backend_options: object,
+    ) -> SquareQDMType1PEPSJointOptimizationResult:
+        first_problem = next(iter(self.problems.values()))
+        initial_parameters = first_problem.base_problem.perturb_parameters(
+            parameters,
+            scale=noise_scale,
+            seed=seed,
+            normalize=True,
+        )
+        initial_validation = self.diagnose(initial_parameters)
+        optimizer_object = self.make_quimb_optimizer(
+            initial_parameters,
+            autodiff_backend=autodiff_backend,
+            optimizer=optimizer,
+            progbar=progbar,
+            loss_target=loss_target,
+            **backend_options,
+        )
+        optimized_network = optimizer_object.optimize(int(max_steps))
+        optimized_parameters = np.asarray(
+            optimized_network["UNIT_CELL"].params,
+            dtype=np.float64,
+        ).reshape(-1)
+        return SquareQDMType1PEPSJointOptimizationResult(
+            initial_parameters=initial_parameters,
+            optimized_parameters=optimized_parameters,
+            loss_history=tuple(float(value) for value in optimizer_object.losses),
+            initial_validation=initial_validation,
+            final_validation=self.diagnose(optimized_parameters),
+            requested_steps=int(max_steps),
+            optimizer=str(optimizer),
+            autodiff_backend=str(autodiff_backend),
+            metadata={
+                "noise_scale": float(noise_scale),
+                "seed": seed,
+                "cluster_labels": tuple(self.problems),
+                "aggregation_power": self.aggregation_power,
+            },
+        )
+
+
+def _quimb_type1_joint_cluster_loss(
+    tensor_network: object,
+    *,
+    cluster_data: Sequence[Mapping[str, Any]],
+    aggregation_power: float,
+    potential_weight: float,
+) -> Any:
+    """Autodiff-compatible separated type-1 objective on many clusters."""
+    import autoray as ar
+
+    unit_tensor = tensor_network["UNIT_CELL"].data
+    kinetic_sum = 0.0
+    potential_sum = 0.0
+    total_weight = 0.0
+    power = float(aggregation_power)
+    aggregate_epsilon = 1.0e-32
+    for data in cluster_data:
+        coordinates = data["tensor_coordinates"]
+        n_basis = int(coordinates.shape[0])
+        n_tiles = int(coordinates.shape[1])
+        state = None
+        for tile_index in range(n_tiles):
+            coordinate = coordinates[:, tile_index, :]
+            selected = unit_tensor[
+                coordinate[:, 0],
+                coordinate[:, 1],
+                coordinate[:, 2],
+                coordinate[:, 3],
+                coordinate[:, 4],
+            ]
+            state = selected if state is None else state * selected
+        if state is None:
+            state = ar.do("ones", (n_basis,), like=unit_tensor)
+        norm_squared = ar.do("sum", state * state) + 1.0e-30
+        residual = data["kinetic"] @ state
+        kinetic_density = (
+            ar.do("sum", residual * residual) / norm_squared / float(data["n_plaquettes"])
+        )
+        probabilities = state * state / norm_squared
+        potential_mean = ar.do("sum", probabilities * data["potential"])
+        delta = data["potential"] - potential_mean
+        potential_density = ar.do("sum", probabilities * delta * delta) / float(
+            data["n_plaquettes"]
+        )
+        weight = float(data["weight"])
+        kinetic_sum = kinetic_sum + weight * kinetic_density**power
+        potential_sum = potential_sum + weight * potential_density**power
+        total_weight += weight
+    kinetic_aggregate = (kinetic_sum / total_weight + aggregate_epsilon) ** (
+        1.0 / power
+    ) - aggregate_epsilon ** (1.0 / power)
+    potential_aggregate = (potential_sum / total_weight + aggregate_epsilon) ** (
+        1.0 / power
+    ) - aggregate_epsilon ** (1.0 / power)
+    return kinetic_aggregate + float(potential_weight) * potential_aggregate
+
+
+def build_square_qdm_type1_joint_cluster_problem(
+    problems: Mapping[str, SquareQDMType1PEPSFiniteClusterProblem],
+    *,
+    aggregation_power: float = 4.0,
+    potential_weight: float = 1.0,
+    cluster_weights: Mapping[str, float] | None = None,
+    tolerance: float = 1.0e-10,
+) -> SquareQDMType1PEPSJointClusterProblem:
+    """Build a shared-tensor type-1 objective over several finite clusters."""
+    return SquareQDMType1PEPSJointClusterProblem(
+        problems=problems,
+        aggregation_power=aggregation_power,
+        potential_weight=potential_weight,
+        cluster_weights={} if cluster_weights is None else cluster_weights,
+        tolerance=tolerance,
+    )
 
 
 def build_square_qdm_type1_peps_problem(
@@ -1924,6 +2538,7 @@ class SquareQDMChiralPEPSAnsatz:
     tile_basis: SquareQDMRectangularTileTensorBasis
     parameters: npt.NDArray[np.complex128]
     physical_charges: npt.NDArray[np.int8]
+    global_charge_sector: int = 0
     metadata: Mapping[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -1937,6 +2552,7 @@ class SquareQDMChiralPEPSAnsatz:
             )
         object.__setattr__(self, "parameters", parameters.copy())
         object.__setattr__(self, "physical_charges", charges.copy())
+        object.__setattr__(self, "global_charge_sector", int(self.global_charge_sector) % 2)
         object.__setattr__(self, "metadata", dict(self.metadata))
 
     @classmethod
@@ -1956,6 +2572,7 @@ class SquareQDMChiralPEPSAnsatz:
             tile_basis=problem.tile_basis,
             parameters=np.asarray(parameters, dtype=np.complex128),
             physical_charges=charges,
+            global_charge_sector=int(problem.parity_rule.offset),
             metadata={
                 "source": "type1_problem",
                 "target_graph_chiral_label": problem.target_chiral_label,
@@ -1976,12 +2593,22 @@ class SquareQDMChiralPEPSAnsatz:
     def n_nonzero_tensor_entries(self) -> int:
         return 8 * self.tile_basis.n_entries
 
-    def tensor_data(self) -> npt.NDArray[np.complex128]:
-        """Return the dense charge-augmented ``urdlp`` tensor."""
+    def tensor_data(
+        self,
+        *,
+        charge_shift: int = 0,
+    ) -> npt.NDArray[np.complex128]:
+        """Return the dense charge-augmented ``urdlp`` tensor.
+
+        ``charge_shift`` inserts a single global ``Z2`` flux.  On a periodic
+        connected network, placing this shift on one tensor selects odd total
+        physical charge while leaving every variational amplitude unchanged.
+        """
+        charge_shift = int(charge_shift) % 2
         data = np.zeros(self.tensor_shape, dtype=np.complex128)
         for entry_index, coordinate in enumerate(self.tile_basis.entry_coordinates):
             up, right, down, left, physical = (int(value) for value in coordinate)
-            physical_charge = int(self.physical_charges[physical])
+            physical_charge = int(self.physical_charges[physical]) ^ charge_shift
             for charge_pattern in range(16):
                 charges = tuple((charge_pattern >> axis) & 1 for axis in range(4))
                 if (sum(charges) % 2) != physical_charge:
@@ -1995,6 +2622,43 @@ class SquareQDMChiralPEPSAnsatz:
                     physical,
                 ] = self.parameters[entry_index]
         return data
+
+    def native_sector_mask(
+        self,
+        problem: SquareQDMPEPSFiniteClusterProblem,
+    ) -> npt.NDArray[np.bool_]:
+        """Return the exact total-charge mask induced by the native PEPS."""
+        if problem.tile_basis.n_entries != self.tile_basis.n_entries or not np.array_equal(
+            problem.tile_basis.entry_coordinates,
+            self.tile_basis.entry_coordinates,
+        ):
+            raise ValueError("The finite-cluster problem uses a different tile tensor basis.")
+        physical_indices = problem.tensor_coordinates[:, :, 4]
+        total_charge = np.sum(self.physical_charges[physical_indices], axis=1) % 2
+        return np.asarray(total_charge == self.global_charge_sector, dtype=np.bool_)
+
+    def finite_cluster_state_vector(
+        self,
+        problem: SquareQDMPEPSFiniteClusterProblem,
+        *,
+        normalize: bool = True,
+    ) -> npt.NDArray[np.complex128]:
+        """Contract the native charge rule on an exact constrained basis.
+
+        The virtual charge sum can be performed analytically: every compatible
+        physical configuration has the same charge multiplicity, so normalized
+        amplitudes are the compact PEPS products restricted by the native total
+        ``Z2`` sector.  No post-hoc graph bipartition projector is used.
+        """
+        values = np.asarray(self.parameters, dtype=np.complex128).reshape(-1)
+        state = np.prod(values[problem.entry_parameter_indices], axis=1)
+        state = state * self.native_sector_mask(problem)
+        if normalize:
+            norm = float(np.linalg.norm(state))
+            if norm == 0.0:
+                raise ValueError("The native chiral PEPS is zero on this finite cluster.")
+            state = state / norm
+        return np.asarray(state, dtype=np.complex128)
 
     @staticmethod
     def charge_degeneracy(*, n_tiles_x: int, n_tiles_y: int) -> int:
@@ -2021,7 +2685,8 @@ class SquareQDMChiralPEPSAnsatz:
             global_tags = (tags,)
         else:
             global_tags = tuple(str(tag) for tag in tags)
-        data = self.tensor_data()
+        regular_data = self.tensor_data()
+        shifted_data = self.tensor_data(charge_shift=self.global_charge_sector)
         tensors = []
         for tile_y in range(int(n_tiles_y)):
             for tile_x in range(int(n_tiles_x)):
@@ -2032,7 +2697,11 @@ class SquareQDMChiralPEPSAnsatz:
                 physical = f"physical_{tile_x}_{tile_y}"
                 tensors.append(
                     qtn.Tensor(
-                        data=data.copy(),
+                        data=(
+                            shifted_data.copy()
+                            if tile_x == 0 and tile_y == 0
+                            else regular_data.copy()
+                        ),
                         inds=(up, right, down, left, physical),
                         tags=(
                             *global_tags,

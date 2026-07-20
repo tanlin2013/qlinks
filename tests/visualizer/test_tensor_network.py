@@ -101,3 +101,42 @@ def test_tensor_network_visualizer_draws_type1_diagnostics() -> None:
 
     assert component_axis.get_ylabel() == "Normalized diagnostic"
     assert charge_axis.get_title() == "Tile-local chiral charges"
+
+
+def test_tensor_network_visualizer_draws_type1_cluster_validation() -> None:
+    from qlinks.caging import (
+        SquareQDMType1ClusterValidationRecord,
+        SquareQDMType1ClusterValidationReport,
+        SquareQDMType1PEPSResidualReport,
+    )
+
+    def report(kinetic: float, potential: float):
+        return SquareQDMType1PEPSResidualReport(
+            norm_before_projection=1.0,
+            norm_after_projection=1.0,
+            retained_chiral_weight=1.0,
+            discarded_chiral_weight=0.0,
+            target_chiral_label=0,
+            kinetic_interference_norm=kinetic * 24.0,
+            kinetic_interference_density=kinetic,
+            potential_mean=0.0,
+            potential_variance=potential * 24.0,
+            potential_variance_density=potential,
+            total_variance=(kinetic + potential) * 24.0,
+            objective=kinetic + potential,
+            max_interference_residual=0.1,
+            n_nonzero_interference_targets=2,
+            nonzero_projected_amplitudes=4,
+            hilbert_dimension=8,
+        )
+
+    validation = SquareQDMType1ClusterValidationReport(
+        records=(
+            SquareQDMType1ClusterValidationRecord("6x2", 12, report(0.2, 0.01)),
+            SquareQDMType1ClusterValidationRecord("6x4", 24, report(0.15, 0.02)),
+        ),
+    )
+    axis = SquareQDMTensorNetworkVisualizer(_basis()).plot_type1_cluster_validation(validation)
+
+    assert axis.get_ylabel() == "Density"
+    assert len(axis.patches) == 4

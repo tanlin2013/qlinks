@@ -469,3 +469,228 @@ def test_short_type1_quimb_optimization_reduces_the_separated_objective() -> Non
 
     assert result.improved
     assert result.final_report.objective < result.initial_report.objective
+
+
+def test_native_type1_block_matches_post_projected_state_and_objective() -> None:
+    from qlinks.caging import build_square_qdm_type1_peps_problem
+
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    model = SquareQDMModel(
+        lx=6,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    problem = build_square_qdm_type1_peps_problem(
+        model,
+        ansatz.tile_basis,
+        reference_parameters=ansatz.parameters,
+    )
+    parameters = problem.base_problem.perturb_parameters(
+        ansatz.parameters,
+        scale=1.0e-2,
+        seed=3,
+    )
+    projected = problem.projected_state_vector(parameters)
+    native = problem.native_state_vector(parameters)
+    native_report = problem.diagnose_native(parameters)
+    projected_report = problem.diagnose(parameters)
+
+    assert problem.kinetic_interference_matrix.shape == (
+        problem.opposite_basis_indices.size,
+        problem.target_basis_indices.size,
+    )
+    assert np.allclose(projected[problem.target_basis_indices], native)
+    assert np.count_nonzero(projected[problem.opposite_basis_indices]) == 0
+    assert np.isclose(
+        native_report.kinetic_interference_density,
+        projected_report.kinetic_interference_density,
+    )
+    assert np.isclose(
+        native_report.potential_variance_density,
+        projected_report.potential_variance_density,
+    )
+    assert np.isclose(problem.loss(parameters), native_report.objective)
+
+
+def test_native_chiral_ansatz_selects_the_same_fock_subset_without_projection() -> None:
+    from qlinks.caging import (
+        SquareQDMChiralPEPSAnsatz,
+        build_square_qdm_type1_peps_problem,
+    )
+
+    basis = _tile_basis()
+    model = SquareQDMModel(
+        lx=6,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    problem = build_square_qdm_type1_peps_problem(model, basis)
+    parameters = np.linspace(0.1, 1.0, basis.n_entries)
+    ansatz = SquareQDMChiralPEPSAnsatz.from_type1_problem(problem, parameters)
+    native_mask = ansatz.native_sector_mask(problem.base_problem)
+    native_state = ansatz.finite_cluster_state_vector(problem.base_problem)
+    projected_state = problem.projected_state_vector(parameters)
+
+    assert np.array_equal(native_mask, problem.chiral_mask.astype(bool))
+    assert np.allclose(native_state, projected_state)
+    assert ansatz.global_charge_sector == problem.parity_rule.offset
+
+
+def test_joint_type1_problem_aggregates_components_separately() -> None:
+    from qlinks.caging import (
+        build_square_qdm_type1_joint_cluster_problem,
+        build_square_qdm_type1_peps_problem,
+        validate_square_qdm_type1_peps_on_clusters,
+    )
+
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    problems = {
+        label: build_square_qdm_type1_peps_problem(
+            SquareQDMModel(
+                lx=lx,
+                ly=ly,
+                boundary_condition="periodic",
+                winding_x=0,
+                winding_y=0,
+                coup_kin=1.0,
+                coup_pot=0.0,
+            ),
+            ansatz.tile_basis,
+            reference_parameters=ansatz.parameters,
+        )
+        for label, (lx, ly) in {
+            "6x2": (6, 2),
+            "6x4": (6, 4),
+        }.items()
+    }
+    report = validate_square_qdm_type1_peps_on_clusters(
+        ansatz.parameters,
+        problems,
+        aggregation_power=4.0,
+    )
+    joint = build_square_qdm_type1_joint_cluster_problem(
+        problems,
+        aggregation_power=4.0,
+    )
+
+    expected_kinetic = (
+        np.mean([record.report.kinetic_interference_density**4 for record in report.records])
+        ** 0.25
+    )
+    assert np.isclose(report.kinetic_aggregate, expected_kinetic)
+    assert np.isclose(report.potential_aggregate, 0.0)
+    assert np.isclose(report.objective, expected_kinetic)
+    assert np.isclose(joint.loss(ansatz.parameters), report.objective)
+    assert report.worst_cluster_label in {"6x2", "6x4"}
+
+
+def test_joint_type1_autograd_matches_cross_cluster_diagnostic() -> None:
+    from qlinks.caging import (
+        autograd_available,
+        build_square_qdm_type1_joint_cluster_problem,
+        build_square_qdm_type1_peps_problem,
+    )
+
+    if not autograd_available():
+        pytest.skip("autograd is not installed")
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    problems = {
+        label: build_square_qdm_type1_peps_problem(
+            SquareQDMModel(
+                lx=lx,
+                ly=ly,
+                boundary_condition="periodic",
+                winding_x=0,
+                winding_y=0,
+                coup_kin=1.0,
+                coup_pot=0.0,
+            ),
+            ansatz.tile_basis,
+            reference_parameters=ansatz.parameters,
+        )
+        for label, (lx, ly) in {"6x2": (6, 2), "6x4": (6, 4)}.items()
+    }
+    joint = build_square_qdm_type1_joint_cluster_problem(problems)
+    parameters = problems["6x2"].base_problem.perturb_parameters(
+        ansatz.parameters,
+        scale=1.0e-2,
+        seed=4,
+    )
+    loss, gradient = joint.loss_and_gradient_autograd(parameters)
+
+    assert np.isclose(loss, joint.loss(parameters))
+    assert gradient.shape == (ansatz.tile_basis.n_entries,)
+    assert np.linalg.norm(gradient) > 0.0
+
+
+@pytest.mark.skipif(not quimb_available(), reason="quimb is not installed")
+def test_short_joint_type1_quimb_optimization_reduces_shared_objective() -> None:
+    from qlinks.caging import (
+        autograd_available,
+        build_square_qdm_type1_joint_cluster_problem,
+        build_square_qdm_type1_peps_problem,
+    )
+
+    if not autograd_available():
+        pytest.skip("autograd is not installed")
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    problems = {
+        label: build_square_qdm_type1_peps_problem(
+            SquareQDMModel(
+                lx=lx,
+                ly=ly,
+                boundary_condition="periodic",
+                winding_x=0,
+                winding_y=0,
+                coup_kin=1.0,
+                coup_pot=0.0,
+            ),
+            ansatz.tile_basis,
+            reference_parameters=ansatz.parameters,
+        )
+        for label, (lx, ly) in {"6x2": (6, 2), "6x4": (6, 4)}.items()
+    }
+    joint = build_square_qdm_type1_joint_cluster_problem(problems)
+    result = joint.optimize_with_quimb(
+        ansatz.parameters,
+        max_steps=1,
+        noise_scale=1.0e-2,
+        seed=0,
+        progbar=False,
+    )
+
+    assert result.improved
+    assert result.final_validation.objective < result.initial_validation.objective
+    assert set(result.final_validation.by_label) == {"6x2", "6x4"}

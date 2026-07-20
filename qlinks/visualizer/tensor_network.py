@@ -15,6 +15,8 @@ from qlinks.caging.tensor_network import (
     SquareQDMChiralParityRule,
     SquareQDMPEPSOptimizationResult,
     SquareQDMRectangularTileTensorBasis,
+    SquareQDMType1ClusterValidationReport,
+    SquareQDMType1PEPSJointOptimizationResult,
     SquareQDMType1PEPSOptimizationResult,
     SquareQDMType1PEPSResidualReport,
 )
@@ -289,14 +291,21 @@ class SquareQDMTensorNetworkVisualizer:
 
     def plot_type1_optimization_history(
         self,
-        result: SquareQDMType1PEPSOptimizationResult | Sequence[float],
+        result: (
+            SquareQDMType1PEPSOptimizationResult
+            | SquareQDMType1PEPSJointOptimizationResult
+            | Sequence[float]
+        ),
         *,
         ax: Axes | None = None,
         log_scale: bool = True,
         title: str | None = None,
     ) -> Axes:
         """Plot the chiral-projected type-1 objective during optimization."""
-        if isinstance(result, SquareQDMType1PEPSOptimizationResult):
+        if isinstance(
+            result,
+            (SquareQDMType1PEPSOptimizationResult, SquareQDMType1PEPSJointOptimizationResult),
+        ):
             losses = np.asarray(result.loss_history, dtype=np.float64)
         else:
             losses = np.asarray(tuple(result), dtype=np.float64)
@@ -310,6 +319,38 @@ class SquareQDMTensorNetworkVisualizer:
         axis.set_ylabel("Type-1 objective density")
         axis.set_title(title or "Type-1 PEPS optimization")
         axis.grid(alpha=0.25)
+        return axis
+
+    def plot_type1_cluster_validation(
+        self,
+        report: SquareQDMType1ClusterValidationReport,
+        *,
+        ax: Axes | None = None,
+        log_scale: bool = False,
+        title: str | None = None,
+    ) -> Axes:
+        """Compare native type-1 losses across finite clusters."""
+        labels = [record.label for record in report.records]
+        kinetic = np.asarray(
+            [record.report.kinetic_interference_density for record in report.records],
+            dtype=np.float64,
+        )
+        potential = np.asarray(
+            [record.report.potential_variance_density for record in report.records],
+            dtype=np.float64,
+        )
+        positions = np.arange(len(labels), dtype=np.float64)
+        width = 0.38
+        _, axis = _axes(ax, figsize=(max(6.2, 1.35 * len(labels)), 3.8))
+        axis.bar(positions - width / 2.0, kinetic, width=width, label="Kinetic interference")
+        axis.bar(positions + width / 2.0, potential, width=width, label="Potential variance")
+        axis.set_xticks(positions, labels, rotation=15, ha="right")
+        if log_scale and np.all(np.concatenate((kinetic, potential)) > 0.0):
+            axis.set_yscale("log")
+        axis.set_ylabel("Density")
+        axis.set_title(title or "Type-1 PEPS cross-cluster validation")
+        axis.legend()
+        axis.grid(axis="y", alpha=0.25)
         return axis
 
     def plot_chiral_physical_charges(
