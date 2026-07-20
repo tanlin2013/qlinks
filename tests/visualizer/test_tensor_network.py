@@ -140,3 +140,45 @@ def test_tensor_network_visualizer_draws_type1_cluster_validation() -> None:
 
     assert axis.get_ylabel() == "Density"
     assert len(axis.patches) == 4
+
+
+def test_tensor_network_visualizer_draws_seam_decomposition_and_adaptive_entries() -> None:
+    from qlinks.caging import (
+        SquareQDMType1AdaptiveParameterization,
+        SquareQDMType1InterferenceClassRecord,
+        SquareQDMType1InterferenceDecomposition,
+        SquareQDMType1ParameterSensitivity,
+    )
+
+    basis = _basis()
+    decomposition = SquareQDMType1InterferenceDecomposition(
+        total_norm_squared=3.0,
+        reconstruction_residual=0.0,
+        plaquette_records=(),
+        class_records=(
+            SquareQDMType1InterferenceClassRecord("interior", 8, 0.0, 4.0, 0.0, 0.0, 0),
+            SquareQDMType1InterferenceClassRecord("x_seam", 4, 1.0, 1.0, 1.0, 0.25, 16),
+            SquareQDMType1InterferenceClassRecord("y_seam", 8, 2.0, 2.0, 2.0, 0.25, 32),
+            SquareQDMType1InterferenceClassRecord("corner", 4, 0.0, 0.0, 0.0, 0.0, 0),
+        ),
+    )
+    sensitivity = SquareQDMType1ParameterSensitivity(
+        plaquette_class="y_seam",
+        gradient=np.linspace(-1.0, 1.0, basis.n_entries),
+        scores=np.abs(np.linspace(-1.0, 1.0, basis.n_entries)),
+        entry_coordinates=basis.entry_coordinates,
+        loss=0.1,
+    )
+    parameterization = SquareQDMType1AdaptiveParameterization(
+        tile_basis=basis,
+        selected_entry_indices=np.asarray((8, 9, 21, 31), dtype=np.int64),
+        split_axis="y",
+    )
+    visualizer = SquareQDMTensorNetworkVisualizer(basis)
+    decomposition_axis = visualizer.plot_type1_interference_decomposition(decomposition)
+    sensitivity_axis = visualizer.plot_type1_parameter_sensitivity(sensitivity, max_entries=8)
+    adaptive_axis = visualizer.plot_type1_adaptive_parameterization(parameterization)
+
+    assert decomposition_axis.get_ylabel() == "Residual norm squared"
+    assert sensitivity_axis.get_ylabel() == "Absolute loss gradient"
+    assert adaptive_axis.get_ylabel() == "Independent tile classes"

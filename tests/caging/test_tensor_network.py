@@ -694,3 +694,215 @@ def test_short_joint_type1_quimb_optimization_reduces_shared_objective() -> None
     assert result.improved
     assert result.final_validation.objective < result.initial_validation.objective
     assert set(result.final_validation.by_label) == {"6x2", "6x4"}
+
+
+def test_type1_interference_decomposition_resolves_interior_and_seam_cancellation() -> None:
+    from qlinks.caging import build_square_qdm_type1_peps_problem
+
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    model = SquareQDMModel(
+        lx=6,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    problem = build_square_qdm_type1_peps_problem(
+        model,
+        ansatz.tile_basis,
+        reference_parameters=ansatz.parameters,
+    )
+    decomposition = problem.interference_decomposition(ansatz.parameters)
+    by_class = decomposition.by_class
+
+    assert np.isclose(decomposition.total_norm_squared, 3.0)
+    assert np.isclose(decomposition.reconstruction_residual, 0.0)
+    assert decomposition.dominant_seam_class == "y_seam"
+    assert np.isclose(by_class["interior"].residual_norm_squared, 0.0)
+    assert np.isclose(by_class["interior"].incoherent_norm_squared, 4.0)
+    assert np.isclose(by_class["x_seam"].residual_norm_squared, 1.0)
+    assert np.isclose(by_class["y_seam"].residual_norm_squared, 2.0)
+    assert np.isclose(by_class["corner"].residual_norm_squared, 0.0)
+    assert np.isclose(decomposition.global_cancellation_fraction, 4.0 / 7.0)
+
+
+def test_type1_seam_sensitivity_builds_targeted_period_two_enlargement() -> None:
+    from qlinks.caging import (
+        SquareQDMType1AdaptivePEPSFiniteClusterProblem,
+        build_square_qdm_type1_adaptive_parameterization,
+        build_square_qdm_type1_peps_problem,
+    )
+
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    model = SquareQDMModel(
+        lx=6,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    problem = build_square_qdm_type1_peps_problem(
+        model,
+        ansatz.tile_basis,
+        reference_parameters=ansatz.parameters,
+    )
+    probe = problem.base_problem.perturb_parameters(
+        ansatz.parameters,
+        scale=1.0e-3,
+        seed=0,
+    )
+    sensitivity = problem.interference_parameter_sensitivity(probe, "y_seam")
+    parameterization = build_square_qdm_type1_adaptive_parameterization(
+        problem,
+        ansatz.parameters,
+        max_selected_entries=6,
+        probe_scale=1.0e-3,
+        seed=0,
+    )
+    adaptive = SquareQDMType1AdaptivePEPSFiniteClusterProblem.from_problem(
+        problem,
+        parameterization,
+    )
+    lifted = parameterization.lift_parameters(ansatz.parameters)
+    base_report = problem.diagnose_native(ansatz.parameters)
+    adaptive_report = adaptive.diagnose(lifted)
+
+    assert sensitivity.loss > 0.0
+    assert np.linalg.norm(sensitivity.gradient) > 0.0
+    assert parameterization.split_axis == "y"
+    assert parameterization.selected_entry_indices.size == 6
+    assert parameterization.n_parameters == ansatz.tile_basis.n_entries + 6
+    assert adaptive.parameter_indices.shape == problem.target_entry_parameter_indices.shape
+    assert np.isclose(
+        adaptive_report.kinetic_interference_density,
+        base_report.kinetic_interference_density,
+    )
+
+
+def test_type1_adaptive_x_split_can_be_shared_across_longitudinal_clusters() -> None:
+    from qlinks.caging import (
+        SquareQDMType1AdaptiveParameterization,
+        build_square_qdm_type1_adaptive_joint_cluster_problem,
+        build_square_qdm_type1_peps_problem,
+    )
+
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    problems = {
+        label: build_square_qdm_type1_peps_problem(
+            SquareQDMModel(
+                lx=lx,
+                ly=ly,
+                boundary_condition="periodic",
+                winding_x=0,
+                winding_y=0,
+                coup_kin=1.0,
+                coup_pot=0.0,
+            ),
+            ansatz.tile_basis,
+            reference_parameters=ansatz.parameters,
+        )
+        for label, (lx, ly) in {"6x2": (6, 2), "6x4": (6, 4), "12x2": (12, 2)}.items()
+    }
+    parameterization = SquareQDMType1AdaptiveParameterization(
+        tile_basis=ansatz.tile_basis,
+        selected_entry_indices=np.asarray((8, 9, 21, 31), dtype=np.int64),
+        split_axis="x",
+    )
+    joint = build_square_qdm_type1_adaptive_joint_cluster_problem(
+        problems,
+        parameterization,
+    )
+    lifted = parameterization.lift_parameters(ansatz.parameters)
+    validation = joint.diagnose(lifted)
+
+    assert parameterization.n_parameters == 112
+    assert set(validation.by_label) == {"6x2", "6x4", "12x2"}
+    for label, problem in problems.items():
+        assert np.isclose(
+            validation.by_label[label].report.kinetic_interference_density,
+            problem.diagnose_native(ansatz.parameters).kinetic_interference_density,
+        )
+
+
+def test_type1_adaptive_exact_gradient_and_short_optimization_reduce_joint_loss() -> None:
+    from qlinks.caging import (
+        SquareQDMType1AdaptiveParameterization,
+        build_square_qdm_type1_adaptive_joint_cluster_problem,
+        build_square_qdm_type1_peps_problem,
+    )
+
+    host = _host_model()
+    singlet = next(
+        block
+        for block in square_qdm_two_plaquette_singlet_blocks(host, directions=("x",))
+        if set(block.anchor_cells) == {(2, 2), (3, 2)}
+    )
+    ansatz = build_square_qdm_singlet_peps_ansatz(host, singlet, origin=(2, 2))
+    problems = {
+        label: build_square_qdm_type1_peps_problem(
+            SquareQDMModel(
+                lx=lx,
+                ly=ly,
+                boundary_condition="periodic",
+                winding_x=0,
+                winding_y=0,
+                coup_kin=1.0,
+                coup_pot=0.0,
+            ),
+            ansatz.tile_basis,
+            reference_parameters=ansatz.parameters,
+        )
+        for label, (lx, ly) in {"6x2": (6, 2), "6x4": (6, 4)}.items()
+    }
+    parameterization = SquareQDMType1AdaptiveParameterization(
+        tile_basis=ansatz.tile_basis,
+        selected_entry_indices=np.asarray((8, 9, 21, 31), dtype=np.int64),
+        split_axis="x",
+    )
+    joint = build_square_qdm_type1_adaptive_joint_cluster_problem(
+        problems,
+        parameterization,
+    )
+    initial = parameterization.lift_parameters(ansatz.parameters)
+    probe = initial + 1.0e-3 * np.random.default_rng(2).normal(size=initial.size)
+    loss, gradient = joint.loss_and_gradient_exact(probe)
+    entry_index = ansatz.tile_basis.n_entries
+    epsilon = 1.0e-6
+    plus = probe.copy()
+    minus = probe.copy()
+    plus[entry_index] += epsilon
+    minus[entry_index] -= epsilon
+    finite_difference = (joint.loss(plus) - joint.loss(minus)) / (2.0 * epsilon)
+    result = joint.optimize_with_scipy(
+        initial,
+        max_steps=2,
+        noise_scale=1.0e-3,
+        seed=0,
+    )
+
+    assert np.isclose(loss, joint.loss(probe))
+    assert np.isclose(gradient[entry_index], finite_difference, rtol=1.0e-4, atol=1.0e-7)
+    assert result.improved
+    assert result.final_validation.objective < result.initial_validation.objective

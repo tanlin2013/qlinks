@@ -15,7 +15,11 @@ from qlinks.caging.tensor_network import (
     SquareQDMChiralParityRule,
     SquareQDMPEPSOptimizationResult,
     SquareQDMRectangularTileTensorBasis,
+    SquareQDMType1AdaptiveJointOptimizationResult,
+    SquareQDMType1AdaptiveParameterization,
     SquareQDMType1ClusterValidationReport,
+    SquareQDMType1InterferenceDecomposition,
+    SquareQDMType1ParameterSensitivity,
     SquareQDMType1PEPSJointOptimizationResult,
     SquareQDMType1PEPSOptimizationResult,
     SquareQDMType1PEPSResidualReport,
@@ -267,6 +271,85 @@ class SquareQDMTensorNetworkVisualizer:
         axis.grid(alpha=0.25)
         return axis
 
+    def plot_type1_interference_decomposition(
+        self,
+        decomposition: SquareQDMType1InterferenceDecomposition,
+        *,
+        ax: Axes | None = None,
+        title: str | None = None,
+    ) -> Axes:
+        """Compare coherent and incoherent kinetic leakage by tile boundary class."""
+        records = decomposition.class_records
+        labels = [record.plaquette_class.replace("_", " ") for record in records]
+        coherent = np.asarray(
+            [record.residual_norm_squared for record in records],
+            dtype=np.float64,
+        )
+        incoherent = np.asarray(
+            [record.incoherent_norm_squared for record in records],
+            dtype=np.float64,
+        )
+        positions = np.arange(len(records), dtype=np.float64)
+        width = 0.38
+        _, axis = _axes(ax, figsize=(7.0, 3.8))
+        axis.bar(positions - width / 2.0, coherent, width=width, label="After interference")
+        axis.bar(positions + width / 2.0, incoherent, width=width, label="Before interference")
+        axis.set_xticks(positions, labels, rotation=15, ha="right")
+        axis.set_ylabel(r"Residual norm squared")
+        axis.set_title(title or "Type-1 interference by tile seam")
+        axis.legend()
+        axis.grid(axis="y", alpha=0.25)
+        return axis
+
+    def plot_type1_parameter_sensitivity(
+        self,
+        sensitivity: SquareQDMType1ParameterSensitivity,
+        *,
+        max_entries: int = 16,
+        ax: Axes | None = None,
+        title: str | None = None,
+    ) -> Axes:
+        """Plot tensor entries that most strongly control one seam loss."""
+        max_entries = max(1, min(int(max_entries), sensitivity.scores.size))
+        order = sensitivity.top_entry_indices(max_entries)
+        _, axis = _axes(ax, figsize=(max(6.0, 0.42 * max_entries), 3.8))
+        axis.bar(np.arange(order.size), sensitivity.scores[order])
+        axis.set_xticks(np.arange(order.size), [str(index) for index in order], rotation=90)
+        axis.set_xlabel("Tensor-entry index")
+        axis.set_ylabel("Absolute loss gradient")
+        axis.set_title(
+            title
+            or f"{sensitivity.plaquette_class.replace('_', ' ').title()} parameter sensitivity"
+        )
+        axis.grid(axis="y", alpha=0.25)
+        return axis
+
+    def plot_type1_adaptive_parameterization(
+        self,
+        parameterization: SquareQDMType1AdaptiveParameterization,
+        *,
+        ax: Axes | None = None,
+        title: str | None = None,
+    ) -> Axes:
+        """Show which compact entries are duplicated in the enlarged unit cell."""
+        selected = parameterization.selected_entry_indices
+        _, axis = _axes(ax, figsize=(max(6.0, 0.36 * selected.size), 3.6))
+        copies = np.full(selected.size, parameterization.n_classes, dtype=np.int64)
+        axis.bar(np.arange(selected.size), copies)
+        axis.set_xticks(np.arange(selected.size), [str(index) for index in selected], rotation=90)
+        axis.set_xlabel("Selected tensor-entry index")
+        axis.set_ylabel("Independent tile classes")
+        axis.set_ylim(0.0, parameterization.n_classes + 0.5)
+        axis.set_title(
+            title
+            or (
+                f"Targeted {parameterization.split_axis} enlargement: "
+                f"{parameterization.n_parameters} parameters"
+            )
+        )
+        axis.grid(axis="y", alpha=0.25)
+        return axis
+
     def plot_type1_components(
         self,
         report: SquareQDMType1PEPSResidualReport,
@@ -294,6 +377,7 @@ class SquareQDMTensorNetworkVisualizer:
         result: (
             SquareQDMType1PEPSOptimizationResult
             | SquareQDMType1PEPSJointOptimizationResult
+            | SquareQDMType1AdaptiveJointOptimizationResult
             | Sequence[float]
         ),
         *,
@@ -304,7 +388,11 @@ class SquareQDMTensorNetworkVisualizer:
         """Plot the chiral-projected type-1 objective during optimization."""
         if isinstance(
             result,
-            (SquareQDMType1PEPSOptimizationResult, SquareQDMType1PEPSJointOptimizationResult),
+            (
+                SquareQDMType1PEPSOptimizationResult,
+                SquareQDMType1PEPSJointOptimizationResult,
+                SquareQDMType1AdaptiveJointOptimizationResult,
+            ),
         ):
             losses = np.asarray(result.loss_history, dtype=np.float64)
         else:

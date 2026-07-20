@@ -269,3 +269,116 @@ The dedicated visualizer separates the physical mechanisms:
 The next analytical target is a local tensor equation equivalent to
 ``B psi_+(A) = 0`` together with zero potential variance, valid independently
 of the finite torus used during optimization.
+
+Seam-resolved type-1 diagnostics
+--------------------------------
+
+A small total interference norm can hide two very different mechanisms:
+individual plaquettes may cancel coherently inside a tile, or uncancelled
+residuals may remain specifically on tile boundaries.  The type-1 PEPS problem
+therefore resolves
+
+.. math::
+
+   B\psi_+(A)=\sum_p B_p\psi_+(A)
+
+by plaquette and by four geometric classes: tile interior, ``x`` seam, ``y``
+seam, and four-tile corner.  For each class, qlinks reports both the incoherent
+sum ``sum_p ||B_p psi||^2`` and the norm after coherent summation.  Their
+difference measures destructive interference within that class.
+
+.. code-block:: python
+
+   decomposition = type1_problem.interference_decomposition(
+       singlet_ansatz.parameters,
+   )
+   for record in decomposition.class_records:
+       print(
+           record.plaquette_class,
+           record.residual_norm_squared,
+           record.incoherent_norm_squared,
+           record.cancellation_fraction,
+       )
+
+For the repeated two-plaquette singlet on the ``6 x 4`` torus, the interior
+plaquette components have total incoherent norm squared ``4`` but cancel to
+zero.  The remaining residual is localized on the tile seams, with norm
+squared ``1`` on ``x`` seams and ``2`` on ``y`` seams.
+
+The parameter-sensitivity diagnostic differentiates one seam-class loss with
+respect to every compact tensor entry:
+
+.. code-block:: python
+
+   sensitivity = type1_problem.interference_parameter_sensitivity(
+       probe_parameters,
+       "y_seam",
+   )
+   print(sensitivity.top_entry_indices(12))
+
+This identifies boundary sectors whose amplitudes control the non-transferring
+leakage, including entries that are zero in the sparse singlet seed.
+
+Targeted enlarged unit cells
+----------------------------
+
+Duplicating all 108 tensor entries in a larger unit cell would expand the
+search space indiscriminately.  The adaptive parameterization instead keeps
+most entries translationally shared and duplicates only the sensitivity-ranked
+entries on a period-two tile sublattice:
+
+.. code-block:: python
+
+   from qlinks.caging import (
+       build_square_qdm_type1_adaptive_joint_cluster_problem,
+       build_square_qdm_type1_adaptive_parameterization,
+   )
+
+   adaptive = build_square_qdm_type1_adaptive_parameterization(
+       type1_problem,
+       singlet_ansatz.parameters,
+       plaquette_class="x_seam",
+       split_axis="x",
+       max_selected_entries=6,
+   )
+   enlarged_parameters = adaptive.lift_parameters(
+       singlet_ansatz.parameters,
+   )
+
+   adaptive_joint = build_square_qdm_type1_adaptive_joint_cluster_problem(
+       type1_clusters,
+       adaptive,
+   )
+   result = adaptive_joint.optimize_with_quimb(
+       enlarged_parameters,
+       max_steps=20,
+   )
+
+A period-two split along ``x`` requires an even number of tensor columns; the
+analogous ``y`` split requires an even number of tensor rows.  A checkerboard
+split requires both.  The adaptive ansatz therefore remains a genuine periodic
+PEPS with a controlled multi-tensor unit cell, rather than assigning unrelated
+parameters to every finite-cluster position.
+
+For environments without the optional tensor-network stack, the same exact
+finite-basis objective has an analytic-gradient fallback:
+
+.. code-block:: python
+
+   result = adaptive_joint.optimize_with_scipy(
+       enlarged_parameters,
+       max_steps=10,
+   )
+
+A short deterministic benchmark duplicates six ``x``-seam-sensitive entries,
+trains on ``6 x 2`` and ``6 x 4``, and holds out ``12 x 2``.  Eight
+analytic-gradient steps reduce the joint training objective from approximately
+``0.180606`` to ``0.138872`` and the untrained holdout kinetic-interference
+density from ``0.208334`` to ``0.162702``.  Unlike the earlier one-tensor
+search, this targeted enlargement improves rather than degrades the longer
+longitudinal holdout.
+
+The present adaptive search is still a numerical discovery tool.  The dominant
+transverse seam must be tested on clusters with more tensor rows, and a
+successful candidate must eventually satisfy a local PEPS interference identity
+independent of the finite torus.

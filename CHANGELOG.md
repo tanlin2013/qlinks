@@ -17,6 +17,7 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Add plaquette/seam-resolved type-1 PEPS interference diagnostics and targeted period-two tensor enlargements selected by boundary-sector sensitivity.
 - Add native chiral-block type-1 PEPS contractions and separated multi-cluster kinetic/potential objectives with cross-size validation.
 - Add weighted boundary-cancellation matroid diagnostics and relative dependency scans that separate regional cage circuits from collective cage classes.
 - Add type-1 chiral PEPS objectives, tile-periodic chiral-parity inference, native Z2 charge-resolved tensors, and separated kinetic/potential visual diagnostics.
