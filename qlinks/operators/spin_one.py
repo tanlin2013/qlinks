@@ -229,3 +229,161 @@ class UpdateSpinOneXYBondOperator(BaseLocalUpdateOperator):
             )
 
         return tuple(actions)
+
+
+@dataclass(frozen=True, slots=True)
+class SpinOneXYPairOperator(BaseLocalOperator):
+    """Hermitian spin-1 XY exchange on an arbitrary ordered site pair.
+
+    The operator uses the same matrix-element convention as
+    :class:`SpinOneXYBondOperator` for real couplings,
+
+    ``0.5 * (t S_i^+ S_j^- + t^* S_i^- S_j^+)``.
+
+    Consequently an allowed ``|0,0> -> |+,- >`` transition has matrix element
+    ``t``.  Complex ``t`` gives a Hermitian Peierls-phase exchange.
+    """
+
+    layout: VariableLayout
+    site_i: int
+    site_j: int
+    coefficient: complex = 1.0
+    name: str = "spin_one_xy_pair"
+
+    def __post_init__(self) -> None:
+        site_i = int(self.site_i)
+        site_j = int(self.site_j)
+        if site_i == site_j:
+            raise ValueError("SpinOneXYPairOperator requires two distinct sites.")
+        variable_indices = np.asarray(
+            [
+                int(self.layout.site_variable_index(site_i)),
+                int(self.layout.site_variable_index(site_j)),
+            ],
+            dtype=np.int64,
+        )
+        self._validate_local_spaces(
+            variable_indices,
+            {-1, 0, 1},
+            operator_name=type(self).__name__,
+        )
+        object.__setattr__(self, "site_i", site_i)
+        object.__setattr__(self, "site_j", site_j)
+        object.__setattr__(self, "_site_ids", self._cached_array([site_i, site_j]))
+        object.__setattr__(self, "_variable_indices", self._cached_array(variable_indices))
+
+    @property
+    def site_ids(self) -> npt.NDArray[np.int64]:
+        return self._copy_indices(self._site_ids)
+
+    @property
+    def variable_indices(self) -> npt.NDArray[np.int64]:
+        return self._copy_indices(self._variable_indices)
+
+    def affected_variables(self) -> npt.NDArray[np.int64]:
+        return self._copy_indices(self._variable_indices)
+
+    def apply(self, config: npt.ArrayLike) -> tuple[OperatorAction, ...]:
+        arr = self._as_config(config)
+        i, j = (int(value) for value in self._variable_indices)
+        mi = int(arr[i])
+        mj = int(arr[j])
+        actions: list[OperatorAction] = []
+
+        amp_i_plus = spin_one_raise_amplitude(mi)
+        amp_j_minus = spin_one_lower_amplitude(mj)
+        if amp_i_plus != 0.0 and amp_j_minus != 0.0:
+            new = arr.copy()
+            new[i] = mi + 1
+            new[j] = mj - 1
+            coefficient = 0.5 * complex(self.coefficient) * amp_i_plus * amp_j_minus
+            actions.append(OperatorAction(coefficient, new))
+
+        amp_i_minus = spin_one_lower_amplitude(mi)
+        amp_j_plus = spin_one_raise_amplitude(mj)
+        if amp_i_minus != 0.0 and amp_j_plus != 0.0:
+            new = arr.copy()
+            new[i] = mi - 1
+            new[j] = mj + 1
+            coefficient = 0.5 * np.conj(complex(self.coefficient)) * amp_i_minus * amp_j_plus
+            actions.append(OperatorAction(coefficient, new))
+
+        return tuple(actions)
+
+
+@dataclass(frozen=True, slots=True)
+class UpdateSpinOneXYPairOperator(BaseLocalUpdateOperator):
+    """Update-action version of :class:`SpinOneXYPairOperator`."""
+
+    layout: VariableLayout
+    site_i: int
+    site_j: int
+    coefficient: complex = 1.0
+    name: str = "update_spin_one_xy_pair"
+
+    def __post_init__(self) -> None:
+        site_i = int(self.site_i)
+        site_j = int(self.site_j)
+        if site_i == site_j:
+            raise ValueError("UpdateSpinOneXYPairOperator requires two distinct sites.")
+        variable_indices = np.asarray(
+            [
+                int(self.layout.site_variable_index(site_i)),
+                int(self.layout.site_variable_index(site_j)),
+            ],
+            dtype=np.int64,
+        )
+        for variable_index in variable_indices:
+            values = set(self.layout.local_space(int(variable_index)).values.tolist())
+            if values != {-1, 0, 1}:
+                raise ValueError(
+                    "UpdateSpinOneXYPairOperator requires local-space values [-1, 0, 1]."
+                )
+        object.__setattr__(self, "site_i", site_i)
+        object.__setattr__(self, "site_j", site_j)
+        object.__setattr__(self, "_site_ids", variable_indices.copy())
+        object.__setattr__(self, "_variable_indices", variable_indices)
+
+    @property
+    def site_ids(self) -> npt.NDArray[np.int64]:
+        return np.asarray([self.site_i, self.site_j], dtype=np.int64)
+
+    @property
+    def variable_indices(self) -> npt.NDArray[np.int64]:
+        return self._variable_indices.copy()
+
+    def affected_variables(self) -> npt.NDArray[np.int64]:
+        return self._variable_indices.copy()
+
+    def apply_update(self, config: npt.ArrayLike) -> tuple[LocalUpdateAction, ...]:
+        arr = self._as_config(config)
+        i, j = (int(value) for value in self._variable_indices)
+        mi = int(arr[i])
+        mj = int(arr[j])
+        actions: list[LocalUpdateAction] = []
+
+        amp_i_plus = spin_one_raise_amplitude(mi)
+        amp_j_minus = spin_one_lower_amplitude(mj)
+        if amp_i_plus != 0.0 and amp_j_minus != 0.0:
+            coefficient = 0.5 * complex(self.coefficient) * amp_i_plus * amp_j_minus
+            actions.append(
+                LocalUpdateAction(
+                    coefficient=coefficient,
+                    variable_indices=self._variable_indices,
+                    new_values=np.asarray([mi + 1, mj - 1], dtype=np.int64),
+                )
+            )
+
+        amp_i_minus = spin_one_lower_amplitude(mi)
+        amp_j_plus = spin_one_raise_amplitude(mj)
+        if amp_i_minus != 0.0 and amp_j_plus != 0.0:
+            coefficient = 0.5 * np.conj(complex(self.coefficient)) * amp_i_minus * amp_j_plus
+            actions.append(
+                LocalUpdateAction(
+                    coefficient=coefficient,
+                    variable_indices=self._variable_indices,
+                    new_values=np.asarray([mi - 1, mj + 1], dtype=np.int64),
+                )
+            )
+
+        return tuple(actions)

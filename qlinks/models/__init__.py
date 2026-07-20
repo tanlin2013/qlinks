@@ -46,7 +46,16 @@ from qlinks.models.qlm import (
     TriangularQLMModel,
 )
 from qlinks.models.quantum_disk import QuantumDiskModel, SquareQuantumDiskModel
-from qlinks.models.spin_one_xy import SpinOneXYChainModel
+from qlinks.models.spin_one_xy import (
+    SpinOneXYChainModel,
+    SpinOneXYPhaseCompatibilityReport,
+    SpinOneXYTowerThermalActivities,
+    spin_one_xy_fixed_magnetization_dimension,
+    spin_one_xy_periodic_range_couplings,
+    spin_one_xy_phase_compatibility,
+    spin_one_xy_scar_tower_states,
+    spin_one_xy_tower_thermal_activities,
+)
 from qlinks.models.toric_code import ToricCodeModel
 
 __all__ = [
@@ -75,6 +84,8 @@ __all__ = [
     "QuantumDiskModel",
     "SparseBuildOptions",
     "SpinOneXYChainModel",
+    "SpinOneXYPhaseCompatibilityReport",
+    "SpinOneXYTowerThermalActivities",
     "SquareQDMModel",
     "SquareQLMModel",
     "SquareQuantumDiskModel",
@@ -90,5 +101,10 @@ __all__ = [
     "peierls_plaquette_coupling",
     "plaquette_coupling_value",
     "solve_basis",
+    "spin_one_xy_fixed_magnetization_dimension",
+    "spin_one_xy_periodic_range_couplings",
+    "spin_one_xy_phase_compatibility",
+    "spin_one_xy_scar_tower_states",
+    "spin_one_xy_tower_thermal_activities",
     "validate_builder_name",
 ]

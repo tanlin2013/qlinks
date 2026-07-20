@@ -34,7 +34,9 @@ from qlinks.operators.plaquette import (
 from qlinks.operators.pxp import PXPSpinFlipOperator
 from qlinks.operators.spin_one import (
     SpinOneXYBondOperator,
+    SpinOneXYPairOperator,
     UpdateSpinOneXYBondOperator,
+    UpdateSpinOneXYPairOperator,
     spin_one_lower_amplitude,
     spin_one_raise_amplitude,
 )
@@ -89,6 +91,7 @@ __all__ = [
     "SetVariablesOperator",
     "SingleLocalUpdateOperator",
     "SpinOneXYBondOperator",
+    "SpinOneXYPairOperator",
     "ToricCodePlaquetteFluxOperator",
     "ToricCodeStarFlipOperator",
     "TransposedBasisOperator",
@@ -101,6 +104,7 @@ __all__ = [
     "UpdatePlaquettePatternTransition",
     "UpdateSetVariablesOperator",
     "UpdateSpinOneXYBondOperator",
+    "UpdateSpinOneXYPairOperator",
     "alternating_binary_flippability_projectors",
     "alternating_binary_patterns",
     "alternating_flux_flippability_projectors",

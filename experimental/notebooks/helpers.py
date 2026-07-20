@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
 from IPython.display import display
@@ -19,6 +20,51 @@ ZERO_MECHANISM_FIELDS = {
     "extended": "extended_mechanism_zero_indices",
     "failure": "failure_mechanism_zero_indices",
 }
+
+
+def set_revtex_matplotlib_style(
+    *,
+    base_font_size: float = 8.0,
+) -> None:
+    """Configure Matplotlib to resemble the current REVTeX manuscript."""
+
+    mpl.rcParams.update(
+        {
+            # Render all text and mathematics with LaTeX.
+            "text.usetex": True,
+            # Default REVTeX/LaTeX serif family.
+            "font.family": "serif",
+            "font.serif": ["Computer Modern Roman"],
+            # Packages and commands used by figure labels.
+            # Do not put \documentclass here.
+            "text.latex.preamble": r"""
+            \usepackage{amsmath}
+            \usepackage{amssymb}
+            \usepackage{bm}
+        """,
+            # Typography at the final printed figure size.
+            "font.size": base_font_size,
+            "axes.labelsize": base_font_size,
+            "axes.titlesize": base_font_size,
+            "xtick.labelsize": base_font_size - 1,
+            "ytick.labelsize": base_font_size - 1,
+            "legend.fontsize": base_font_size - 1,
+            "figure.titlesize": base_font_size,
+            # Keep mathematical minus signs and ordinary text consistent.
+            "axes.unicode_minus": False,
+            # Avoid overly thick default figure elements.
+            "axes.linewidth": 0.7,
+            "lines.linewidth": 1.0,
+            "lines.markersize": 4.0,
+            "xtick.major.width": 0.7,
+            "ytick.major.width": 0.7,
+            "xtick.minor.width": 0.5,
+            "ytick.minor.width": 0.5,
+            # Save figures without a rasterized background.
+            "savefig.transparent": False,
+            "savefig.bbox": "tight",
+        }
+    )
 
 
 def classify_cage_search_result(

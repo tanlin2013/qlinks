@@ -22,7 +22,9 @@ from qlinks.operators import (
     LocalSquareValueDiagonalOperator,
     LocalValueDiagonalOperator,
     SpinOneXYBondOperator,
+    SpinOneXYPairOperator,
     UpdateSpinOneXYBondOperator,
+    UpdateSpinOneXYPairOperator,
 )
 from qlinks.variables import LocalSpace, VariableLayout
 
@@ -50,6 +52,40 @@ class SpinOneXYChainModel(HamiltonianModelBase):
     h_z: complex = 0.0
     d_z: complex = 0.0
     total_sz: int | None = None
+    extra_xy_couplings: tuple[tuple[int, int, complex], ...] = ()
+    h_z_by_site: tuple[complex, ...] | None = None
+    d_z_by_site: tuple[complex, ...] | None = None
+
+    def __post_init__(self) -> None:
+        if self.length <= 0:
+            raise ValueError("length must be positive.")
+
+        couplings: list[tuple[int, int, complex]] = []
+        for raw in self.extra_xy_couplings:
+            if len(raw) != 3:
+                raise ValueError("each extra_xy_coupling must be (site_i, site_j, coefficient).")
+            site_i, site_j, coefficient = int(raw[0]), int(raw[1]), complex(raw[2])
+            if site_i == site_j:
+                raise ValueError("extra XY couplings require distinct sites.")
+            if not (0 <= site_i < self.length and 0 <= site_j < self.length):
+                raise ValueError("extra XY coupling site is outside the chain.")
+            couplings.append((site_i, site_j, coefficient))
+        object.__setattr__(self, "extra_xy_couplings", tuple(couplings))
+
+        for name in ("h_z_by_site", "d_z_by_site"):
+            values = getattr(self, name)
+            if values is None:
+                continue
+            normalized = tuple(complex(value) for value in values)
+            if len(normalized) != self.length:
+                raise ValueError(f"{name} must have length equal to the chain length.")
+            object.__setattr__(self, name, normalized)
+
+    def _site_coefficient(self, name: str, site_id: int) -> complex:
+        by_site = getattr(self, f"{name}_by_site")
+        if by_site is not None:
+            return complex(by_site[int(site_id)])
+        return complex(getattr(self, name))
 
     def _make_lattice(self) -> ChainLattice:
         return ChainLattice(
@@ -98,32 +134,53 @@ class SpinOneXYChainModel(HamiltonianModelBase):
         if layout is None:
             layout = self.layout
 
-        if builder == "sparse":
-            return tuple(
-                SpinOneXYBondOperator(
-                    layout=layout,
-                    lattice=self.lattice,
-                    link_id=int(link_id),
-                    coefficient=self.j_xy,
+        operators: list[object] = []
+        for link_id in self.lattice.link_ids:
+            if builder == "sparse":
+                operators.append(
+                    SpinOneXYBondOperator(
+                        layout=layout,
+                        lattice=self.lattice,
+                        link_id=int(link_id),
+                        coefficient=self.j_xy,
+                    )
                 )
-                for link_id in self.lattice.link_ids
-            )
-
-        if builder == "optimized":
-            return tuple(
-                UpdateSpinOneXYBondOperator(
-                    layout=layout,
-                    lattice=self.lattice,
-                    link_id=int(link_id),
-                    coefficient=self.j_xy,
+            elif builder == "optimized":
+                operators.append(
+                    UpdateSpinOneXYBondOperator(
+                        layout=layout,
+                        lattice=self.lattice,
+                        link_id=int(link_id),
+                        coefficient=self.j_xy,
+                    )
                 )
-                for link_id in self.lattice.link_ids
-            )
+            else:
+                raise NotImplementedError(
+                    "SpinOneXYChainModel currently supports kinetic terms only for "
+                    "builder='sparse' or builder='optimized'."
+                )
 
-        raise NotImplementedError(
-            "SpinOneXYChainModel currently supports kinetic terms only for "
-            "builder='sparse' or builder='optimized'."
-        )
+        for site_i, site_j, coefficient in self.extra_xy_couplings:
+            if builder == "sparse":
+                operators.append(
+                    SpinOneXYPairOperator(
+                        layout=layout,
+                        site_i=site_i,
+                        site_j=site_j,
+                        coefficient=coefficient,
+                    )
+                )
+            elif builder == "optimized":
+                operators.append(
+                    UpdateSpinOneXYPairOperator(
+                        layout=layout,
+                        site_i=site_i,
+                        site_j=site_j,
+                        coefficient=coefficient,
+                    )
+                )
+
+        return tuple(operators)
 
     def make_potential_operators(
         self,
@@ -136,36 +193,41 @@ class SpinOneXYChainModel(HamiltonianModelBase):
         if layout is None:
             layout = self.layout
 
-        operators: list[object] = []
-
         if builder not in ("sparse", "optimized"):
-            if self.h_z == 0 and self.d_z == 0:
+            has_potential = any(
+                self._site_coefficient(name, site_id) != 0
+                for name in ("h_z", "d_z")
+                for site_id in range(self.length)
+            )
+            if not has_potential:
                 return ()
-
             raise NotImplementedError(
                 "SpinOneXYChainModel currently supports potential terms only for "
                 "builder='sparse' or builder='optimized'."
             )
 
+        operators: list[object] = []
         for site_id in self.lattice.site_ids:
             variable_index = int(layout.site_variable_index(int(site_id)))
+            h_value = self._site_coefficient("h_z", int(site_id))
+            d_value = self._site_coefficient("d_z", int(site_id))
 
-            if self.h_z != 0:
+            if h_value != 0:
                 operators.append(
                     LocalValueDiagonalOperator(
                         layout=layout,
                         variable_index=variable_index,
-                        coefficient=self.h_z,
+                        coefficient=h_value,
                         name="spin_one_zeeman_z",
                     )
                 )
 
-            if self.d_z != 0:
+            if d_value != 0:
                 operators.append(
                     LocalSquareValueDiagonalOperator(
                         layout=layout,
                         variable_index=variable_index,
-                        coefficient=self.d_z,
+                        coefficient=d_value,
                         name="spin_one_single_ion_anisotropy",
                     )
                 )
@@ -223,7 +285,7 @@ class SpinOneXYChainModel(HamiltonianModelBase):
         operator_kind: LocalOperatorKind | None = None,
         term_kind: LocalTermKind | None = None,
     ) -> tuple[LocalTermDescriptor, ...]:
-        """Return site/bond local terms for generic open-system builders."""
+        """Return site/pair local terms for generic diagnostics and builders."""
         descriptors: list[LocalTermDescriptor] = []
 
         if term_kind in (None, "bond") and operator_kind in (None, "kinetic", "hamiltonian"):
@@ -244,11 +306,28 @@ class SpinOneXYChainModel(HamiltonianModelBase):
                     )
                 )
 
+            offset = len(self.lattice.links)
+            for pair_index, (site_i, site_j, _coefficient) in enumerate(self.extra_xy_couplings):
+                support_sites = (int(site_i), int(site_j))
+                support_variables = tuple(
+                    int(self.layout.site_variable_index(site_id)) for site_id in support_sites
+                )
+                descriptors.append(
+                    LocalTermDescriptor(
+                        term_id=offset + pair_index,
+                        term_kind="bond",
+                        operator_kind="kinetic",
+                        support_links=(),
+                        support_sites=support_sites,
+                        support_variables=support_variables,
+                        label=f"XY_pair_{pair_index}_{site_i}_{site_j}",
+                    )
+                )
+
         if term_kind in (None, "site") and operator_kind in (None, "potential", "hamiltonian"):
             for site_id in self.lattice.site_ids:
                 variable_index = int(self.layout.site_variable_index(int(site_id)))
-
-                if self.h_z != 0:
+                if self._site_coefficient("h_z", int(site_id)) != 0:
                     descriptors.append(
                         LocalTermDescriptor(
                             term_id=int(site_id),
@@ -260,8 +339,7 @@ class SpinOneXYChainModel(HamiltonianModelBase):
                             label=f"Sz_{site_id}",
                         )
                     )
-
-                if self.d_z != 0:
+                if self._site_coefficient("d_z", int(site_id)) != 0:
                     descriptors.append(
                         LocalTermDescriptor(
                             term_id=int(site_id),
@@ -286,8 +364,9 @@ class SpinOneXYChainModel(HamiltonianModelBase):
         validate_builder_name(builder)
 
         if descriptor.term_kind == "bond" and descriptor.operator_kind == "kinetic":
-            operators = (
-                (
+            n_links = len(self.lattice.links)
+            if int(descriptor.term_id) < n_links:
+                operator = (
                     SpinOneXYBondOperator(
                         layout=layout,
                         lattice=self.lattice,
@@ -301,11 +380,31 @@ class SpinOneXYChainModel(HamiltonianModelBase):
                         link_id=int(descriptor.term_id),
                         coefficient=self.j_xy,
                     )
-                ),
-            )
+                )
+            else:
+                pair_index = int(descriptor.term_id) - n_links
+                try:
+                    site_i, site_j, coefficient = self.extra_xy_couplings[pair_index]
+                except IndexError as exc:
+                    raise ValueError("unknown spin-one XY pair descriptor.") from exc
+                operator = (
+                    SpinOneXYPairOperator(
+                        layout=layout,
+                        site_i=site_i,
+                        site_j=site_j,
+                        coefficient=coefficient,
+                    )
+                    if builder == "sparse"
+                    else UpdateSpinOneXYPairOperator(
+                        layout=layout,
+                        site_i=site_i,
+                        site_j=site_j,
+                        coefficient=coefficient,
+                    )
+                )
             return HamiltonianTermSpec.from_operators(
                 name=f"kinetic_{descriptor.term_id}",
-                operators=operators,
+                operators=(operator,),
                 kind="kinetic",
             )
 
@@ -314,29 +413,29 @@ class SpinOneXYChainModel(HamiltonianModelBase):
             variable_index = int(layout.site_variable_index(site_id))
             operators: list[object] = []
 
-            if self.h_z != 0 and (
-                descriptor.label is None or str(descriptor.label).startswith("Sz_")
-            ):
-                operators.append(
-                    LocalValueDiagonalOperator(
-                        layout=layout,
-                        variable_index=variable_index,
-                        coefficient=self.h_z,
-                        name="spin_one_zeeman_z",
+            if descriptor.label is None or str(descriptor.label).startswith("Sz_"):
+                h_value = self._site_coefficient("h_z", site_id)
+                if h_value != 0:
+                    operators.append(
+                        LocalValueDiagonalOperator(
+                            layout=layout,
+                            variable_index=variable_index,
+                            coefficient=h_value,
+                            name="spin_one_zeeman_z",
+                        )
                     )
-                )
 
-            if self.d_z != 0 and (
-                descriptor.label is None or str(descriptor.label).startswith("Sz2_")
-            ):
-                operators.append(
-                    LocalSquareValueDiagonalOperator(
-                        layout=layout,
-                        variable_index=variable_index,
-                        coefficient=self.d_z,
-                        name="spin_one_single_ion_anisotropy",
+            if descriptor.label is None or str(descriptor.label).startswith("Sz2_"):
+                d_value = self._site_coefficient("d_z", site_id)
+                if d_value != 0:
+                    operators.append(
+                        LocalSquareValueDiagonalOperator(
+                            layout=layout,
+                            variable_index=variable_index,
+                            coefficient=d_value,
+                            name="spin_one_single_ion_anisotropy",
+                        )
                     )
-                )
 
             return HamiltonianTermSpec.from_operators(
                 name=f"potential_{descriptor.label or site_id}",
@@ -345,7 +444,7 @@ class SpinOneXYChainModel(HamiltonianModelBase):
             )
 
         raise ValueError(
-            "SpinOneXYChainModel local terms support bond kinetic terms and site potential terms."
+            "SpinOneXYChainModel local terms support pair kinetic terms and site potential terms."
         )
 
 
@@ -406,3 +505,184 @@ def spin_one_xy_scar_tower_states(
         return np.zeros((n_basis, 0), dtype=np.complex128), ()
 
     return np.column_stack(states).astype(np.complex128, copy=False), tuple(labels)
+
+
+@dataclass(frozen=True, slots=True)
+class SpinOneXYTowerThermalActivities:
+    """Exact fixed-magnetization witness activities for the pi-bimagnon tower.
+
+    ``xy_matrix_element`` is the qlinks convention: it is the matrix element
+    connecting ``|00>`` with ``|+->``.  In the manuscript convention of
+    Eq. (104), ``xy_matrix_element = 2 J``.
+    """
+
+    length: int
+    total_sz: int
+    sector_dimension: int
+    one_zero_count: int
+    two_site_remainder_count: int
+    y2_activity: float
+    z2_activity: float
+    p0_limit: float
+    y2_limit: float
+    z2_limit: float
+    xy_matrix_element: complex
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "length": self.length,
+            "total_sz": self.total_sz,
+            "sector_dimension": self.sector_dimension,
+            "one_zero_count": self.one_zero_count,
+            "two_site_remainder_count": self.two_site_remainder_count,
+            "y2_activity": self.y2_activity,
+            "z2_activity": self.z2_activity,
+            "p0_limit": self.p0_limit,
+            "y2_limit": self.y2_limit,
+            "z2_limit": self.z2_limit,
+            "xy_matrix_element": self.xy_matrix_element,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SpinOneXYPhaseCompatibilityReport:
+    """Bondwise compatibility of a generalized tower phase with XY exchanges."""
+
+    residuals: tuple[complex, ...]
+    pairs: tuple[tuple[int, int], ...]
+    couplings: tuple[complex, ...]
+    phases: tuple[complex, ...]
+
+    @property
+    def max_residual(self) -> float:
+        return max((abs(value) for value in self.residuals), default=0.0)
+
+    @property
+    def is_compatible(self) -> bool:
+        return self.max_residual <= 1.0e-10
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "pairs": self.pairs,
+            "couplings": self.couplings,
+            "phases": self.phases,
+            "residuals": self.residuals,
+            "max_residual": self.max_residual,
+            "is_compatible": self.is_compatible,
+        }
+
+
+def spin_one_xy_periodic_range_couplings(
+    *,
+    length: int,
+    distance: int,
+    coefficient: complex,
+) -> tuple[tuple[int, int, complex], ...]:
+    """Return unique undirected periodic pairs at one separation.
+
+    The ordered orientation is chosen from ``r`` to ``r + distance`` before
+    duplicate undirected pairs are removed.  Real coefficients therefore give
+    the usual translation-invariant exchange.  For complex coefficients the
+    orientation fixes the Peierls phase convention.
+    """
+    if length <= 1:
+        raise ValueError("length must exceed one.")
+    step = int(distance) % int(length)
+    if step == 0:
+        raise ValueError("distance must not be a multiple of length.")
+    seen: set[frozenset[int]] = set()
+    pairs: list[tuple[int, int, complex]] = []
+    for site_i in range(int(length)):
+        site_j = (site_i + step) % int(length)
+        key = frozenset((site_i, site_j))
+        if key in seen:
+            continue
+        seen.add(key)
+        pairs.append((site_i, site_j, complex(coefficient)))
+    return tuple(pairs)
+
+
+def spin_one_xy_fixed_magnetization_dimension(length: int, total_sz: int) -> int:
+    """Return ``[z^M](z^-1 + 1 + z)^L`` by exact dynamic programming."""
+    if length < 0:
+        raise ValueError("length must be non-negative.")
+    counts = {0: 1}
+    for _ in range(int(length)):
+        updated: dict[int, int] = {}
+        for magnetization, count in counts.items():
+            for local_value in (-1, 0, 1):
+                key = magnetization + local_value
+                updated[key] = updated.get(key, 0) + count
+        counts = updated
+    return int(counts.get(int(total_sz), 0))
+
+
+def spin_one_xy_tower_thermal_activities(
+    *,
+    length: int,
+    total_sz: int,
+    xy_matrix_element: complex = 1.0,
+) -> SpinOneXYTowerThermalActivities:
+    """Evaluate the exact finite-L ratios and their fixed-density limits.
+
+    The returned quantities are ``Tr(rho Y_r^2)`` and
+    ``Tr(rho Z_{r,r+1}^2)`` in the infinite-temperature fixed-magnetization
+    ensemble.  They correspond to Eqs. (125)-(129) of the current draft after
+    identifying ``xy_matrix_element = 2 J``.
+    """
+    if length < 2:
+        raise ValueError("length must be at least two.")
+    dimension = spin_one_xy_fixed_magnetization_dimension(length, total_sz)
+    if dimension == 0:
+        raise ValueError("requested fixed-magnetization sector is empty.")
+    one_zero = spin_one_xy_fixed_magnetization_dimension(length - 1, total_sz)
+    remainder = spin_one_xy_fixed_magnetization_dimension(length - 2, total_sz)
+    matrix_element = complex(xy_matrix_element)
+    y2 = float(one_zero / dimension)
+    z2 = float(4.0 * abs(matrix_element) ** 2 * remainder / dimension)
+    q = float(total_sz) / float(length)
+    if abs(q) > 1.0:
+        raise ValueError("magnetization density must lie in [-1, 1].")
+    p0 = float((np.sqrt(max(4.0 - 3.0 * q * q, 0.0)) - 1.0) / 3.0)
+    return SpinOneXYTowerThermalActivities(
+        length=int(length),
+        total_sz=int(total_sz),
+        sector_dimension=dimension,
+        one_zero_count=one_zero,
+        two_site_remainder_count=remainder,
+        y2_activity=y2,
+        z2_activity=z2,
+        p0_limit=p0,
+        y2_limit=p0,
+        z2_limit=float(4.0 * abs(matrix_element) ** 2 * p0**2),
+        xy_matrix_element=matrix_element,
+    )
+
+
+def spin_one_xy_phase_compatibility(
+    couplings: tuple[tuple[int, int, complex], ...],
+    *,
+    phases: npt.ArrayLike,
+) -> SpinOneXYPhaseCompatibilityReport:
+    """Check ``t* eta_i + t eta_j = 0`` for every Hermitian pair exchange."""
+    eta = np.asarray(phases, dtype=np.complex128).reshape(-1)
+    if eta.size == 0:
+        raise ValueError("phases must not be empty.")
+    if np.any(np.abs(np.abs(eta) - 1.0) > 1.0e-10):
+        raise ValueError("tower phases must have unit modulus.")
+    pairs: list[tuple[int, int]] = []
+    values: list[complex] = []
+    residuals: list[complex] = []
+    for site_i, site_j, coupling in couplings:
+        i, j, value = int(site_i), int(site_j), complex(coupling)
+        if not (0 <= i < eta.size and 0 <= j < eta.size):
+            raise ValueError("coupling site lies outside the phase array.")
+        pairs.append((i, j))
+        values.append(value)
+        residuals.append(np.conj(value) * eta[i] + value * eta[j])
+    return SpinOneXYPhaseCompatibilityReport(
+        residuals=tuple(residuals),
+        pairs=tuple(pairs),
+        couplings=tuple(values),
+        phases=tuple(complex(value) for value in eta),
+    )

@@ -268,3 +268,46 @@ def test_spin_one_xy_total_sz_sector_extreme_state() -> None:
 
     assert basis.n_states == 1
     np.testing.assert_array_equal(basis.states[0], np.asarray([-1, -1, -1]))
+
+
+def test_spin_one_xy_extra_pair_coupling_is_hermitian_and_matches_optimized() -> None:
+    kwargs = dict(
+        length=4,
+        boundary_condition="periodic",
+        j_xy=0.0,
+        total_sz=0,
+        extra_xy_couplings=((0, 3, 0.7 + 0.2j), (1, 2, -0.4j)),
+    )
+    sparse_result = SpinOneXYChainModel(**kwargs).build(
+        builder="sparse",
+        basis_solver="dfs",
+        sort_basis=True,
+    )
+    optimized_result = SpinOneXYChainModel(**kwargs).build(
+        builder="optimized",
+        basis_solver="dfs",
+        sort_basis=True,
+    )
+    dense = sparse_result.hamiltonian.toarray()
+    np.testing.assert_allclose(dense, dense.conj().T, atol=1.0e-12)
+    assert_sparse_allclose(sparse_result.hamiltonian, optimized_result.hamiltonian)
+
+
+def test_spin_one_xy_site_resolved_potentials() -> None:
+    model = SpinOneXYChainModel(
+        length=3,
+        j_xy=0.0,
+        h_z=9.0,
+        d_z=9.0,
+        h_z_by_site=(0.1, 0.2, 0.3),
+        d_z_by_site=(1.0, 2.0, 3.0),
+    )
+    result = model.build(builder="optimized", basis_solver="dfs", sort_basis=True)
+    expected = np.asarray(
+        [
+            np.dot(config, np.asarray([0.1, 0.2, 0.3]))
+            + np.dot(config * config, np.asarray([1.0, 2.0, 3.0]))
+            for config in result.basis.states
+        ]
+    )
+    np.testing.assert_allclose(result.potential.diagonal(), expected)
