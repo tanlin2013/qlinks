@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import shutil
+import warnings
+
 import matplotlib as mpl
 import numpy as np
 import pandas as pd
@@ -25,23 +28,43 @@ ZERO_MECHANISM_FIELDS = {
 def set_revtex_matplotlib_style(
     *,
     base_font_size: float = 8.0,
+    prefer_tex: bool = True,
 ) -> None:
-    """Configure Matplotlib to resemble the current REVTeX manuscript."""
+    """Configure Matplotlib to resemble the current REVTeX manuscript.
+
+    If a working ``latex`` executable is unavailable, the function falls back
+    to Matplotlib's built-in mathtext while keeping the Computer-Modern-like
+    serif appearance. This makes the notebooks portable on lightweight
+    environments such as CI and remote containers.
+    """
+
+    use_tex = bool(prefer_tex and shutil.which("latex"))
+    if prefer_tex and not use_tex:
+        warnings.warn(
+            "LaTeX executable not found; falling back to Matplotlib mathtext.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
     mpl.rcParams.update(
         {
-            # Render all text and mathematics with LaTeX.
-            "text.usetex": True,
+            # Render all text and mathematics with LaTeX when available.
+            "text.usetex": use_tex,
             # Default REVTeX/LaTeX serif family.
             "font.family": "serif",
-            "font.serif": ["Computer Modern Roman"],
+            "font.serif": ["Computer Modern Roman", "CMU Serif", "DejaVu Serif"],
+            "mathtext.fontset": "cm",
             # Packages and commands used by figure labels.
             # Do not put \documentclass here.
-            "text.latex.preamble": r"""
+            "text.latex.preamble": (
+                r"""
             \usepackage{amsmath}
             \usepackage{amssymb}
             \usepackage{bm}
-        """,
+        """
+                if use_tex
+                else ""
+            ),
             # Typography at the final printed figure size.
             "font.size": base_font_size,
             "axes.labelsize": base_font_size,
