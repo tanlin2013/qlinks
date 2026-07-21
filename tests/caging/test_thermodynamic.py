@@ -8,11 +8,15 @@ from qlinks.caging import (
     ETHScalingReport,
     ReducedIZPatternSupport,
     common_local_witness_families,
+    diagnose_local_channel_spectrum,
+    directed_transition_witness_template,
     evaluate_local_witness_microcanonical,
     evaluate_local_witness_on_diagonal_ensemble,
     evaluate_local_witness_on_states,
+    hermitianize_local_witness_template,
     local_witness_template_from_pattern_support,
     make_eth_scaling_point,
+    thermal_activity_margin_from_samples,
 )
 
 
@@ -180,3 +184,54 @@ def test_common_local_witness_families_match_translated_patterns() -> None:
     assert family.system_labels == ("L=4", "L=6")
     assert family.witnesses_for("L=4")[0].variable_indices == (0,)
     assert family.witnesses_for("L=6")[0].variable_indices == (2,)
+
+
+def test_directed_transition_template_and_hermitianization() -> None:
+    directed = directed_transition_witness_template(
+        target_pattern=(0, 0),
+        source_patterns=((1, -1), (-1, 1)),
+        amplitudes=(2.0, 2.0),
+    )
+    hermitian = hermitianize_local_witness_template(directed)
+
+    expected = np.zeros((3, 3), dtype=np.complex128)
+    expected[0, 1:] = 2.0
+    np.testing.assert_allclose(directed.local_operator, expected)
+    np.testing.assert_allclose(
+        hermitian.local_operator,
+        expected + expected.conj().T,
+    )
+    np.testing.assert_allclose(
+        directed.q_operator,
+        np.array(
+            [
+                [0.0, 0.0, 0.0],
+                [0.0, 4.0, 4.0],
+                [0.0, 4.0, 4.0],
+            ],
+            dtype=np.complex128,
+        ),
+    )
+
+
+def test_local_channel_spectrum_and_thermal_margin() -> None:
+    directed = directed_transition_witness_template(
+        target_pattern=(0, 0),
+        source_patterns=((1, -1), (-1, 1)),
+        amplitudes=(2.0, 2.0),
+        normalization="operator_norm",
+    )
+    spectrum = diagnose_local_channel_spectrum(directed)
+    assert spectrum.rank == 1
+    assert spectrum.nullity == 2
+    assert np.isclose(spectrum.dark_channel_gap, 1.0)
+
+    margin = thermal_activity_margin_from_samples(
+        [-0.1, 0.0, 0.1],
+        [0.28, 0.30, 0.27],
+        reference_parameter=0.0,
+    )
+    assert np.isclose(margin.reference_activity, 0.30)
+    assert np.isclose(margin.susceptibility_bound, 0.30)
+    assert np.isclose(margin.half_activity_radius, 0.5)
+    assert np.isclose(margin.lower_bound(0.1), 0.27)

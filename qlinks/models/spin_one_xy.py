@@ -522,9 +522,11 @@ class SpinOneXYTowerThermalActivities:
     one_zero_count: int
     two_site_remainder_count: int
     y2_activity: float
+    directed_q_activity: float
     z2_activity: float
     p0_limit: float
     y2_limit: float
+    directed_q_limit: float
     z2_limit: float
     xy_matrix_element: complex
 
@@ -536,9 +538,11 @@ class SpinOneXYTowerThermalActivities:
             "one_zero_count": self.one_zero_count,
             "two_site_remainder_count": self.two_site_remainder_count,
             "y2_activity": self.y2_activity,
+            "directed_q_activity": self.directed_q_activity,
             "z2_activity": self.z2_activity,
             "p0_limit": self.p0_limit,
             "y2_limit": self.y2_limit,
+            "directed_q_limit": self.directed_q_limit,
             "z2_limit": self.z2_limit,
             "xy_matrix_element": self.xy_matrix_element,
         }
@@ -625,10 +629,11 @@ def spin_one_xy_tower_thermal_activities(
 ) -> SpinOneXYTowerThermalActivities:
     """Evaluate the exact finite-L ratios and their fixed-density limits.
 
-    The returned quantities are ``Tr(rho Y_r^2)`` and
+    The returned quantities are ``Tr(rho Y_r^2)``, the one-sided directed
+    activity ``Tr(rho A_r^dagger A_r)``, and
     ``Tr(rho Z_{r,r+1}^2)`` in the infinite-temperature fixed-magnetization
-    ensemble.  They correspond to Eqs. (125)-(129) of the current draft after
-    identifying ``xy_matrix_element = 2 J``.
+    ensemble.  They correspond to the local channels in the current draft
+    after identifying ``xy_matrix_element = 2 J``.
     """
     if length < 2:
         raise ValueError("length must be at least two.")
@@ -639,6 +644,7 @@ def spin_one_xy_tower_thermal_activities(
     remainder = spin_one_xy_fixed_magnetization_dimension(length - 2, total_sz)
     matrix_element = complex(xy_matrix_element)
     y2 = float(one_zero / dimension)
+    directed_q = float(2.0 * abs(matrix_element) ** 2 * remainder / dimension)
     z2 = float(4.0 * abs(matrix_element) ** 2 * remainder / dimension)
     q = float(total_sz) / float(length)
     if abs(q) > 1.0:
@@ -651,9 +657,11 @@ def spin_one_xy_tower_thermal_activities(
         one_zero_count=one_zero,
         two_site_remainder_count=remainder,
         y2_activity=y2,
+        directed_q_activity=directed_q,
         z2_activity=z2,
         p0_limit=p0,
         y2_limit=p0,
+        directed_q_limit=float(2.0 * abs(matrix_element) ** 2 * p0**2),
         z2_limit=float(4.0 * abs(matrix_element) ** 2 * p0**2),
         xy_matrix_element=matrix_element,
     )

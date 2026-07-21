@@ -368,6 +368,39 @@ class LinearizedCageObstructionReport:
 
 
 @dataclass(frozen=True, slots=True)
+class CageJacobianConditioningReport:
+    """Conditioning spectrum of the gauge-fixed caged-eigenpair equations."""
+
+    support: tuple[int, ...]
+    energy: complex
+    jacobian: npt.NDArray[np.complex128]
+    singular_values: npt.NDArray[np.float64]
+    rank: int
+    nullity: int
+    cage_gap: float
+    internal_residual: float
+    boundary_residual: float
+    full_residual: float
+    tolerance: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "support_size": len(self.support),
+            "energy": self.energy,
+            "jacobian_rows": int(self.jacobian.shape[0]),
+            "jacobian_columns": int(self.jacobian.shape[1]),
+            "rank": self.rank,
+            "nullity": self.nullity,
+            "cage_gap": self.cage_gap,
+            "singular_values": tuple(float(value) for value in self.singular_values),
+            "internal_residual": self.internal_residual,
+            "boundary_residual": self.boundary_residual,
+            "full_residual": self.full_residual,
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class FixedCageStateCompatibilityReport:
     """Exact affine perturbation space that preserves one cage vector.
 
@@ -1265,6 +1298,103 @@ def fixed_cage_state_compatibility(
             np.float64,
             copy=False,
         ),
+        tolerance=tolerance,
+    )
+
+
+def cage_jacobian_conditioning(
+    internal_matrix: object,
+    boundary_matrix: object,
+    cage_state: npt.ArrayLike,
+    *,
+    support: Sequence[int] | None = None,
+    tolerance: float = 1.0e-10,
+) -> CageJacobianConditioningReport:
+    """Evaluate the gauge-fixed Jacobian and ``Delta_cage``.
+
+    The domain consists of state variations orthogonal to the normalized cage
+    vector together with one energy variation.  This is the finite-dimensional
+    Jacobian in Eq. (45) of the current deformation criterion.  Its smallest
+    positive singular value is a conditioning scale after a deformation has
+    passed the obstruction test; it does not by itself guarantee compatibility.
+    """
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    internal = as_dense_array(internal_matrix)
+    boundary = as_dense_array(boundary_matrix)
+    if internal.ndim != 2 or internal.shape[0] != internal.shape[1]:
+        raise ValueError("internal_matrix must be square.")
+    if boundary.ndim != 2 or boundary.shape[1] != internal.shape[0]:
+        raise ValueError("boundary_matrix must have one column per support state.")
+    state = np.asarray(cage_state, dtype=np.complex128).reshape(-1)
+    if state.size != internal.shape[0]:
+        raise ValueError("cage_state length must match internal_matrix.shape[0].")
+    norm = float(np.linalg.norm(state))
+    if norm <= tolerance:
+        raise ValueError("cage_state must have nonzero norm.")
+    state = state / norm
+
+    energy = complex(np.vdot(state, internal @ state))
+    orthogonal_basis = nullspace_svd(state.conj()[np.newaxis, :], tolerance=tolerance)
+    shifted = internal - energy * np.eye(state.size, dtype=np.complex128)
+    state_column = -state[:, np.newaxis]
+    boundary_energy_column = np.zeros((boundary.shape[0], 1), dtype=np.complex128)
+    jacobian = np.block(
+        [
+            [shifted @ orthogonal_basis, state_column],
+            [boundary @ orthogonal_basis, boundary_energy_column],
+        ]
+    ).astype(np.complex128, copy=False)
+
+    singular_values = scipy_linalg.svdvals(jacobian).astype(np.float64, copy=False)
+    rank = int(np.sum(singular_values > tolerance))
+    nullity = int(jacobian.shape[1] - rank)
+    positive = singular_values[singular_values > tolerance]
+    gap = float(np.min(positive)) if positive.size else float("inf")
+
+    internal_residual = float(np.linalg.norm(shifted @ state))
+    boundary_residual = float(np.linalg.norm(boundary @ state))
+    full_residual = float(np.hypot(internal_residual, boundary_residual))
+    support_tuple = (
+        tuple(range(state.size)) if support is None else tuple(int(index) for index in support)
+    )
+    if len(support_tuple) != state.size:
+        raise ValueError("support length must match cage_state.size.")
+    return CageJacobianConditioningReport(
+        support=support_tuple,
+        energy=energy,
+        jacobian=jacobian,
+        singular_values=singular_values,
+        rank=rank,
+        nullity=nullity,
+        cage_gap=gap,
+        internal_residual=internal_residual,
+        boundary_residual=boundary_residual,
+        full_residual=full_residual,
+        tolerance=tolerance,
+    )
+
+
+def cage_jacobian_conditioning_from_hamiltonian(
+    hamiltonian: object,
+    support: Sequence[int] | npt.NDArray[np.integer],
+    cage_state: npt.ArrayLike,
+    *,
+    tolerance: float = 1.0e-10,
+) -> CageJacobianConditioningReport:
+    """Build the cage Jacobian directly from a full Hamiltonian."""
+    blocks = partition_cage_hamiltonian(hamiltonian, support)
+    local_state = _normalized_local_state(
+        cage_state,
+        support=blocks.support,
+        hilbert_size=blocks.hilbert_size,
+        tolerance=tolerance,
+    )
+    return cage_jacobian_conditioning(
+        blocks.internal,
+        blocks.boundary,
+        local_state,
+        support=tuple(int(index) for index in blocks.support),
         tolerance=tolerance,
     )
 

@@ -202,6 +202,93 @@ class LocalWitnessTemplate:
         }
 
 
+def directed_transition_witness_template(
+    *,
+    target_pattern: Sequence[int],
+    source_patterns: Sequence[Sequence[int]],
+    amplitudes: npt.ArrayLike,
+    pattern_key: ReducedIZPatternKey = (),
+    source_zero_indices: Sequence[int] = (),
+    mechanism_labels: Sequence[IZProbeMechanismLabel] = (),
+    metadata: Mapping[str, object] | None = None,
+    normalization: WitnessNormalization = "none",
+) -> LocalWitnessTemplate:
+    """Construct a directed local transition map from sources into one target.
+
+    The returned local operator has the rank-one form
+
+    ``A_R = |target><v|``,  ``|v> = sum_j amplitudes[j]^* |source_j>``.
+
+    The target pattern is stored first, followed by the source patterns.  This
+    helper is model independent and is useful when a boundary-row cancellation
+    is retained as a one-sided local channel rather than Hermitianized into an
+    IZ operator.
+    """
+    target = tuple(int(value) for value in target_pattern)
+    sources = tuple(tuple(int(value) for value in pattern) for pattern in source_patterns)
+    if not sources:
+        raise ValueError("source_patterns must not be empty.")
+    if any(len(pattern) != len(target) for pattern in sources):
+        raise ValueError("target_pattern and source_patterns must have equal width.")
+    patterns = (target, *sources)
+    if len(set(patterns)) != len(patterns):
+        raise ValueError("target_pattern and source_patterns must be distinct.")
+
+    coefficients = np.asarray(amplitudes, dtype=np.complex128).reshape(-1)
+    if coefficients.size != len(sources):
+        raise ValueError("amplitudes must contain one value per source pattern.")
+    if not np.all(np.isfinite(coefficients)):
+        raise ValueError("amplitudes must contain finite values.")
+    if np.linalg.norm(coefficients) == 0.0:
+        raise ValueError("amplitudes must not all vanish.")
+
+    operator = np.zeros((len(patterns), len(patterns)), dtype=np.complex128)
+    operator[0, 1:] = coefficients
+    template_metadata = {
+        "channel_type": "directed_transition",
+        "target_pattern": target,
+        "source_patterns": sources,
+    }
+    if metadata is not None:
+        template_metadata.update(dict(metadata))
+    template = LocalWitnessTemplate(
+        pattern_key=pattern_key,
+        local_patterns=patterns,
+        local_operator=operator,
+        source_zero_indices=tuple(int(index) for index in source_zero_indices),
+        mechanism_labels=tuple(mechanism_labels),
+        metadata=template_metadata,
+    )
+    return template.normalized(normalization)
+
+
+def hermitianize_local_witness_template(
+    template: LocalWitnessTemplate,
+    *,
+    normalization: WitnessNormalization = "none",
+    metadata: Mapping[str, object] | None = None,
+) -> LocalWitnessTemplate:
+    """Return the Hermitian symmetrization ``L_R + L_R^dagger``.
+
+    The local patterns, source rows, and mechanism labels are preserved.  This
+    makes it straightforward to compare a directed transfer witness with the
+    corresponding Hermitian IZ witness using exactly the same local embedding.
+    """
+    symmetrized_metadata = dict(template.metadata)
+    symmetrized_metadata["channel_type"] = "hermitianized_transition"
+    if metadata is not None:
+        symmetrized_metadata.update(dict(metadata))
+    result = LocalWitnessTemplate(
+        pattern_key=template.pattern_key,
+        local_patterns=template.local_patterns,
+        local_operator=template.local_operator + template.local_operator.conj().T,
+        source_zero_indices=template.source_zero_indices,
+        mechanism_labels=template.mechanism_labels,
+        metadata=symmetrized_metadata,
+    )
+    return result.normalized(normalization)
+
+
 @dataclass(frozen=True, slots=True)
 class LocalWitness:
     """One embedding of a size-independent local witness template."""
@@ -241,6 +328,168 @@ class LocalWitness:
             local_patterns=self.local_patterns,
             local_operator=self.local_operator,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class LocalChannelSpectrumReport:
+    """Positive spectrum and conditioning gap of one local channel."""
+
+    channel_shape: tuple[int, int]
+    operator_norm: float
+    q_eigenvalues: tuple[float, ...]
+    rank: int
+    nullity: int
+    dark_channel_gap: float
+    tolerance: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "channel_rows": self.channel_shape[0],
+            "channel_columns": self.channel_shape[1],
+            "operator_norm": self.operator_norm,
+            "rank": self.rank,
+            "nullity": self.nullity,
+            "dark_channel_gap": self.dark_channel_gap,
+            "q_eigenvalues": self.q_eigenvalues,
+            "tolerance": self.tolerance,
+        }
+
+
+def diagnose_local_channel_spectrum(
+    channel: LocalWitnessTemplate | LocalWitness | npt.ArrayLike,
+    *,
+    normalize_operator: bool = False,
+    tolerance: float = 1.0e-10,
+) -> LocalChannelSpectrumReport:
+    """Diagnose ``Q_R=A_R^dagger A_R`` and its smallest positive eigenvalue.
+
+    ``dark_channel_gap`` is the quantity denoted ``Delta_Q`` in the predictive
+    deformation criterion.  It is a conditioning scale for the local dark
+    subspace, not by itself an exact-protection criterion.
+    """
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    if isinstance(channel, LocalWitness):
+        operator = np.asarray(channel.local_operator, dtype=np.complex128)
+    elif isinstance(channel, LocalWitnessTemplate):
+        operator = np.asarray(channel.local_operator, dtype=np.complex128)
+    else:
+        operator = np.asarray(channel, dtype=np.complex128)
+    if operator.ndim != 2:
+        raise ValueError("channel must be a two-dimensional matrix.")
+    if not np.all(np.isfinite(operator)):
+        raise ValueError("channel must contain finite values.")
+    operator_norm = float(np.linalg.norm(operator, ord=2))
+    if operator_norm <= tolerance:
+        raise ValueError("channel must be nonzero.")
+    if normalize_operator:
+        operator = operator / operator_norm
+        operator_norm = 1.0
+
+    q_operator = operator.conj().T @ operator
+    eigenvalues = np.asarray(np.linalg.eigvalsh(q_operator), dtype=np.float64)
+    eigenvalues[np.abs(eigenvalues) <= tolerance] = 0.0
+    positive = eigenvalues[eigenvalues > tolerance]
+    rank = int(positive.size)
+    nullity = int(q_operator.shape[0] - rank)
+    gap = float(np.min(positive)) if positive.size else float("inf")
+    return LocalChannelSpectrumReport(
+        channel_shape=(int(operator.shape[0]), int(operator.shape[1])),
+        operator_norm=operator_norm,
+        q_eigenvalues=tuple(float(value) for value in eigenvalues),
+        rank=rank,
+        nullity=nullity,
+        dark_channel_gap=gap,
+        tolerance=tolerance,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class ThermalActivityMarginReport:
+    """Finite-difference estimate of a local witness's thermal margin."""
+
+    parameters: tuple[float, ...]
+    activities: tuple[float, ...]
+    secant_slopes: tuple[float, ...]
+    reference_parameter: float
+    reference_activity: float
+    minimum_activity: float
+    susceptibility_bound: float
+    half_activity_radius: float
+    tolerance: float
+
+    def lower_bound(self, distance: float) -> float:
+        """Return ``tau(0)-chi*distance`` clipped only by arithmetic."""
+        if distance < 0.0:
+            raise ValueError("distance must be non-negative.")
+        return float(self.reference_activity - self.susceptibility_bound * float(distance))
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "reference_parameter": self.reference_parameter,
+            "reference_activity": self.reference_activity,
+            "minimum_activity": self.minimum_activity,
+            "susceptibility_bound": self.susceptibility_bound,
+            "half_activity_radius": self.half_activity_radius,
+            "parameters": self.parameters,
+            "activities": self.activities,
+            "secant_slopes": self.secant_slopes,
+            "tolerance": self.tolerance,
+        }
+
+
+def thermal_activity_margin_from_samples(
+    parameters: npt.ArrayLike,
+    activities: npt.ArrayLike,
+    *,
+    reference_parameter: float = 0.0,
+    tolerance: float = 1.0e-10,
+) -> ThermalActivityMarginReport:
+    """Estimate ``tau_Q``, ``chi_Q``, and the half-activity radius on a path.
+
+    The susceptibility is conservatively taken as the largest absolute secant
+    slope between neighboring sampled points.  The returned radius implements
+    the draft bound ``tau_0/(2 chi_Q)``.  It is an empirical finite-size bound
+    over the sampled neighborhood, not a proof of differentiability or a
+    thermodynamic uniform bound.
+    """
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    x = np.asarray(parameters, dtype=np.float64).reshape(-1)
+    y = np.asarray(activities, dtype=np.float64).reshape(-1)
+    if x.size != y.size or x.size == 0:
+        raise ValueError("parameters and activities must be nonempty and have equal length.")
+    if not np.all(np.isfinite(x)) or not np.all(np.isfinite(y)):
+        raise ValueError("parameters and activities must contain finite values.")
+    if np.any(y < -tolerance):
+        raise ValueError("thermal activities must be non-negative.")
+    order = np.argsort(x)
+    x = x[order]
+    y = y[order]
+    if np.any(np.diff(x) <= tolerance):
+        raise ValueError("parameters must be distinct at the stated tolerance.")
+
+    reference_index = int(np.argmin(np.abs(x - float(reference_parameter))))
+    if abs(float(x[reference_index]) - float(reference_parameter)) > tolerance:
+        raise ValueError("reference_parameter must coincide with one sampled point.")
+    slopes = np.diff(y) / np.diff(x)
+    susceptibility = float(np.max(np.abs(slopes))) if slopes.size else 0.0
+    reference_activity = float(max(y[reference_index], 0.0))
+    if susceptibility <= tolerance:
+        radius = float("inf") if reference_activity > 0.0 else 0.0
+    else:
+        radius = float(reference_activity / (2.0 * susceptibility))
+    return ThermalActivityMarginReport(
+        parameters=tuple(float(value) for value in x),
+        activities=tuple(float(max(value, 0.0)) for value in y),
+        secant_slopes=tuple(float(value) for value in slopes),
+        reference_parameter=float(reference_parameter),
+        reference_activity=reference_activity,
+        minimum_activity=float(max(np.min(y), 0.0)),
+        susceptibility_bound=susceptibility,
+        half_activity_radius=radius,
+        tolerance=tolerance,
+    )
 
 
 @dataclass(frozen=True, slots=True)

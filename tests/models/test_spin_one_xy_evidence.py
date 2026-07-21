@@ -26,7 +26,9 @@ def test_exact_tower_thermal_activities_match_direct_counting() -> None:
     assert report.one_zero_count == 7
     assert report.two_site_remainder_count == 3
     assert np.isclose(report.y2_activity, 7.0 / 19.0)
+    assert np.isclose(report.directed_q_activity, 24.0 / 19.0)
     assert np.isclose(report.z2_activity, 48.0 / 19.0)
+    assert np.isclose(report.directed_q_limit, 0.5 * report.z2_limit)
     assert report.p0_limit > 0.0
 
 

@@ -17,6 +17,7 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Add directed local-transfer ETH witnesses, local-channel spectra, cage-Jacobian conditioning, thermal-activity margins, and the spin-1 XY deformation-evidence notebook.
 - Add plaquette/seam-resolved type-1 PEPS interference diagnostics and targeted period-two tensor enlargements selected by boundary-sector sensitivity.
 - Add native chiral-block type-1 PEPS contractions and separated multi-cluster kinetic/potential objectives with cross-size validation.
 - Add weighted boundary-cancellation matroid diagnostics and relative dependency scans that separate regional cage circuits from collective cage classes.

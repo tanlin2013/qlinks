@@ -3,6 +3,7 @@ import scipy.sparse as sp
 
 from qlinks.caging import (
     cage_compatibility_hierarchy_from_hamiltonians,
+    cage_jacobian_conditioning_from_hamiltonian,
     combine_perturbations_from_coefficients,
     diagnose_cage_stability,
     estimate_power_law_exponent,
@@ -969,3 +970,18 @@ def test_laurent_periodic_dimension_consistency_accepts_order_two_torsion() -> N
     )
     assert report.passes_necessary_conditions
     assert report.primitive_order_multiplicities == ((1, 0), (2, 1), (4, 0))
+
+
+def test_cage_jacobian_conditioning_reports_positive_gap() -> None:
+    base, _strong, _structural, _incompatible, state = _toy_problem()
+    support = np.array([0, 1], dtype=np.int64)
+    report = cage_jacobian_conditioning_from_hamiltonian(
+        base,
+        support,
+        state,
+        tolerance=1.0e-12,
+    )
+    assert report.full_residual < 1.0e-12
+    assert report.cage_gap > 0.0
+    assert report.rank == report.jacobian.shape[1]
+    assert report.nullity == 0
