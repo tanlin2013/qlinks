@@ -17,6 +17,7 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Add many-body CLS-completeness quotients, translation-sector resolution, and finite-size persistence reports comparing square-QDM collective cages with the spin-1 XY tower.
 - Add directed local-transfer ETH witnesses, local-channel spectra, cage-Jacobian conditioning, thermal-activity margins, and the spin-1 XY deformation-evidence notebook.
 - Add plaquette/seam-resolved type-1 PEPS interference diagnostics and targeted period-two tensor enlargements selected by boundary-sector sensitivity.
 - Add native chiral-block type-1 PEPS contractions and separated multi-cluster kinetic/potential objectives with cross-size validation.
