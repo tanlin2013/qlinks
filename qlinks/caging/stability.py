@@ -3084,6 +3084,459 @@ def diagnose_many_body_topological_localization(
 
 
 @dataclass(frozen=True, slots=True)
+class BoundaryIncidenceCohomologyReport:
+    """Cohomology of a two-channel support-to-boundary constraint map.
+
+    Every active boundary row is interpreted as an edge joining the two support
+    configurations on which it acts.  If the coefficient ratios define a flat
+    multiplicative gauge, the boundary map is diagonally equivalent to an
+    oriented graph-incidence matrix.  Its right kernel is then the zeroth
+    cohomology of the support graph: one gauge-covariantly constant vector per
+    connected component.
+
+    ``betti_1`` counts graph cycles, but the cage vectors reported here belong
+    to ``H^0`` rather than to the loop sector ``H^1``.  This distinction is
+    important when comparing persistent many-body cages with noncontractible
+    loop states in singular flat bands.
+    """
+
+    n_support_vertices: int
+    n_boundary_rows: int
+    n_active_constraints: int
+    active_row_weight_histogram: tuple[tuple[int, int], ...]
+    is_two_channel: bool
+    equal_magnitude_residual: float | None
+    gauge_flatness_residual: float | None
+    incidence_residual: float | None
+    connected_component_count: int | None
+    betti_0: int | None
+    betti_1: int | None
+    kernel_dimension: int
+    h0_intersection_dimension: int | None
+    state_h0_weight: float | None
+    interference_gap: float | None
+    gauge_basis: npt.NDArray[np.complex128]
+    edge_endpoints: tuple[tuple[int, int], ...]
+    tolerance: float
+
+    @property
+    def is_flat_incidence_problem(self) -> bool:
+        return bool(
+            self.is_two_channel
+            and self.gauge_flatness_residual is not None
+            and self.gauge_flatness_residual <= 10.0 * self.tolerance
+            and self.incidence_residual is not None
+            and self.incidence_residual <= 10.0 * self.tolerance
+        )
+
+    @property
+    def kernel_is_exact_h0(self) -> bool:
+        return bool(
+            self.is_flat_incidence_problem
+            and self.betti_0 is not None
+            and self.kernel_dimension == self.betti_0
+            and self.h0_intersection_dimension == self.betti_0
+        )
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "n_support_vertices": self.n_support_vertices,
+            "n_boundary_rows": self.n_boundary_rows,
+            "n_active_constraints": self.n_active_constraints,
+            "active_row_weight_histogram": self.active_row_weight_histogram,
+            "is_two_channel": self.is_two_channel,
+            "equal_magnitude_residual": self.equal_magnitude_residual,
+            "gauge_flatness_residual": self.gauge_flatness_residual,
+            "incidence_residual": self.incidence_residual,
+            "connected_component_count": self.connected_component_count,
+            "betti_0": self.betti_0,
+            "betti_1": self.betti_1,
+            "kernel_dimension": self.kernel_dimension,
+            "h0_intersection_dimension": self.h0_intersection_dimension,
+            "state_h0_weight": self.state_h0_weight,
+            "interference_gap": self.interference_gap,
+            "is_flat_incidence_problem": self.is_flat_incidence_problem,
+            "kernel_is_exact_h0": self.kernel_is_exact_h0,
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class HardCoreLaurentLiftReport:
+    """Hard-core many-body lift of a scalar Laurent transfer root.
+
+    Support configurations are interpreted as fixed-particle-number binary
+    words on a periodic chain.  Two-channel boundary constraints must exchange
+    one occupied site with an adjacent empty site.  If every right-moving
+    exchange transports the cage amplitude by the same factor ``zeta``, the
+    many-body state is the hard-core lift of the scalar local relation whose
+    Laurent symbol vanishes at ``z=zeta``.
+
+    A unit-modulus root has a discrete primitive order, but the corresponding
+    Toeplitz symbol is not Fredholm because it vanishes on the unit circle.
+    The primitive order is therefore a translation/cyclotomic invariant of the
+    exact interference rule, not a conventional Fredholm winding number.
+    """
+
+    length: int
+    particle_number: int
+    support_size: int
+    exchange_constraint_count: int
+    all_constraints_are_nearest_neighbor_exchanges: bool
+    uniform_transport_factor: complex | None
+    transport_residual: float | None
+    primitive_root_order: int | None
+    periodic_compatibility_residual: float | None
+    amplitude_factorization_residual: float | None
+    one_site_translation_character: complex | None
+    one_site_translation_residual: float | None
+    has_unit_circle_symbol_zero: bool
+    incidence_cohomology: BoundaryIncidenceCohomologyReport
+    tolerance: float
+
+    @property
+    def is_cyclotomic_hard_core_lift(self) -> bool:
+        return bool(
+            self.all_constraints_are_nearest_neighbor_exchanges
+            and self.uniform_transport_factor is not None
+            and self.transport_residual is not None
+            and self.transport_residual <= 10.0 * self.tolerance
+            and self.primitive_root_order is not None
+            and self.periodic_compatibility_residual is not None
+            and self.periodic_compatibility_residual <= 10.0 * self.tolerance
+            and self.amplitude_factorization_residual is not None
+            and self.amplitude_factorization_residual <= 10.0 * self.tolerance
+            and self.incidence_cohomology.kernel_is_exact_h0
+        )
+
+    @property
+    def toeplitz_fredholm_index_is_defined(self) -> bool:
+        return not self.has_unit_circle_symbol_zero
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "length": self.length,
+            "particle_number": self.particle_number,
+            "support_size": self.support_size,
+            "exchange_constraint_count": self.exchange_constraint_count,
+            "all_constraints_are_nearest_neighbor_exchanges": (
+                self.all_constraints_are_nearest_neighbor_exchanges
+            ),
+            "uniform_transport_factor": self.uniform_transport_factor,
+            "transport_residual": self.transport_residual,
+            "primitive_root_order": self.primitive_root_order,
+            "periodic_compatibility_residual": self.periodic_compatibility_residual,
+            "amplitude_factorization_residual": self.amplitude_factorization_residual,
+            "one_site_translation_character": self.one_site_translation_character,
+            "one_site_translation_residual": self.one_site_translation_residual,
+            "has_unit_circle_symbol_zero": self.has_unit_circle_symbol_zero,
+            "toeplitz_fredholm_index_is_defined": (self.toeplitz_fredholm_index_is_defined),
+            "is_cyclotomic_hard_core_lift": self.is_cyclotomic_hard_core_lift,
+            "incidence_cohomology": self.incidence_cohomology.to_summary_dict(),
+            "tolerance": self.tolerance,
+        }
+
+
+def _positive_singular_gap(
+    matrix: npt.NDArray[np.complex128],
+    *,
+    tolerance: float,
+) -> tuple[int, float | None]:
+    singular_values = scipy_linalg.svdvals(matrix)
+    rank = int(np.sum(singular_values > tolerance))
+    positive = singular_values[singular_values > tolerance]
+    gap = None if positive.size == 0 else float(np.min(positive))
+    return int(matrix.shape[1] - rank), gap
+
+
+def diagnose_boundary_incidence_cohomology(
+    boundary: object,
+    state: npt.ArrayLike | None = None,
+    *,
+    tolerance: float = 1e-10,
+) -> BoundaryIncidenceCohomologyReport:
+    """Diagnose whether a boundary map is a flat two-channel incidence problem."""
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    matrix = np.asarray(as_dense_array(boundary), dtype=np.complex128)
+    if matrix.ndim != 2 or matrix.shape[1] == 0:
+        raise ValueError("boundary must be a matrix with at least one support column.")
+    row_weights = np.sum(np.abs(matrix) > tolerance, axis=1).astype(np.int64)
+    active_rows = np.flatnonzero(row_weights > 0)
+    histogram = tuple(
+        (int(weight), int(np.sum(row_weights[active_rows] == weight)))
+        for weight in sorted(set(int(value) for value in row_weights[active_rows]))
+    )
+    kernel_dimension, interference_gap = _positive_singular_gap(
+        matrix,
+        tolerance=tolerance,
+    )
+    n_vertices = int(matrix.shape[1])
+    if active_rows.size == 0 or np.any(row_weights[active_rows] != 2):
+        return BoundaryIncidenceCohomologyReport(
+            n_support_vertices=n_vertices,
+            n_boundary_rows=int(matrix.shape[0]),
+            n_active_constraints=int(active_rows.size),
+            active_row_weight_histogram=histogram,
+            is_two_channel=False,
+            equal_magnitude_residual=None,
+            gauge_flatness_residual=None,
+            incidence_residual=None,
+            connected_component_count=None,
+            betti_0=None,
+            betti_1=None,
+            kernel_dimension=kernel_dimension,
+            h0_intersection_dimension=None,
+            state_h0_weight=None,
+            interference_gap=interference_gap,
+            gauge_basis=np.zeros((n_vertices, 0), dtype=np.complex128),
+            edge_endpoints=(),
+            tolerance=tolerance,
+        )
+
+    edges: list[tuple[int, int]] = []
+    transports: list[complex] = []
+    magnitude_residual = 0.0
+    adjacency: list[list[tuple[int, int, bool]]] = [[] for _ in range(n_vertices)]
+    for edge_index, row_index in enumerate(active_rows):
+        columns = np.flatnonzero(np.abs(matrix[row_index]) > tolerance)
+        first, second = int(columns[0]), int(columns[1])
+        first_value = complex(matrix[row_index, first])
+        second_value = complex(matrix[row_index, second])
+        scale = max(abs(first_value), abs(second_value), tolerance)
+        magnitude_residual = max(
+            magnitude_residual,
+            abs(abs(first_value) - abs(second_value)) / scale,
+        )
+        transport = -first_value / second_value
+        edges.append((first, second))
+        transports.append(transport)
+        adjacency[first].append((second, edge_index, True))
+        adjacency[second].append((first, edge_index, False))
+
+    gauge = np.zeros(n_vertices, dtype=np.complex128)
+    component_labels = np.full(n_vertices, -1, dtype=np.int64)
+    flatness_residual = 0.0
+    component_count = 0
+    for start in range(n_vertices):
+        if component_labels[start] >= 0:
+            continue
+        component_labels[start] = component_count
+        gauge[start] = 1.0 + 0.0j
+        stack = [start]
+        while stack:
+            current = stack.pop()
+            for target, edge_index, forward in adjacency[current]:
+                factor = transports[edge_index] if forward else 1.0 / transports[edge_index]
+                candidate = factor * gauge[current]
+                if component_labels[target] < 0:
+                    component_labels[target] = component_count
+                    gauge[target] = candidate
+                    stack.append(target)
+                else:
+                    denominator = max(abs(candidate), abs(gauge[target]), tolerance)
+                    flatness_residual = max(
+                        flatness_residual,
+                        abs(gauge[target] - candidate) / denominator,
+                    )
+        component_count += 1
+
+    incidence_residual = 0.0
+    for row_index, (first, second) in zip(active_rows, edges, strict=True):
+        transformed = np.asarray(
+            [matrix[row_index, first] * gauge[first], matrix[row_index, second] * gauge[second]],
+            dtype=np.complex128,
+        )
+        scale = max(float(np.max(np.abs(transformed))), tolerance)
+        incidence_residual = max(incidence_residual, abs(np.sum(transformed)) / scale)
+
+    gauge_columns: list[npt.NDArray[np.complex128]] = []
+    for component in range(component_count):
+        vector = np.zeros(n_vertices, dtype=np.complex128)
+        indices = np.flatnonzero(component_labels == component)
+        vector[indices] = gauge[indices]
+        norm = float(np.linalg.norm(vector))
+        if norm > tolerance:
+            gauge_columns.append(vector / norm)
+    gauge_basis = (
+        np.column_stack(gauge_columns)
+        if gauge_columns
+        else np.zeros((n_vertices, 0), dtype=np.complex128)
+    )
+    actual_kernel = nullspace_svd(matrix, tolerance=tolerance)
+    overlaps = subspace_principal_overlaps(actual_kernel, gauge_basis)
+    h0_intersection = int(np.sum(overlaps >= 1.0 - tolerance))
+    state_weight: float | None = None
+    if state is not None:
+        vector = np.asarray(state, dtype=np.complex128).reshape(-1)
+        if vector.size != n_vertices:
+            raise ValueError("state must have one amplitude per support column.")
+        norm = float(np.linalg.norm(vector))
+        if norm <= tolerance:
+            raise ValueError("state must be nonzero.")
+        state_weight = float(np.linalg.norm(gauge_basis.conj().T @ (vector / norm)) ** 2)
+
+    return BoundaryIncidenceCohomologyReport(
+        n_support_vertices=n_vertices,
+        n_boundary_rows=int(matrix.shape[0]),
+        n_active_constraints=int(active_rows.size),
+        active_row_weight_histogram=histogram,
+        is_two_channel=True,
+        equal_magnitude_residual=float(magnitude_residual),
+        gauge_flatness_residual=float(flatness_residual),
+        incidence_residual=float(incidence_residual),
+        connected_component_count=component_count,
+        betti_0=component_count,
+        betti_1=int(len(edges) - n_vertices + component_count),
+        kernel_dimension=kernel_dimension,
+        h0_intersection_dimension=h0_intersection,
+        state_h0_weight=state_weight,
+        interference_gap=interference_gap,
+        gauge_basis=gauge_basis,
+        edge_endpoints=tuple(edges),
+        tolerance=tolerance,
+    )
+
+
+def _smallest_root_of_unity_order(
+    value: complex,
+    *,
+    maximum_order: int,
+    tolerance: float,
+) -> int | None:
+    if maximum_order < 1 or abs(abs(value) - 1.0) > 10.0 * tolerance:
+        return None
+    for order in range(1, maximum_order + 1):
+        if abs(value**order - 1.0) <= 10.0 * tolerance:
+            return order
+    return None
+
+
+def diagnose_hard_core_laurent_lift(
+    support_configs: npt.ArrayLike,
+    amplitudes: npt.ArrayLike,
+    boundary: object,
+    *,
+    raised_value: int = 1,
+    maximum_root_order: int = 32,
+    tolerance: float = 1e-10,
+) -> HardCoreLaurentLiftReport:
+    """Detect a uniform cyclotomic transfer rule in a hard-core cage shell."""
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    configs = np.asarray(support_configs, dtype=np.int64)
+    if configs.ndim != 2 or configs.shape[0] == 0 or configs.shape[1] < 2:
+        raise ValueError("support_configs must be a nonempty two-dimensional array.")
+    vector = np.asarray(amplitudes, dtype=np.complex128).reshape(-1)
+    if vector.size != configs.shape[0] or np.any(np.abs(vector) <= tolerance):
+        raise ValueError("amplitudes must contain one nonzero value per support config.")
+    matrix = np.asarray(as_dense_array(boundary), dtype=np.complex128)
+    if matrix.ndim != 2 or matrix.shape[1] != configs.shape[0]:
+        raise ValueError("boundary columns must match support_configs rows.")
+
+    cohomology = diagnose_boundary_incidence_cohomology(
+        matrix,
+        vector,
+        tolerance=tolerance,
+    )
+    occupations = configs == int(raised_value)
+    particle_counts = np.sum(occupations, axis=1)
+    if np.any(particle_counts != particle_counts[0]):
+        raise ValueError("support_configs must have fixed raised-site number.")
+    length = int(configs.shape[1])
+    particle_number = int(particle_counts[0])
+
+    active_rows = np.flatnonzero(np.sum(np.abs(matrix) > tolerance, axis=1) > 0)
+    exchange_ratios: list[complex] = []
+    all_nearest = bool(cohomology.is_two_channel)
+    if cohomology.is_two_channel:
+        for row_index in active_rows:
+            columns = np.flatnonzero(np.abs(matrix[row_index]) > tolerance)
+            first, second = int(columns[0]), int(columns[1])
+            first_occ = occupations[first]
+            second_occ = occupations[second]
+            removed = np.flatnonzero(first_occ & ~second_occ)
+            added = np.flatnonzero(second_occ & ~first_occ)
+            if removed.size != 1 or added.size != 1:
+                all_nearest = False
+                continue
+            origin, target = int(removed[0]), int(added[0])
+            if target == (origin + 1) % length:
+                exchange_ratios.append(complex(vector[second] / vector[first]))
+            elif origin == (target + 1) % length:
+                exchange_ratios.append(complex(vector[first] / vector[second]))
+            else:
+                all_nearest = False
+    transport: complex | None = None
+    transport_residual: float | None = None
+    primitive_order: int | None = None
+    periodic_residual: float | None = None
+    factorization_residual: float | None = None
+    has_unit_circle_zero = False
+    if all_nearest and exchange_ratios:
+        transport = complex(np.mean(np.asarray(exchange_ratios, dtype=np.complex128)))
+        scale = max(abs(transport), tolerance)
+        transport_residual = float(max(abs(value - transport) / scale for value in exchange_ratios))
+        primitive_order = _smallest_root_of_unity_order(
+            transport,
+            maximum_order=maximum_root_order,
+            tolerance=tolerance,
+        )
+        periodic_residual = float(abs(transport**length - 1.0))
+        exponents = np.sum(
+            occupations * np.arange(length, dtype=np.int64)[None, :],
+            axis=1,
+        )
+        predicted = transport**exponents
+        coefficient = complex(np.vdot(predicted, vector) / np.vdot(predicted, predicted))
+        factorization_residual = float(
+            np.linalg.norm(vector - coefficient * predicted) / np.linalg.norm(vector)
+        )
+        has_unit_circle_zero = bool(abs(abs(transport) - 1.0) <= 10.0 * tolerance)
+
+    amplitude_by_config = {
+        tuple(int(value) for value in config): complex(amplitude)
+        for config, amplitude in zip(configs, vector, strict=True)
+    }
+    translation_ratios: list[complex] = []
+    for config, amplitude in zip(configs, vector, strict=True):
+        translated = tuple(int(value) for value in np.roll(config, 1))
+        translated_amplitude = amplitude_by_config.get(translated)
+        if translated_amplitude is None:
+            translation_ratios = []
+            break
+        translation_ratios.append(translated_amplitude / amplitude)
+    translation_character: complex | None = None
+    translation_residual: float | None = None
+    if translation_ratios:
+        translation_character = complex(
+            np.mean(np.asarray(translation_ratios, dtype=np.complex128))
+        )
+        scale = max(abs(translation_character), tolerance)
+        translation_residual = float(
+            max(abs(value - translation_character) / scale for value in translation_ratios)
+        )
+
+    return HardCoreLaurentLiftReport(
+        length=length,
+        particle_number=particle_number,
+        support_size=int(configs.shape[0]),
+        exchange_constraint_count=len(exchange_ratios),
+        all_constraints_are_nearest_neighbor_exchanges=all_nearest,
+        uniform_transport_factor=transport,
+        transport_residual=transport_residual,
+        primitive_root_order=primitive_order,
+        periodic_compatibility_residual=periodic_residual,
+        amplitude_factorization_residual=factorization_residual,
+        one_site_translation_character=translation_character,
+        one_site_translation_residual=translation_residual,
+        has_unit_circle_symbol_zero=has_unit_circle_zero,
+        incidence_cohomology=cohomology,
+        tolerance=tolerance,
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class SignedBoundaryCycle:
     """Gauge-invariant signed holonomy on one bipartite boundary cycle."""
 
