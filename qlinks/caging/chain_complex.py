@@ -265,6 +265,410 @@ class LaurentPeriodicKernelPoint:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class ScalarLaurentBulkPhaseReport:
+    """Fredholm phase data for a scalar first-order Laurent constraint.
+
+    The local relation is ``psi[j + 1] = transport * psi[j]`` with symbol
+    ``b(z) = z - transport``.  When ``abs(transport) != 1`` the symbol is
+    nonzero on the unit circle and its winding is well defined.  Unit-modulus
+    transport lies exactly on the non-Fredholm transition locus.
+    """
+
+    transport: complex
+    root_modulus: float
+    unit_circle_gap: float
+    winding_number: int | None
+    toeplitz_index: int | None
+    is_fredholm: bool
+    localization_length: float | None
+    tolerance: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "transport": self.transport,
+            "root_modulus": self.root_modulus,
+            "unit_circle_gap": self.unit_circle_gap,
+            "winding_number": self.winding_number,
+            "toeplitz_index": self.toeplitz_index,
+            "is_fredholm": self.is_fredholm,
+            "localization_length": self.localization_length,
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ScalarLaurentDomainWallReport:
+    """Finite-chain domain wall between two scalar Laurent constraints.
+
+    Sites are arranged as ``left_length`` bonds, one interface site, and
+    ``right_length`` bonds.  The constraint matrix imposes the left transport
+    on bonds to the left of the interface and the right transport on bonds to
+    the right.  A right-chiral interface mode is topologically predicted only
+    when both bulks are Fredholm and their winding numbers differ in the
+    appropriate orientation.
+    """
+
+    left_bulk: ScalarLaurentBulkPhaseReport
+    right_bulk: ScalarLaurentBulkPhaseReport
+    left_length: int
+    right_length: int
+    constraint_matrix: ComplexArray
+    kernel_dimension: int
+    kernel_basis: ComplexArray
+    canonical_mode: ComplexArray
+    residual: float
+    inverse_participation_ratio: float | None
+    interface_site_weight: float | None
+    interface_window_weight: float | None
+    center_of_mass: float | None
+    predicted_right_interface_modes: int | None
+    predicted_left_interface_modes: int | None
+    is_exponentially_interface_localized: bool
+    classification: str
+    tolerance: float
+
+    @property
+    def site_count(self) -> int:
+        return int(self.left_length + self.right_length + 1)
+
+    @property
+    def interface_site(self) -> int:
+        return int(self.left_length)
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "left_transport": self.left_bulk.transport,
+            "right_transport": self.right_bulk.transport,
+            "left_winding": self.left_bulk.winding_number,
+            "right_winding": self.right_bulk.winding_number,
+            "left_length": self.left_length,
+            "right_length": self.right_length,
+            "kernel_dimension": self.kernel_dimension,
+            "residual": self.residual,
+            "inverse_participation_ratio": self.inverse_participation_ratio,
+            "interface_site_weight": self.interface_site_weight,
+            "interface_window_weight": self.interface_window_weight,
+            "center_of_mass": self.center_of_mass,
+            "predicted_right_interface_modes": self.predicted_right_interface_modes,
+            "predicted_left_interface_modes": self.predicted_left_interface_modes,
+            "is_exponentially_interface_localized": (self.is_exponentially_interface_localized),
+            "classification": self.classification,
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class IncidenceConstraintInterfaceReport:
+    """Interface obtained by gluing two local incidence constraint modules.
+
+    The combined differential contains both complete bulk constraint maps plus
+    additional interface rows.  Consequently, any interface kernel lies inside
+    the direct sum of the two original bulk kernels.  The report tests whether
+    gluing merely merges the local ``H^0`` sectors, frustrates them, or creates
+    a higher-arity problem; it cannot create a new quotient mode without
+    modifying or removing bulk constraints near the interface.
+    """
+
+    left_support_dimension: int
+    right_support_dimension: int
+    left_kernel_dimension: int
+    right_kernel_dimension: int
+    decoupled_kernel_dimension: int
+    interface_constraint_count: int
+    combined_constraint_map: ComplexArray
+    combined_kernel_basis: ComplexArray
+    combined_kernel_dimension: int
+    surviving_bulk_kernel_dimension: int
+    interface_created_dimension: int
+    interface_removed_dimension: int
+    active_row_weight_histogram: tuple[tuple[int, int], ...]
+    is_two_channel: bool
+    connected_component_count: int | None
+    betti_1: int | None
+    gauge_flatness_residual: float | None
+    kernel_equals_h0: bool
+    classification: str
+    tolerance: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "left_support_dimension": self.left_support_dimension,
+            "right_support_dimension": self.right_support_dimension,
+            "left_kernel_dimension": self.left_kernel_dimension,
+            "right_kernel_dimension": self.right_kernel_dimension,
+            "decoupled_kernel_dimension": self.decoupled_kernel_dimension,
+            "interface_constraint_count": self.interface_constraint_count,
+            "combined_kernel_dimension": self.combined_kernel_dimension,
+            "surviving_bulk_kernel_dimension": self.surviving_bulk_kernel_dimension,
+            "interface_created_dimension": self.interface_created_dimension,
+            "interface_removed_dimension": self.interface_removed_dimension,
+            "active_row_weight_histogram": self.active_row_weight_histogram,
+            "is_two_channel": self.is_two_channel,
+            "connected_component_count": self.connected_component_count,
+            "betti_1": self.betti_1,
+            "gauge_flatness_residual": self.gauge_flatness_residual,
+            "kernel_equals_h0": self.kernel_equals_h0,
+            "classification": self.classification,
+            "tolerance": self.tolerance,
+        }
+
+
+def diagnose_scalar_laurent_bulk_phase(
+    transport: complex,
+    *,
+    tolerance: float = 1.0e-10,
+) -> ScalarLaurentBulkPhaseReport:
+    """Diagnose the scalar symbol ``b(z)=z-transport`` on the unit circle."""
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    value = complex(transport)
+    modulus = float(abs(value))
+    gap = float(abs(1.0 - modulus))
+    is_fredholm = bool(gap > tolerance)
+    winding: int | None = None
+    toeplitz_index: int | None = None
+    localization_length: float | None = None
+    if is_fredholm:
+        winding = 1 if modulus < 1.0 else 0
+        toeplitz_index = -winding
+        if modulus > tolerance:
+            localization_length = float(1.0 / abs(np.log(modulus)))
+        else:
+            localization_length = 0.0
+    return ScalarLaurentBulkPhaseReport(
+        transport=value,
+        root_modulus=modulus,
+        unit_circle_gap=gap,
+        winding_number=winding,
+        toeplitz_index=toeplitz_index,
+        is_fredholm=is_fredholm,
+        localization_length=localization_length,
+        tolerance=tolerance,
+    )
+
+
+def diagnose_scalar_laurent_domain_wall(
+    left_transport: complex,
+    right_transport: complex,
+    *,
+    left_length: int = 24,
+    right_length: int = 24,
+    interface_window_radius: int = 1,
+    tolerance: float = 1.0e-10,
+) -> ScalarLaurentDomainWallReport:
+    """Test the bulk--defect correspondence of two scalar transport modules."""
+    if left_length < 1 or right_length < 1:
+        raise ValueError("left_length and right_length must be positive.")
+    if interface_window_radius < 0:
+        raise ValueError("interface_window_radius must be nonnegative.")
+    left = diagnose_scalar_laurent_bulk_phase(left_transport, tolerance=tolerance)
+    right = diagnose_scalar_laurent_bulk_phase(right_transport, tolerance=tolerance)
+    if abs(left.transport) <= tolerance or abs(right.transport) <= tolerance:
+        raise ValueError("domain-wall transport factors must be nonzero.")
+
+    site_count = left_length + right_length + 1
+    interface_site = left_length
+    differential = np.zeros((site_count - 1, site_count), dtype=np.complex128)
+    for bond in range(site_count - 1):
+        transport = left.transport if bond < interface_site else right.transport
+        differential[bond, bond] = -transport
+        differential[bond, bond + 1] = 1.0
+
+    kernel = nullspace_svd(differential, tolerance=tolerance)
+    mode = np.zeros(site_count, dtype=np.complex128)
+    residual = 0.0
+    ipr: float | None = None
+    interface_site_weight: float | None = None
+    interface_window_weight: float | None = None
+    center_of_mass: float | None = None
+    if kernel.shape[1]:
+        # The first-order open-chain differential has a one-dimensional kernel.
+        # Use the SVD vector rather than a recurrence so the diagnostic remains
+        # stable for large transport contrasts.
+        mode = np.asarray(kernel[:, 0], dtype=np.complex128)
+        norm = float(np.linalg.norm(mode))
+        if norm > tolerance:
+            mode /= norm
+        probabilities = np.abs(mode) ** 2
+        residual = float(np.linalg.norm(differential @ mode))
+        ipr = float(np.sum(probabilities**2))
+        interface_site_weight = float(probabilities[interface_site])
+        start = max(0, interface_site - interface_window_radius)
+        stop = min(site_count, interface_site + interface_window_radius + 1)
+        interface_window_weight = float(np.sum(probabilities[start:stop]))
+        center_of_mass = float(np.dot(np.arange(site_count), probabilities))
+
+    predicted_right: int | None = None
+    predicted_left: int | None = None
+    if left.is_fredholm and right.is_fredholm:
+        assert left.winding_number is not None and right.winding_number is not None
+        difference = int(right.winding_number - left.winding_number)
+        predicted_right = max(0, difference)
+        predicted_left = max(0, -difference)
+
+    localized = bool(
+        predicted_right is not None
+        and predicted_right > 0
+        and abs(left.transport) > 1.0 + tolerance
+        and abs(right.transport) < 1.0 - tolerance
+        and interface_window_weight is not None
+        and interface_window_weight > 0.25
+    )
+    if not left.is_fredholm or not right.is_fredholm:
+        classification = "critical_transport_no_fredholm_index"
+    elif predicted_right and localized:
+        classification = "fredholm_interface_mode"
+    elif predicted_left:
+        classification = "opposite_chirality_interface_mode"
+    elif left.winding_number == right.winding_number:
+        classification = "same_fredholm_phase_no_interface_index"
+    else:
+        classification = "index_jump_without_resolved_right_mode"
+
+    return ScalarLaurentDomainWallReport(
+        left_bulk=left,
+        right_bulk=right,
+        left_length=int(left_length),
+        right_length=int(right_length),
+        constraint_matrix=differential,
+        kernel_dimension=int(kernel.shape[1]),
+        kernel_basis=kernel,
+        canonical_mode=mode,
+        residual=residual,
+        inverse_participation_ratio=ipr,
+        interface_site_weight=interface_site_weight,
+        interface_window_weight=interface_window_weight,
+        center_of_mass=center_of_mass,
+        predicted_right_interface_modes=predicted_right,
+        predicted_left_interface_modes=predicted_left,
+        is_exponentially_interface_localized=localized,
+        classification=classification,
+        tolerance=tolerance,
+    )
+
+
+def diagnose_incidence_constraint_interface(
+    left_constraint_map: object,
+    right_constraint_map: object,
+    interface_constraint_map: object,
+    *,
+    tolerance: float = 1.0e-10,
+) -> IncidenceConstraintInterfaceReport:
+    """Glue two local constraint modules and test for an excess interface kernel."""
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    left = _as_matrix(left_constraint_map)
+    right = _as_matrix(right_constraint_map)
+    interface = _as_matrix(interface_constraint_map)
+    combined_columns = left.shape[1] + right.shape[1]
+    if interface.shape[1] != combined_columns:
+        raise ValueError("interface_constraint_map has incompatible column dimension.")
+
+    decoupled = scipy_linalg.block_diag(left, right).astype(np.complex128, copy=False)
+    combined = np.vstack([decoupled, interface])
+    left_kernel = nullspace_svd(left, tolerance=tolerance)
+    right_kernel = nullspace_svd(right, tolerance=tolerance)
+    bulk_kernel = scipy_linalg.block_diag(left_kernel, right_kernel).astype(
+        np.complex128,
+        copy=False,
+    )
+    combined_kernel = nullspace_svd(combined, tolerance=tolerance)
+    overlaps = scipy_linalg.svdvals(bulk_kernel.conj().T @ combined_kernel)
+    surviving = int(np.sum(overlaps >= 1.0 - 10.0 * tolerance))
+    created = max(0, int(combined_kernel.shape[1]) - surviving)
+    removed = max(0, int(bulk_kernel.shape[1]) - surviving)
+
+    active_counts = np.sum(np.abs(combined) > tolerance, axis=1)
+    active_counts = active_counts[active_counts > 0]
+    unique, counts = np.unique(active_counts, return_counts=True)
+    histogram = tuple((int(weight), int(count)) for weight, count in zip(unique, counts))
+    is_two_channel = bool(active_counts.size and np.all(active_counts == 2))
+    component_count: int | None = None
+    betti_1: int | None = None
+    flatness_residual: float | None = None
+    kernel_equals_h0 = False
+    if is_two_channel:
+        n_vertices = combined.shape[1]
+        adjacency: list[list[tuple[int, complex]]] = [[] for _ in range(n_vertices)]
+        edge_count = 0
+        for row in range(combined.shape[0]):
+            columns = np.flatnonzero(np.abs(combined[row]) > tolerance)
+            if columns.size == 0:
+                continue
+            first, second = int(columns[0]), int(columns[1])
+            # A first-column gauge amplitude transports to the second as
+            # -c_first/c_second.
+            transport = complex(-combined[row, first] / combined[row, second])
+            adjacency[first].append((second, transport))
+            adjacency[second].append((first, 1.0 / transport))
+            edge_count += 1
+
+        labels = np.full(n_vertices, -1, dtype=np.int64)
+        gauge = np.zeros(n_vertices, dtype=np.complex128)
+        component_count = 0
+        flatness_residual = 0.0
+        for start in range(n_vertices):
+            if labels[start] >= 0:
+                continue
+            labels[start] = component_count
+            gauge[start] = 1.0 + 0.0j
+            stack = [start]
+            while stack:
+                source = stack.pop()
+                for target, transport in adjacency[source]:
+                    candidate = transport * gauge[source]
+                    if labels[target] < 0:
+                        labels[target] = component_count
+                        gauge[target] = candidate
+                        stack.append(target)
+                    else:
+                        scale = max(abs(candidate), abs(gauge[target]), tolerance)
+                        flatness_residual = max(
+                            flatness_residual,
+                            abs(gauge[target] - candidate) / scale,
+                        )
+            component_count += 1
+        betti_1 = int(edge_count - n_vertices + component_count)
+        kernel_equals_h0 = bool(
+            flatness_residual <= 10.0 * tolerance and combined_kernel.shape[1] == component_count
+        )
+
+    if created > 0:
+        classification = "interface_created_excess_kernel"
+    elif is_two_channel and kernel_equals_h0 and removed > 0:
+        classification = "flat_gluing_merges_local_h0_sectors"
+    elif is_two_channel and flatness_residual is not None and flatness_residual > 10.0 * tolerance:
+        classification = "frustrated_interface_lifts_local_h0_sector"
+    elif interface.shape[0] == 0:
+        classification = "decoupled_modules"
+    else:
+        classification = "interface_restricts_bulk_kernel_without_excess_mode"
+
+    return IncidenceConstraintInterfaceReport(
+        left_support_dimension=int(left.shape[1]),
+        right_support_dimension=int(right.shape[1]),
+        left_kernel_dimension=int(left_kernel.shape[1]),
+        right_kernel_dimension=int(right_kernel.shape[1]),
+        decoupled_kernel_dimension=int(bulk_kernel.shape[1]),
+        interface_constraint_count=int(interface.shape[0]),
+        combined_constraint_map=combined,
+        combined_kernel_basis=combined_kernel,
+        combined_kernel_dimension=int(combined_kernel.shape[1]),
+        surviving_bulk_kernel_dimension=surviving,
+        interface_created_dimension=created,
+        interface_removed_dimension=removed,
+        active_row_weight_histogram=histogram,
+        is_two_channel=is_two_channel,
+        connected_component_count=component_count,
+        betti_1=betti_1,
+        gauge_flatness_residual=flatness_residual,
+        kernel_equals_h0=kernel_equals_h0,
+        classification=classification,
+        tolerance=tolerance,
+    )
+
+
 def build_hamiltonian_graph_chain_complex(
     hamiltonian: object,
     support_indices: Sequence[int],
