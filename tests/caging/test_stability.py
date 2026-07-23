@@ -985,3 +985,79 @@ def test_cage_jacobian_conditioning_reports_positive_gap() -> None:
     assert report.cage_gap > 0.0
     assert report.rank == report.jacobian.shape[1]
     assert report.nullity == 0
+
+
+def test_reduced_constraint_fredholm_candidate_distinguishes_square_and_tall_maps() -> None:
+    from qlinks.caging import diagnose_reduced_constraint_fredholm_candidate
+
+    kernel = np.asarray([[1.0], [1.0]], dtype=np.complex128) / np.sqrt(2.0)
+    square = diagnose_reduced_constraint_fredholm_candidate(
+        np.asarray([[1.0, -1.0]], dtype=np.complex128),
+        kernel_basis=kernel,
+        tolerance=1.0e-12,
+    )
+    tall = diagnose_reduced_constraint_fredholm_candidate(
+        np.asarray(
+            [[1.0, -1.0], [2.0, -2.0], [0.0, 0.0]],
+            dtype=np.complex128,
+        ),
+        kernel_basis=kernel,
+        tolerance=1.0e-12,
+    )
+
+    assert square.admits_intrinsic_scalar_winding
+    assert square.classification == "square_fredholm_symbol_candidate"
+    assert square.codomain_excess == 0
+    assert np.isclose(square.reduced_gap, np.sqrt(2.0))
+    assert tall.is_reduced_injective
+    assert not tall.admits_intrinsic_scalar_winding
+    assert tall.classification == "rectangular_stiefel_no_intrinsic_winding"
+    assert tall.codomain_excess == 2
+    assert np.isclose(tall.reduced_gap, np.sqrt(10.0))
+
+
+def test_compact_qdm_reduced_winding_is_constant_and_trivial_at_fixed_width() -> None:
+    from qlinks.caging import diagnose_square_qdm_compact_cage_reduced_winding
+
+    report = diagnose_square_qdm_compact_cage_reduced_winding(
+        _physical_square_qdm_periodic_cage_unit_cell(),
+        (1, 2, 3),
+        max_support_size=64,
+        tolerance=1.0e-9,
+    )
+
+    assert report.classification == "local_constant_symbol_trivial_winding"
+    assert report.local_pair_offsets == ((0, 2), (9, 11))
+    assert report.reduced_coupling_winding == 0
+    assert np.isclose(report.reduced_coupling_gap, np.sqrt(2.0))
+    np.testing.assert_allclose(
+        report.reduced_coupling_symbol,
+        np.sqrt(2.0) * np.eye(2),
+        atol=1.0e-12,
+    )
+    assert not report.state_space_has_intrinsic_scalar_winding_candidate
+    assert report.has_uniform_fixed_width_gap
+    assert [point.state_complement.codomain_excess for point in report.points] == [
+        5,
+        49,
+        321,
+    ]
+    np.testing.assert_allclose(
+        [point.state_complement.reduced_gap for point in report.points],
+        2.0,
+    )
+    assert [point.kinetic_quotient_dimension for point in report.points] == [2, 4, 6]
+    np.testing.assert_allclose(
+        [point.kinetic_quotient_gap for point in report.points],
+        np.sqrt(2.0),
+    )
+    np.testing.assert_allclose(
+        [point.intercell_gram_norm for point in report.points],
+        0.0,
+        atol=1.0e-12,
+    )
+    np.testing.assert_allclose(
+        [point.unit_cell_gram_residual for point in report.points],
+        0.0,
+        atol=1.0e-12,
+    )

@@ -4645,6 +4645,240 @@ class QDMLocalPotentialCompatibilityReport:
 
 
 @dataclass(frozen=True, slots=True)
+class ReducedConstraintFredholmCandidateReport:
+    """Reduced constraint map after quotienting a known exact kernel.
+
+    The report deliberately distinguishes a square Fredholm-symbol candidate
+    from a strictly rectangular injective map.  For a tall complex map, the
+    polar part takes values in a complex Stiefel manifold with trivial first
+    homotopy group, so a determinant winding is not intrinsic without an
+    additional choice of codomain frame.
+    """
+
+    codomain_dimension: int
+    domain_dimension: int
+    kernel_dimension: int
+    reduced_domain_dimension: int
+    reduced_rank: int
+    codomain_excess: int
+    reduced_singular_values: npt.NDArray[np.float64]
+    reduced_gap: float | None
+    canonical_log_abs_determinant: float | None
+    canonical_determinant_phase: float | None
+    is_reduced_injective: bool
+    is_square_symbol_candidate: bool
+    classification: str
+    tolerance: float
+
+    @property
+    def admits_intrinsic_scalar_winding(self) -> bool:
+        return bool(self.is_reduced_injective and self.is_square_symbol_candidate)
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "codomain_dimension": self.codomain_dimension,
+            "domain_dimension": self.domain_dimension,
+            "kernel_dimension": self.kernel_dimension,
+            "reduced_domain_dimension": self.reduced_domain_dimension,
+            "reduced_rank": self.reduced_rank,
+            "codomain_excess": self.codomain_excess,
+            "reduced_gap": self.reduced_gap,
+            "canonical_log_abs_determinant": self.canonical_log_abs_determinant,
+            "canonical_determinant_phase": self.canonical_determinant_phase,
+            "is_reduced_injective": self.is_reduced_injective,
+            "is_square_symbol_candidate": self.is_square_symbol_candidate,
+            "admits_intrinsic_scalar_winding": self.admits_intrinsic_scalar_winding,
+            "classification": self.classification,
+            "tolerance": self.tolerance,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class QDMCompactCageReducedWindingPoint:
+    """Reduced state- and coupling-space data for one fixed-width member."""
+
+    repeats: int
+    system_size: tuple[int, int]
+    support_size: int
+    shell_size: int
+    state_complement: ReducedConstraintFredholmCandidateReport
+    kinetic_term_count: int
+    kinetic_compatible_dimension: int
+    kinetic_quotient_dimension: int
+    kinetic_quotient_singular_values: npt.NDArray[np.float64]
+    kinetic_quotient_gap: float | None
+    local_pair_offsets: tuple[tuple[int, int], ...]
+    intercell_gram_norm: float
+    unit_cell_gram_residual: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "repeats": self.repeats,
+            "system_size": self.system_size,
+            "support_size": self.support_size,
+            "shell_size": self.shell_size,
+            "state_reduced_domain_dimension": (self.state_complement.reduced_domain_dimension),
+            "state_codomain_excess": self.state_complement.codomain_excess,
+            "state_reduced_gap": self.state_complement.reduced_gap,
+            "state_scalar_winding_eligible": (
+                self.state_complement.admits_intrinsic_scalar_winding
+            ),
+            "kinetic_term_count": self.kinetic_term_count,
+            "kinetic_compatible_dimension": self.kinetic_compatible_dimension,
+            "kinetic_quotient_dimension": self.kinetic_quotient_dimension,
+            "kinetic_quotient_gap": self.kinetic_quotient_gap,
+            "local_pair_offsets": self.local_pair_offsets,
+            "intercell_gram_norm": self.intercell_gram_norm,
+            "unit_cell_gram_residual": self.unit_cell_gram_residual,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class QDMCompactCageReducedWindingReport:
+    """Fredholm-winding audit of the compact square-QDM cage sequence."""
+
+    repeat_axis: str
+    unit_cell_size: tuple[int, int]
+    local_pair_offsets: tuple[tuple[int, int], ...]
+    reduced_coupling_symbol: npt.NDArray[np.complex128]
+    reduced_coupling_winding: int
+    reduced_coupling_gap: float
+    points: tuple[QDMCompactCageReducedWindingPoint, ...]
+    classification: str
+    tolerance: float
+
+    @property
+    def state_space_has_intrinsic_scalar_winding_candidate(self) -> bool:
+        return bool(
+            self.points
+            and all(point.state_complement.admits_intrinsic_scalar_winding for point in self.points)
+        )
+
+    @property
+    def has_uniform_fixed_width_gap(self) -> bool:
+        if not self.points:
+            return False
+        gaps = np.asarray(
+            [point.kinetic_quotient_gap for point in self.points],
+            dtype=np.float64,
+        )
+        return bool(
+            np.all(np.isfinite(gaps)) and np.max(np.abs(gaps - gaps[0])) <= 10.0 * self.tolerance
+        )
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "repeat_axis": self.repeat_axis,
+            "unit_cell_size": self.unit_cell_size,
+            "local_pair_offsets": self.local_pair_offsets,
+            "reduced_coupling_winding": self.reduced_coupling_winding,
+            "reduced_coupling_gap": self.reduced_coupling_gap,
+            "state_space_has_intrinsic_scalar_winding_candidate": (
+                self.state_space_has_intrinsic_scalar_winding_candidate
+            ),
+            "has_uniform_fixed_width_gap": self.has_uniform_fixed_width_gap,
+            "classification": self.classification,
+            "points": tuple(point.to_summary_dict() for point in self.points),
+            "tolerance": self.tolerance,
+        }
+
+
+def diagnose_reduced_constraint_fredholm_candidate(
+    constraint_map: object,
+    *,
+    kernel_basis: object | None = None,
+    tolerance: float = 1e-10,
+) -> ReducedConstraintFredholmCandidateReport:
+    """Quotient an exact kernel and test whether a scalar winding is intrinsic.
+
+    A square, injective reduced map can be the value of a Fredholm symbol once
+    a translation-dependent family is supplied.  A strictly tall map has no
+    intrinsic determinant phase: choosing a frame for its range can shift any
+    apparent square-compression winding.
+    """
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    matrix = constraint_map
+    if scipy_sparse.issparse(matrix):
+        matrix_shape = matrix.shape
+        dense_for_kernel = None
+    else:
+        matrix = np.asarray(matrix, dtype=np.complex128)
+        if matrix.ndim != 2:
+            raise ValueError("constraint_map must be two-dimensional.")
+        matrix_shape = matrix.shape
+        dense_for_kernel = matrix
+    codomain_dimension, domain_dimension = map(int, matrix_shape)
+
+    if kernel_basis is None:
+        if dense_for_kernel is None:
+            dense_for_kernel = np.asarray(matrix.toarray(), dtype=np.complex128)
+        kernel = nullspace_svd(dense_for_kernel, tolerance=tolerance)
+    else:
+        kernel = np.asarray(kernel_basis, dtype=np.complex128)
+        if kernel.ndim == 1:
+            kernel = kernel[:, np.newaxis]
+        if kernel.ndim != 2 or kernel.shape[0] != domain_dimension:
+            raise ValueError("kernel_basis has incompatible shape.")
+        kernel = _orthonormal_columns(kernel)
+        residual = np.linalg.norm(matrix @ kernel)
+        scale = max(1.0, float(np.linalg.norm(kernel)))
+        if residual > tolerance * scale:
+            raise ValueError("kernel_basis is not annihilated by constraint_map.")
+
+    kernel_dimension = int(kernel.shape[1])
+    if kernel_dimension > domain_dimension:
+        raise ValueError("kernel dimension cannot exceed the domain dimension.")
+    if kernel_dimension == domain_dimension:
+        complement = np.zeros((domain_dimension, 0), dtype=np.complex128)
+    else:
+        complement = scipy_linalg.null_space(
+            kernel.conj().T,
+            rcond=tolerance,
+        ).astype(np.complex128, copy=False)
+    reduced = np.asarray(matrix @ complement, dtype=np.complex128)
+    singular_values = scipy_linalg.svdvals(reduced) if reduced.size else np.zeros(0)
+    rank = int(np.sum(singular_values > tolerance))
+    reduced_domain_dimension = int(complement.shape[1])
+    injective = rank == reduced_domain_dimension
+    positive = singular_values[singular_values > tolerance]
+    gap = None if positive.size == 0 else float(np.min(positive))
+    square_candidate = codomain_dimension == reduced_domain_dimension
+    log_abs_det: float | None = None
+    phase: float | None = None
+    if injective and reduced_domain_dimension > 0:
+        log_abs_det = float(np.sum(np.log(positive)))
+        # The polar-frame compression is the positive matrix
+        # sqrt(reduced^dagger reduced), whose determinant phase is zero.
+        phase = 0.0
+    if not injective:
+        classification = "reduced_map_not_injective"
+    elif square_candidate:
+        classification = "square_fredholm_symbol_candidate"
+    elif codomain_dimension > reduced_domain_dimension:
+        classification = "rectangular_stiefel_no_intrinsic_winding"
+    else:
+        classification = "underdetermined_reduced_map"
+
+    return ReducedConstraintFredholmCandidateReport(
+        codomain_dimension=codomain_dimension,
+        domain_dimension=domain_dimension,
+        kernel_dimension=kernel_dimension,
+        reduced_domain_dimension=reduced_domain_dimension,
+        reduced_rank=rank,
+        codomain_excess=int(codomain_dimension - reduced_domain_dimension),
+        reduced_singular_values=np.asarray(singular_values, dtype=np.float64),
+        reduced_gap=gap,
+        canonical_log_abs_determinant=log_abs_det,
+        canonical_determinant_phase=phase,
+        is_reduced_injective=injective,
+        is_square_symbol_candidate=square_candidate,
+        classification=classification,
+        tolerance=tolerance,
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class QDMPhysicalCancellationScalingPoint:
     """Exact finite-support cancellation data for one periodic product member."""
 
@@ -5087,6 +5321,190 @@ def scan_square_qdm_periodic_product_cancellation_scaling(
         unit_cell_size=(int(unit_cell.model.lx), int(unit_cell.model.ly)),
         support_size_per_unit_cell=int(unit_cell.support_size_per_unit_cell),
         points=tuple(points),
+        tolerance=tolerance,
+    )
+
+
+def diagnose_square_qdm_compact_cage_reduced_winding(
+    unit_cell: SquareQDMPeriodicProductUnitCell,
+    repeat_counts: Sequence[int] | npt.NDArray[np.integer],
+    *,
+    max_support_size: int = 1024,
+    tolerance: float = 1e-10,
+) -> QDMCompactCageReducedWindingReport:
+    """Audit scalar Fredholm winding for the compact QDM cage sequence.
+
+    Two reductions are kept separate.  In state space the exact product cage is
+    quotiented from the physical support-to-shell map.  This map remains
+    strictly rectangular and therefore has no intrinsic determinant winding.
+    In coupling space the cage-compatible directions are quotiented from the
+    independently varying plaquette couplings.  The remaining two channels per
+    repeated cell form a constant positive symbol and hence carry winding zero.
+    """
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    counts = tuple(int(value) for value in np.asarray(repeat_counts).reshape(-1))
+    if not counts or any(value <= 0 for value in counts):
+        raise ValueError("repeat_counts must contain positive integers.")
+    if len(set(counts)) != len(counts):
+        raise ValueError("repeat_counts must not contain duplicates.")
+
+    points: list[QDMCompactCageReducedWindingPoint] = []
+    reference_pair_offsets: tuple[tuple[int, int], ...] | None = None
+    reference_symbol: npt.NDArray[np.complex128] | None = None
+    for repeats in counts:
+        instance = unit_cell.instantiate(repeats)
+        support = materialize_square_qdm_periodic_product_support(
+            instance,
+            max_support_size=max_support_size,
+        )
+        boundary_map = build_qdm_explicit_support_boundary(
+            instance.model,
+            support.configs,
+        )
+        state_complement = diagnose_reduced_constraint_fredholm_candidate(
+            boundary_map.boundary,
+            kernel_basis=support.amplitudes[:, np.newaxis],
+            tolerance=tolerance,
+        )
+        kinetic = diagnose_qdm_local_kinetic_compatibility(
+            instance.model,
+            support.configs,
+            support.amplitudes,
+            boundary_map=boundary_map,
+            tolerance=tolerance,
+        )
+        if len(kinetic.plaquette_ids) % repeats:
+            raise ValueError("plaquette count is not divisible by repeat count.")
+        terms_per_cell = len(kinetic.plaquette_ids) // repeats
+        column_by_id = {
+            int(plaquette_id): index for index, plaquette_id in enumerate(kinetic.plaquette_ids)
+        }
+        pair_data: list[tuple[int, tuple[int, int], tuple[int, int]]] = []
+        for left_id, right_id in kinetic.equal_coupling_pairs:
+            left_cell, left_offset = divmod(int(left_id), terms_per_cell)
+            right_cell, right_offset = divmod(int(right_id), terms_per_cell)
+            if left_cell != right_cell:
+                raise ValueError("a kinetic compatibility pair crosses unit cells.")
+            pair_data.append(
+                (
+                    left_cell,
+                    (left_offset, right_offset),
+                    (column_by_id[int(left_id)], column_by_id[int(right_id)]),
+                )
+            )
+        pair_data.sort(key=lambda item: (item[0], item[1]))
+        if len(pair_data) != kinetic.rank:
+            raise ValueError("equal-coupling pairs do not span the kinetic obstruction quotient.")
+        local_offsets = tuple(offset for cell, offset, _columns in pair_data if cell == 0)
+        if not local_offsets:
+            raise ValueError("no local kinetic obstruction channels were found.")
+        if any(
+            tuple(offset for cell, offset, _columns in pair_data if cell == cell_index)
+            != local_offsets
+            for cell_index in range(repeats)
+        ):
+            raise ValueError("kinetic obstruction pattern is not translation repeated.")
+        if reference_pair_offsets is None:
+            reference_pair_offsets = local_offsets
+        elif local_offsets != reference_pair_offsets:
+            raise ValueError("local kinetic obstruction pattern changes with size.")
+
+        quotient_basis = np.zeros(
+            (len(kinetic.plaquette_ids), len(pair_data)),
+            dtype=np.complex128,
+        )
+        for quotient_index, (_cell, _offset, (left_column, right_column)) in enumerate(pair_data):
+            quotient_basis[left_column, quotient_index] = 1.0 / np.sqrt(2.0)
+            quotient_basis[right_column, quotient_index] = -1.0 / np.sqrt(2.0)
+        effective = kinetic.obstruction_matrix @ quotient_basis
+        singular_values = scipy_linalg.svdvals(effective)
+        effective_rank = int(np.sum(singular_values > tolerance))
+        if effective_rank != len(pair_data):
+            raise ValueError("kinetic quotient map is not injective.")
+        positive = singular_values[singular_values > tolerance]
+        kinetic_gap = float(np.min(positive))
+        gram = np.asarray(effective.conj().T @ effective, dtype=np.complex128)
+        channels_per_cell = len(local_offsets)
+        first_block = gram[:channels_per_cell, :channels_per_cell]
+        unit_cell_symbol = scipy_linalg.sqrtm(first_block).astype(
+            np.complex128,
+            copy=False,
+        )
+        if reference_symbol is None:
+            reference_symbol = unit_cell_symbol
+        symbol_scale = max(1.0, float(np.linalg.norm(reference_symbol)))
+        cell_block_residuals: list[float] = []
+        off_cell_blocks: list[float] = []
+        for left_cell in range(repeats):
+            left_slice = slice(
+                left_cell * channels_per_cell,
+                (left_cell + 1) * channels_per_cell,
+            )
+            for right_cell in range(repeats):
+                right_slice = slice(
+                    right_cell * channels_per_cell,
+                    (right_cell + 1) * channels_per_cell,
+                )
+                block = gram[left_slice, right_slice]
+                if left_cell == right_cell:
+                    block_symbol = scipy_linalg.sqrtm(block).astype(
+                        np.complex128,
+                        copy=False,
+                    )
+                    cell_block_residuals.append(
+                        float(np.linalg.norm(block_symbol - reference_symbol))
+                    )
+                else:
+                    off_cell_blocks.append(float(np.linalg.norm(block)))
+        unit_cell_residual = max(cell_block_residuals, default=0.0) / symbol_scale
+        intercell_norm = max(off_cell_blocks, default=0.0)
+
+        points.append(
+            QDMCompactCageReducedWindingPoint(
+                repeats=repeats,
+                system_size=(int(instance.model.lx), int(instance.model.ly)),
+                support_size=support.support_size,
+                shell_size=boundary_map.shell_size,
+                state_complement=state_complement,
+                kinetic_term_count=len(kinetic.plaquette_ids),
+                kinetic_compatible_dimension=kinetic.compatible_dimension,
+                kinetic_quotient_dimension=len(pair_data),
+                kinetic_quotient_singular_values=np.asarray(
+                    singular_values,
+                    dtype=np.float64,
+                ),
+                kinetic_quotient_gap=kinetic_gap,
+                local_pair_offsets=local_offsets,
+                intercell_gram_norm=intercell_norm,
+                unit_cell_gram_residual=unit_cell_residual,
+            )
+        )
+
+    assert reference_pair_offsets is not None and reference_symbol is not None
+    symbol_singular_values = scipy_linalg.svdvals(reference_symbol)
+    symbol_gap = float(np.min(symbol_singular_values))
+    symbol_det = complex(np.linalg.det(reference_symbol))
+    if abs(symbol_det) <= tolerance:
+        classification = "reduced_coupling_symbol_gapless"
+    elif any(point.intercell_gram_norm > 10.0 * tolerance for point in points):
+        classification = "intercell_reduced_coupling_requires_matrix_symbol"
+    elif any(point.unit_cell_gram_residual > 10.0 * tolerance for point in points):
+        classification = "reduced_coupling_symbol_not_size_stable"
+    elif any(point.state_complement.admits_intrinsic_scalar_winding for point in points):
+        classification = "state_square_symbol_requires_twist_test"
+    else:
+        classification = "local_constant_symbol_trivial_winding"
+
+    return QDMCompactCageReducedWindingReport(
+        repeat_axis=str(unit_cell.repeat_axis),
+        unit_cell_size=(int(unit_cell.model.lx), int(unit_cell.model.ly)),
+        local_pair_offsets=reference_pair_offsets,
+        reduced_coupling_symbol=reference_symbol,
+        reduced_coupling_winding=0,
+        reduced_coupling_gap=symbol_gap,
+        points=tuple(points),
+        classification=classification,
         tolerance=tolerance,
     )
 
