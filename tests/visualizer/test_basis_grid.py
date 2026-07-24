@@ -446,3 +446,50 @@ def test_basis_grid_rejects_empty_states_before_creating_axes() -> None:
             plaquette_symbols="none",
             show=False,
         )
+
+
+def test_paper_grid_theme_uses_compact_defaults() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    states = np.zeros((1, layout.n_variables), dtype=np.int64)
+
+    grid = BasisGridVisualizer(
+        lattice=lattice,
+        layout=layout,
+        theme="paper",
+    )
+    fig, axes = grid.plot(
+        states,
+        mode="dimers",
+        plaquette_symbols="none",
+        show=False,
+    )
+
+    assert tuple(fig.get_size_inches()) == pytest.approx((2.35, 2.35))
+    assert len(axes.flat[0].texts) == 0
+    assert grid.style is not None
+    assert grid.style.node_color == "black"
+
+    plt.close(fig)
+
+
+def test_plot_basis_grid_accepts_paper_theme() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    states = np.zeros((2, layout.n_variables), dtype=np.int64)
+
+    fig, axes = plot_basis_grid(
+        lattice=lattice,
+        layout=layout,
+        states=states,
+        ncols=2,
+        theme="paper",
+        mode="dimers",
+        plaquette_symbols="none",
+        show=False,
+    )
+
+    assert tuple(fig.get_size_inches()) == pytest.approx((4.7, 2.35))
+    assert all(len(ax.texts) == 0 for ax in axes.flat)
+
+    plt.close(fig)

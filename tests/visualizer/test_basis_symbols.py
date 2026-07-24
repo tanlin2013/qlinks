@@ -1,6 +1,8 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
+from matplotlib.colors import to_rgba
 
 from qlinks.lattice import (
     HoneycombLattice,
@@ -392,6 +394,74 @@ def test_resonance_style_marks_binary_qdm_resonance() -> None:
     assert symbols & {"◆", "◇"}
     assert "↺" not in symbols
     assert "↻" not in symbols
+
+    plt.close(fig)
+
+
+def test_paper_qdm_resonance_symbol_uses_blue_filled_and_orange_hollow() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    visualizer = BasisConfigurationVisualizer(lattice=lattice, theme="paper")
+
+    assert visualizer._theme_qdm_resonance_symbol([1, 0, 1, 0]) == ("◆", "#0072B2")
+    assert visualizer._theme_qdm_resonance_symbol([0, 1, 0, 1]) == ("◇", "#D55E00")
+
+
+def test_paper_qdm_nonflippable_plaquette_draws_gray_cross() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        theme="paper",
+    )
+
+    fig, ax = plt.subplots()
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="dimers",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="resonance",
+    )
+
+    crosses = [text for text in ax.texts if text.get_text() == "×"]
+    assert len(crosses) == 1
+    assert to_rgba(crosses[0].get_color()) == pytest.approx(to_rgba("0.60"))
+
+    plt.close(fig)
+
+
+def test_paper_qdm_vulnerable_arrow_is_gray() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    visualizer = BasisConfigurationVisualizer(
+        lattice=lattice,
+        layout=layout,
+        theme="paper",
+    )
+    draw_plaquette = visualizer._draw_plaquette_primitives()[0]
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+
+    for link_id, value in zip(draw_plaquette.link_ids, [1, 0, 1, 1], strict=True):
+        config[int(link_id)] = value
+
+    fig, ax = plt.subplots()
+    visualizer.plot(
+        config,
+        ax=ax,
+        show=False,
+        mode="dimers",
+        with_site_labels=False,
+        with_plaquette_symbols=True,
+        plaquette_symbol_style="resonance",
+    )
+
+    assert len(ax.patches) == 1
+    assert to_rgba(ax.patches[0].get_edgecolor()) == pytest.approx(to_rgba("0.45"))
+    assert all(text.get_text() != "×" for text in ax.texts)
 
     plt.close(fig)
 

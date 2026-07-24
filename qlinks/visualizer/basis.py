@@ -24,6 +24,7 @@ from qlinks.lattice import (
 from qlinks.variables import VariableKind, VariableLayout
 
 BasisConfigLabelStyle = Literal["none", "compact", "array"]
+BasisVisualizerTheme = Literal["research", "paper"]
 LinkPlotMode = Literal["auto", "arrows", "dimers", "values"]
 PeriodicImageMode = Literal["none", "positive_patch"]
 PlaquetteSymbolMode = Literal["binary", "flux"]
@@ -62,6 +63,9 @@ class LinkVisualStyle:
 
     node_size: float = 180.0
     node_color: str = "tab:orange"
+    node_face_color: str | None = None
+    node_edge_color: str | None = None
+    node_linewidth: float | None = None
     edge_color: str = "black"
     empty_edge_color: str = "lightgray"
 
@@ -80,6 +84,85 @@ class LinkVisualStyle:
     plaquette_symbol_fontsize: float = 22.0
     vulnerable_link_arrow_length_fraction: float = 1.1
     plaquette_symbol_offset: tuple[float, float] = (0.0, 0.0)
+
+
+@dataclass(frozen=True, slots=True)
+class _BasisVisualizerThemeDefaults:
+    """Resolved presentation defaults for a basis-visualizer theme."""
+
+    style: LinkVisualStyle
+    with_site_labels: bool
+    axes_padding: float
+    panel_size: float
+    title_fontsize: float | None
+    qdm_filled_flippable_color: str
+    qdm_hollow_flippable_color: str
+    qdm_vulnerable_color: str | None
+    qdm_nonflippable_symbol: tuple[str, str] | None
+
+
+def _basis_visualizer_theme_defaults(
+    theme: BasisVisualizerTheme,
+) -> _BasisVisualizerThemeDefaults:
+    """Return presentation defaults for a named basis-visualizer theme."""
+    if theme == "research":
+        return _BasisVisualizerThemeDefaults(
+            style=LinkVisualStyle(),
+            with_site_labels=True,
+            axes_padding=0.5,
+            panel_size=3.0,
+            title_fontsize=None,
+            qdm_filled_flippable_color="blue",
+            qdm_hollow_flippable_color="red",
+            qdm_vulnerable_color=None,
+            qdm_nonflippable_symbol=None,
+        )
+
+    if theme == "paper":
+        return _BasisVisualizerThemeDefaults(
+            style=LinkVisualStyle(
+                node_size=22.0,
+                node_color="black",
+                node_face_color="white",
+                node_edge_color="black",
+                node_linewidth=0.9,
+                edge_color="black",
+                empty_edge_color="0.72",
+                arrow_linewidth=0.9,
+                arrow_alpha=1.0,
+                arrow_mutation_scale=6.5,
+                arrow_shrink_points=1.0,
+                occupied_width=2.8,
+                empty_width=0.65,
+                occupied_alpha=1.0,
+                empty_alpha=0.55,
+                site_label_fontsize=6.0,
+                link_label_fontsize=5.5,
+                plaquette_symbol_fontsize=13.0,
+                vulnerable_link_arrow_length_fraction=0.95,
+            ),
+            with_site_labels=False,
+            axes_padding=0.18,
+            panel_size=2.35,
+            title_fontsize=8.0,
+            qdm_filled_flippable_color="#0072B2",
+            qdm_hollow_flippable_color="#D55E00",
+            qdm_vulnerable_color="0.45",
+            qdm_nonflippable_symbol=("×", "0.60"),
+        )
+
+    raise ValueError("theme must be 'research' or 'paper'.")
+
+
+def basis_visual_style(theme: BasisVisualizerTheme = "research") -> LinkVisualStyle:
+    """Return the default :class:`LinkVisualStyle` for a named basis theme.
+
+    ``"research"`` reproduces the historical qlinks appearance. ``"paper"`` uses a compact
+    publication style with hollow lattice sites and the paper QDM plaquette convention.
+    The returned dataclass is immutable and can be customized with
+    :func:`dataclasses.replace` when a figure needs a small local override.
+    """
+    return _basis_visualizer_theme_defaults(theme).style
 
 
 @dataclass(frozen=True, slots=True)
@@ -277,7 +360,12 @@ class BasisConfigurationVisualizer:
             :class:`SquareLattice`.
         layout: Optional variable layout.  If omitted, link plotting assumes
             ``link_variable_index == link_id``.
-        style: Visual style for links, sites, and plaquette symbols.
+        theme: Named presentation theme. ``"research"`` preserves the
+            historical qlinks styling; ``"paper"`` uses compact publication
+            defaults.
+        style: Optional explicit visual style. When provided, it overrides the
+            link/site style supplied by ``theme`` while retaining the theme's
+            presentation defaults.
         periodic_image_mode: How to draw links that wrap periodic boundaries.
             ``"none"`` omits wrapped links; ``"positive_patch"`` draws the
             positive image patch; ``"both"`` draws both images.
@@ -290,12 +378,22 @@ class BasisConfigurationVisualizer:
 
     lattice: LatticeGraph
     layout: VariableLayout | None = None
-    style: LinkVisualStyle = field(default_factory=LinkVisualStyle)
+    style: LinkVisualStyle | None = None
+    theme: BasisVisualizerTheme = "research"
     periodic_image_mode: PeriodicImageMode = "positive_patch"
     collapse_duplicate_visual_links: bool = True
     coordinate_scale: float = 1.0
     coordinate_transform: npt.NDArray[np.float64] | None = None
     site_label_style: SiteLabelStyle = "cell_sublattice"
+
+    def __post_init__(self) -> None:
+        defaults = _basis_visualizer_theme_defaults(self.theme)
+        if self.style is None:
+            object.__setattr__(self, "style", defaults.style)
+
+    @property
+    def _theme_defaults(self) -> _BasisVisualizerThemeDefaults:
+        return _basis_visualizer_theme_defaults(self.theme)
 
     def _infer_link_plot_mode(
         self,
@@ -599,7 +697,7 @@ class BasisConfigurationVisualizer:
         show: bool = True,
         backend: VisualizerBackend = "matplotlib",
         mode: LinkPlotMode = "auto",
-        with_site_labels: bool = True,
+        with_site_labels: bool | None = None,
         with_site_values: bool = False,
         with_link_values: bool = False,
         with_link_ids: bool = False,
@@ -635,6 +733,9 @@ class BasisConfigurationVisualizer:
         """
         if ax is None:
             _, ax = plt.subplots()
+
+        if with_site_labels is None:
+            with_site_labels = self._theme_defaults.with_site_labels
 
         resolved_mode = self._resolve_link_plot_mode(
             config=config,
@@ -1097,9 +1198,7 @@ class BasisConfigurationVisualizer:
             ax.scatter(
                 active_xy[:, 0],
                 active_xy[:, 1],
-                s=self.style.node_size,
-                color=self.style.node_color,
-                zorder=4,
+                **self._node_scatter_kwargs(zorder=4),
             )
 
         if not (with_site_labels or with_site_values):
@@ -1281,6 +1380,33 @@ class BasisConfigurationVisualizer:
 
         raise ValueError("mode must be one of 'arrows', 'dimers', or 'values'.")
 
+    def _node_scatter_kwargs(self, *, zorder: int) -> dict[str, Any]:
+        """Return scatter kwargs while preserving legacy filled-node behavior."""
+        kwargs: dict[str, Any] = {
+            "s": self.style.node_size,
+            "zorder": zorder,
+        }
+
+        if self.style.node_face_color is None and self.style.node_edge_color is None:
+            kwargs["color"] = self.style.node_color
+            return kwargs
+
+        kwargs["facecolors"] = (
+            self.style.node_color
+            if self.style.node_face_color is None
+            else self.style.node_face_color
+        )
+        kwargs["edgecolors"] = (
+            self.style.node_color
+            if self.style.node_edge_color is None
+            else self.style.node_edge_color
+        )
+
+        if self.style.node_linewidth is not None:
+            kwargs["linewidths"] = self.style.node_linewidth
+
+        return kwargs
+
     def _draw_nodes_from_grid_render_cache(
         self,
         *,
@@ -1299,9 +1425,7 @@ class BasisConfigurationVisualizer:
         ax.scatter(
             x,
             y,
-            s=self.style.node_size,
-            color=self.style.node_color,
-            zorder=3,
+            **self._node_scatter_kwargs(zorder=3),
         )
 
         if not (with_site_labels or with_site_values):
@@ -1451,7 +1575,7 @@ class BasisConfigurationVisualizer:
                 for variable_index in render_cache.plaquette_link_variable_indices[index]
             )
 
-            symbol_info = self._qdm_resonance_symbol(values)
+            symbol_info = self._theme_qdm_resonance_symbol(values)
 
             if symbol_info is not None:
                 symbol, color = symbol_info
@@ -1471,9 +1595,14 @@ class BasisConfigurationVisualizer:
             vulnerable_info = self._qdm_one_vulnerable_link(values)
 
             if vulnerable_info is None:
+                self._draw_theme_qdm_nonflippable_symbol(
+                    ax=ax,
+                    center=center,
+                )
                 continue
 
             vulnerable_index, color = vulnerable_info
+            color = self._theme_qdm_vulnerable_color(color)
             plaquette_midpoints = render_cache.plaquette_midpoints[index]
 
             if vulnerable_index >= len(plaquette_midpoints):
@@ -2276,9 +2405,7 @@ class BasisConfigurationVisualizer:
         ax.scatter(
             x,
             y,
-            s=self.style.node_size,
-            color=self.style.node_color,
-            zorder=3,
+            **self._node_scatter_kwargs(zorder=3),
         )
 
         for node, px, py in zip(draw_nodes, x, y, strict=True):
@@ -3190,6 +3317,53 @@ class BasisConfigurationVisualizer:
 
         return color
 
+    def _theme_qdm_resonance_symbol(
+        self,
+        values: Sequence[int],
+    ) -> tuple[str, str] | None:
+        """Return the QDM resonance marker using the active presentation theme."""
+        symbol_info = self._qdm_resonance_symbol(values)
+
+        if symbol_info is None:
+            return None
+
+        symbol, _color = symbol_info
+        defaults = self._theme_defaults
+
+        if symbol == "◆":
+            return symbol, defaults.qdm_filled_flippable_color
+
+        return symbol, defaults.qdm_hollow_flippable_color
+
+    def _theme_qdm_vulnerable_color(self, inferred_color: str) -> str:
+        """Resolve one-vulnerable-link color for the active presentation theme."""
+        return self._theme_defaults.qdm_vulnerable_color or inferred_color
+
+    def _draw_theme_qdm_nonflippable_symbol(
+        self,
+        *,
+        ax,
+        center: Sequence[float],
+    ) -> None:
+        """Draw the paper-theme nonflippable marker, if the theme requests one."""
+        symbol_info = self._theme_defaults.qdm_nonflippable_symbol
+
+        if symbol_info is None:
+            return
+
+        symbol, color = symbol_info
+        ax.annotate(
+            symbol,
+            xy=(float(center[0]), float(center[1])),
+            xytext=self.style.plaquette_symbol_offset,
+            textcoords="offset points",
+            fontsize=self.style.plaquette_symbol_fontsize,
+            color=color,
+            ha="center",
+            va="center",
+            zorder=6,
+        )
+
     @staticmethod
     def _qdm_one_vulnerable_link(
         values: Sequence[int],
@@ -3443,7 +3617,7 @@ class BasisConfigurationVisualizer:
 
             values = [self.link_value(config, int(link_id)) for link_id in link_ids]
 
-            symbol_info = self._qdm_resonance_symbol(values)
+            symbol_info = self._theme_qdm_resonance_symbol(values)
 
             if symbol_info is not None:
                 symbol, color = symbol_info
@@ -3465,9 +3639,14 @@ class BasisConfigurationVisualizer:
             vulnerable_info = self._qdm_one_vulnerable_link(values)
 
             if vulnerable_info is None:
+                self._draw_theme_qdm_nonflippable_symbol(
+                    ax=ax,
+                    center=draw_plaquette.center,
+                )
                 continue
 
             vulnerable_index, color = vulnerable_info
+            color = self._theme_qdm_vulnerable_color(color)
 
             if vulnerable_index >= len(draw_plaquette.link_midpoints):
                 continue
@@ -3801,9 +3980,16 @@ class BasisConfigurationVisualizer:
         ax.axis("off")
 
         if title is not None:
-            ax.set_title(title)
+            title_fontsize = self._theme_defaults.title_fontsize
+            if title_fontsize is None:
+                ax.set_title(title)
+            else:
+                ax.set_title(title, fontsize=title_fontsize)
 
-        self._autoscale_with_padding(ax)
+        self._autoscale_with_padding(
+            ax,
+            padding=self._theme_defaults.axes_padding,
+        )
 
     @staticmethod
     def _autoscale_with_padding(ax, padding: float = 0.5) -> None:
@@ -4306,7 +4492,7 @@ def plot_basis_config(
     show: bool = True,
     backend: VisualizerBackend = "matplotlib",
     mode: LinkPlotMode = "auto",
-    with_site_labels: bool = True,
+    with_site_labels: bool | None = None,
     with_site_values: bool = False,
     with_link_values: bool = False,
     with_link_ids: bool = False,
@@ -4318,6 +4504,7 @@ def plot_basis_config(
     coordinate_scale: float = 1.0,
     coordinate_transform: npt.ArrayLike | None = None,
     site_label_style: SiteLabelStyle = "cell_sublattice",
+    theme: BasisVisualizerTheme = "research",
     style: LinkVisualStyle | None = None,
 ):
     """
@@ -4327,7 +4514,8 @@ def plot_basis_config(
     visualizer = BasisConfigurationVisualizer(
         lattice=lattice,
         layout=layout,
-        style=style if style is not None else LinkVisualStyle(),
+        theme=theme,
+        style=style,
         periodic_image_mode=periodic_image_mode,
         collapse_duplicate_visual_links=collapse_duplicate_visual_links,
         coordinate_scale=coordinate_scale,
@@ -5413,7 +5601,11 @@ class BasisGridVisualizer:
     Attributes:
         lattice: Geometry/topology object.
         layout: Variable layout used to interpret each configuration array.
-        style: Visual style for links, sites, and plaquette symbols.
+        theme: Named presentation theme. ``"research"`` preserves the
+            historical qlinks styling; ``"paper"`` uses compact publication
+            defaults.
+        style: Optional explicit visual style. When provided, it overrides the
+            link/site style supplied by ``theme``.
         periodic_image_mode: How to draw periodic links.
         collapse_duplicate_visual_links: Whether duplicate periodic visual
             links are collapsed.
@@ -5424,17 +5616,28 @@ class BasisGridVisualizer:
 
     lattice: LatticeGraph
     layout: VariableLayout | None = None
-    style: LinkVisualStyle = field(default_factory=LinkVisualStyle)
+    style: LinkVisualStyle | None = None
+    theme: BasisVisualizerTheme = "research"
     periodic_image_mode: PeriodicImageMode = "positive_patch"
     collapse_duplicate_visual_links: bool = True
     coordinate_scale: float = 1.0
     coordinate_transform: npt.ArrayLike | None = None
     site_label_style: SiteLabelStyle = "cell_sublattice"
 
+    def __post_init__(self) -> None:
+        defaults = _basis_visualizer_theme_defaults(self.theme)
+        if self.style is None:
+            object.__setattr__(self, "style", defaults.style)
+
+    @property
+    def _theme_defaults(self) -> _BasisVisualizerThemeDefaults:
+        return _basis_visualizer_theme_defaults(self.theme)
+
     def _single_visualizer(self) -> BasisConfigurationVisualizer:
         return BasisConfigurationVisualizer(
             lattice=self.lattice,
             layout=self.layout,
+            theme=self.theme,
             style=self.style,
             periodic_image_mode=self.periodic_image_mode,
             collapse_duplicate_visual_links=self.collapse_duplicate_visual_links,
@@ -5547,7 +5750,8 @@ class BasisGridVisualizer:
             raise ValueError("labels must have the same length as states.")
 
         if figsize is None:
-            figsize = (3.0 * cols, 3.0 * rows)
+            panel_size = self._theme_defaults.panel_size
+            figsize = (panel_size * cols, panel_size * rows)
 
         fig, axes = plt.subplots(rows, cols, figsize=figsize, squeeze=False)
 
@@ -5557,7 +5761,12 @@ class BasisGridVisualizer:
             single_plot_kwargs = {}
 
         plot_kwargs = dict(single_plot_kwargs)
-        with_site_labels = bool(plot_kwargs.pop("with_site_labels", True))
+        with_site_labels = bool(
+            plot_kwargs.pop(
+                "with_site_labels",
+                self._theme_defaults.with_site_labels,
+            )
+        )
         with_site_values = bool(plot_kwargs.pop("with_site_values", False))
         with_link_values = bool(plot_kwargs.pop("with_link_values", False))
         with_link_ids = bool(plot_kwargs.pop("with_link_ids", False))
@@ -5798,6 +6007,7 @@ def plot_basis_grid(
     coordinate_scale: float = 1.0,
     coordinate_transform: npt.ArrayLike | None = None,
     site_label_style: SiteLabelStyle = "cell_sublattice",
+    theme: BasisVisualizerTheme = "research",
     style: LinkVisualStyle | None = None,
     figsize: tuple[float, float] | None = None,
     show: bool = True,
@@ -5812,7 +6022,8 @@ def plot_basis_grid(
     visualizer = BasisGridVisualizer(
         lattice=lattice,
         layout=layout,
-        style=style if style is not None else LinkVisualStyle(),
+        theme=theme,
+        style=style,
         periodic_image_mode=periodic_image_mode,
         collapse_duplicate_visual_links=collapse_duplicate_visual_links,
         coordinate_scale=coordinate_scale,
