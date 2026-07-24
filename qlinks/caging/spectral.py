@@ -99,6 +99,75 @@ class MicrocanonicalWindowSelection:
 
 
 @dataclass(frozen=True, slots=True)
+class SpectralMicrocanonicalEnsemble:
+    """Low-rank representation of a finite-size microcanonical ensemble.
+
+    The selected eigenvectors are stored as columns and carry equal weights.
+    This avoids materializing a dense density matrix unless explicitly
+    requested, while still exposing the ensemble used for observable traces.
+    """
+
+    selection: MicrocanonicalWindowSelection
+    eigenvalues: npt.NDArray[np.float64]
+    eigenvectors: npt.NDArray[np.complex128]
+    weights: npt.NDArray[np.float64]
+    volume: int | None = None
+
+    @property
+    def n_states(self) -> int:
+        return int(self.eigenvectors.shape[1])
+
+    @property
+    def hilbert_dimension(self) -> int:
+        return int(self.eigenvectors.shape[0])
+
+    @property
+    def energy_density_half_width(self) -> float | None:
+        if self.volume is None:
+            return None
+        return float(self.selection.half_width / self.volume)
+
+    def density_matrix(self) -> npt.NDArray[np.complex128]:
+        """Materialize ``rho_mc = sum_a w_a |E_a><E_a|``."""
+        weighted = self.eigenvectors * self.weights[np.newaxis, :]
+        return np.asarray(weighted @ self.eigenvectors.conj().T, dtype=np.complex128)
+
+    def expectation(self, operator: MatrixLike) -> complex:
+        """Return ``Tr(rho_mc operator)`` without materializing ``rho_mc``."""
+        actions = np.asarray(operator @ self.eigenvectors, dtype=np.complex128)
+        diagonal = np.einsum(
+            "ij,ij->j",
+            self.eigenvectors.conj(),
+            actions,
+        )
+        return complex(np.dot(self.weights, diagonal))
+
+    def observable_moments(
+        self,
+        operator: MatrixLike,
+        *,
+        squared_operator: MatrixLike | None = None,
+        hermiticity_tolerance: float = 1.0e-10,
+    ) -> "SpectralObservableMoments":
+        """Return mean, second moment, and variance in this ensemble."""
+        return spectral_observable_moments(
+            operator,
+            self.eigenvectors,
+            squared_operator=squared_operator,
+            weights=self.weights,
+            hermiticity_tolerance=hermiticity_tolerance,
+        )
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            **self.selection.to_summary_dict(),
+            "hilbert_dimension": self.hilbert_dimension,
+            "volume": self.volume,
+            "energy_density_half_width": self.energy_density_half_width,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ThermodynamicEnergyWindowPlan:
     """Size-scaled energy window for a thermodynamic microcanonical sequence.
 
@@ -664,6 +733,49 @@ def select_microcanonical_window_by_width(
         energy_max=float(np.max(selected_energies)),
         mean_energy=float(np.mean(selected_energies)),
         center_offset=float(np.mean(selected_energies) - float(target_energy)),
+    )
+
+
+def microcanonical_ensemble_from_spectrum(
+    eigenvalues: npt.ArrayLike,
+    eigenvectors: npt.ArrayLike,
+    *,
+    target_energy: float,
+    half_width: float,
+    exclude_indices: Sequence[int] = (),
+    degeneracy_tolerance: float = 1.0e-10,
+    volume: int | None = None,
+) -> SpectralMicrocanonicalEnsemble:
+    """Construct an equal-weight microcanonical ensemble from an eigensystem.
+
+    The interval is selected by :func:`select_microcanonical_window_by_width`.
+    Degenerate levels intersecting the numerical boundary are retained through
+    ``degeneracy_tolerance``.  The returned object stores only the selected
+    eigenvectors and therefore remains a low-rank representation of the
+    density matrix.
+    """
+    energies = np.asarray(eigenvalues, dtype=np.float64).reshape(-1)
+    vectors = np.asarray(eigenvectors, dtype=np.complex128)
+    if vectors.ndim != 2 or vectors.shape[0] != energies.size or vectors.shape[1] != energies.size:
+        raise ValueError("eigenvectors must be a square matrix whose columns match eigenvalues.")
+    if volume is not None and int(volume) <= 0:
+        raise ValueError("volume must be positive when supplied.")
+    selection = select_microcanonical_window_by_width(
+        energies,
+        target_energy=target_energy,
+        half_width=half_width,
+        exclude_indices=exclude_indices,
+        degeneracy_tolerance=degeneracy_tolerance,
+    )
+    indices = np.asarray(selection.indices, dtype=np.int64)
+    selected_vectors = np.asarray(vectors[:, indices], dtype=np.complex128)
+    weights = np.full(indices.size, 1.0 / indices.size, dtype=np.float64)
+    return SpectralMicrocanonicalEnsemble(
+        selection=selection,
+        eigenvalues=np.asarray(energies[indices], dtype=np.float64),
+        eigenvectors=selected_vectors,
+        weights=weights,
+        volume=None if volume is None else int(volume),
     )
 
 

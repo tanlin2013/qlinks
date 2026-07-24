@@ -606,6 +606,44 @@ def spin_one_xy_periodic_range_couplings(
     return tuple(pairs)
 
 
+def spin_one_xy_hxy_h3_model(
+    *,
+    length: int,
+    j: complex = 1.0,
+    j3: complex = 0.1,
+    total_sz: int | None = None,
+    h_z: complex = 0.0,
+    d_z: complex = 0.0,
+) -> SpinOneXYChainModel:
+    """Return the periodic manuscript Hamiltonian ``H_XY + H_3``.
+
+    The manuscript convention is
+
+    ``H_XY = J sum_r (S_r^+ S_{r+1}^- + h.c.)`` and
+    ``H_3  = J3 sum_r (S_r^+ S_{r+3}^- + h.c.)``.
+
+    :class:`SpinOneXYChainModel` uses the conventional ``J_xy/2`` prefactor
+    for the ladder-operator form, so the corresponding qlinks coefficients are
+    ``j_xy=2*J`` and ``extra_xy_coupling=2*J3``.  The third-neighbor term is
+    phase compatible with the staggered tower on even periodic chains.
+    """
+    if length <= 0:
+        raise ValueError("length must be positive.")
+    return SpinOneXYChainModel(
+        length=int(length),
+        boundary_condition=BoundaryCondition.PERIODIC,
+        j_xy=2.0 * complex(j),
+        h_z=complex(h_z),
+        d_z=complex(d_z),
+        total_sz=total_sz,
+        extra_xy_couplings=spin_one_xy_periodic_range_couplings(
+            length=int(length),
+            distance=3,
+            coefficient=2.0 * complex(j3),
+        ),
+    )
+
+
 def spin_one_xy_fixed_magnetization_dimension(length: int, total_sz: int) -> int:
     """Return ``[z^M](z^-1 + 1 + z)^L`` by exact dynamic programming."""
     if length < 0:

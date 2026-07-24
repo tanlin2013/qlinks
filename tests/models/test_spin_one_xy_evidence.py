@@ -4,6 +4,7 @@ import numpy as np
 
 from qlinks.models import (
     spin_one_xy_fixed_magnetization_dimension,
+    spin_one_xy_hxy_h3_model,
     spin_one_xy_periodic_range_couplings,
     spin_one_xy_phase_compatibility,
     spin_one_xy_tower_thermal_activities,
@@ -46,3 +47,23 @@ def test_periodic_odd_range_is_phase_compatible() -> None:
     broken = tuple((*couplings[:-1], (couplings[-1][0], couplings[-1][1], 0.4j)))
     broken_report = spin_one_xy_phase_compatibility(broken, phases=phases)
     assert not broken_report.is_compatible
+
+
+def test_hxy_h3_model_uses_manuscript_coupling_convention() -> None:
+    model = spin_one_xy_hxy_h3_model(
+        length=8,
+        j=1.0,
+        j3=0.1,
+        total_sz=-2,
+    )
+    assert model.boundary_condition.value == "periodic"
+    assert np.isclose(model.j_xy, 2.0)
+    assert len(model.extra_xy_couplings) == 8
+    assert all(np.isclose(coupling[2], 0.2) for coupling in model.extra_xy_couplings)
+
+    phases = (-1.0) ** np.arange(8)
+    report = spin_one_xy_phase_compatibility(
+        model.extra_xy_couplings,
+        phases=phases,
+    )
+    assert report.is_compatible

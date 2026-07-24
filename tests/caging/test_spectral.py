@@ -155,3 +155,32 @@ def test_commuting_cyclic_sector_and_product_basis_phases() -> None:
         phases,
         np.exp(1.0j * np.asarray([0.0, 0.2, -0.4, -0.2])),
     )
+
+
+def test_low_rank_microcanonical_ensemble() -> None:
+    from qlinks.caging import microcanonical_ensemble_from_spectrum
+
+    energies = np.asarray([-2.0, -0.5, 0.5, 2.0])
+    vectors = np.eye(4, dtype=np.complex128)
+    ensemble = microcanonical_ensemble_from_spectrum(
+        energies,
+        vectors,
+        target_energy=0.0,
+        half_width=0.6,
+        volume=4,
+    )
+    assert ensemble.selection.indices == (1, 2)
+    assert ensemble.n_states == 2
+    assert ensemble.hilbert_dimension == 4
+    assert np.isclose(ensemble.energy_density_half_width, 0.125)
+
+    rho = ensemble.density_matrix()
+    np.testing.assert_allclose(rho, np.diag([0.0, 0.5, 0.5, 0.0]))
+    assert np.isclose(np.trace(rho), 1.0)
+
+    observable = np.diag([1.0, 2.0, 4.0, 8.0])
+    assert np.isclose(ensemble.expectation(observable), 3.0)
+    moments = ensemble.observable_moments(observable)
+    assert np.isclose(moments.mean, 3.0)
+    assert np.isclose(moments.second_moment, 10.0)
+    assert np.isclose(moments.variance, 1.0)
