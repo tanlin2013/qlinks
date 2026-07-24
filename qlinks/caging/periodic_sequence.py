@@ -837,6 +837,69 @@ def certify_square_qdm_periodic_product_instance(
     )
 
 
+def materialize_square_qdm_periodic_product_state(
+    instance: SquareQDMPeriodicProductInstance,
+    basis_configs: npt.ArrayLike,
+    *,
+    normalize: bool = True,
+    tolerance: float = 1.0e-12,
+) -> npt.NDArray[np.complex128]:
+    """Embed a modest repeated product cage in an enumerated QDM basis.
+
+    The coordinate-level sequence certificate avoids an exponentially large
+    Cartesian product.  For ED-accessible repeat counts, this helper explicitly
+    forms that product and maps every complete dimer covering to the supplied
+    basis ordering.  It is intended for microcanonical overlap checks and
+    figure generation, not for proving the arbitrary-repeat sequence.
+    """
+    configs = np.asarray(basis_configs, dtype=np.int64)
+    if configs.ndim != 2:
+        raise ValueError("basis_configs must have shape (n_states, n_links).")
+    if configs.shape[1] != int(instance.model.lattice.num_links):
+        raise ValueError("basis_configs has the wrong number of link variables.")
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive.")
+    lookup = {tuple(int(value) for value in config): index for index, config in enumerate(configs)}
+    if len(lookup) != configs.shape[0]:
+        raise ValueError("basis_configs must not contain duplicate configurations.")
+
+    exterior = {
+        int(link_id): int(value)
+        for link_id, value in zip(
+            instance.padding.exterior_link_ids,
+            instance.padding.exterior_config,
+            strict=True,
+        )
+    }
+    state = np.zeros(configs.shape[0], dtype=np.complex128)
+    support_ranges = tuple(range(block.support_size) for block in instance.blocks)
+    for support_indices in itertools.product(*support_ranges):
+        complete = np.zeros(configs.shape[1], dtype=np.int64)
+        for link_id, value in exterior.items():
+            complete[link_id] = value
+        amplitude = 1.0 + 0.0j
+        for block, support_index in zip(instance.blocks, support_indices, strict=True):
+            complete[np.asarray(block.link_ids, dtype=np.int64)] = block.support_configs[
+                support_index
+            ]
+            amplitude *= complex(block.amplitudes[support_index])
+        key = tuple(int(value) for value in complete)
+        try:
+            basis_index = lookup[key]
+        except KeyError as exc:
+            raise ValueError(
+                "a product-support configuration is absent from the supplied basis sector."
+            ) from exc
+        state[basis_index] += amplitude
+
+    norm = float(np.linalg.norm(state))
+    if norm <= tolerance:
+        raise ValueError("materialized product state has zero norm.")
+    if normalize:
+        state /= norm
+    return state
+
+
 def certify_square_qdm_periodic_product_sequence(
     unit_cell: SquareQDMPeriodicProductUnitCell,
     *,

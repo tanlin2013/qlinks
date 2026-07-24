@@ -175,6 +175,42 @@ class SquareQDMWitnessPlacement:
             },
         )
 
+    def instantiate_on_model(
+        self,
+        model: SquareQDMModel,
+        *,
+        origin_x: int = 0,
+        origin_y: int = 0,
+    ) -> LocalWitness:
+        """Embed the normalized strip placement in a finite square-QDM model."""
+        lattice = model.lattice
+        if not isinstance(lattice, SquareLattice):
+            raise TypeError("model must use SquareLattice geometry.")
+        if int(lattice.ly) != int(self.circumference):
+            raise ValueError("the finite model circumference must match the witness placement.")
+        periodic = lattice.boundary_condition == BoundaryCondition.PERIODIC
+        lookup: dict[tuple[int, int, str], int] = {}
+        for link in lattice.links:
+            source_cell = lattice.sites[int(link.source)].cell
+            lookup[(int(source_cell[0]), int(source_cell[1]), str(link.kind))] = int(link.id)
+
+        variable_indices: list[int] = []
+        for coordinate in self.link_coordinates:
+            x = int(origin_x) + int(coordinate.x)
+            y = int(origin_y) + int(coordinate.y)
+            if periodic:
+                x %= int(lattice.lx)
+                y %= int(lattice.ly)
+            key = (x, y, str(coordinate.kind))
+            try:
+                link_id = lookup[key]
+            except KeyError as exc:
+                raise ValueError(
+                    f"witness coordinate {key!r} does not exist in the finite model."
+                ) from exc
+            variable_indices.append(int(model.layout.link_variable_index(link_id)))
+        return self.template.instantiate(tuple(variable_indices))
+
     @classmethod
     def from_local_witness(
         cls,

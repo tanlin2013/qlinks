@@ -540,6 +540,7 @@ class Quasi1DAuditReport:
 
     points: tuple[Quasi1DSequencePoint, ...]
     energy_density_mismatch: float | None
+    thermal_comparison: Literal["beta_zero", "energy_matched_microcanonical"]
     level_gap_ratio: float | None
     zero_mode_fraction: float | None
     issues: tuple[str, ...]
@@ -573,6 +574,7 @@ class Quasi1DAuditReport:
             "has_bounded_witness": self.has_bounded_witness,
             "has_positive_thermal_activity": self.has_positive_thermal_activity,
             "energy_density_mismatch": self.energy_density_mismatch,
+            "thermal_comparison": self.thermal_comparison,
             "level_gap_ratio": self.level_gap_ratio,
             "zero_mode_fraction": self.zero_mode_fraction,
             "issues": self.issues,
@@ -585,6 +587,7 @@ def audit_quasi_1d_sequence(
     points: Sequence[Quasi1DSequencePoint],
     *,
     energy_density_mismatch: float | None = None,
+    thermal_comparison: Literal["beta_zero", "energy_matched_microcanonical"] = "beta_zero",
     level_gap_ratio: float | None = None,
     zero_mode_fraction: float | None = None,
     tolerance: float = 1.0e-9,
@@ -592,6 +595,8 @@ def audit_quasi_1d_sequence(
     """Separate exact quasi-1D results from unresolved ETH/topology claims."""
     if tolerance <= 0.0:
         raise ValueError("tolerance must be positive.")
+    if thermal_comparison not in {"beta_zero", "energy_matched_microcanonical"}:
+        raise ValueError("thermal_comparison must be beta_zero or energy_matched_microcanonical.")
     ordered = tuple(sorted(points, key=lambda point: point.length))
     if not ordered:
         raise ValueError("points must not be empty.")
@@ -662,12 +667,17 @@ def audit_quasi_1d_sequence(
 
     if energy_density_mismatch is not None:
         if abs(energy_density_mismatch) <= tolerance:
-            established.append("scar energy density matched to the beta-zero ensemble")
-        else:
+            if thermal_comparison == "beta_zero":
+                established.append("scar energy density matched to the beta-zero ensemble")
+            else:
+                established.append("microcanonical window centered at the scar energy")
+        elif thermal_comparison == "beta_zero":
             issues.append(
                 "The scar energy density is not at beta zero; "
                 "a finite-temperature microcanonical comparison is required."
             )
+        else:
+            issues.append("The reported microcanonical window is not centered at the scar energy.")
 
     if zero_mode_fraction is not None and zero_mode_fraction > 0.05:
         issues.append(
@@ -692,6 +702,7 @@ def audit_quasi_1d_sequence(
     return Quasi1DAuditReport(
         points=ordered,
         energy_density_mismatch=energy_density_mismatch,
+        thermal_comparison=thermal_comparison,
         level_gap_ratio=level_gap_ratio,
         zero_mode_fraction=zero_mode_fraction,
         issues=tuple(issues),

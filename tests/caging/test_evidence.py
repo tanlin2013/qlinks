@@ -95,6 +95,26 @@ def test_quasi_one_dimensional_audit_flags_fixed_width_and_codimension() -> None
     assert any("finite-temperature" in issue for issue in report.issues)
 
 
+def test_quasi_one_dimensional_audit_accepts_energy_matched_microcanonical() -> None:
+    points = (
+        Quasi1DSequencePoint(
+            length=8,
+            width=4,
+            exact_residual=1.0e-12,
+            witness_radius=1.0,
+            thermal_second_moment=0.2,
+        ),
+    )
+    report = audit_quasi_1d_sequence(
+        points,
+        energy_density_mismatch=0.0,
+        thermal_comparison="energy_matched_microcanonical",
+    )
+    assert report.thermal_comparison == "energy_matched_microcanonical"
+    assert "microcanonical window centered at the scar energy" in report.established
+    assert not any("beta-zero" in statement for statement in report.established)
+
+
 def test_operator_coefficient_compatibility_distinguishes_fixed_vectors() -> None:
     from qlinks.caging import operator_coefficient_compatibility
 

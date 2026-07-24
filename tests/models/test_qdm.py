@@ -383,3 +383,52 @@ def test_kagome_qdm_builds_and_bitmask_matches_sparse() -> None:
     assert sparse.basis.n_states == 128
     assert sparse.hamiltonian.nnz > 0
     assert (sparse.hamiltonian - bitmask.hamiltonian).nnz == 0
+
+
+def test_square_qdm_link_gauge_peierls_couplings_are_unitarily_equivalent() -> None:
+    from qlinks.basis.configs import basis_configs_from_build_result
+    from qlinks.caging import product_basis_diagonal_phase_factors
+    from qlinks.models import (
+        qdm_peierls_couplings_from_link_phases,
+        qdm_plaquette_link_gauge_matrix,
+    )
+
+    base_model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=1.0,
+        coup_pot=0.0,
+    )
+    rng = np.random.default_rng(84)
+    link_phases = rng.normal(scale=0.2, size=base_model.lattice.num_links)
+    incidence = qdm_plaquette_link_gauge_matrix(base_model.lattice)
+    assert incidence.shape == (16, 32)
+    assert np.linalg.matrix_rank(incidence, tol=1.0e-10) == 15
+
+    phase_model = SquareQDMModel(
+        lx=4,
+        ly=4,
+        boundary_condition="periodic",
+        winding_x=0,
+        winding_y=0,
+        winding_convention="electric",
+        coup_kin=qdm_peierls_couplings_from_link_phases(
+            base_model.lattice,
+            link_phases,
+        ),
+        coup_pot=0.0,
+    )
+    base = base_model.build(builder="sparse", basis_solver="dfs", sort_basis=True)
+    phased = phase_model.build(builder="sparse", basis_solver="dfs", sort_basis=True)
+    np.testing.assert_array_equal(base.basis.states, phased.basis.states)
+
+    factors = product_basis_diagonal_phase_factors(
+        basis_configs_from_build_result(base),
+        link_phases,
+    )
+    transported = base.hamiltonian.multiply(factors[:, None]).multiply(factors.conj()[None, :])
+    assert_sparse_allclose(phased.hamiltonian, transported, atol=1.0e-11)

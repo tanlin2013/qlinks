@@ -22,6 +22,8 @@ from qlinks.models.couplings import (
     is_zero_coupling,
     peierls_plaquette_coupling,
     plaquette_coupling_value,
+    qdm_peierls_couplings_from_link_phases,
+    qdm_plaquette_link_gauge_matrix,
 )
 from qlinks.models.local_terms import (
     LocalOperatorKind,
@@ -100,6 +102,8 @@ __all__ = [
     "normalize_sector_labels_for_display",
     "peierls_plaquette_coupling",
     "plaquette_coupling_value",
+    "qdm_peierls_couplings_from_link_phases",
+    "qdm_plaquette_link_gauge_matrix",
     "solve_basis",
     "spin_one_xy_fixed_magnetization_dimension",
     "spin_one_xy_periodic_range_couplings",

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
+from itertools import product
 from typing import Literal
 
 import numpy as np
@@ -94,6 +95,82 @@ class MicrocanonicalWindowSelection:
             "energy_max": self.energy_max,
             "mean_energy": self.mean_energy,
             "center_offset": self.center_offset,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ThermodynamicEnergyWindowPlan:
+    """Size-scaled energy window for a thermodynamic microcanonical sequence.
+
+    A width ``Delta E_L = c * epsilon * volume**alpha`` with ``alpha < 1``
+    has a vanishing energy-density width.  The default ``alpha=1/2`` is the
+    square-root-volume choice used in the manuscript notebooks.
+    """
+
+    volume: int
+    energy_density: float
+    target_energy: float
+    half_width: float
+    energy_density_half_width: float
+    width_prefactor: float
+    local_energy_scale: float
+    width_exponent: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "volume": self.volume,
+            "energy_density": self.energy_density,
+            "target_energy": self.target_energy,
+            "half_width": self.half_width,
+            "energy_density_half_width": self.energy_density_half_width,
+            "width_prefactor": self.width_prefactor,
+            "local_energy_scale": self.local_energy_scale,
+            "width_exponent": self.width_exponent,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SpectralObservableMoments:
+    """First two measurement moments of one Hermitian observable."""
+
+    mean: float
+    second_moment: float
+    variance: float
+    n_states: int
+    effective_state_count: float
+    minimum_expectation: float
+    maximum_expectation: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "mean": self.mean,
+            "second_moment": self.second_moment,
+            "variance": self.variance,
+            "n_states": self.n_states,
+            "effective_state_count": self.effective_state_count,
+            "minimum_expectation": self.minimum_expectation,
+            "maximum_expectation": self.maximum_expectation,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SmoothSpectralFilter:
+    """Normalized smooth energy-filter weights and their diagnostics."""
+
+    weights: tuple[float, ...]
+    target_energy: float
+    sigma: float
+    mean_energy: float
+    energy_variance: float
+    effective_state_count: float
+
+    def to_summary_dict(self) -> dict[str, object]:
+        return {
+            "target_energy": self.target_energy,
+            "sigma": self.sigma,
+            "mean_energy": self.mean_energy,
+            "energy_variance": self.energy_variance,
+            "effective_state_count": self.effective_state_count,
         }
 
 
@@ -301,6 +378,124 @@ def cyclic_symmetry_sector_basis(
     )
 
 
+def commuting_cyclic_symmetry_sector_basis(
+    index_permutations: Sequence[npt.ArrayLike],
+    *,
+    orders: Sequence[int],
+    momentum_indices: Sequence[int],
+    labels: dict[str, object] | None = None,
+    tolerance: float = 1.0e-10,
+) -> SymmetrySectorBasis:
+    """Build a simultaneous character basis for commuting cyclic permutations.
+
+    This is the finite Abelian-group extension of
+    :func:`cyclic_symmetry_sector_basis`.  It is particularly useful for the
+    two translation generators of a periodic lattice.  One normalized Fourier
+    vector is produced for every compatible group orbit.
+    """
+    permutations = tuple(
+        np.asarray(value, dtype=np.int64).reshape(-1) for value in index_permutations
+    )
+    orders_tuple = tuple(int(value) for value in orders)
+    momenta_tuple = tuple(int(value) for value in momentum_indices)
+    if not permutations:
+        raise ValueError("index_permutations must not be empty.")
+    if len(permutations) != len(orders_tuple) or len(permutations) != len(momenta_tuple):
+        raise ValueError("permutations, orders, and momentum_indices must have equal length.")
+    n = permutations[0].size
+    if any(permutation.size != n for permutation in permutations):
+        raise ValueError("all permutations must have the same size.")
+    for permutation, order in zip(permutations, orders_tuple, strict=True):
+        if order <= 0:
+            raise ValueError("orders must be positive.")
+        if np.unique(permutation).size != n or np.any(permutation < 0) or np.any(permutation >= n):
+            raise ValueError("each index permutation must permute range(n).")
+        current = np.arange(n, dtype=np.int64)
+        for _ in range(order):
+            current = permutation[current]
+        if not np.array_equal(current, np.arange(n, dtype=np.int64)):
+            raise ValueError("a permutation does not close at its declared order.")
+    for left in range(len(permutations)):
+        for right in range(left + 1, len(permutations)):
+            if not np.array_equal(
+                permutations[left][permutations[right]],
+                permutations[right][permutations[left]],
+            ):
+                raise ValueError("the cyclic permutations must commute.")
+
+    powers: list[tuple[npt.NDArray[np.int64], ...]] = []
+    identity = np.arange(n, dtype=np.int64)
+    for permutation, order in zip(permutations, orders_tuple, strict=True):
+        local = [identity]
+        for _ in range(1, order):
+            local.append(permutation[local[-1]])
+        powers.append(tuple(local))
+
+    momenta = tuple(
+        2.0 * np.pi * (momentum % order) / float(order)
+        for momentum, order in zip(momenta_tuple, orders_tuple, strict=True)
+    )
+    visited = np.zeros(n, dtype=bool)
+    rows: list[int] = []
+    columns: list[int] = []
+    data: list[complex] = []
+    orbit_sizes: list[int] = []
+    column = 0
+    group_ranges = tuple(range(order) for order in orders_tuple)
+
+    for seed in range(n):
+        if visited[seed]:
+            continue
+        coefficient_by_state: dict[int, complex] = {}
+        orbit: set[int] = set()
+        for exponents in product(*group_ranges):
+            state = int(seed)
+            phase_angle = 0.0
+            for generator_index, exponent in enumerate(exponents):
+                state = int(powers[generator_index][exponent][state])
+                phase_angle += momenta[generator_index] * exponent
+            orbit.add(state)
+            coefficient_by_state[state] = coefficient_by_state.get(state, 0.0j) + np.exp(
+                -1.0j * phase_angle
+            )
+        for state in orbit:
+            visited[state] = True
+        norm = float(np.sqrt(sum(abs(value) ** 2 for value in coefficient_by_state.values())))
+        if norm <= tolerance:
+            continue
+        for state, coefficient in coefficient_by_state.items():
+            if abs(coefficient) <= tolerance:
+                continue
+            rows.append(int(state))
+            columns.append(column)
+            data.append(complex(coefficient / norm))
+        orbit_sizes.append(len(orbit))
+        column += 1
+
+    basis = sp.csr_array(
+        (np.asarray(data, dtype=np.complex128), (rows, columns)),
+        shape=(n, column),
+    )
+    gram = basis.conj().T @ basis
+    residual = float(sp.linalg.norm(gram - sp.eye(column, dtype=np.complex128, format="csr")))
+    sector_labels = {} if labels is None else dict(labels)
+    sector_labels.update(
+        {
+            "cyclic_orders": orders_tuple,
+            "momentum_indices": tuple(
+                momentum % order
+                for momentum, order in zip(momenta_tuple, orders_tuple, strict=True)
+            ),
+            "orbit_sizes": tuple(int(value) for value in orbit_sizes),
+        }
+    )
+    return SymmetrySectorBasis(
+        basis=basis,
+        labels=sector_labels,
+        unitarity_residual=residual,
+    )
+
+
 def refine_sector_by_involution(
     sector: SymmetrySectorBasis,
     involution_index_permutation: npt.ArrayLike,
@@ -382,6 +577,242 @@ def lift_state_from_sector(
     if vector.size != basis.shape[1]:
         raise ValueError("sector state has incompatible dimension.")
     return np.asarray(basis @ vector, dtype=np.complex128).reshape(-1)
+
+
+def thermodynamic_energy_window_plan(
+    *,
+    volume: int,
+    energy_density: float,
+    width_prefactor: float = 1.0,
+    local_energy_scale: float = 1.0,
+    width_exponent: float = 0.5,
+) -> ThermodynamicEnergyWindowPlan:
+    """Return a subextensive microcanonical energy-window plan.
+
+    The window is centered at ``E_L = e * volume`` and has half-width
+    ``width_prefactor * local_energy_scale * volume**width_exponent``.
+    ``0 <= width_exponent < 1`` guarantees a vanishing energy-density width.
+    Whether the number of states in the window grows must be checked from the
+    spectrum; it is not implied by this kinematic scaling alone.
+    """
+    if volume <= 0:
+        raise ValueError("volume must be positive.")
+    if not np.isfinite(energy_density):
+        raise ValueError("energy_density must be finite.")
+    if not np.isfinite(width_prefactor) or width_prefactor <= 0.0:
+        raise ValueError("width_prefactor must be finite and positive.")
+    if not np.isfinite(local_energy_scale) or local_energy_scale <= 0.0:
+        raise ValueError("local_energy_scale must be finite and positive.")
+    if not np.isfinite(width_exponent) or not 0.0 <= width_exponent < 1.0:
+        raise ValueError("width_exponent must satisfy 0 <= exponent < 1.")
+    target = float(energy_density) * int(volume)
+    half_width = (
+        float(width_prefactor) * float(local_energy_scale) * float(volume) ** float(width_exponent)
+    )
+    return ThermodynamicEnergyWindowPlan(
+        volume=int(volume),
+        energy_density=float(energy_density),
+        target_energy=float(target),
+        half_width=float(half_width),
+        energy_density_half_width=float(half_width / float(volume)),
+        width_prefactor=float(width_prefactor),
+        local_energy_scale=float(local_energy_scale),
+        width_exponent=float(width_exponent),
+    )
+
+
+def select_microcanonical_window_by_width(
+    eigenvalues: npt.ArrayLike,
+    *,
+    target_energy: float,
+    half_width: float,
+    exclude_indices: Sequence[int] = (),
+    degeneracy_tolerance: float = 1.0e-10,
+) -> MicrocanonicalWindowSelection:
+    """Select every level in a prescribed energy interval.
+
+    Exact degeneracies at the interval boundary are retained by the tolerance.
+    The returned ``half_width`` is the largest actual distance of a retained
+    level from the target; the requested width remains known to the caller via
+    its thermodynamic window plan.
+    """
+    energies = np.asarray(eigenvalues, dtype=np.float64).reshape(-1)
+    if not np.isfinite(target_energy):
+        raise ValueError("target_energy must be finite.")
+    if not np.isfinite(half_width) or half_width < 0.0:
+        raise ValueError("half_width must be finite and non-negative.")
+    if degeneracy_tolerance < 0.0:
+        raise ValueError("degeneracy_tolerance must be non-negative.")
+    excluded = {int(index) for index in exclude_indices}
+    if any(index < 0 or index >= energies.size for index in excluded):
+        raise IndexError("exclude_indices contains an out-of-range level index.")
+    mask = np.abs(energies - float(target_energy)) <= (
+        float(half_width) + float(degeneracy_tolerance)
+    )
+    if excluded:
+        mask[np.fromiter(excluded, dtype=np.int64)] = False
+    selected = np.flatnonzero(mask)
+    if selected.size == 0:
+        raise ValueError("the prescribed microcanonical window contains no states.")
+    selected_energies = energies[selected]
+    actual_half_width = float(np.max(np.abs(selected_energies - float(target_energy))))
+    return MicrocanonicalWindowSelection(
+        indices=tuple(int(index) for index in selected),
+        target_energy=float(target_energy),
+        half_width=actual_half_width,
+        energy_min=float(np.min(selected_energies)),
+        energy_max=float(np.max(selected_energies)),
+        mean_energy=float(np.mean(selected_energies)),
+        center_offset=float(np.mean(selected_energies) - float(target_energy)),
+    )
+
+
+def gaussian_spectral_filter(
+    eigenvalues: npt.ArrayLike,
+    *,
+    target_energy: float,
+    sigma: float,
+    cutoff_sigma: float | None = 6.0,
+) -> SmoothSpectralFilter:
+    """Return normalized Gaussian weights centered on ``target_energy``."""
+    energies = np.asarray(eigenvalues, dtype=np.float64).reshape(-1)
+    if energies.size == 0:
+        raise ValueError("eigenvalues must not be empty.")
+    if not np.isfinite(target_energy):
+        raise ValueError("target_energy must be finite.")
+    if not np.isfinite(sigma) or sigma <= 0.0:
+        raise ValueError("sigma must be finite and positive.")
+    scaled = (energies - float(target_energy)) / float(sigma)
+    weights = np.exp(-0.5 * scaled**2)
+    if cutoff_sigma is not None:
+        if not np.isfinite(cutoff_sigma) or cutoff_sigma <= 0.0:
+            raise ValueError("cutoff_sigma must be finite and positive when supplied.")
+        weights[np.abs(scaled) > float(cutoff_sigma)] = 0.0
+    total = float(np.sum(weights))
+    if not np.isfinite(total) or total <= 0.0:
+        raise ValueError("Gaussian filter has zero numerical weight.")
+    weights /= total
+    mean_energy = float(np.dot(weights, energies))
+    variance = float(np.dot(weights, (energies - mean_energy) ** 2))
+    effective = float(1.0 / np.sum(weights**2))
+    return SmoothSpectralFilter(
+        weights=tuple(float(value) for value in weights),
+        target_energy=float(target_energy),
+        sigma=float(sigma),
+        mean_energy=mean_energy,
+        energy_variance=max(variance, 0.0),
+        effective_state_count=effective,
+    )
+
+
+def spectral_observable_moments(
+    operator: MatrixLike,
+    eigenvectors: npt.ArrayLike,
+    *,
+    squared_operator: MatrixLike | None = None,
+    indices: Sequence[int] | None = None,
+    weights: npt.ArrayLike | None = None,
+    hermiticity_tolerance: float = 1.0e-10,
+) -> SpectralObservableMoments:
+    """Evaluate ``Tr(rho O)``, ``Tr(rho O^2)``, and measurement variance.
+
+    ``eigenvectors`` are columns. The state is an equal-weight mixture over
+    ``indices`` unless explicit non-negative normalized ``weights`` are given.
+
+    ``squared_operator`` is useful after symmetry projection. For a local
+    observable that does not preserve the resolved symmetry sector, the
+    correct second moment is ``P O^2 P``, not ``(P O P)^2``. Supply the former
+    as ``squared_operator``. When omitted, the function uses the action norm
+    and therefore evaluates the square of the supplied ``operator``.
+    """
+    vectors = np.asarray(eigenvectors, dtype=np.complex128)
+    if vectors.ndim != 2 or vectors.shape[0] != operator.shape[0]:
+        raise ValueError("eigenvectors must have shape (dimension, n_states).")
+    if sp.issparse(operator):
+        anti = operator - operator.conj().T
+        anti_norm = float(sp.linalg.norm(anti))
+    else:
+        dense = np.asarray(operator, dtype=np.complex128)
+        anti_norm = float(np.linalg.norm(dense - dense.conj().T))
+    if anti_norm > hermiticity_tolerance:
+        raise ValueError("operator must be Hermitian at the stated tolerance.")
+
+    if indices is None:
+        selected = np.arange(vectors.shape[1], dtype=np.int64)
+    else:
+        selected = np.asarray(tuple(int(index) for index in indices), dtype=np.int64)
+        if selected.size == 0:
+            raise ValueError("indices must not be empty.")
+        if np.any(selected < 0) or np.any(selected >= vectors.shape[1]):
+            raise IndexError("indices contains an out-of-range eigenvector index.")
+    selected_vectors = vectors[:, selected]
+    actions = np.asarray(operator @ selected_vectors, dtype=np.complex128)
+    per_mean = np.einsum("ij,ij->j", selected_vectors.conj(), actions).real
+    if squared_operator is None:
+        per_second = np.einsum("ij,ij->j", actions.conj(), actions).real
+    else:
+        if squared_operator.shape != operator.shape:
+            raise ValueError("squared_operator must have the same shape as operator.")
+        if sp.issparse(squared_operator):
+            squared_anti = squared_operator - squared_operator.conj().T
+            squared_anti_norm = float(sp.linalg.norm(squared_anti))
+        else:
+            squared_dense = np.asarray(squared_operator, dtype=np.complex128)
+            squared_anti_norm = float(np.linalg.norm(squared_dense - squared_dense.conj().T))
+        if squared_anti_norm > hermiticity_tolerance:
+            raise ValueError("squared_operator must be Hermitian at the stated tolerance.")
+        squared_actions = np.asarray(
+            squared_operator @ selected_vectors,
+            dtype=np.complex128,
+        )
+        per_second = np.einsum(
+            "ij,ij->j",
+            selected_vectors.conj(),
+            squared_actions,
+        ).real
+
+    if weights is None:
+        normalized_weights = np.full(selected.size, 1.0 / selected.size, dtype=np.float64)
+    else:
+        normalized_weights = np.asarray(weights, dtype=np.float64).reshape(-1)
+        if normalized_weights.size == vectors.shape[1] and selected.size != vectors.shape[1]:
+            normalized_weights = normalized_weights[selected]
+        if normalized_weights.size != selected.size:
+            raise ValueError("weights must match the selected state count or all eigenvectors.")
+        if np.any(normalized_weights < 0.0) or not np.all(np.isfinite(normalized_weights)):
+            raise ValueError("weights must be finite and non-negative.")
+        total = float(np.sum(normalized_weights))
+        if total <= 0.0:
+            raise ValueError("weights must have a positive sum.")
+        normalized_weights = normalized_weights / total
+
+    mean = float(np.dot(normalized_weights, per_mean))
+    second = float(np.dot(normalized_weights, per_second))
+    variance = float(max(second - mean**2, 0.0))
+    effective = float(1.0 / np.sum(normalized_weights**2))
+    return SpectralObservableMoments(
+        mean=mean,
+        second_moment=second,
+        variance=variance,
+        n_states=int(selected.size),
+        effective_state_count=effective,
+        minimum_expectation=float(np.min(per_mean)),
+        maximum_expectation=float(np.max(per_mean)),
+    )
+
+
+def product_basis_diagonal_phase_factors(
+    basis_configs: npt.ArrayLike,
+    local_phases: npt.ArrayLike,
+) -> npt.NDArray[np.complex128]:
+    """Return ``exp(i sum_j theta_j n_j)`` for product-basis configurations."""
+    configs = np.asarray(basis_configs, dtype=np.float64)
+    phases = np.asarray(local_phases, dtype=np.float64).reshape(-1)
+    if configs.ndim != 2 or configs.shape[1] != phases.size:
+        raise ValueError("basis_configs and local_phases have incompatible shapes.")
+    if not np.all(np.isfinite(configs)) or not np.all(np.isfinite(phases)):
+        raise ValueError("basis_configs and local_phases must be finite.")
+    return np.exp(1.0j * (configs @ phases)).astype(np.complex128, copy=False)
 
 
 def select_microcanonical_window_by_count(

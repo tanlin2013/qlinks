@@ -128,3 +128,64 @@ def is_zero_coupling(
         == 0
         for plaquette_id in plaquette_ids
     )
+
+
+def qdm_plaquette_link_gauge_matrix(
+    lattice,
+    plaquette_ids: list[int] | tuple[int, ...] | None = None,
+) -> np.ndarray:
+    """Return the link-to-Peierls-phase incidence matrix for QDM flips.
+
+    For the QDM convention ``1010 -> 0101``, a diagonal link-gauge unitary
+    ``exp(i sum_l theta_l n_l)`` changes the forward plaquette-flip phase by
+
+    ``phi_p = theta_1 + theta_3 - theta_0 - theta_2``
+
+    in the plaquette-link ordering supplied by the lattice.
+    """
+    selected = (
+        tuple(int(value) for value in lattice.plaquette_ids)
+        if plaquette_ids is None
+        else tuple(int(value) for value in plaquette_ids)
+    )
+    matrix = np.zeros((len(selected), int(lattice.num_links)), dtype=np.float64)
+    for row, plaquette_id in enumerate(selected):
+        links = tuple(int(value) for value in lattice.plaquette_links(plaquette_id))
+        if len(links) != 4:
+            raise ValueError("QDM link-gauge phases currently require four-link plaquettes.")
+        matrix[row, links[0]] = -1.0
+        matrix[row, links[2]] = -1.0
+        matrix[row, links[1]] = 1.0
+        matrix[row, links[3]] = 1.0
+    return matrix
+
+
+def qdm_peierls_couplings_from_link_phases(
+    lattice,
+    link_phases,
+    *,
+    amplitude: complex = 1.0,
+    plaquette_ids: list[int] | tuple[int, ...] | None = None,
+) -> dict[int, DirectedPlaquetteCoupling]:
+    """Construct a gauge-generated Hermitian Peierls coupling map.
+
+    The returned Hamiltonian is related to the zero-link-phase Hamiltonian by
+    a diagonal product-basis unitary.  It therefore has the same spectrum, and
+    every eigenstate and local witness can be transported covariantly.
+    """
+    phases = np.asarray(link_phases, dtype=np.float64).reshape(-1)
+    if phases.size != int(lattice.num_links):
+        raise ValueError("link_phases must contain one phase per lattice link.")
+    if not np.all(np.isfinite(phases)):
+        raise ValueError("link_phases must be finite.")
+    selected = (
+        tuple(int(value) for value in lattice.plaquette_ids)
+        if plaquette_ids is None
+        else tuple(int(value) for value in plaquette_ids)
+    )
+    incidence = qdm_plaquette_link_gauge_matrix(lattice, selected)
+    plaquette_phases = incidence @ phases
+    return {
+        plaquette_id: peierls_plaquette_coupling(amplitude, float(phase))
+        for plaquette_id, phase in zip(selected, plaquette_phases, strict=True)
+    }
