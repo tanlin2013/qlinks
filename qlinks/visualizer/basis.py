@@ -92,9 +92,13 @@ class _BasisVisualizerThemeDefaults:
 
     style: LinkVisualStyle
     with_site_labels: bool
+    with_coordinate_labels: bool
     axes_padding: float
     panel_size: float
     title_fontsize: float | None
+    coordinate_label_fontsize: float | None
+    coordinate_axis_label_fontsize: float | None
+    coordinate_label_color: str
     qdm_filled_flippable_color: str
     qdm_hollow_flippable_color: str
     qdm_vulnerable_color: str | None
@@ -109,9 +113,13 @@ def _basis_visualizer_theme_defaults(
         return _BasisVisualizerThemeDefaults(
             style=LinkVisualStyle(),
             with_site_labels=True,
+            with_coordinate_labels=False,
             axes_padding=0.5,
             panel_size=3.0,
             title_fontsize=None,
+            coordinate_label_fontsize=None,
+            coordinate_axis_label_fontsize=None,
+            coordinate_label_color="0.30",
             qdm_filled_flippable_color="blue",
             qdm_hollow_flippable_color="red",
             qdm_vulnerable_color=None,
@@ -142,9 +150,13 @@ def _basis_visualizer_theme_defaults(
                 vulnerable_link_arrow_length_fraction=0.95,
             ),
             with_site_labels=False,
+            with_coordinate_labels=False,
             axes_padding=0.18,
             panel_size=2.35,
             title_fontsize=8.0,
+            coordinate_label_fontsize=8.5,
+            coordinate_axis_label_fontsize=11.0,
+            coordinate_label_color="0.25",
             qdm_filled_flippable_color="#0072B2",
             qdm_hollow_flippable_color="#D55E00",
             qdm_vulnerable_color="0.45",
@@ -698,6 +710,7 @@ class BasisConfigurationVisualizer:
         backend: VisualizerBackend = "matplotlib",
         mode: LinkPlotMode = "auto",
         with_site_labels: bool | None = None,
+        with_coordinate_labels: bool | None = None,
         with_site_values: bool = False,
         with_link_values: bool = False,
         with_link_ids: bool = False,
@@ -736,6 +749,8 @@ class BasisConfigurationVisualizer:
 
         if with_site_labels is None:
             with_site_labels = self._theme_defaults.with_site_labels
+        if with_coordinate_labels is None:
+            with_coordinate_labels = self._theme_defaults.with_coordinate_labels
 
         resolved_mode = self._resolve_link_plot_mode(
             config=config,
@@ -762,6 +777,7 @@ class BasisConfigurationVisualizer:
             backend=backend,
             mode=resolved_mode,
             with_site_labels=with_site_labels,
+            with_coordinate_labels=with_coordinate_labels,
             with_site_values=with_site_values,
             with_link_values=with_link_values,
             with_link_ids=with_link_ids,
@@ -810,6 +826,7 @@ class BasisConfigurationVisualizer:
         backend: VisualizerBackend = "matplotlib",
         mode: LinkPlotMode = "auto",
         with_site_labels: bool = True,
+        with_coordinate_labels: bool = False,
         with_site_values: bool = False,
         with_link_values: bool = False,
         with_link_ids: bool = False,
@@ -876,7 +893,12 @@ class BasisConfigurationVisualizer:
                 title=None,
             )
 
-        self._finish_axes(ax, title=title)
+        self._finish_axes(
+            ax,
+            title=title,
+            with_coordinate_labels=with_coordinate_labels,
+            draw_nodes=draw_nodes,
+        )
 
         if show:
             plt.show()
@@ -892,6 +914,7 @@ class BasisConfigurationVisualizer:
         show: bool = True,
         backend: VisualizerBackend = "matplotlib",
         with_site_labels: bool = True,
+        with_coordinate_labels: bool = False,
         with_site_values: bool = False,
         with_link_values: bool = False,
         with_link_ids: bool = False,
@@ -953,7 +976,12 @@ class BasisConfigurationVisualizer:
                     plaquette_symbol_values=plaquette_symbol_values,
                 )
 
-        self._finish_axes(ax, title=title)
+        self._finish_axes(
+            ax,
+            title=title,
+            with_coordinate_labels=with_coordinate_labels,
+            draw_nodes=render_cache.draw_nodes,
+        )
 
         if show:
             plt.show()
@@ -972,6 +1000,7 @@ class BasisConfigurationVisualizer:
         show: bool = True,
         backend: VisualizerBackend = "matplotlib",
         with_site_labels: bool = True,
+        with_coordinate_labels: bool = False,
         with_site_values: bool = False,
         with_link_values: bool = False,
         with_link_ids: bool = False,
@@ -1039,7 +1068,12 @@ class BasisConfigurationVisualizer:
                 plaquette_symbol_values=plaquette_symbol_values,
             )
 
-        self._finish_axes(ax, title=title)
+        self._finish_axes(
+            ax,
+            title=title,
+            with_coordinate_labels=with_coordinate_labels,
+            draw_nodes=render_cache.draw_nodes,
+        )
 
         if show:
             plt.show()
@@ -3975,7 +4009,14 @@ class BasisConfigurationVisualizer:
         bits = [1 if value > 0 else 0 for value in values]
         return "".join(str(bit) for bit in bits)
 
-    def _finish_axes(self, ax, *, title: str | None) -> None:
+    def _finish_axes(
+        self,
+        ax,
+        *,
+        title: str | None,
+        with_coordinate_labels: bool = False,
+        draw_nodes: Sequence[_DrawNode] | None = None,
+    ) -> None:
         ax.set_aspect("equal", adjustable="box")
         ax.axis("off")
 
@@ -3991,6 +4032,9 @@ class BasisConfigurationVisualizer:
             padding=self._theme_defaults.axes_padding,
         )
 
+        if with_coordinate_labels and draw_nodes:
+            self._draw_coordinate_labels(ax, draw_nodes=draw_nodes)
+
     @staticmethod
     def _autoscale_with_padding(ax, padding: float = 0.5) -> None:
         xlim = ax.get_xlim()
@@ -3998,6 +4042,165 @@ class BasisConfigurationVisualizer:
 
         ax.set_xlim(xlim[0] - padding, xlim[1] + padding)
         ax.set_ylim(ylim[0] - padding, ylim[1] + padding)
+
+    def _draw_coordinate_labels(
+        self,
+        ax,
+        *,
+        draw_nodes: Sequence[_DrawNode],
+    ) -> None:
+        annotation_data = self._coordinate_annotation_data(draw_nodes)
+        if annotation_data is None:
+            return
+
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+        span_x = max(float(xlim[1] - xlim[0]), 1e-9)
+        span_y = max(float(ylim[1] - ylim[0]), 1e-9)
+
+        label_color = self._theme_defaults.coordinate_label_color
+        label_fontsize = self._resolved_coordinate_label_fontsize()
+        axis_label_fontsize = self._resolved_coordinate_axis_label_fontsize()
+
+        bottom_offset = 0.08 * span_y
+        left_offset = 0.08 * span_x
+        axis_extra_x = 0.05 * span_x
+        axis_extra_y = 0.05 * span_y
+
+        label_y = annotation_data["min_y"] - bottom_offset
+        label_x = annotation_data["min_x"] - left_offset
+
+        x_label_positions = [annotation_data["min_x"]]
+        y_label_positions = [annotation_data["min_y"]]
+
+        for x_pos, label in annotation_data["x_labels"]:
+            ax.text(
+                x_pos,
+                label_y,
+                str(label),
+                ha="center",
+                va="top",
+                fontsize=label_fontsize,
+                color=label_color,
+                clip_on=False,
+            )
+            x_label_positions.append(float(x_pos))
+
+        if self.lattice.ndim >= 2:
+            for y_pos, label in annotation_data["y_labels"]:
+                ax.text(
+                    label_x,
+                    y_pos,
+                    str(label),
+                    ha="right",
+                    va="center",
+                    fontsize=label_fontsize,
+                    color=label_color,
+                    clip_on=False,
+                )
+                y_label_positions.append(float(y_pos))
+
+        axis_text_positions_x = list(x_label_positions)
+        axis_text_positions_y = list(y_label_positions)
+
+        if annotation_data["x_labels"]:
+            ax.text(
+                max(x_label_positions) + axis_extra_x,
+                label_y,
+                r"$x$",
+                ha="left",
+                va="top",
+                fontsize=axis_label_fontsize,
+                color=label_color,
+                clip_on=False,
+            )
+            axis_text_positions_x.append(max(x_label_positions) + axis_extra_x)
+
+        if self.lattice.ndim >= 2 and annotation_data["y_labels"]:
+            ax.text(
+                label_x,
+                max(y_label_positions) + axis_extra_y,
+                r"$y$",
+                ha="right",
+                va="bottom",
+                fontsize=axis_label_fontsize,
+                color=label_color,
+                clip_on=False,
+            )
+            axis_text_positions_y.append(max(y_label_positions) + axis_extra_y)
+
+        new_xlim = (
+            min(float(xlim[0]), label_x - 0.5 * left_offset),
+            max(float(xlim[1]), max(axis_text_positions_x) + 0.6 * axis_extra_x),
+        )
+        new_ylim = (
+            min(float(ylim[0]), label_y - 0.6 * bottom_offset),
+            max(float(ylim[1]), max(axis_text_positions_y) + 0.6 * axis_extra_y),
+        )
+        ax.set_xlim(*new_xlim)
+        ax.set_ylim(*new_ylim)
+
+    def _coordinate_annotation_data(
+        self,
+        draw_nodes: Sequence[_DrawNode],
+    ) -> dict[str, Any] | None:
+        base_nodes = [
+            node for node in draw_nodes if all(int(shift) == 0 for shift in node.image_shift)
+        ]
+        if not base_nodes:
+            base_nodes = list(draw_nodes)
+
+        if not base_nodes:
+            return None
+
+        x_groups: dict[int, list[tuple[float, float]]] = {}
+        y_groups: dict[int, list[tuple[float, float]]] = {}
+        all_x: list[float] = []
+        all_y: list[float] = []
+
+        for node in base_nodes:
+            site = self.lattice.sites[int(node.site_id)]
+            cell = tuple(int(v) for v in site.cell)
+            x_coord = cell[0] if cell else 0
+            y_coord = cell[1] if len(cell) >= 2 else 0
+            x_groups.setdefault(x_coord, []).append(node.position)
+            y_groups.setdefault(y_coord, []).append(node.position)
+            all_x.append(float(node.position[0]))
+            all_y.append(float(node.position[1]))
+
+        x_labels: list[tuple[float, int]] = []
+        for x_coord in sorted(x_groups):
+            points = np.asarray(x_groups[x_coord], dtype=float)
+            min_y = float(np.min(points[:, 1]))
+            x_pos = float(np.mean(points[np.isclose(points[:, 1], min_y), 0]))
+            x_labels.append((x_pos, int(x_coord)))
+
+        y_labels: list[tuple[float, int]] = []
+        if self.lattice.ndim >= 2:
+            for y_coord in sorted(y_groups):
+                points = np.asarray(y_groups[y_coord], dtype=float)
+                min_x = float(np.min(points[:, 0]))
+                y_pos = float(np.mean(points[np.isclose(points[:, 0], min_x), 1]))
+                y_labels.append((y_pos, int(y_coord)))
+
+        return {
+            "x_labels": x_labels,
+            "y_labels": y_labels,
+            "min_x": min(all_x),
+            "min_y": min(all_y),
+        }
+
+    def _resolved_coordinate_label_fontsize(self) -> float:
+        fontsize = self._theme_defaults.coordinate_label_fontsize
+        if fontsize is not None:
+            return float(fontsize)
+        return max(self._resolved_site_label_fontsize() - 0.5, 6.0)
+
+    def _resolved_coordinate_axis_label_fontsize(self) -> float:
+        fontsize = self._theme_defaults.coordinate_axis_label_fontsize
+        if fontsize is not None:
+            return float(fontsize)
+        return self._resolved_coordinate_label_fontsize() + 1.5
 
     def _visual_cell(
         self,
@@ -4493,6 +4696,7 @@ def plot_basis_config(
     backend: VisualizerBackend = "matplotlib",
     mode: LinkPlotMode = "auto",
     with_site_labels: bool | None = None,
+    with_coordinate_labels: bool | None = None,
     with_site_values: bool = False,
     with_link_values: bool = False,
     with_link_ids: bool = False,
@@ -4530,6 +4734,7 @@ def plot_basis_config(
         backend=backend,
         mode=mode,
         with_site_labels=with_site_labels,
+        with_coordinate_labels=with_coordinate_labels,
         with_site_values=with_site_values,
         with_link_values=with_link_values,
         with_link_ids=with_link_ids,
@@ -4721,7 +4926,8 @@ class LocalBasisGridVisualizer:
 
     lattice: LatticeGraph
     layout: VariableLayout | None = None
-    style: LinkVisualStyle = field(default_factory=LinkVisualStyle)
+    style: LinkVisualStyle | None = None
+    theme: BasisVisualizerTheme = "research"
     shadow_style: LocalBasisShadowStyle = field(default_factory=LocalBasisShadowStyle)
     periodic_image_mode: PeriodicImageMode = "positive_patch"
     collapse_duplicate_visual_links: bool = True
@@ -4733,10 +4939,16 @@ class LocalBasisGridVisualizer:
     # omits the sublattice label when there is only one basis offset.
     site_label_style: SiteLabelStyle = "sublattice_cell"
 
+    def __post_init__(self) -> None:
+        defaults = _basis_visualizer_theme_defaults(self.theme)
+        if self.style is None:
+            object.__setattr__(self, "style", defaults.style)
+
     def _single_visualizer(self) -> BasisConfigurationVisualizer:
         return BasisConfigurationVisualizer(
             lattice=self.lattice,
             layout=self.layout,
+            theme=self.theme,
             style=self.style,
             periodic_image_mode=self.periodic_image_mode,
             collapse_duplicate_visual_links=self.collapse_duplicate_visual_links,
@@ -4905,7 +5117,18 @@ class LocalBasisGridVisualizer:
             single_plot_kwargs = {}
 
         plot_kwargs = dict(single_plot_kwargs)
-        with_site_labels = bool(plot_kwargs.pop("with_site_labels", True))
+        with_site_labels = bool(
+            plot_kwargs.pop(
+                "with_site_labels",
+                single_visualizer._theme_defaults.with_site_labels,
+            )
+        )
+        with_coordinate_labels = bool(
+            plot_kwargs.pop(
+                "with_coordinate_labels",
+                single_visualizer._theme_defaults.with_coordinate_labels,
+            )
+        )
         with_site_values = bool(plot_kwargs.pop("with_site_values", False))
         with_link_values = bool(plot_kwargs.pop("with_link_values", False))
         with_link_ids = bool(plot_kwargs.pop("with_link_ids", False))
@@ -4960,6 +5183,7 @@ class LocalBasisGridVisualizer:
                 show=False,
                 backend=backend,
                 with_site_labels=with_site_labels,
+                with_coordinate_labels=with_coordinate_labels,
                 with_site_values=with_site_values,
                 with_link_values=with_link_values,
                 with_link_ids=with_link_ids,
@@ -5767,6 +5991,12 @@ class BasisGridVisualizer:
                 self._theme_defaults.with_site_labels,
             )
         )
+        with_coordinate_labels = bool(
+            plot_kwargs.pop(
+                "with_coordinate_labels",
+                self._theme_defaults.with_coordinate_labels,
+            )
+        )
         with_site_values = bool(plot_kwargs.pop("with_site_values", False))
         with_link_values = bool(plot_kwargs.pop("with_link_values", False))
         with_link_ids = bool(plot_kwargs.pop("with_link_ids", False))
@@ -5819,6 +6049,7 @@ class BasisGridVisualizer:
                 show=False,
                 backend=backend,
                 with_site_labels=with_site_labels,
+                with_coordinate_labels=with_coordinate_labels,
                 with_site_values=with_site_values,
                 with_link_values=with_link_values,
                 with_link_ids=with_link_ids,
@@ -6073,6 +6304,7 @@ def plot_local_basis_grid(
     coordinate_scale: float = 1.0,
     coordinate_transform: npt.ArrayLike | None = None,
     site_label_style: SiteLabelStyle = "sublattice_cell",
+    theme: BasisVisualizerTheme = "research",
     style: LinkVisualStyle | None = None,
     shadow_style: LocalBasisShadowStyle | None = None,
     figsize: tuple[float, float] | None = None,
@@ -6093,7 +6325,8 @@ def plot_local_basis_grid(
     visualizer = LocalBasisGridVisualizer(
         lattice=lattice,
         layout=layout,
-        style=style if style is not None else LinkVisualStyle(),
+        style=style,
+        theme=theme,
         shadow_style=shadow_style if shadow_style is not None else LocalBasisShadowStyle(),
         periodic_image_mode=periodic_image_mode,
         collapse_duplicate_visual_links=collapse_duplicate_visual_links,
@@ -6152,6 +6385,7 @@ def plot_local_structure_readout(
     coordinate_scale: float = 1.0,
     coordinate_transform: npt.ArrayLike | None = None,
     site_label_style: SiteLabelStyle = "sublattice_cell",
+    theme: BasisVisualizerTheme = "research",
     style: LinkVisualStyle | None = None,
     shadow_style: LocalBasisShadowStyle | None = None,
     figsize: tuple[float, float] | None = None,
@@ -6163,7 +6397,8 @@ def plot_local_structure_readout(
     visualizer = LocalBasisGridVisualizer(
         lattice=lattice,
         layout=layout,
-        style=style if style is not None else LinkVisualStyle(),
+        style=style,
+        theme=theme,
         shadow_style=shadow_style if shadow_style is not None else LocalBasisShadowStyle(),
         periodic_image_mode=periodic_image_mode,
         collapse_duplicate_visual_links=collapse_duplicate_visual_links,
@@ -6213,6 +6448,7 @@ def plot_local_structure_report(
     coordinate_scale: float = 1.0,
     coordinate_transform: npt.ArrayLike | None = None,
     site_label_style: SiteLabelStyle = "sublattice_cell",
+    theme: BasisVisualizerTheme = "research",
     style: LinkVisualStyle | None = None,
     shadow_style: LocalBasisShadowStyle | None = None,
     figsize: tuple[float, float] | None = None,
@@ -6224,7 +6460,8 @@ def plot_local_structure_report(
     visualizer = LocalBasisGridVisualizer(
         lattice=lattice,
         layout=layout,
-        style=style if style is not None else LinkVisualStyle(),
+        style=style,
+        theme=theme,
         shadow_style=shadow_style if shadow_style is not None else LocalBasisShadowStyle(),
         periodic_image_mode=periodic_image_mode,
         collapse_duplicate_visual_links=collapse_duplicate_visual_links,

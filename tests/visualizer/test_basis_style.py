@@ -225,3 +225,28 @@ def test_research_theme_keeps_site_labels_by_default() -> None:
 
     assert len(ax.texts) >= lattice.num_sites
     plt.close(fig)
+
+
+def test_paper_theme_coordinate_labels_can_be_enabled() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    config = np.zeros(layout.n_variables, dtype=np.int64)
+
+    fig, ax = plt.subplots()
+    plot_basis_config(
+        lattice=lattice,
+        layout=layout,
+        config=config,
+        ax=ax,
+        theme="paper",
+        mode="dimers",
+        with_site_labels=False,
+        with_coordinate_labels=True,
+        with_plaquette_symbols=False,
+        show=False,
+    )
+
+    texts = {text.get_text() for text in ax.texts}
+    assert texts >= {"0", "1", "$x$", "$y$"}
+    assert all("(" not in text for text in texts)
+    plt.close(fig)

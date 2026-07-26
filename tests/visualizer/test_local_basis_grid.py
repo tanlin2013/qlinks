@@ -179,6 +179,36 @@ def test_local_basis_grid_can_use_layout_default_reference_config() -> None:
     plt.close(fig)
 
 
+def test_local_basis_grid_supports_paper_theme_and_coordinate_labels() -> None:
+    lattice = SquareLattice(2, 2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
+    reference = np.zeros(layout.n_variables, dtype=np.int64)
+
+    visualizer = LocalBasisGridVisualizer(
+        lattice=lattice,
+        layout=layout,
+        theme="paper",
+    )
+
+    fig, axes = visualizer.plot(
+        np.array([[1]], dtype=np.int64),
+        variable_indices=(0,),
+        reference_config=reference,
+        mode="dimers",
+        show=False,
+        single_plot_kwargs={
+            "with_coordinate_labels": True,
+            "with_plaquette_symbols": False,
+        },
+    )
+
+    texts = {text.get_text() for text in axes.flat[0].texts}
+    assert texts >= {"0", "1", "$x$", "$y$"}
+    assert all("(" not in text for text in texts)
+
+    plt.close(fig)
+
+
 def test_local_basis_grid_plot_readout_uses_readout_metadata() -> None:
     lattice = SquareLattice(2, 2, boundary_condition="open")
     layout = VariableLayout.from_lattice_links(lattice, LocalSpace.binary())
