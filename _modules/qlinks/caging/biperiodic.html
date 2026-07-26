@@ -1,0 +1,1499 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.caging.biperiodic &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=eeb54e98"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qlinks/caging/biperiodic';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.3" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/caging/biperiodic.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qlinks.caging.biperiodic</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FactorizedLocalQDMPadding</span><span class="p">,</span>
+    <span class="n">LocalQDMCageBlock</span><span class="p">,</span>
+    <span class="n">LocalQDMMultiPaddingConfig</span><span class="p">,</span>
+    <span class="n">MultiLocalQDMPadding</span><span class="p">,</span>
+    <span class="n">_qdm_global_plaquette_actions</span><span class="p">,</span>
+    <span class="n">factorized_qdm_padding_from_multi_padding</span><span class="p">,</span>
+    <span class="n">iter_multi_qdm_block_paddings</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.periodic_sequence</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">QDMIndependentBlockCertificate</span><span class="p">,</span>
+    <span class="n">_block_local_action_certificate</span><span class="p">,</span>
+    <span class="n">_constant_product_winding_sector</span><span class="p">,</span>
+    <span class="n">_inert_plaquette_pattern_counts</span><span class="p">,</span>
+    <span class="n">_link_coordinate</span><span class="p">,</span>
+    <span class="n">_link_lookup</span><span class="p">,</span>
+    <span class="n">_plaquette_coordinate</span><span class="p">,</span>
+    <span class="n">_uniform_couplings_are_repeatable</span><span class="p">,</span>
+    <span class="n">_validate_complete_product_assignment</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.lattice</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundaryCondition</span><span class="p">,</span> <span class="n">SquareLattice</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SquareQDMModel</span>
+
+<span class="n">_PlaquetteClass</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;internal&quot;</span><span class="p">,</span> <span class="s2">&quot;x_seam&quot;</span><span class="p">,</span> <span class="s2">&quot;y_seam&quot;</span><span class="p">,</span> <span class="s2">&quot;corner&quot;</span><span class="p">]</span>
+<span class="n">_SiteClass</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;internal&quot;</span><span class="p">,</span> <span class="s2">&quot;x_seam&quot;</span><span class="p">,</span> <span class="s2">&quot;y_seam&quot;</span><span class="p">,</span> <span class="s2">&quot;corner&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_factorized_padding</span><span class="p">(</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span> <span class="o">|</span> <span class="n">MultiLocalQDMPadding</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">padding</span><span class="p">,</span> <span class="n">MultiLocalQDMPadding</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">factorized_qdm_padding_from_multi_padding</span><span class="p">(</span><span class="n">padding</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">padding</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_translate_link_coordinate_2d</span><span class="p">(</span>
+    <span class="n">coordinate</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">offset_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">offset_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">kind</span> <span class="o">=</span> <span class="n">coordinate</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">offset_x</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="n">offset_y</span><span class="p">),</span> <span class="n">kind</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_translate_plaquette_ids_2d</span><span class="p">(</span>
+    <span class="n">source_model</span><span class="p">:</span> <span class="n">SquareQDMModel</span><span class="p">,</span>
+    <span class="n">target_model</span><span class="p">:</span> <span class="n">SquareQDMModel</span><span class="p">,</span>
+    <span class="n">plaquette_ids</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">offset_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">offset_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+    <span class="n">translated</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">plaquette_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">_plaquette_coordinate</span><span class="p">(</span><span class="n">source_model</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">))</span>
+        <span class="n">translated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">target_model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_id_from_cell</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">offset_x</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">offset_y</span><span class="p">))</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">translated</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="QDMBiperiodicPlacedBlock">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMBiperiodicPlacedBlock">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QDMBiperiodicPlacedBlock</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One translated tile block, retaining support-dependent boundary charge.&quot;&quot;&quot;</span>
+
+    <span class="n">block_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">source_block_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">link_ids</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">active_plaquette_ids</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">guard_plaquette_ids</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">support_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">amplitudes</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">site_counts_by_support</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">link_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">link_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">support</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">support_configs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">amplitudes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">amplitudes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_counts_by_support</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">link_ids</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">link_ids</span><span class="p">)</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">link_ids</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;link_ids must be a one-dimensional unique array.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">support</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">support</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">link_ids</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;support_configs must align with link_ids.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">amplitudes</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">amplitudes</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">support</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;amplitudes must have one entry per support configuration.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">counts</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">counts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">support</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;site_counts_by_support must have one row per support state.&quot;</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">amplitudes</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;block amplitudes must have nonzero norm.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;link_ids&quot;</span><span class="p">,</span> <span class="n">link_ids</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;support_configs&quot;</span><span class="p">,</span> <span class="n">support</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;amplitudes&quot;</span><span class="p">,</span> <span class="n">amplitudes</span> <span class="o">/</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;site_counts_by_support&quot;</span><span class="p">,</span> <span class="n">counts</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="s2">&quot;active_plaquette_ids&quot;</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">active_plaquette_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)),</span>
+        <span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="s2">&quot;guard_plaquette_ids&quot;</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">guard_plaquette_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">support_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">support_configs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_support_independent_site_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">support_size</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+            <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_counts_by_support</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_counts_by_support</span><span class="p">[:</span><span class="mi">1</span><span class="p">])</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SquareQDMBiperiodicProductInstance">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicProductInstance">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMBiperiodicProductInstance</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One finite member of a two-directionally repeated product-tile family.&quot;&quot;&quot;</span>
+
+    <span class="n">model</span><span class="p">:</span> <span class="n">SquareQDMModel</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">QDMBiperiodicPlacedBlock</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span>
+    <span class="n">repeats_x</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">repeats_y</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">tile_lx</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">tile_ly</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeats_x</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeats_y</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;repeats_x and repeats_y must be positive.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_lx</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_ly</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tile_lx and tile_ly must be positive.&quot;</span><span class="p">)</span>
+        <span class="n">_validate_complete_product_assignment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_tiles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">repeats_x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeats_y</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">formal_support_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">([</span><span class="n">block</span><span class="o">.</span><span class="n">support_size</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="SquareQDMBiperiodicProductTile">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicProductTile">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMBiperiodicProductTile</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A finite square-QDM tile proposed for independent x/y repetition.</span>
+
+<span class="sd">    The tile stores coherent local blocks and one fixed exterior on a periodic</span>
+<span class="sd">    reference torus.  Repetition is performed by coordinate translation into a</span>
+<span class="sd">    larger torus.  Exactness is *not* assumed: the bi-periodic certificate checks</span>
+<span class="sd">    all dimer constraints and all seam/corner plaquette environments explicitly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model</span><span class="p">:</span> <span class="n">SquareQDMModel</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">SquareQDMModel</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;model must be a SquareQDMModel.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span> <span class="n">SquareLattice</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;model must use SquareLattice geometry.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">boundary_condition</span> <span class="o">!=</span> <span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bi-periodic product tiles require periodic boundaries.&quot;</span><span class="p">)</span>
+        <span class="n">_validate_complete_product_assignment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;blocks&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">))</span>
+
+<div class="viewcode-block" id="SquareQDMBiperiodicProductTile.from_padding">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicProductTile.from_padding">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_padding</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">SquareQDMModel</span><span class="p">,</span>
+        <span class="n">block_pool</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">],</span>
+        <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span> <span class="o">|</span> <span class="n">MultiLocalQDMPadding</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareQDMBiperiodicProductTile</span><span class="p">:</span>
+        <span class="n">factorized</span> <span class="o">=</span> <span class="n">_as_factorized_padding</span><span class="p">(</span><span class="n">padding</span><span class="p">)</span>
+        <span class="n">block_by_id</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span><span class="p">):</span> <span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">block_pool</span><span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">block_by_id</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">block_id</span><span class="p">)]</span> <span class="k">for</span> <span class="n">block_id</span> <span class="ow">in</span> <span class="n">factorized</span><span class="o">.</span><span class="n">block_ids</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;padding references an unknown block id: </span><span class="si">{</span><span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">blocks</span><span class="o">=</span><span class="n">selected</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="n">factorized</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="p">{}</span> <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">(</span><span class="n">metadata</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">support_size_per_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">([</span><span class="n">block</span><span class="o">.</span><span class="n">support_size</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sites_per_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_sites</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">active_plaquette_density</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">active</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">plaquette_id</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span>
+            <span class="k">for</span> <span class="n">plaquette_id</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">active_plaquette_ids</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_plaquettes</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="SquareQDMBiperiodicProductTile.with_couplings">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicProductTile.with_couplings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_couplings</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">coup_kin</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">coup_pot</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareQDMBiperiodicProductTile</span><span class="p">:</span>
+        <span class="n">updates</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">coup_kin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">updates</span><span class="p">[</span><span class="s2">&quot;coup_kin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">coup_kin</span>
+        <span class="k">if</span> <span class="n">coup_pot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">updates</span><span class="p">[</span><span class="s2">&quot;coup_pot&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">coup_pot</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">updates</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">updates</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SquareQDMBiperiodicProductTile.instantiate">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicProductTile.instantiate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">instantiate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repeats_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">repeats_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareQDMBiperiodicProductInstance</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Translate the tile over an ``repeats_x`` by ``repeats_y`` torus.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">repeats_x</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">repeats_y</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;repeats_x and repeats_y must be positive.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_uniform_couplings_are_repeatable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;bi-periodic repetition currently requires scalar, translation-invariant &quot;</span>
+                <span class="s2">&quot;kinetic and potential couplings.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">target_model</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">lx</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lx</span> <span class="o">*</span> <span class="n">repeats_x</span><span class="p">),</span>
+            <span class="n">ly</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ly</span> <span class="o">*</span> <span class="n">repeats_y</span><span class="p">),</span>
+            <span class="n">winding_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">winding_y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">target_lookup</span> <span class="o">=</span> <span class="n">_link_lookup</span><span class="p">(</span><span class="n">target_model</span><span class="p">)</span>
+        <span class="n">translated_blocks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QDMBiperiodicPlacedBlock</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">tile_y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeats_y</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">tile_x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeats_x</span><span class="p">):</span>
+                <span class="n">offset_x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tile_x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lx</span><span class="p">)</span>
+                <span class="n">offset_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tile_y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ly</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">source_block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                    <span class="n">link_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                        <span class="p">[</span>
+                            <span class="n">target_lookup</span><span class="p">[</span>
+                                <span class="n">_translate_link_coordinate_2d</span><span class="p">(</span>
+                                    <span class="n">_link_coordinate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)),</span>
+                                    <span class="n">offset_x</span><span class="o">=</span><span class="n">offset_x</span><span class="p">,</span>
+                                    <span class="n">offset_y</span><span class="o">=</span><span class="n">offset_y</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="p">]</span>
+                            <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">source_block</span><span class="o">.</span><span class="n">link_ids</span>
+                        <span class="p">],</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">local_position</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">):</span> <span class="n">position</span> <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">link_ids</span><span class="p">)</span>
+                    <span class="p">}</span>
+                    <span class="n">site_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">source_block</span><span class="o">.</span><span class="n">support_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">target_model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_sites</span><span class="p">)),</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">target_model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_sites</span><span class="p">)):</span>
+                        <span class="n">positions</span> <span class="o">=</span> <span class="p">[</span>
+                            <span class="n">local_position</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)]</span>
+                            <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">target_model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">incident_links</span><span class="p">(</span><span class="n">site_id</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">local_position</span>
+                        <span class="p">]</span>
+                        <span class="k">if</span> <span class="n">positions</span><span class="p">:</span>
+                            <span class="n">site_counts</span><span class="p">[:,</span> <span class="n">site_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                                <span class="n">source_block</span><span class="o">.</span><span class="n">support_configs</span><span class="p">[:,</span> <span class="n">positions</span><span class="p">],</span>
+                                <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                            <span class="p">)</span>
+                    <span class="n">translated_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">QDMBiperiodicPlacedBlock</span><span class="p">(</span>
+                            <span class="n">block_id</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">translated_blocks</span><span class="p">),</span>
+                            <span class="n">source_block_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">source_block</span><span class="o">.</span><span class="n">block_id</span><span class="p">),</span>
+                            <span class="n">link_ids</span><span class="o">=</span><span class="n">link_ids</span><span class="p">,</span>
+                            <span class="n">active_plaquette_ids</span><span class="o">=</span><span class="n">_translate_plaquette_ids_2d</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                                <span class="n">target_model</span><span class="p">,</span>
+                                <span class="n">source_block</span><span class="o">.</span><span class="n">active_plaquette_ids</span><span class="p">,</span>
+                                <span class="n">offset_x</span><span class="o">=</span><span class="n">offset_x</span><span class="p">,</span>
+                                <span class="n">offset_y</span><span class="o">=</span><span class="n">offset_y</span><span class="p">,</span>
+                            <span class="p">),</span>
+                            <span class="n">guard_plaquette_ids</span><span class="o">=</span><span class="n">_translate_plaquette_ids_2d</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                                <span class="n">target_model</span><span class="p">,</span>
+                                <span class="n">source_block</span><span class="o">.</span><span class="n">guard_plaquette_ids</span><span class="p">,</span>
+                                <span class="n">offset_x</span><span class="o">=</span><span class="n">offset_x</span><span class="p">,</span>
+                                <span class="n">offset_y</span><span class="o">=</span><span class="n">offset_y</span><span class="p">,</span>
+                            <span class="p">),</span>
+                            <span class="n">support_configs</span><span class="o">=</span><span class="n">source_block</span><span class="o">.</span><span class="n">support_configs</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                            <span class="n">amplitudes</span><span class="o">=</span><span class="n">source_block</span><span class="o">.</span><span class="n">amplitudes</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                            <span class="n">site_counts_by_support</span><span class="o">=</span><span class="n">site_counts</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+        <span class="n">exterior_link_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">exterior_config</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">tile_y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeats_y</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">tile_x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeats_x</span><span class="p">):</span>
+                <span class="n">offset_x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tile_x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lx</span><span class="p">)</span>
+                <span class="n">offset_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tile_y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ly</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">link_id</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_link_ids</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_config</span><span class="p">,</span>
+                    <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="n">coordinate</span> <span class="o">=</span> <span class="n">_translate_link_coordinate_2d</span><span class="p">(</span>
+                        <span class="n">_link_coordinate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)),</span>
+                        <span class="n">offset_x</span><span class="o">=</span><span class="n">offset_x</span><span class="p">,</span>
+                        <span class="n">offset_y</span><span class="o">=</span><span class="n">offset_y</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">exterior_link_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">target_lookup</span><span class="p">[</span><span class="n">coordinate</span><span class="p">]))</span>
+                    <span class="n">exterior_config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="n">padding</span> <span class="o">=</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">(</span>
+            <span class="n">block_ids</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">translated_blocks</span><span class="p">),</span>
+            <span class="n">exterior_link_ids</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">exterior_link_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+            <span class="n">exterior_config</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">exterior_config</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">SquareQDMBiperiodicProductInstance</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">target_model</span><span class="p">,</span>
+            <span class="n">blocks</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">translated_blocks</span><span class="p">),</span>
+            <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span>
+            <span class="n">repeats_x</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">repeats_x</span><span class="p">),</span>
+            <span class="n">repeats_y</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">repeats_y</span><span class="p">),</span>
+            <span class="n">tile_lx</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lx</span><span class="p">),</span>
+            <span class="n">tile_ly</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ly</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="QDMBiperiodicSeamDiagnostics">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMBiperiodicSeamDiagnostics">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QDMBiperiodicSeamDiagnostics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plaquette and dimer-constraint diagnostics grouped by tile boundary class.&quot;&quot;&quot;</span>
+
+    <span class="n">plaquette_counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">inert_pattern_checks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">flippable_inert_patterns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">multi_block_plaquettes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">max_site_constraint_residuals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total_flippable_inert_patterns</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flippable_inert_patterns</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_site_constraint_residual</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_site_constraint_residuals</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">first_failure_class</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;corner&quot;</span><span class="p">,</span> <span class="s2">&quot;x_seam&quot;</span><span class="p">,</span> <span class="s2">&quot;y_seam&quot;</span><span class="p">,</span> <span class="s2">&quot;internal&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_site_constraint_residuals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_dimer_constraint&quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flippable_inert_patterns</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_kinetic_leakage&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="QDMBiperiodicSeamDiagnostics.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMBiperiodicSeamDiagnostics.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;plaquette_counts&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plaquette_counts</span><span class="p">),</span>
+            <span class="s2">&quot;inert_pattern_checks&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inert_pattern_checks</span><span class="p">),</span>
+            <span class="s2">&quot;flippable_inert_patterns&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flippable_inert_patterns</span><span class="p">),</span>
+            <span class="s2">&quot;multi_block_plaquettes&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multi_block_plaquettes</span><span class="p">),</span>
+            <span class="s2">&quot;max_site_constraint_residuals&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_site_constraint_residuals</span><span class="p">),</span>
+            <span class="s2">&quot;total_flippable_inert_patterns&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_flippable_inert_patterns</span><span class="p">,</span>
+            <span class="s2">&quot;max_site_constraint_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_site_constraint_residual</span><span class="p">,</span>
+            <span class="s2">&quot;first_failure_class&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_failure_class</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="QDMBiperiodicInstanceCertificate">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMBiperiodicInstanceCertificate">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QDMBiperiodicInstanceCertificate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exact local-decomposition check for one finite tile array.&quot;&quot;&quot;</span>
+
+    <span class="n">repeats_x</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">repeats_y</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">block_certificates</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">QDMIndependentBlockCertificate</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">seam_diagnostics</span><span class="p">:</span> <span class="n">QDMBiperiodicSeamDiagnostics</span>
+    <span class="n">energy</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">winding_sector</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_certified</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seam_diagnostics</span><span class="o">.</span><span class="n">max_site_constraint_residual</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">seam_diagnostics</span><span class="o">.</span><span class="n">total_flippable_inert_patterns</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">winding_sector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="n">certificate</span><span class="o">.</span><span class="n">is_certified</span><span class="p">(</span><span class="n">tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">certificate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_certificates</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">failure_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">seam_failure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seam_diagnostics</span><span class="o">.</span><span class="n">first_failure_class</span>
+        <span class="k">if</span> <span class="n">seam_failure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">seam_failure</span>
+        <span class="k">for</span> <span class="n">certificate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_certificates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">certificate</span><span class="o">.</span><span class="n">leakage_residual</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;single_block_leakage&quot;</span>
+            <span class="k">if</span> <span class="n">certificate</span><span class="o">.</span><span class="n">kinetic_residual</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;single_block_kinetic_nonclosure&quot;</span>
+            <span class="k">if</span> <span class="n">certificate</span><span class="o">.</span><span class="n">potential_residual</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;single_block_potential_nonuniformity&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">winding_sector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;support_dependent_winding_sector&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="QDMBiperiodicInstanceCertificate.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMBiperiodicInstanceCertificate.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;repeats_x&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeats_x</span><span class="p">,</span>
+            <span class="s2">&quot;repeats_y&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeats_y</span><span class="p">,</span>
+            <span class="s2">&quot;n_blocks&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block_certificates</span><span class="p">),</span>
+            <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
+            <span class="s2">&quot;winding_sector&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">winding_sector</span><span class="p">,</span>
+            <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+            <span class="s2">&quot;is_certified&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_certified</span><span class="p">,</span>
+            <span class="s2">&quot;failure_reason&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure_reason</span><span class="p">,</span>
+            <span class="s2">&quot;seam_diagnostics&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">seam_diagnostics</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">(),</span>
+            <span class="s2">&quot;block_certificates&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">certificate</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">certificate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_certificates</span>
+            <span class="p">),</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SquareQDMBiperiodicSequenceCertificate">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicSequenceCertificate">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMBiperiodicSequenceCertificate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Certificate for an exact two-parameter square-QDM product-tile family.&quot;&quot;&quot;</span>
+
+    <span class="n">tile</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicProductTile</span>
+    <span class="n">finite_checks</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">QDMBiperiodicInstanceCertificate</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">verification_repeats</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">minimum_proven_repeats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">tile_energy</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">energy_density</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">tile_winding_sector</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">proof_statement</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generic_environment_check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QDMBiperiodicInstanceCertificate</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">report</span>
+                <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_checks</span>
+                <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">repeats_x</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">verification_repeats</span>
+                <span class="ow">and</span> <span class="n">report</span><span class="o">.</span><span class="n">repeats_y</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">verification_repeats</span>
+            <span class="p">),</span>
+            <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_certified</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">generic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_environment_check</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">verification_repeats</span> <span class="o">&gt;=</span> <span class="mi">3</span>
+            <span class="ow">and</span> <span class="n">generic</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">generic</span><span class="o">.</span><span class="n">is_certified</span>
+            <span class="ow">and</span> <span class="n">_uniform_couplings_are_repeatable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tile</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_certified_for_all_positive_repeats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">expected_pairs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="p">(</span><span class="n">repeats_x</span><span class="p">,</span> <span class="n">repeats_y</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">repeats_x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verification_repeats</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">repeats_y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">verification_repeats</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">reports_by_pair</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">repeats_x</span><span class="p">,</span> <span class="n">report</span><span class="o">.</span><span class="n">repeats_y</span><span class="p">):</span> <span class="n">report</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_checks</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_certified</span>
+            <span class="ow">and</span> <span class="n">expected_pairs</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">reports_by_pair</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">reports_by_pair</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span><span class="o">.</span><span class="n">is_certified</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">expected_pairs</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_true_2d_sequence</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_certified</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">support_size_per_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile</span><span class="o">.</span><span class="n">support_size_per_tile</span>
+
+<div class="viewcode-block" id="SquareQDMBiperiodicSequenceCertificate.formal_support_size">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicSequenceCertificate.formal_support_size">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">formal_support_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repeats_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">repeats_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">repeats_x</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">repeats_y</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;repeats_x and repeats_y must be positive.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">support_size_per_tile</span> <span class="o">**</span> <span class="p">(</span><span class="n">repeats_x</span> <span class="o">*</span> <span class="n">repeats_y</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SquareQDMBiperiodicSequenceCertificate.energy_for_repeats">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicSequenceCertificate.energy_for_repeats">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">energy_for_repeats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repeats_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">repeats_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">repeats_x</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">repeats_y</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;repeats_x and repeats_y must be positive.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">repeats_x</span> <span class="o">*</span> <span class="n">repeats_y</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_energy</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SquareQDMBiperiodicSequenceCertificate.winding_sector_for_repeats">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicSequenceCertificate.winding_sector_for_repeats">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">winding_sector_for_repeats</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">repeats_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">repeats_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">repeats_x</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">repeats_y</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;repeats_x and repeats_y must be positive.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_winding_sector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">winding_x</span><span class="p">,</span> <span class="n">winding_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_winding_sector</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">repeats_y</span> <span class="o">*</span> <span class="n">winding_x</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">repeats_x</span> <span class="o">*</span> <span class="n">winding_y</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">failed_checks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">QDMBiperiodicInstanceCertificate</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">report</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_checks</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">report</span><span class="o">.</span><span class="n">is_certified</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SquareQDMBiperiodicSequenceCertificate.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicSequenceCertificate.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;is_certified&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_certified</span><span class="p">,</span>
+            <span class="s2">&quot;is_true_2d_sequence&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_true_2d_sequence</span><span class="p">,</span>
+            <span class="s2">&quot;is_certified_for_all_positive_repeats&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_certified_for_all_positive_repeats</span><span class="p">),</span>
+            <span class="s2">&quot;verification_repeats&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">verification_repeats</span><span class="p">,</span>
+            <span class="s2">&quot;minimum_proven_repeats&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimum_proven_repeats</span><span class="p">,</span>
+            <span class="s2">&quot;tile_energy&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_energy</span><span class="p">,</span>
+            <span class="s2">&quot;energy_density&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_density</span><span class="p">,</span>
+            <span class="s2">&quot;tile_winding_sector&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_winding_sector</span><span class="p">,</span>
+            <span class="s2">&quot;support_size_per_tile&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_size_per_tile</span><span class="p">,</span>
+            <span class="s2">&quot;active_plaquette_density&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile</span><span class="o">.</span><span class="n">active_plaquette_density</span><span class="p">,</span>
+            <span class="s2">&quot;proof_statement&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">proof_statement</span><span class="p">,</span>
+            <span class="s2">&quot;finite_checks&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_checks</span><span class="p">),</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plaquette_class</span><span class="p">(</span>
+    <span class="n">instance</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicProductInstance</span><span class="p">,</span>
+    <span class="n">plaquette_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_PlaquetteClass</span><span class="p">:</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">_plaquette_coordinate</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">plaquette_id</span><span class="p">)</span>
+    <span class="n">crosses_x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">%</span> <span class="n">instance</span><span class="o">.</span><span class="n">tile_lx</span> <span class="o">==</span> <span class="n">instance</span><span class="o">.</span><span class="n">tile_lx</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">crosses_y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">%</span> <span class="n">instance</span><span class="o">.</span><span class="n">tile_ly</span> <span class="o">==</span> <span class="n">instance</span><span class="o">.</span><span class="n">tile_ly</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">crosses_x</span> <span class="ow">and</span> <span class="n">crosses_y</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;corner&quot;</span>
+    <span class="k">if</span> <span class="n">crosses_x</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;x_seam&quot;</span>
+    <span class="k">if</span> <span class="n">crosses_y</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;y_seam&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;internal&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_site_class</span><span class="p">(</span>
+    <span class="n">instance</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicProductInstance</span><span class="p">,</span>
+    <span class="n">site_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_SiteClass</span><span class="p">:</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">sites</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)]</span><span class="o">.</span><span class="n">cell</span>
+    <span class="n">on_x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">%</span> <span class="n">instance</span><span class="o">.</span><span class="n">tile_lx</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">on_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">%</span> <span class="n">instance</span><span class="o">.</span><span class="n">tile_ly</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">on_x</span> <span class="ow">and</span> <span class="n">on_y</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;corner&quot;</span>
+    <span class="k">if</span> <span class="n">on_x</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;x_seam&quot;</span>
+    <span class="k">if</span> <span class="n">on_y</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;y_seam&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;internal&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_constraint_residuals_by_site_class</span><span class="p">(</span>
+    <span class="n">instance</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicProductInstance</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="n">exterior</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">):</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">link_id</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_link_ids</span><span class="p">,</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_config</span><span class="p">,</span>
+            <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">residuals</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;internal&quot;</span><span class="p">,</span> <span class="s2">&quot;x_seam&quot;</span><span class="p">,</span> <span class="s2">&quot;y_seam&quot;</span><span class="p">,</span> <span class="s2">&quot;corner&quot;</span><span class="p">)}</span>
+    <span class="n">owner_by_link</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">):</span> <span class="n">block_index</span>
+        <span class="k">for</span> <span class="n">block_index</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">link_ids</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_sites</span><span class="p">)):</span>
+        <span class="n">incident_blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="nb">sorted</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">owner_by_link</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)]</span>
+                    <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">incident_links</span><span class="p">(</span><span class="n">site_id</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">owner_by_link</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">support_ranges</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">support_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">incident_blocks</span><span class="p">]</span>
+        <span class="n">combinations</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">support_ranges</span><span class="p">)</span> <span class="k">if</span> <span class="n">support_ranges</span> <span class="k">else</span> <span class="p">[()]</span>
+        <span class="n">exterior_count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">exterior</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">incident_links</span><span class="p">(</span><span class="n">site_id</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">_site_class</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">site_id</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">support_indices</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="n">exterior_count</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">site_counts_by_support</span><span class="p">[</span><span class="n">support_index</span><span class="p">,</span> <span class="n">site_id</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">support_index</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                    <span class="n">incident_blocks</span><span class="p">,</span>
+                    <span class="n">support_indices</span><span class="p">,</span>
+                    <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">residuals</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="n">residuals</span><span class="p">[</span><span class="n">name</span><span class="p">],</span>
+                <span class="nb">abs</span><span class="p">(</span><span class="n">count</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">required_count</span><span class="p">)),</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">residuals</span>
+
+
+<div class="viewcode-block" id="certify_square_qdm_biperiodic_product_instance">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.certify_square_qdm_biperiodic_product_instance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">certify_square_qdm_biperiodic_product_instance</span><span class="p">(</span>
+    <span class="n">instance</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicProductInstance</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-9</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QDMBiperiodicInstanceCertificate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Certify one finite bi-periodic product-tile array by local identities.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tolerance</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tolerance must be non-negative.&quot;</span><span class="p">)</span>
+
+    <span class="n">owner_by_link</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">):</span> <span class="n">block_index</span>
+        <span class="k">for</span> <span class="n">block_index</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">link_ids</span>
+    <span class="p">}</span>
+    <span class="n">actions_by_block</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">index</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">blocks</span><span class="p">))}</span>
+    <span class="n">inert_by_class</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">name</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;internal&quot;</span><span class="p">,</span> <span class="s2">&quot;x_seam&quot;</span><span class="p">,</span> <span class="s2">&quot;y_seam&quot;</span><span class="p">,</span> <span class="s2">&quot;corner&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">plaquette_counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">inert_by_class</span><span class="p">}</span>
+    <span class="n">multi_block</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">inert_by_class</span><span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">_qdm_global_plaquette_actions</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">model</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">_plaquette_class</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">plaquette_id</span><span class="p">))</span>
+        <span class="n">plaquette_counts</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">owners</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="nb">sorted</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">owner_by_link</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)]</span>
+                    <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">action</span><span class="o">.</span><span class="n">links</span>
+                    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">owner_by_link</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">owners</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">actions_by_block</span><span class="p">[</span><span class="n">owners</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inert_by_class</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">action</span><span class="p">,</span> <span class="n">owners</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">owners</span><span class="p">:</span>
+                <span class="n">multi_block</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">block_certificates</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="n">_block_local_action_certificate</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">actions_by_block</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">blocks</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">checks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">flippable</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">inert_actions</span> <span class="ow">in</span> <span class="n">inert_by_class</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">checks</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">flippable</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_inert_plaquette_pattern_counts</span><span class="p">(</span>
+            <span class="n">instance</span><span class="p">,</span>
+            <span class="n">inert_actions</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">QDMBiperiodicSeamDiagnostics</span><span class="p">(</span>
+        <span class="n">plaquette_counts</span><span class="o">=</span><span class="n">plaquette_counts</span><span class="p">,</span>
+        <span class="n">inert_pattern_checks</span><span class="o">=</span><span class="n">checks</span><span class="p">,</span>
+        <span class="n">flippable_inert_patterns</span><span class="o">=</span><span class="n">flippable</span><span class="p">,</span>
+        <span class="n">multi_block_plaquettes</span><span class="o">=</span><span class="n">multi_block</span><span class="p">,</span>
+        <span class="n">max_site_constraint_residuals</span><span class="o">=</span><span class="n">_constraint_residuals_by_site_class</span><span class="p">(</span><span class="n">instance</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">certificate</span><span class="o">.</span><span class="n">energy</span> <span class="k">for</span> <span class="n">certificate</span> <span class="ow">in</span> <span class="n">block_certificates</span><span class="p">),</span>
+        <span class="n">start</span><span class="o">=</span><span class="mf">0.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">QDMBiperiodicInstanceCertificate</span><span class="p">(</span>
+        <span class="n">repeats_x</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">repeats_x</span><span class="p">),</span>
+        <span class="n">repeats_y</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">repeats_y</span><span class="p">),</span>
+        <span class="n">block_certificates</span><span class="o">=</span><span class="n">block_certificates</span><span class="p">,</span>
+        <span class="n">seam_diagnostics</span><span class="o">=</span><span class="n">diagnostics</span><span class="p">,</span>
+        <span class="n">energy</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">energy</span><span class="p">),</span>
+        <span class="n">winding_sector</span><span class="o">=</span><span class="n">_constant_product_winding_sector</span><span class="p">(</span><span class="n">instance</span><span class="p">),</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="diagnose_square_qdm_biperiodic_repeatability">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnose_square_qdm_biperiodic_repeatability">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagnose_square_qdm_biperiodic_repeatability</span><span class="p">(</span>
+    <span class="n">tile</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicProductTile</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">verification_repeats</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">check_smaller_repeats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-9</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareQDMBiperiodicSequenceCertificate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagnose whether a tile generates an exact family for arbitrary ``nx, ny``.</span>
+
+<span class="sd">    A ``3 x 3`` tile array contains an interior tile, both one-direction seams,</span>
+<span class="sd">    and four-tile corner environments.  Because square-QDM terms have range one,</span>
+<span class="sd">    exact coordinate repetition with uniform couplings then propagates these</span>
+<span class="sd">    identities to every larger torus.  Rings of size one and two are checked</span>
+<span class="sd">    separately by default because periodic identifications create short-ring</span>
+<span class="sd">    environments not present in the generic ``3 x 3`` array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">verification_repeats</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;verification_repeats must be at least three.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_uniform_couplings_are_repeatable</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">model</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bi-periodic certification requires scalar uniform couplings.&quot;</span><span class="p">)</span>
+
+    <span class="n">repeat_values</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">verification_repeats</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">check_smaller_repeats</span>
+        <span class="k">else</span> <span class="p">(</span><span class="n">verification_repeats</span><span class="p">,)</span>
+    <span class="p">)</span>
+    <span class="n">checks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="n">certify_square_qdm_biperiodic_product_instance</span><span class="p">(</span>
+            <span class="n">tile</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">repeats_x</span><span class="p">,</span> <span class="n">repeats_y</span><span class="p">),</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">repeats_y</span> <span class="ow">in</span> <span class="n">repeat_values</span>
+        <span class="k">for</span> <span class="n">repeats_x</span> <span class="ow">in</span> <span class="n">repeat_values</span>
+    <span class="p">)</span>
+    <span class="n">verification</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+        <span class="n">report</span>
+        <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">checks</span>
+        <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">repeats_x</span> <span class="o">==</span> <span class="n">verification_repeats</span> <span class="ow">and</span> <span class="n">report</span><span class="o">.</span><span class="n">repeats_y</span> <span class="o">==</span> <span class="n">verification_repeats</span>
+    <span class="p">)</span>
+    <span class="n">tile_energy</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">verification</span><span class="o">.</span><span class="n">energy</span> <span class="o">/</span> <span class="p">(</span><span class="n">verification_repeats</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tile_energy</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">tolerance</span><span class="p">,</span> <span class="mf">1.0e-12</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bi-periodic candidate has a non-real tile energy.&quot;</span><span class="p">)</span>
+    <span class="n">energy_density</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tile_energy</span><span class="o">.</span><span class="n">real</span> <span class="o">/</span> <span class="n">tile</span><span class="o">.</span><span class="n">sites_per_tile</span><span class="p">)</span>
+
+    <span class="n">tile_winding</span> <span class="o">=</span> <span class="n">_constant_product_winding_sector</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">tile</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">lx</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">tile</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ly</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">tile_winding</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">tile_winding</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">winding_x</span><span class="p">,</span> <span class="n">winding_y</span> <span class="o">=</span> <span class="n">tile_winding</span>
+        <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">checks</span><span class="p">:</span>
+            <span class="n">predicted</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">repeats_y</span> <span class="o">*</span> <span class="n">winding_x</span><span class="p">),</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">repeats_x</span> <span class="o">*</span> <span class="n">winding_y</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">winding_sector</span> <span class="o">!=</span> <span class="n">predicted</span><span class="p">:</span>
+                <span class="n">tile_winding</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">break</span>
+
+    <span class="n">all_small</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
+        <span class="n">check_smaller_repeats</span>
+        <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">checks</span><span class="p">)</span> <span class="o">==</span> <span class="n">verification_repeats</span><span class="o">**</span><span class="mi">2</span>
+        <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">is_certified</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">checks</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">minimum</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">all_small</span> <span class="k">else</span> <span class="p">(</span><span class="n">verification_repeats</span><span class="p">,</span> <span class="n">verification_repeats</span><span class="p">)</span>
+    <span class="n">statement</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;The 3 x 3 tile array checks all range-one local environments: tile interiors, &quot;</span>
+        <span class="s2">&quot;x seams, y seams, and four-tile corners.  Support-independent dimer constraints, &quot;</span>
+        <span class="s2">&quot;inactive multi-factor plaquettes, and fixed local block eigenvalue equations &quot;</span>
+        <span class="s2">&quot;therefore propagate to arbitrary independent repeat counts nx, ny &gt;= 3.&quot;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">all_small</span><span class="p">:</span>
+        <span class="n">statement</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="s2">&quot; Every short torus with 1 &lt;= nx, ny &lt; 3 was checked separately, so the &quot;</span>
+            <span class="s2">&quot;family is certified for all positive nx and ny.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">SquareQDMBiperiodicSequenceCertificate</span><span class="p">(</span>
+        <span class="n">tile</span><span class="o">=</span><span class="n">tile</span><span class="p">,</span>
+        <span class="n">finite_checks</span><span class="o">=</span><span class="n">checks</span><span class="p">,</span>
+        <span class="n">verification_repeats</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">verification_repeats</span><span class="p">),</span>
+        <span class="n">minimum_proven_repeats</span><span class="o">=</span><span class="n">minimum</span><span class="p">,</span>
+        <span class="n">tile_energy</span><span class="o">=</span><span class="n">tile_energy</span><span class="p">,</span>
+        <span class="n">energy_density</span><span class="o">=</span><span class="n">energy_density</span><span class="p">,</span>
+        <span class="n">tile_winding_sector</span><span class="o">=</span><span class="n">tile_winding</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span>
+        <span class="n">proof_statement</span><span class="o">=</span><span class="n">statement</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="certify_square_qdm_biperiodic_product_sequence">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.certify_square_qdm_biperiodic_product_sequence">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">certify_square_qdm_biperiodic_product_sequence</span><span class="p">(</span>
+    <span class="n">tile</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicProductTile</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">verification_repeats</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">check_smaller_repeats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-9</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareQDMBiperiodicSequenceCertificate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the exact two-dimensional sequence certificate for ``tile``.</span>
+
+<span class="sd">    The function returns a diagnostic object even when certification fails; use</span>
+<span class="sd">    ``certificate.is_certified`` and ``certificate.failed_checks`` to inspect the</span>
+<span class="sd">    obstruction rather than relying on an exception for ordinary search failure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">diagnose_square_qdm_biperiodic_repeatability</span><span class="p">(</span>
+        <span class="n">tile</span><span class="p">,</span>
+        <span class="n">verification_repeats</span><span class="o">=</span><span class="n">verification_repeats</span><span class="p">,</span>
+        <span class="n">check_smaller_repeats</span><span class="o">=</span><span class="n">check_smaller_repeats</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SquareQDMBiperiodicTileSearchConfig">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicTileSearchConfig">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMBiperiodicTileSearchConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Budget and acceptance rules for direct periodic product-tile search.&quot;&quot;&quot;</span>
+
+    <span class="n">min_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">max_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">max_padding_attempts</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span>
+    <span class="n">max_paddings_per_packing</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">max_results</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">max_certified_results</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">max_tile_support_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">4096</span>
+    <span class="n">verification_repeats</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">check_smaller_repeats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">require_kinetic_separation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">require_static_exterior</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">include_sectors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-9</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_blocks</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;min_blocks must be positive.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_blocks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_blocks</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_blocks</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_blocks must be None or at least min_blocks.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_padding_attempts</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_padding_attempts must be non-negative.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_paddings_per_packing</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_paddings_per_packing must be non-negative.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_results</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_results must be non-negative.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_certified_results</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_certified_results</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_certified_results must be non-negative or None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_tile_support_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_tile_support_size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_tile_support_size must be positive or None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verification_repeats</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;verification_repeats must be at least three.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tolerance must be non-negative.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SquareQDMBiperiodicTileSearchConfig.padding_config">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicTileSearchConfig.padding_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">padding_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LocalQDMMultiPaddingConfig</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LocalQDMMultiPaddingConfig</span><span class="p">(</span>
+            <span class="n">min_blocks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_blocks</span><span class="p">,</span>
+            <span class="n">max_blocks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_blocks</span><span class="p">,</span>
+            <span class="n">max_paddings</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_results</span><span class="p">,</span>
+            <span class="n">max_padding_attempts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_padding_attempts</span><span class="p">,</span>
+            <span class="n">max_paddings_per_packing</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_paddings_per_packing</span><span class="p">,</span>
+            <span class="n">include_sectors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">include_sectors</span><span class="p">,</span>
+            <span class="n">require_static_exterior</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">require_static_exterior</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+            <span class="n">max_product_support_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_tile_support_size</span><span class="p">,</span>
+            <span class="n">require_kinetic_separation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">require_kinetic_separation</span><span class="p">,</span>
+            <span class="n">store_full_states</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SquareQDMBiperiodicTileSearchRecord">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicTileSearchRecord">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMBiperiodicTileSearchRecord</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One periodic exterior completion and its two-dimensional diagnosis.&quot;&quot;&quot;</span>
+
+    <span class="n">tile</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicProductTile</span>
+    <span class="n">certificate</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicSequenceCertificate</span>
+    <span class="n">score</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">block_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile</span><span class="o">.</span><span class="n">padding</span><span class="o">.</span><span class="n">block_ids</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_certified</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">certificate</span><span class="o">.</span><span class="n">is_certified</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">failure_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">failed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">certificate</span><span class="o">.</span><span class="n">failed_checks</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">failed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">failed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">failure_reason</span>
+
+<div class="viewcode-block" id="SquareQDMBiperiodicTileSearchRecord.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicTileSearchRecord.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;block_ids&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_ids</span><span class="p">,</span>
+            <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">score</span><span class="p">,</span>
+            <span class="s2">&quot;is_certified&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_certified</span><span class="p">,</span>
+            <span class="s2">&quot;failure_reason&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure_reason</span><span class="p">,</span>
+            <span class="s2">&quot;active_plaquette_density&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile</span><span class="o">.</span><span class="n">active_plaquette_density</span><span class="p">,</span>
+            <span class="s2">&quot;support_size_per_tile&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile</span><span class="o">.</span><span class="n">support_size_per_tile</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SquareQDMBiperiodicTileSearchResult">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicTileSearchResult">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMBiperiodicTileSearchResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Direct product-tile search output, including informative failures.&quot;&quot;&quot;</span>
+
+    <span class="n">records</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SquareQDMBiperiodicTileSearchRecord</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicTileSearchConfig</span>
+    <span class="n">n_padding_candidates_examined</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">certified_records</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SquareQDMBiperiodicTileSearchRecord</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">record</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span> <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">is_certified</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">failed_records</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SquareQDMBiperiodicTileSearchRecord</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">record</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">record</span><span class="o">.</span><span class="n">is_certified</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">failure_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">failed_records</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">failure_reason</span> <span class="ow">or</span> <span class="s2">&quot;unknown&quot;</span>
+            <span class="n">counts</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">counts</span>
+
+<div class="viewcode-block" id="SquareQDMBiperiodicTileSearchResult.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicTileSearchResult.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;n_padding_candidates_examined&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_padding_candidates_examined</span><span class="p">,</span>
+            <span class="s2">&quot;n_records&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">),</span>
+            <span class="s2">&quot;n_certified&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">certified_records</span><span class="p">),</span>
+            <span class="s2">&quot;n_failed&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">failed_records</span><span class="p">),</span>
+            <span class="s2">&quot;failure_counts&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure_counts</span><span class="p">,</span>
+            <span class="s2">&quot;records&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">to_summary_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">),</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tile_search_score</span><span class="p">(</span><span class="n">certificate</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicSequenceCertificate</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">tile</span> <span class="o">=</span> <span class="n">certificate</span><span class="o">.</span><span class="n">tile</span>
+    <span class="n">failures</span> <span class="o">=</span> <span class="n">certificate</span><span class="o">.</span><span class="n">failed_checks</span>
+    <span class="n">seam_penalty</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">seam_diagnostics</span><span class="o">.</span><span class="n">total_flippable_inert_patterns</span>
+        <span class="o">+</span> <span class="n">report</span><span class="o">.</span><span class="n">seam_diagnostics</span><span class="o">.</span><span class="n">max_site_constraint_residual</span>
+        <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">failures</span>
+    <span class="p">)</span>
+    <span class="n">block_penalty</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">block</span><span class="o">.</span><span class="n">support_size</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">tile</span><span class="o">.</span><span class="n">blocks</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">certification_bonus</span> <span class="o">=</span> <span class="mf">1000.0</span> <span class="k">if</span> <span class="n">certificate</span><span class="o">.</span><span class="n">is_certified</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+        <span class="n">certification_bonus</span>
+        <span class="o">+</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">tile</span><span class="o">.</span><span class="n">active_plaquette_density</span>
+        <span class="o">-</span> <span class="n">seam_penalty</span>
+        <span class="o">-</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">block_penalty</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="search_square_qdm_biperiodic_product_tiles">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.search_square_qdm_biperiodic_product_tiles">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">search_square_qdm_biperiodic_product_tiles</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">SquareQDMModel</span><span class="p">,</span>
+    <span class="n">block_pool</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SquareQDMBiperiodicTileSearchConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareQDMBiperiodicTileSearchResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Search periodic static exteriors and certify two-direction repetition.</span>
+
+<span class="sd">    The search only solves and materializes the finite reference-tile product</span>
+<span class="sd">    support, bounded by ``max_tile_support_size``.  Every completion is then</span>
+<span class="sd">    diagnosed on tile arrays through ``3 x 3`` without constructing the support</span>
+<span class="sd">    of the repeated two-dimensional system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">search_config</span> <span class="o">=</span> <span class="n">SquareQDMBiperiodicTileSearchConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
+    <span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SquareQDMBiperiodicTileSearchRecord</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">examined</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">certified_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">materialized_padding</span> <span class="ow">in</span> <span class="n">iter_multi_qdm_block_paddings</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">block_pool</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">search_config</span><span class="o">.</span><span class="n">padding_config</span><span class="p">(),</span>
+        <span class="n">max_yielded</span><span class="o">=</span><span class="n">search_config</span><span class="o">.</span><span class="n">max_padding_attempts</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">examined</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">padding</span> <span class="o">=</span> <span class="n">factorized_qdm_padding_from_multi_padding</span><span class="p">(</span><span class="n">materialized_padding</span><span class="p">)</span>
+        <span class="n">tile</span> <span class="o">=</span> <span class="n">SquareQDMBiperiodicProductTile</span><span class="o">.</span><span class="n">from_padding</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">block_pool</span><span class="p">,</span>
+            <span class="n">padding</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;search_candidate_index&quot;</span><span class="p">:</span> <span class="n">examined</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;finite_tile_support_size&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="n">materialized_padding</span><span class="o">.</span><span class="n">global_support_configs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+        <span class="n">certificate</span> <span class="o">=</span> <span class="n">diagnose_square_qdm_biperiodic_repeatability</span><span class="p">(</span>
+            <span class="n">tile</span><span class="p">,</span>
+            <span class="n">verification_repeats</span><span class="o">=</span><span class="n">search_config</span><span class="o">.</span><span class="n">verification_repeats</span><span class="p">,</span>
+            <span class="n">check_smaller_repeats</span><span class="o">=</span><span class="n">search_config</span><span class="o">.</span><span class="n">check_smaller_repeats</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">search_config</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">SquareQDMBiperiodicTileSearchRecord</span><span class="p">(</span>
+                <span class="n">tile</span><span class="o">=</span><span class="n">tile</span><span class="p">,</span>
+                <span class="n">certificate</span><span class="o">=</span><span class="n">certificate</span><span class="p">,</span>
+                <span class="n">score</span><span class="o">=</span><span class="n">_tile_search_score</span><span class="p">(</span><span class="n">certificate</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">certificate</span><span class="o">.</span><span class="n">is_certified</span><span class="p">:</span>
+            <span class="n">certified_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">search_config</span><span class="o">.</span><span class="n">max_certified_results</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">certified_count</span> <span class="o">&gt;=</span> <span class="n">search_config</span><span class="o">.</span><span class="n">max_certified_results</span>
+            <span class="p">):</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">records</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">search_config</span><span class="o">.</span><span class="n">max_results</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="n">records</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">record</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">score</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SquareQDMBiperiodicTileSearchResult</span><span class="p">(</span>
+        <span class="n">records</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">records</span><span class="p">),</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">search_config</span><span class="p">,</span>
+        <span class="n">n_padding_candidates_examined</span><span class="o">=</span><span class="n">examined</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -166,6 +166,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../development_status.html">Current development status</a></li>
 </ul>
@@ -352,6 +354,14 @@
     <span class="n">bad_h_invariant_common_kernel_basis</span><span class="p">,</span>
     <span class="n">diagnose_common_kernel_h_invariant_sector</span><span class="p">,</span>
     <span class="n">diagnose_dark_manifold</span><span class="p">,</span>
+    <span class="n">jump_activity_series</span><span class="p">,</span>
+    <span class="n">target_manifold_coherence_series</span><span class="p">,</span>
+    <span class="n">target_manifold_density_matrix_series</span><span class="p">,</span>
+    <span class="n">target_manifold_entropy_series</span><span class="p">,</span>
+    <span class="n">target_manifold_populations_series</span><span class="p">,</span>
+    <span class="n">target_manifold_projector</span><span class="p">,</span>
+    <span class="n">target_manifold_purity_series</span><span class="p">,</span>
+    <span class="n">target_manifold_weight_series</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.local_recycling</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LocalRecyclingBuildResult</span><span class="p">,</span>
@@ -1644,6 +1654,9 @@
 <span class="sd">        plaquette Hamiltonians, bonds for nearest-neighbor XY-like hopping</span>
 <span class="sd">        models, and any custom units exposed by ``model.natural_region_units``.</span>
 <span class="sd">        ``cluster_size`` counts these units, not individual variables.</span>
+<span class="sd">        ``cluster_size=1`` returns each model-natural unit directly; for QDM</span>
+<span class="sd">        this is still a plaquette/rhombus/hexagon-local object rather than an</span>
+<span class="sd">        onsite/link-local object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">expand_local_regions_to_cluster_unions</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">regional_units</span><span class="p">,</span>
@@ -2842,6 +2855,77 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">construction</span><span class="o">.</span><span class="n">target_density_matrix</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_projector</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Projector onto the target dark/cage manifold.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">target_manifold_projector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manifold_basis</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CageLindbladDesignProblem.target_manifold_weight_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignProblem.target_manifold_weight_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_weight_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``Tr(P_target rho(t))`` for solver or MCWF output.</span>
+
+<span class="sd">        The method forwards data-source keywords such as ``evolution_result``,</span>
+<span class="sd">        ``density_matrices``, ``ensemble_result``, or ``state_snapshots`` to</span>
+<span class="sd">        :func:`qlinks.open_system.diagnostics.target_manifold_weight_series`</span>
+<span class="sd">        and automatically supplies this problem&#39;s target basis.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">target_manifold_weight_series</span><span class="p">(</span>
+            <span class="n">target_basis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manifold_basis</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignProblem.target_manifold_density_matrix_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignProblem.target_manifold_density_matrix_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_density_matrix_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the conditioned density matrix inside the target manifold.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">target_manifold_density_matrix_series</span><span class="p">(</span>
+            <span class="n">target_basis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manifold_basis</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignProblem.target_manifold_populations_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignProblem.target_manifold_populations_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_populations_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return target-basis populations inside the target manifold.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">target_manifold_populations_series</span><span class="p">(</span>
+            <span class="n">target_basis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manifold_basis</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignProblem.target_manifold_coherence_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignProblem.target_manifold_coherence_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_coherence_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return off-diagonal target-manifold coherence over time.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">target_manifold_coherence_series</span><span class="p">(</span>
+            <span class="n">target_basis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manifold_basis</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignProblem.target_manifold_purity_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignProblem.target_manifold_purity_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_purity_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return purity of the conditioned target-manifold state over time.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">target_manifold_purity_series</span><span class="p">(</span>
+            <span class="n">target_basis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manifold_basis</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignProblem.target_manifold_entropy_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignProblem.target_manifold_entropy_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_entropy_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return entropy of the conditioned target-manifold state over time.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">target_manifold_entropy_series</span><span class="p">(</span>
+            <span class="n">target_basis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manifold_basis</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">hilbert_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">construction</span><span class="o">.</span><span class="n">hilbert_dimension</span>
 
@@ -3082,6 +3166,90 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">solver_problem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LindbladProblem</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Alias for ``lindblad_problem`` used by some solver-oriented notebooks.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lindblad_problem</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_projector</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Projector onto this design&#39;s target dark/cage manifold.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">target_manifold_projector</span>
+
+<div class="viewcode-block" id="CageLindbladDesignResult.target_manifold_weight_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignResult.target_manifold_weight_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_weight_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``Tr(P_target rho(t))`` for evolution or MCWF output.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            ``design.target_manifold_weight_series(evolution_result=result)``</span>
+<span class="sd">            for Lindblad density-matrix solvers, or</span>
+<span class="sd">            ``design.target_manifold_weight_series(ensemble_result=mcwf)`` for</span>
+<span class="sd">            MCWF results containing ``rho_t`` or ``state_snapshots``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">target_manifold_weight_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignResult.target_manifold_density_matrix_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignResult.target_manifold_density_matrix_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_density_matrix_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the conditioned density matrix inside the target manifold.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">target_manifold_density_matrix_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignResult.target_manifold_populations_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignResult.target_manifold_populations_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_populations_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return target-basis populations inside the target manifold.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">target_manifold_populations_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignResult.target_manifold_coherence_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignResult.target_manifold_coherence_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_coherence_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return off-diagonal target-manifold coherence over time.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">target_manifold_coherence_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignResult.target_manifold_purity_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignResult.target_manifold_purity_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_purity_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return purity of the conditioned target-manifold state over time.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">target_manifold_purity_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignResult.target_manifold_entropy_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignResult.target_manifold_entropy_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_entropy_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return entropy of the conditioned target-manifold state over time.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">target_manifold_entropy_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignResult.jump_activity_series">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignResult.jump_activity_series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jump_activity_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return total jump activity ``sum_mu Tr(J_mu^dag J_mu rho(t))``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">jump_activity_series</span><span class="p">(</span><span class="n">jumps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">jumps</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CageLindbladDesignResult.evolve_with_target_weight">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignResult.evolve_with_target_weight">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evolve_with_target_weight</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">density_matrix_initial</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">times</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">options</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evolve this Lindblad problem and return target-manifold weights.</span>
+
+<span class="sd">        This is a convenience wrapper around ``self.lindblad_problem.evolve``</span>
+<span class="sd">        followed by ``Tr(P_target rho(t))``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lindblad_problem</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span>
+            <span class="n">density_matrix_initial</span><span class="p">,</span>
+            <span class="n">times</span><span class="p">,</span>
+            <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_manifold_weight_series</span><span class="p">(</span><span class="n">evolution_result</span><span class="o">=</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">weights</span></div>
+
 
 <div class="viewcode-block" id="CageLindbladDesignResult.to_lindblad_problem">
 <a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.CageLindbladDesignResult.to_lindblad_problem">[docs]</a>

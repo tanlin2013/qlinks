@@ -45,6 +45,8 @@
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -168,6 +170,8 @@
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
 </ul>
@@ -370,7 +374,7 @@ this guide when writing notebooks or examples.</p>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-pypi">Install from PyPI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-source">Install from source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#docker-tensor-network-interpreter">Docker tensor-network interpreter</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical workflow</a><ul>
@@ -382,6 +386,32 @@ this guide when writing notebooks or examples.</p>
 <li class="toctree-l2"><a class="reference internal" href="workflow.html#classify-a-cage">Classify a cage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="workflow.html#visualize">Visualize</a></li>
 <li class="toctree-l2"><a class="reference internal" href="workflow.html#open-system-construction">Open-system construction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="thermodynamic_eth.html">Thermodynamic ETH diagnostics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#match-one-local-witness-across-sizes">Match one local witness across sizes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#evaluate-cage-and-thermal-expectations">Evaluate cage and thermal expectations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#factorized-multi-block-certification">Factorized multi-block certification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#square-qdm-strip-transfer-matrix">Square-QDM strip transfer matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#winding-resolved-periodic-contractions">Winding-resolved periodic contractions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#evaluate-a-common-cage-witness-family">Evaluate a common cage witness family</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#normalize-and-evaluate-the-actual-cage-derived-witness">Normalize and evaluate the actual cage-derived witness</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#exact-arbitrary-repeat-cage-sequences">Exact arbitrary-repeat cage sequences</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#match-the-cage-energy-density-to-beta-zero">Match the cage energy density to beta zero</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#bi-periodic-product-tile-certification">Bi-periodic product-tile certification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#direct-finite-tile-search">Direct finite-tile search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="thermodynamic_eth.html#singlet-product-stripes-and-the-tensor-network-handoff">Singlet-product stripes and the tensor-network handoff</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tensor_network.html">Tensor-network cage ansatzes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tensor_network.html#rectangular-vertex-tensor">Rectangular vertex tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensor_network.html#quimb-networks">Quimb networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensor_network.html#compact-autograd-optimization">Compact Autograd optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensor_network.html#visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensor_network.html#type-1-chiral-specialization">Type-1 chiral specialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensor_network.html#native-chiral-peps">Native chiral PEPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensor_network.html#seam-resolved-type-1-diagnostics">Seam-resolved type-1 diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensor_network.html#targeted-enlarged-unit-cells">Targeted enlarged unit cells</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a><ul>

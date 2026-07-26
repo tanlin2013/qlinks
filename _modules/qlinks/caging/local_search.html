@@ -166,6 +166,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
 </ul>
@@ -344,6 +346,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
@@ -2584,6 +2587,93 @@
 
 
 
+<div class="viewcode-block" id="FactorizedLocalQDMPadding">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.FactorizedLocalQDMPadding">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FactorizedLocalQDMPadding</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Shared exterior for a product of local blocks without support expansion.</span>
+
+<span class="sd">    Unlike :class:`MultiLocalQDMPadding`, this object never forms the Cartesian</span>
+<span class="sd">    product of block support configurations.  Its memory cost is therefore</span>
+<span class="sd">    independent of ``prod(block.support_size)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">block_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">exterior_link_ids</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">exterior_config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">link_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exterior_link_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exterior_config</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">link_ids</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;exterior_link_ids and exterior_config must be one-dimensional.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">link_ids</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">config</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;exterior_config must have one value per exterior link.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">link_ids</span><span class="p">)</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">link_ids</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;exterior_link_ids must not contain duplicates.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">((</span><span class="n">config</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">config</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;exterior_config must be binary.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;block_ids&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_ids</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;exterior_link_ids&quot;</span><span class="p">,</span> <span class="n">link_ids</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;exterior_config&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="QDMFactorizedProductCertificationReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.QDMFactorizedProductCertificationReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QDMFactorizedProductCertificationReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Polynomial-cost certificate for a separated product of QDM cage blocks.&quot;&quot;&quot;</span>
+
+    <span class="n">block_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span>
+    <span class="n">support_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">kinetic_eigenvalue</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">self_loop_value</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">energy</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">kinetic_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">potential_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">hamiltonian_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">n_kinetic_product_terms</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_potential_product_terms</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">max_blocks_touched_by_plaquette</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">sector_validation</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">failure_reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_certified</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure_reason</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">avoids_support_materialization</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="QDMFactorizedProductCertificationReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.QDMFactorizedProductCertificationReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;block_ids&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_ids</span><span class="p">,</span>
+            <span class="s2">&quot;support_size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_size</span><span class="p">,</span>
+            <span class="s2">&quot;kinetic_eigenvalue&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinetic_eigenvalue</span><span class="p">,</span>
+            <span class="s2">&quot;self_loop_value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">self_loop_value</span><span class="p">,</span>
+            <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span><span class="p">,</span>
+            <span class="s2">&quot;kinetic_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kinetic_residual</span><span class="p">,</span>
+            <span class="s2">&quot;potential_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">potential_residual</span><span class="p">,</span>
+            <span class="s2">&quot;hamiltonian_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hamiltonian_residual</span><span class="p">,</span>
+            <span class="s2">&quot;signature&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">,</span>
+            <span class="s2">&quot;n_kinetic_product_terms&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kinetic_product_terms</span><span class="p">,</span>
+            <span class="s2">&quot;n_potential_product_terms&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_potential_product_terms</span><span class="p">,</span>
+            <span class="s2">&quot;max_blocks_touched_by_plaquette&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_blocks_touched_by_plaquette</span><span class="p">,</span>
+            <span class="s2">&quot;sector_validation&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sector_validation</span><span class="p">,</span>
+            <span class="s2">&quot;failure_reason&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure_reason</span><span class="p">,</span>
+            <span class="s2">&quot;is_certified&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_certified</span><span class="p">,</span>
+            <span class="s2">&quot;avoids_support_materialization&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">avoids_support_materialization</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
 <div class="viewcode-block" id="MultiLocalQDMCertificationReport">
 <a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.MultiLocalQDMCertificationReport">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -2809,6 +2899,64 @@
     <span class="n">forward</span><span class="p">:</span> <span class="nb">complex</span>
     <span class="n">backward</span><span class="p">:</span> <span class="nb">complex</span>
     <span class="n">potential</span><span class="p">:</span> <span class="nb">complex</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_FactorizedProductTerm</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One coefficient times a tensor product of sparse factor vectors.&quot;&quot;&quot;</span>
+
+    <span class="n">coefficient</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">factors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">complex</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sparse_factor_inner_product</span><span class="p">(</span>
+    <span class="n">left</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">complex</span><span class="p">],</span>
+    <span class="n">right</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">complex</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">left</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">right</span><span class="p">):</span>
+        <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">right</span><span class="p">,</span> <span class="n">left</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">_sparse_factor_inner_product</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="n">right</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">left</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_product_inner_product</span><span class="p">(</span>
+    <span class="n">left</span><span class="p">:</span> <span class="n">_FactorizedProductTerm</span><span class="p">,</span>
+    <span class="n">right</span><span class="p">:</span> <span class="n">_FactorizedProductTerm</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">factors</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">right</span><span class="o">.</span><span class="n">factors</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;factorized product terms must have the same number of factors.&quot;</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">coefficient</span><span class="p">)</span> <span class="o">*</span> <span class="n">right</span><span class="o">.</span><span class="n">coefficient</span>
+    <span class="k">for</span> <span class="n">left_factor</span><span class="p">,</span> <span class="n">right_factor</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">factors</span><span class="p">,</span> <span class="n">right</span><span class="o">.</span><span class="n">factors</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">*=</span> <span class="n">_sparse_factor_inner_product</span><span class="p">(</span><span class="n">left_factor</span><span class="p">,</span> <span class="n">right_factor</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_sum_norm</span><span class="p">(</span><span class="n">terms</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_FactorizedProductTerm</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">contributions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">complex</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">left_index</span><span class="p">,</span> <span class="n">left</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">terms</span><span class="p">):</span>
+        <span class="n">contributions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_factorized_product_inner_product</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">left</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">right</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">[</span><span class="n">left_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]:</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="n">_factorized_product_inner_product</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+            <span class="n">contributions</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">overlap</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">overlap</span><span class="p">)))</span>
+
+    <span class="n">real_value</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">fsum</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">contributions</span><span class="p">)</span>
+    <span class="n">imaginary_value</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">fsum</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">contributions</span><span class="p">)</span>
+    <span class="n">absolute_scale</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">fsum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">contributions</span><span class="p">)</span>
+    <span class="n">roundoff_bound</span> <span class="o">=</span> <span class="mf">128.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">absolute_scale</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">real_value</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">roundoff_bound</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">imaginary_value</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">roundoff_bound</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">real_value</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">roundoff_bound</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ArithmeticError</span><span class="p">(</span><span class="s2">&quot;factorized norm contraction produced a negative norm square.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">real_value</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_sum_expectation</span><span class="p">(</span>
+    <span class="n">reference</span><span class="p">:</span> <span class="n">_FactorizedProductTerm</span><span class="p">,</span>
+    <span class="n">terms</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_FactorizedProductTerm</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">_factorized_product_inner_product</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">term</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">))</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -6254,7 +6402,8 @@
     <span class="n">blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">LocalQDMMultiPaddingConfig</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">MultiLocalQDMPadding</span><span class="p">]:</span>
+    <span class="n">factorized</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">MultiLocalQDMPadding</span> <span class="o">|</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">]:</span>
     <span class="n">fixed_blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">fixed_blocks</span><span class="p">:</span>
         <span class="k">return</span>
@@ -6302,14 +6451,29 @@
 
     <span class="k">if</span> <span class="n">n_exterior</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">exterior_config</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
-        <span class="n">padding</span> <span class="o">=</span> <span class="n">_make_qdm_multi_padding_from_exterior</span><span class="p">(</span>
-            <span class="n">model</span><span class="p">,</span>
-            <span class="n">fixed_blocks</span><span class="p">,</span>
-            <span class="n">exterior_link_ids</span><span class="o">=</span><span class="n">exterior_link_ids</span><span class="p">,</span>
-            <span class="n">exterior_config</span><span class="o">=</span><span class="n">exterior_config</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">_multi_padding_passes_global_filters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">fixed_blocks</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-            <span class="k">yield</span> <span class="n">padding</span>
+        <span class="k">if</span> <span class="n">factorized</span><span class="p">:</span>
+            <span class="n">padding</span> <span class="o">=</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">(</span>
+                <span class="n">block_ids</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">fixed_blocks</span><span class="p">),</span>
+                <span class="n">exterior_link_ids</span><span class="o">=</span><span class="n">exterior_link_ids</span><span class="p">,</span>
+                <span class="n">exterior_config</span><span class="o">=</span><span class="n">exterior_config</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">reason</span><span class="p">,</span> <span class="n">_sector_validation</span><span class="p">,</span> <span class="n">_max_touched</span> <span class="o">=</span> <span class="n">_factorized_padding_validation_reason</span><span class="p">(</span>
+                <span class="n">model</span><span class="p">,</span>
+                <span class="n">fixed_blocks</span><span class="p">,</span>
+                <span class="n">padding</span><span class="p">,</span>
+                <span class="n">config</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">padding</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">padding</span> <span class="o">=</span> <span class="n">_make_qdm_multi_padding_from_exterior</span><span class="p">(</span>
+                <span class="n">model</span><span class="p">,</span>
+                <span class="n">fixed_blocks</span><span class="p">,</span>
+                <span class="n">exterior_link_ids</span><span class="o">=</span><span class="n">exterior_link_ids</span><span class="p">,</span>
+                <span class="n">exterior_config</span><span class="o">=</span><span class="n">exterior_config</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">_multi_padding_passes_global_filters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">fixed_blocks</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">padding</span>
         <span class="k">return</span>
 
     <span class="n">variable_order</span> <span class="o">=</span> <span class="n">_qdm_exterior_variable_order</span><span class="p">(</span>
@@ -6379,13 +6543,35 @@
 
         <span class="k">if</span> <span class="n">depth</span> <span class="o">==</span> <span class="n">n_exterior</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">full_check</span><span class="p">():</span>
-                <span class="n">padding</span> <span class="o">=</span> <span class="n">_make_qdm_multi_padding_from_exterior</span><span class="p">(</span>
-                    <span class="n">model</span><span class="p">,</span>
-                    <span class="n">fixed_blocks</span><span class="p">,</span>
-                    <span class="n">exterior_link_ids</span><span class="o">=</span><span class="n">exterior_link_ids</span><span class="p">,</span>
-                    <span class="n">exterior_config</span><span class="o">=</span><span class="n">exterior_config</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="n">_multi_padding_passes_global_filters</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">fixed_blocks</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">factorized</span><span class="p">:</span>
+                    <span class="n">padding</span> <span class="o">=</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">(</span>
+                        <span class="n">block_ids</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">fixed_blocks</span><span class="p">),</span>
+                        <span class="n">exterior_link_ids</span><span class="o">=</span><span class="n">exterior_link_ids</span><span class="p">,</span>
+                        <span class="n">exterior_config</span><span class="o">=</span><span class="n">exterior_config</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                    <span class="p">)</span>
+                    <span class="n">reason</span><span class="p">,</span> <span class="n">_sector_validation</span><span class="p">,</span> <span class="n">_max_touched</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">_factorized_padding_validation_reason</span><span class="p">(</span>
+                            <span class="n">model</span><span class="p">,</span>
+                            <span class="n">fixed_blocks</span><span class="p">,</span>
+                            <span class="n">padding</span><span class="p">,</span>
+                            <span class="n">config</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">passes_filters</span> <span class="o">=</span> <span class="n">reason</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">padding</span> <span class="o">=</span> <span class="n">_make_qdm_multi_padding_from_exterior</span><span class="p">(</span>
+                        <span class="n">model</span><span class="p">,</span>
+                        <span class="n">fixed_blocks</span><span class="p">,</span>
+                        <span class="n">exterior_link_ids</span><span class="o">=</span><span class="n">exterior_link_ids</span><span class="p">,</span>
+                        <span class="n">exterior_config</span><span class="o">=</span><span class="n">exterior_config</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                    <span class="p">)</span>
+                    <span class="n">passes_filters</span> <span class="o">=</span> <span class="n">_multi_padding_passes_global_filters</span><span class="p">(</span>
+                        <span class="n">model</span><span class="p">,</span>
+                        <span class="n">padding</span><span class="p">,</span>
+                        <span class="n">fixed_blocks</span><span class="p">,</span>
+                        <span class="n">config</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">passes_filters</span><span class="p">:</span>
                     <span class="n">yielded_count</span> <span class="o">+=</span> <span class="mi">1</span>
                     <span class="k">yield</span> <span class="n">padding</span>
             <span class="k">return</span>
@@ -6623,6 +6809,588 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">owners</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
     <span class="k">return</span> <span class="kc">True</span>
+
+
+<div class="viewcode-block" id="factorized_qdm_padding_from_multi_padding">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.factorized_qdm_padding_from_multi_padding">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">factorized_qdm_padding_from_multi_padding</span><span class="p">(</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">MultiLocalQDMPadding</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Drop the materialized Cartesian-product support from an old padding.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">(</span>
+        <span class="n">block_ids</span><span class="o">=</span><span class="n">padding</span><span class="o">.</span><span class="n">block_ids</span><span class="p">,</span>
+        <span class="n">exterior_link_ids</span><span class="o">=</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_link_ids</span><span class="p">,</span>
+        <span class="n">exterior_config</span><span class="o">=</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_config</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="iter_factorized_qdm_block_paddings">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.iter_factorized_qdm_block_paddings">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">iter_factorized_qdm_block_paddings</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">block_pool</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">LocalQDMMultiPaddingConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_yielded</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">FactorizedLocalQDMPadding</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield exterior assignments without materializing block support products.</span>
+
+<span class="sd">    This mirrors :func:`iter_multi_qdm_block_paddings`, but the returned object</span>
+<span class="sd">    contains only the block ids and shared exterior configuration.  The search</span>
+<span class="sd">    therefore remains usable when ``prod(block.support_size)`` is too large to</span>
+<span class="sd">    enumerate.  ``max_product_support_size`` is intentionally not applied on</span>
+<span class="sd">    this path because the Cartesian-product support is never materialized.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">multi_config</span> <span class="o">=</span> <span class="n">LocalQDMMultiPaddingConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
+    <span class="n">yielded_limit</span> <span class="o">=</span> <span class="n">multi_config</span><span class="o">.</span><span class="n">max_padding_attempts</span> <span class="k">if</span> <span class="n">max_yielded</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">max_yielded</span>
+    <span class="k">if</span> <span class="n">yielded_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">yielded_limit</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">blocks_tuple</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">block_pool</span><span class="p">)</span>
+    <span class="n">block_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks_tuple</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">block_ids</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">block_ids</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;block_pool contains duplicate block_id values.&quot;</span><span class="p">)</span>
+    <span class="n">max_blocks</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">blocks_tuple</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">multi_config</span><span class="o">.</span><span class="n">max_blocks</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">multi_config</span><span class="o">.</span><span class="n">max_blocks</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks_tuple</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">yielded</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">block_count</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">multi_config</span><span class="o">.</span><span class="n">min_blocks</span><span class="p">,</span> <span class="n">max_blocks</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">blocks</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">blocks_tuple</span><span class="p">,</span> <span class="n">block_count</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">yielded_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">yielded</span> <span class="o">&gt;=</span> <span class="n">yielded_limit</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_qdm_blocks_are_pairwise_link_disjoint</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">separated</span> <span class="o">=</span> <span class="n">_qdm_blocks_are_kinetically_separated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">blocks</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">multi_config</span><span class="o">.</span><span class="n">require_kinetic_separation</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">separated</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">padding</span> <span class="ow">in</span> <span class="n">_iter_qdm_exterior_paddings_for_blocks</span><span class="p">(</span>
+                <span class="n">model</span><span class="p">,</span>
+                <span class="n">blocks</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">multi_config</span><span class="p">,</span>
+                <span class="n">factorized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">padding</span><span class="p">,</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;factorized padding iterator returned an unexpected object.&quot;</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">padding</span>
+                <span class="n">yielded</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">yielded_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">yielded</span> <span class="o">&gt;=</span> <span class="n">yielded_limit</span><span class="p">:</span>
+                    <span class="k">return</span></div>
+
+
+
+<div class="viewcode-block" id="find_factorized_qdm_block_paddings">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.find_factorized_qdm_block_paddings">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_factorized_qdm_block_paddings</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">block_pool</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">LocalQDMMultiPaddingConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">FactorizedLocalQDMPadding</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Materialize a bounded list of factorized QDM exterior assignments.&quot;&quot;&quot;</span>
+    <span class="n">multi_config</span> <span class="o">=</span> <span class="n">LocalQDMMultiPaddingConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
+    <span class="k">if</span> <span class="n">multi_config</span><span class="o">.</span><span class="n">max_paddings</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span>
+        <span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span>
+            <span class="n">iter_factorized_qdm_block_paddings</span><span class="p">(</span>
+                <span class="n">model</span><span class="p">,</span>
+                <span class="n">block_pool</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">multi_config</span><span class="p">,</span>
+                <span class="n">max_yielded</span><span class="o">=</span><span class="n">multi_config</span><span class="o">.</span><span class="n">max_paddings</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">multi_config</span><span class="o">.</span><span class="n">max_paddings</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_block_state_factor</span><span class="p">(</span>
+    <span class="n">block</span><span class="p">:</span> <span class="n">LocalQDMCageBlock</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">complex</span><span class="p">]:</span>
+    <span class="n">factor</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">complex</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">complex</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">config</span><span class="p">,</span> <span class="n">amplitude</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">support_configs</span><span class="p">,</span> <span class="n">block</span><span class="o">.</span><span class="n">amplitudes</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">factor</span><span class="p">[</span><span class="n">_config_key</span><span class="p">(</span><span class="n">config</span><span class="p">)]</span> <span class="o">+=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">amplitude</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">factor</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_reference_term</span><span class="p">(</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">],</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_FactorizedProductTerm</span><span class="p">:</span>
+    <span class="n">block_factors</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_factorized_block_state_factor</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">)</span>
+    <span class="n">exterior_factor</span> <span class="o">=</span> <span class="p">{</span><span class="n">_config_key</span><span class="p">(</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_config</span><span class="p">):</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">_FactorizedProductTerm</span><span class="p">(</span>
+        <span class="n">coefficient</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span><span class="p">,</span>
+        <span class="n">factors</span><span class="o">=</span><span class="n">block_factors</span> <span class="o">+</span> <span class="p">(</span><span class="n">exterior_factor</span><span class="p">,),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_padding_reference_config</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">],</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">support_indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_links</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_link_ids</span><span class="p">]</span> <span class="o">=</span> <span class="n">padding</span><span class="o">.</span><span class="n">exterior_config</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span> <span class="k">if</span> <span class="n">support_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">support_indices</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;support_indices must have one entry per block.&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">support_index</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">link_ids</span><span class="p">]</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">support_configs</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">support_index</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">config</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_padding_validation_reason</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">],</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">LocalQDMMultiPaddingConfig</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="n">fixed_blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fixed_blocks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;no_blocks&quot;</span><span class="p">,</span> <span class="s2">&quot;not_checked&quot;</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">fixed_blocks</span><span class="p">)</span> <span class="o">!=</span> <span class="n">padding</span><span class="o">.</span><span class="n">block_ids</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;block_id_mismatch&quot;</span><span class="p">,</span> <span class="s2">&quot;not_checked&quot;</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_qdm_blocks_are_pairwise_link_disjoint</span><span class="p">(</span><span class="n">fixed_blocks</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;overlapping_block_links&quot;</span><span class="p">,</span> <span class="s2">&quot;not_checked&quot;</span><span class="p">,</span> <span class="mi">0</span>
+
+    <span class="n">owner_by_link</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">block_index</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fixed_blocks</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">link_ids</span><span class="p">:</span>
+            <span class="n">owner_by_link</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">block_index</span><span class="p">)</span>
+    <span class="n">exterior_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">padding</span><span class="o">.</span><span class="n">exterior_link_ids</span><span class="p">)</span>
+    <span class="n">expected_exterior</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_links</span><span class="p">)))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">owner_by_link</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">exterior_ids</span> <span class="o">!=</span> <span class="n">expected_exterior</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;incomplete_link_partition&quot;</span><span class="p">,</span> <span class="s2">&quot;not_checked&quot;</span><span class="p">,</span> <span class="mi">0</span>
+
+    <span class="n">max_touched</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">_qdm_global_plaquette_actions</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+        <span class="n">owners</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">owner_by_link</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)]</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">action</span><span class="o">.</span><span class="n">links</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">owner_by_link</span>
+        <span class="p">}</span>
+        <span class="n">max_touched</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_touched</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">owners</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">max_touched</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;plaquette_touches_multiple_blocks&quot;</span><span class="p">,</span> <span class="s2">&quot;not_checked&quot;</span><span class="p">,</span> <span class="n">max_touched</span>
+
+    <span class="n">reference</span> <span class="o">=</span> <span class="n">_factorized_padding_reference_config</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">fixed_blocks</span><span class="p">,</span> <span class="n">padding</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_global_configs_satisfy_qdm_constraints</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;constraint_violation&quot;</span><span class="p">,</span> <span class="s2">&quot;not_checked&quot;</span><span class="p">,</span> <span class="n">max_touched</span>
+
+    <span class="n">sector_validation</span> <span class="o">=</span> <span class="s2">&quot;disabled&quot;</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">include_sectors</span><span class="p">:</span>
+        <span class="n">sector_validation</span> <span class="o">=</span> <span class="s2">&quot;reference_and_single_block_variations&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_global_configs_satisfy_model_sectors</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;sector_violation&quot;</span><span class="p">,</span> <span class="n">sector_validation</span><span class="p">,</span> <span class="n">max_touched</span>
+        <span class="k">for</span> <span class="n">block_index</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fixed_blocks</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">support_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">support_size</span><span class="p">):</span>
+                <span class="n">support_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">fixed_blocks</span><span class="p">)</span>
+                <span class="n">support_indices</span><span class="p">[</span><span class="n">block_index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">support_index</span><span class="p">)</span>
+                <span class="n">varied</span> <span class="o">=</span> <span class="n">_factorized_padding_reference_config</span><span class="p">(</span>
+                    <span class="n">model</span><span class="p">,</span>
+                    <span class="n">fixed_blocks</span><span class="p">,</span>
+                    <span class="n">padding</span><span class="p">,</span>
+                    <span class="n">support_indices</span><span class="o">=</span><span class="n">support_indices</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_global_configs_satisfy_model_sectors</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">varied</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="s2">&quot;sector_variation&quot;</span><span class="p">,</span> <span class="n">sector_validation</span><span class="p">,</span> <span class="n">max_touched</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">require_static_exterior</span><span class="p">:</span>
+        <span class="n">block_link_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">owner_by_link</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">_qdm_global_plaquette_actions</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">block_link_set</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">action</span><span class="o">.</span><span class="n">links</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">_qdm_plaquette_is_flippable_from_action</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s2">&quot;nonstatic_exterior&quot;</span><span class="p">,</span> <span class="n">sector_validation</span><span class="p">,</span> <span class="n">max_touched</span>
+
+    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sector_validation</span><span class="p">,</span> <span class="n">max_touched</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_action_context</span><span class="p">(</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">],</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+    <span class="n">block_position_by_link</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">block_index</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">local_index</span><span class="p">,</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">link_ids</span><span class="p">):</span>
+            <span class="n">block_position_by_link</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">block_index</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">local_index</span><span class="p">))</span>
+    <span class="n">exterior_position_by_link</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">):</span> <span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_link_ids</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">block_position_by_link</span><span class="p">,</span> <span class="n">exterior_position_by_link</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_pattern_matches</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">_QDMGlobalPlaquetteAction</span><span class="p">,</span>
+    <span class="n">pattern</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+    <span class="n">block_config</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">block_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">block_position_by_link</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+    <span class="n">exterior_config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+    <span class="n">exterior_position_by_link</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">action_position</span><span class="p">,</span> <span class="n">link_id_raw</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">links</span><span class="p">):</span>
+        <span class="n">link_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id_raw</span><span class="p">)</span>
+        <span class="n">owner</span> <span class="o">=</span> <span class="n">block_position_by_link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">owner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">exterior_config</span><span class="p">[</span><span class="n">exterior_position_by_link</span><span class="p">[</span><span class="n">link_id</span><span class="p">]])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">owner_index</span><span class="p">,</span> <span class="n">local_index</span> <span class="o">=</span> <span class="n">owner</span>
+            <span class="k">if</span> <span class="n">block_index</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">owner_index</span> <span class="o">!=</span> <span class="n">block_index</span> <span class="ow">or</span> <span class="n">block_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;inconsistent block ownership in factorized action.&quot;</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">block_config</span><span class="p">[</span><span class="n">local_index</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pattern</span><span class="p">[</span><span class="n">action_position</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_updated_outputs</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">_QDMGlobalPlaquetteAction</span><span class="p">,</span>
+    <span class="n">target_pattern</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+    <span class="n">block_config</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">block_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">block_position_by_link</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+    <span class="n">exterior_config</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+    <span class="n">exterior_position_by_link</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+    <span class="n">updated_block</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">block_config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">block_config</span><span class="p">)</span>
+    <span class="n">updated_exterior</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">exterior_config</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">action_position</span><span class="p">,</span> <span class="n">link_id_raw</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">links</span><span class="p">):</span>
+        <span class="n">link_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id_raw</span><span class="p">)</span>
+        <span class="n">owner</span> <span class="o">=</span> <span class="n">block_position_by_link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span>
+        <span class="n">target_value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">target_pattern</span><span class="p">[</span><span class="n">action_position</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">owner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">updated_exterior</span><span class="p">[</span><span class="n">exterior_position_by_link</span><span class="p">[</span><span class="n">link_id</span><span class="p">]]</span> <span class="o">=</span> <span class="n">target_value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">owner_index</span><span class="p">,</span> <span class="n">local_index</span> <span class="o">=</span> <span class="n">owner</span>
+            <span class="k">if</span> <span class="n">block_index</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">owner_index</span> <span class="o">!=</span> <span class="n">block_index</span> <span class="ow">or</span> <span class="n">updated_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;inconsistent block ownership in factorized output.&quot;</span><span class="p">)</span>
+            <span class="n">updated_block</span><span class="p">[</span><span class="n">local_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_value</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="kc">None</span> <span class="k">if</span> <span class="n">updated_block</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">updated_block</span><span class="p">),</span>
+        <span class="n">_config_key</span><span class="p">(</span><span class="n">updated_exterior</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_kinetic_terms_for_action</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">_QDMGlobalPlaquetteAction</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">,</span>
+    <span class="n">reference</span><span class="p">:</span> <span class="n">_FactorizedProductTerm</span><span class="p">,</span>
+    <span class="n">block_position_by_link</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+    <span class="n">exterior_position_by_link</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_FactorizedProductTerm</span><span class="p">]:</span>
+    <span class="n">owners</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">block_position_by_link</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">action</span><span class="o">.</span><span class="n">links</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">block_position_by_link</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">owners</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;factorized certification requires kinetic separation.&quot;</span><span class="p">)</span>
+    <span class="n">block_index</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">owners</span><span class="p">))</span> <span class="k">if</span> <span class="n">owners</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="n">terms</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_FactorizedProductTerm</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">directions</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">pattern0</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">pattern1</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">forward</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">pattern1</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">pattern0</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">backward</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">block_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">source_pattern</span><span class="p">,</span> <span class="n">target_pattern</span><span class="p">,</span> <span class="n">coefficient</span> <span class="ow">in</span> <span class="n">directions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_factorized_pattern_matches</span><span class="p">(</span>
+                <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+                <span class="n">pattern</span><span class="o">=</span><span class="n">source_pattern</span><span class="p">,</span>
+                <span class="n">block_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">block_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">block_position_by_link</span><span class="o">=</span><span class="n">block_position_by_link</span><span class="p">,</span>
+                <span class="n">exterior_config</span><span class="o">=</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_config</span><span class="p">,</span>
+                <span class="n">exterior_position_by_link</span><span class="o">=</span><span class="n">exterior_position_by_link</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">_unused_block</span><span class="p">,</span> <span class="n">exterior_output</span> <span class="o">=</span> <span class="n">_factorized_updated_outputs</span><span class="p">(</span>
+                <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+                <span class="n">target_pattern</span><span class="o">=</span><span class="n">target_pattern</span><span class="p">,</span>
+                <span class="n">block_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">block_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">block_position_by_link</span><span class="o">=</span><span class="n">block_position_by_link</span><span class="p">,</span>
+                <span class="n">exterior_config</span><span class="o">=</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_config</span><span class="p">,</span>
+                <span class="n">exterior_position_by_link</span><span class="o">=</span><span class="n">exterior_position_by_link</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">factors</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">factors</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">({</span><span class="n">exterior_output</span><span class="p">:</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span><span class="p">},)</span>
+            <span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_FactorizedProductTerm</span><span class="p">(</span><span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span> <span class="n">factors</span><span class="o">=</span><span class="n">factors</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">terms</span>
+
+    <span class="n">source_factor</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">factors</span><span class="p">[</span><span class="n">block_index</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">source_pattern</span><span class="p">,</span> <span class="n">target_pattern</span><span class="p">,</span> <span class="n">coefficient</span> <span class="ow">in</span> <span class="n">directions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">coefficient</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">output_factor</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">complex</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">complex</span><span class="p">)</span>
+        <span class="n">exterior_output</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">block_config</span><span class="p">,</span> <span class="n">amplitude</span> <span class="ow">in</span> <span class="n">source_factor</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_factorized_pattern_matches</span><span class="p">(</span>
+                <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+                <span class="n">pattern</span><span class="o">=</span><span class="n">source_pattern</span><span class="p">,</span>
+                <span class="n">block_config</span><span class="o">=</span><span class="n">block_config</span><span class="p">,</span>
+                <span class="n">block_index</span><span class="o">=</span><span class="n">block_index</span><span class="p">,</span>
+                <span class="n">block_position_by_link</span><span class="o">=</span><span class="n">block_position_by_link</span><span class="p">,</span>
+                <span class="n">exterior_config</span><span class="o">=</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_config</span><span class="p">,</span>
+                <span class="n">exterior_position_by_link</span><span class="o">=</span><span class="n">exterior_position_by_link</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">block_output</span><span class="p">,</span> <span class="n">current_exterior</span> <span class="o">=</span> <span class="n">_factorized_updated_outputs</span><span class="p">(</span>
+                <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+                <span class="n">target_pattern</span><span class="o">=</span><span class="n">target_pattern</span><span class="p">,</span>
+                <span class="n">block_config</span><span class="o">=</span><span class="n">block_config</span><span class="p">,</span>
+                <span class="n">block_index</span><span class="o">=</span><span class="n">block_index</span><span class="p">,</span>
+                <span class="n">block_position_by_link</span><span class="o">=</span><span class="n">block_position_by_link</span><span class="p">,</span>
+                <span class="n">exterior_config</span><span class="o">=</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_config</span><span class="p">,</span>
+                <span class="n">exterior_position_by_link</span><span class="o">=</span><span class="n">exterior_position_by_link</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">block_output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;missing block output for a block-touching action.&quot;</span><span class="p">)</span>
+            <span class="n">output_factor</span><span class="p">[</span><span class="n">block_output</span><span class="p">]</span> <span class="o">+=</span> <span class="n">amplitude</span>
+            <span class="k">if</span> <span class="n">exterior_output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">exterior_output</span> <span class="o">=</span> <span class="n">current_exterior</span>
+            <span class="k">elif</span> <span class="n">exterior_output</span> <span class="o">!=</span> <span class="n">current_exterior</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;one kinetic direction produced inconsistent exterior outputs.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">output_factor</span> <span class="ow">or</span> <span class="n">exterior_output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">factors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">factors</span><span class="p">)</span>
+        <span class="n">factors</span><span class="p">[</span><span class="n">block_index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">output_factor</span><span class="p">)</span>
+        <span class="n">factors</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">exterior_output</span><span class="p">:</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span><span class="p">}</span>
+        <span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">_FactorizedProductTerm</span><span class="p">(</span>
+                <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                <span class="n">factors</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">factors</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">terms</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_potential_term_for_action</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">_QDMGlobalPlaquetteAction</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span><span class="p">,</span>
+    <span class="n">reference</span><span class="p">:</span> <span class="n">_FactorizedProductTerm</span><span class="p">,</span>
+    <span class="n">block_position_by_link</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+    <span class="n">exterior_position_by_link</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_FactorizedProductTerm</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">potential</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">owners</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">block_position_by_link</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">action</span><span class="o">.</span><span class="n">links</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">block_position_by_link</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">owners</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;factorized certification requires kinetic separation.&quot;</span><span class="p">)</span>
+    <span class="n">block_index</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">owners</span><span class="p">))</span> <span class="k">if</span> <span class="n">owners</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">block_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">flippable</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">_factorized_pattern_matches</span><span class="p">(</span>
+                <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+                <span class="n">pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">,</span>
+                <span class="n">block_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">block_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">block_position_by_link</span><span class="o">=</span><span class="n">block_position_by_link</span><span class="p">,</span>
+                <span class="n">exterior_config</span><span class="o">=</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_config</span><span class="p">,</span>
+                <span class="n">exterior_position_by_link</span><span class="o">=</span><span class="n">exterior_position_by_link</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">pattern0</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">pattern1</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">flippable</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">_FactorizedProductTerm</span><span class="p">(</span>
+            <span class="n">coefficient</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">potential</span><span class="p">,</span>
+            <span class="n">factors</span><span class="o">=</span><span class="n">reference</span><span class="o">.</span><span class="n">factors</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">source_factor</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">factors</span><span class="p">[</span><span class="n">block_index</span><span class="p">]</span>
+    <span class="n">output_factor</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">complex</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">block_config</span><span class="p">,</span> <span class="n">amplitude</span> <span class="ow">in</span> <span class="n">source_factor</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">flippable</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">_factorized_pattern_matches</span><span class="p">(</span>
+                <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+                <span class="n">pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">,</span>
+                <span class="n">block_config</span><span class="o">=</span><span class="n">block_config</span><span class="p">,</span>
+                <span class="n">block_index</span><span class="o">=</span><span class="n">block_index</span><span class="p">,</span>
+                <span class="n">block_position_by_link</span><span class="o">=</span><span class="n">block_position_by_link</span><span class="p">,</span>
+                <span class="n">exterior_config</span><span class="o">=</span><span class="n">padding</span><span class="o">.</span><span class="n">exterior_config</span><span class="p">,</span>
+                <span class="n">exterior_position_by_link</span><span class="o">=</span><span class="n">exterior_position_by_link</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">pattern0</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">pattern1</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">flippable</span><span class="p">:</span>
+            <span class="n">output_factor</span><span class="p">[</span><span class="n">block_config</span><span class="p">]</span> <span class="o">=</span> <span class="n">amplitude</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_factor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">factors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">factors</span><span class="p">)</span>
+    <span class="n">factors</span><span class="p">[</span><span class="n">block_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_factor</span>
+    <span class="k">return</span> <span class="n">_FactorizedProductTerm</span><span class="p">(</span>
+        <span class="n">coefficient</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">potential</span><span class="p">,</span>
+        <span class="n">factors</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">factors</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factorized_eigen_residual</span><span class="p">(</span>
+    <span class="n">action_terms</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_FactorizedProductTerm</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">reference</span><span class="p">:</span> <span class="n">_FactorizedProductTerm</span><span class="p">,</span>
+    <span class="n">eigenvalue</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">residual_terms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">action_terms</span><span class="p">)</span>
+    <span class="n">residual_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">_FactorizedProductTerm</span><span class="p">(</span>
+            <span class="n">coefficient</span><span class="o">=-</span><span class="nb">complex</span><span class="p">(</span><span class="n">eigenvalue</span><span class="p">),</span>
+            <span class="n">factors</span><span class="o">=</span><span class="n">reference</span><span class="o">.</span><span class="n">factors</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_factorized_sum_norm</span><span class="p">(</span><span class="n">residual_terms</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="certify_qdm_factorized_product_state">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.local_search.certify_qdm_factorized_product_state">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">certify_qdm_factorized_product_state</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">],</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">FactorizedLocalQDMPadding</span> <span class="o">|</span> <span class="n">MultiLocalQDMPadding</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">LocalQDMMultiPaddingConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QDMFactorizedProductCertificationReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Certify a separated product cage without forming its global support.</span>
+
+<span class="sd">    The Hamiltonian action is represented as a sum of tensor-product vectors.</span>
+<span class="sd">    Norms and expectation values are evaluated by factor contractions.  The</span>
+<span class="sd">    cost is polynomial in the number of blocks and plaquettes and exponential</span>
+<span class="sd">    only in the largest *single-block* support, rather than in the product of</span>
+<span class="sd">    all block support sizes.</span>
+
+<span class="sd">    Exact factorization currently requires every plaquette to touch at most one</span>
+<span class="sd">    selected block.  This is precisely the kinetic-separation condition used by</span>
+<span class="sd">    the strict multi-padding workflow.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">multi_config</span> <span class="o">=</span> <span class="n">LocalQDMMultiPaddingConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
+    <span class="n">factorized_padding</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">factorized_qdm_padding_from_multi_padding</span><span class="p">(</span><span class="n">padding</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">padding</span><span class="p">,</span> <span class="n">MultiLocalQDMPadding</span><span class="p">)</span>
+        <span class="k">else</span> <span class="n">padding</span>
+    <span class="p">)</span>
+    <span class="n">fixed_blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+    <span class="n">failure_reason</span><span class="p">,</span> <span class="n">sector_validation</span><span class="p">,</span> <span class="n">max_touched</span> <span class="o">=</span> <span class="n">_factorized_padding_validation_reason</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">fixed_blocks</span><span class="p">,</span>
+        <span class="n">factorized_padding</span><span class="p">,</span>
+        <span class="n">multi_config</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">support_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">([</span><span class="n">block</span><span class="o">.</span><span class="n">support_size</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">fixed_blocks</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">failure_reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">QDMFactorizedProductCertificationReport</span><span class="p">(</span>
+            <span class="n">block_ids</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">fixed_blocks</span><span class="p">),</span>
+            <span class="n">padding</span><span class="o">=</span><span class="n">factorized_padding</span><span class="p">,</span>
+            <span class="n">support_size</span><span class="o">=</span><span class="n">support_size</span><span class="p">,</span>
+            <span class="n">kinetic_eigenvalue</span><span class="o">=</span><span class="mf">0.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span><span class="p">,</span>
+            <span class="n">self_loop_value</span><span class="o">=</span><span class="mf">0.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span><span class="p">,</span>
+            <span class="n">energy</span><span class="o">=</span><span class="mf">0.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span><span class="p">,</span>
+            <span class="n">kinetic_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span>
+            <span class="n">potential_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span>
+            <span class="n">hamiltonian_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span>
+            <span class="n">signature</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">n_kinetic_product_terms</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">n_potential_product_terms</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">max_blocks_touched_by_plaquette</span><span class="o">=</span><span class="n">max_touched</span><span class="p">,</span>
+            <span class="n">sector_validation</span><span class="o">=</span><span class="n">sector_validation</span><span class="p">,</span>
+            <span class="n">failure_reason</span><span class="o">=</span><span class="n">failure_reason</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">reference</span> <span class="o">=</span> <span class="n">_factorized_reference_term</span><span class="p">(</span><span class="n">fixed_blocks</span><span class="p">,</span> <span class="n">factorized_padding</span><span class="p">)</span>
+    <span class="n">block_position_by_link</span><span class="p">,</span> <span class="n">exterior_position_by_link</span> <span class="o">=</span> <span class="n">_factorized_action_context</span><span class="p">(</span>
+        <span class="n">fixed_blocks</span><span class="p">,</span>
+        <span class="n">factorized_padding</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">kinetic_terms</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_FactorizedProductTerm</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">potential_terms</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_FactorizedProductTerm</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">_qdm_global_plaquette_actions</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+        <span class="n">kinetic_terms</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">_factorized_kinetic_terms_for_action</span><span class="p">(</span>
+                <span class="n">action</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="n">factorized_padding</span><span class="p">,</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
+                <span class="n">block_position_by_link</span><span class="o">=</span><span class="n">block_position_by_link</span><span class="p">,</span>
+                <span class="n">exterior_position_by_link</span><span class="o">=</span><span class="n">exterior_position_by_link</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">potential_term</span> <span class="o">=</span> <span class="n">_factorized_potential_term_for_action</span><span class="p">(</span>
+            <span class="n">action</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="n">factorized_padding</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
+            <span class="n">block_position_by_link</span><span class="o">=</span><span class="n">block_position_by_link</span><span class="p">,</span>
+            <span class="n">exterior_position_by_link</span><span class="o">=</span><span class="n">exterior_position_by_link</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">potential_term</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">potential_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">potential_term</span><span class="p">)</span>
+
+    <span class="n">kinetic_eigenvalue</span> <span class="o">=</span> <span class="n">_factorized_sum_expectation</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">kinetic_terms</span><span class="p">)</span>
+    <span class="n">self_loop_value</span> <span class="o">=</span> <span class="n">_factorized_sum_expectation</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">potential_terms</span><span class="p">)</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">kinetic_eigenvalue</span> <span class="o">+</span> <span class="n">self_loop_value</span>
+    <span class="n">kinetic_residual</span> <span class="o">=</span> <span class="n">_factorized_eigen_residual</span><span class="p">(</span>
+        <span class="n">kinetic_terms</span><span class="p">,</span>
+        <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
+        <span class="n">eigenvalue</span><span class="o">=</span><span class="n">kinetic_eigenvalue</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">potential_residual</span> <span class="o">=</span> <span class="n">_factorized_eigen_residual</span><span class="p">(</span>
+        <span class="n">potential_terms</span><span class="p">,</span>
+        <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
+        <span class="n">eigenvalue</span><span class="o">=</span><span class="n">self_loop_value</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">hamiltonian_residual</span> <span class="o">=</span> <span class="n">_factorized_eigen_residual</span><span class="p">(</span>
+        <span class="nb">tuple</span><span class="p">(</span><span class="n">kinetic_terms</span><span class="p">)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">potential_terms</span><span class="p">),</span>
+        <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
+        <span class="n">eigenvalue</span><span class="o">=</span><span class="n">energy</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">signature</span> <span class="o">=</span> <span class="n">signature_from_energy_and_self_loop</span><span class="p">(</span>
+        <span class="n">energy</span><span class="p">,</span>
+        <span class="n">self_loop_value</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">multi_config</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span> <span class="mf">1.0e-15</span><span class="p">)</span> <span class="o">*</span> <span class="mf">10.0</span><span class="p">,</span>
+        <span class="n">potential_unit</span><span class="o">=</span><span class="n">_infer_potential_unit_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">residual_failure</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">kinetic_residual</span> <span class="o">&gt;</span> <span class="n">multi_config</span><span class="o">.</span><span class="n">tolerance</span><span class="p">:</span>
+        <span class="n">residual_failure</span> <span class="o">=</span> <span class="s2">&quot;kinetic_residual&quot;</span>
+    <span class="k">elif</span> <span class="n">potential_residual</span> <span class="o">&gt;</span> <span class="n">multi_config</span><span class="o">.</span><span class="n">tolerance</span><span class="p">:</span>
+        <span class="n">residual_failure</span> <span class="o">=</span> <span class="s2">&quot;potential_residual&quot;</span>
+    <span class="k">elif</span> <span class="n">hamiltonian_residual</span> <span class="o">&gt;</span> <span class="n">multi_config</span><span class="o">.</span><span class="n">tolerance</span><span class="p">:</span>
+        <span class="n">residual_failure</span> <span class="o">=</span> <span class="s2">&quot;hamiltonian_residual&quot;</span>
+    <span class="k">elif</span> <span class="n">signature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">residual_failure</span> <span class="o">=</span> <span class="s2">&quot;signature_inference_failed&quot;</span>
+
+    <span class="k">return</span> <span class="n">QDMFactorizedProductCertificationReport</span><span class="p">(</span>
+        <span class="n">block_ids</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">fixed_blocks</span><span class="p">),</span>
+        <span class="n">padding</span><span class="o">=</span><span class="n">factorized_padding</span><span class="p">,</span>
+        <span class="n">support_size</span><span class="o">=</span><span class="n">support_size</span><span class="p">,</span>
+        <span class="n">kinetic_eigenvalue</span><span class="o">=</span><span class="n">kinetic_eigenvalue</span><span class="p">,</span>
+        <span class="n">self_loop_value</span><span class="o">=</span><span class="n">self_loop_value</span><span class="p">,</span>
+        <span class="n">energy</span><span class="o">=</span><span class="n">energy</span><span class="p">,</span>
+        <span class="n">kinetic_residual</span><span class="o">=</span><span class="n">kinetic_residual</span><span class="p">,</span>
+        <span class="n">potential_residual</span><span class="o">=</span><span class="n">potential_residual</span><span class="p">,</span>
+        <span class="n">hamiltonian_residual</span><span class="o">=</span><span class="n">hamiltonian_residual</span><span class="p">,</span>
+        <span class="n">signature</span><span class="o">=</span><span class="n">signature</span><span class="p">,</span>
+        <span class="n">n_kinetic_product_terms</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">kinetic_terms</span><span class="p">),</span>
+        <span class="n">n_potential_product_terms</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">potential_terms</span><span class="p">),</span>
+        <span class="n">max_blocks_touched_by_plaquette</span><span class="o">=</span><span class="n">max_touched</span><span class="p">,</span>
+        <span class="n">sector_validation</span><span class="o">=</span><span class="n">sector_validation</span><span class="p">,</span>
+        <span class="n">failure_reason</span><span class="o">=</span><span class="n">residual_failure</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_make_qdm_multi_padding_from_exterior</span><span class="p">(</span>

@@ -1,0 +1,1489 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.caging.chain_complex &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=eeb54e98"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qlinks/caging/chain_complex';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.3" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/caging/chain_complex.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qlinks.caging.chain_complex</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">scipy_linalg</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">scipy_sparse</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.nullspace</span><span class="w"> </span><span class="kn">import</span> <span class="n">as_dense_array</span><span class="p">,</span> <span class="n">nullspace_svd</span>
+
+<span class="n">ComplexArray</span> <span class="o">=</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+<span class="n">FloatArray</span> <span class="o">=</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="HamiltonianGraphChainComplex">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.HamiltonianGraphChainComplex">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HamiltonianGraphChainComplex</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Finite Hamiltonian-graph caging complex ``C2 -&gt; C1 -&gt; C0``.</span>
+
+<span class="sd">    ``constraint_map`` is the physical leakage/eigenvalue map ``D_E`` from</span>
+<span class="sd">    support amplitudes to violated Hamiltonian rows. ``generator_map`` maps a</span>
+<span class="sd">    chosen library of bounded-support cage motifs into the support-amplitude</span>
+<span class="sd">    space. The chain condition is ``constraint_map @ generator_map == 0``.</span>
+
+<span class="sd">    The basis conventions are:</span>
+
+<span class="sd">    * columns of ``generator_map`` are local cage generators;</span>
+<span class="sd">    * columns of ``ker(constraint_map)`` are all exact cage amplitudes on the</span>
+<span class="sd">      chosen support shell;</span>
+<span class="sd">    * ``H_1 = ker(D_E) / im(T_R)`` is the many-body CLS-completeness defect;</span>
+<span class="sd">    * ``H_2 = ker(T_R)`` records linear relations among translated motifs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">constraint_map</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">generator_map</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">support_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">test_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">generator_labels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">c0_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint_map</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">c1_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint_map</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">c2_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generator_map</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chain_residual</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint_map</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator_map</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="HamiltonianGraphHomologyReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.HamiltonianGraphHomologyReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HamiltonianGraphHomologyReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Numerical homology/cohomology report for a caging chain complex.&quot;&quot;&quot;</span>
+
+    <span class="n">c0_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">c1_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">c2_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">constraint_rank</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">generator_rank</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">cage_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">h1_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">h2_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">chain_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">relative_chain_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">generator_containment_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">cage_basis</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">local_generator_basis</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">h1_basis</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">h2_basis</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">cocycle_basis</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">hodge_operator</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">hodge_eigenvalues</span><span class="p">:</span> <span class="n">FloatArray</span>
+    <span class="n">hodge_gap</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nu_mb</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the finite-volume many-body CLS-completeness defect.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h1_dimension</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_chain_complex</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_chain_residual</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_locally_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h1_dimension</span> <span class="o">==</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="HamiltonianGraphHomologyReport.pairing_matrix">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.HamiltonianGraphHomologyReport.pairing_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pairing_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cage_representatives</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComplexArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pair dual cocycles with supplied cage representatives.</span>
+
+<span class="sd">        With no argument, harmonic ``H_1`` representatives are used. Under the</span>
+<span class="sd">        Euclidean inner product the returned matrix should be the identity up</span>
+<span class="sd">        to numerical tolerance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">representatives</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h1_basis</span>
+            <span class="k">if</span> <span class="n">cage_representatives</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">_as_column_matrix</span><span class="p">(</span><span class="n">cage_representatives</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c1_dimension</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cocycle_basis</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">representatives</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HamiltonianGraphHomologyReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.HamiltonianGraphHomologyReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;c0_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">c0_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;c1_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">c1_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;c2_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">c2_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;constraint_rank&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint_rank</span><span class="p">,</span>
+            <span class="s2">&quot;generator_rank&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator_rank</span><span class="p">,</span>
+            <span class="s2">&quot;cage_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cage_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;h1_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">h1_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;nu_mb&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu_mb</span><span class="p">,</span>
+            <span class="s2">&quot;h2_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">h2_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;chain_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">chain_residual</span><span class="p">,</span>
+            <span class="s2">&quot;relative_chain_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_chain_residual</span><span class="p">,</span>
+            <span class="s2">&quot;generator_containment_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator_containment_residual</span><span class="p">,</span>
+            <span class="s2">&quot;hodge_gap&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hodge_gap</span><span class="p">,</span>
+            <span class="s2">&quot;is_chain_complex&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_chain_complex</span><span class="p">,</span>
+            <span class="s2">&quot;is_locally_complete&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_locally_complete</span><span class="p">,</span>
+            <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TermResolvedCagingReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.TermResolvedCagingReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TermResolvedCagingReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare separately vanishing local channels with collective cancellation.&quot;&quot;&quot;</span>
+
+    <span class="n">physical_constraint_map</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">resolved_constraint_map</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">physical_kernel_basis</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">resolved_kernel_basis</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">collective_quotient_basis</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">physical_nullity</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">resolved_nullity</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">collective_quotient_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">resolved_containment_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_collective_cancellation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_quotient_dimension</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="TermResolvedCagingReport.channel_activity">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.TermResolvedCagingReport.channel_activity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">channel_activity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FloatArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``||\\widetilde D_E psi||`` for each supplied state column.&quot;&quot;&quot;</span>
+        <span class="n">vectors</span> <span class="o">=</span> <span class="n">_as_column_matrix</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">physical_constraint_map</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_constraint_map</span> <span class="o">@</span> <span class="n">vectors</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TermResolvedCagingReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.TermResolvedCagingReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;physical_nullity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">physical_nullity</span><span class="p">,</span>
+            <span class="s2">&quot;resolved_nullity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved_nullity</span><span class="p">,</span>
+            <span class="s2">&quot;collective_quotient_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">collective_quotient_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;resolved_containment_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved_containment_residual</span><span class="p">,</span>
+            <span class="s2">&quot;has_collective_cancellation&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_collective_cancellation</span><span class="p">,</span>
+            <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="MotifRadiusHomologyPoint">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.MotifRadiusHomologyPoint">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MotifRadiusHomologyPoint</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One motif-radius point in a local-generator saturation scan.&quot;&quot;&quot;</span>
+
+    <span class="n">radius</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">generator_rank</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">h1_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">h2_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">chain_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">hodge_gap</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="MotifRadiusHomologyPoint.from_report">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.MotifRadiusHomologyPoint.from_report">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_report</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">radius</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">report</span><span class="p">:</span> <span class="n">HamiltonianGraphHomologyReport</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MotifRadiusHomologyPoint</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">radius</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">radius</span><span class="p">),</span>
+            <span class="n">generator_rank</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">generator_rank</span><span class="p">,</span>
+            <span class="n">h1_dimension</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">h1_dimension</span><span class="p">,</span>
+            <span class="n">h2_dimension</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">h2_dimension</span><span class="p">,</span>
+            <span class="n">chain_residual</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">chain_residual</span><span class="p">,</span>
+            <span class="n">hodge_gap</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">hodge_gap</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="MotifRadiusSaturationReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.MotifRadiusSaturationReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MotifRadiusSaturationReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Track whether ``nu_MB`` stabilizes as the motif library grows.&quot;&quot;&quot;</span>
+
+    <span class="n">points</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MotifRadiusHomologyPoint</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">plateau_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">classification</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;empty&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;invalid_tolerance&quot;</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">chain_residual</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;invalid_chain_data&quot;</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plateau_length</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">required</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;insufficient_radius_range&quot;</span>
+        <span class="n">tail</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="o">-</span><span class="n">required</span><span class="p">:]</span>
+        <span class="n">h1_values</span> <span class="o">=</span> <span class="p">{</span><span class="n">point</span><span class="o">.</span><span class="n">h1_dimension</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">tail</span><span class="p">}</span>
+        <span class="n">generator_ranks</span> <span class="o">=</span> <span class="p">{</span><span class="n">point</span><span class="o">.</span><span class="n">generator_rank</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">tail</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">h1_values</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">generator_ranks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;not_saturated&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">tail</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">h1_dimension</span>
+        <span class="k">return</span> <span class="s2">&quot;locally_complete&quot;</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;saturated_defect_candidate&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">saturated_nu_mb</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">classification</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;locally_complete&quot;</span><span class="p">,</span> <span class="s2">&quot;saturated_defect_candidate&quot;</span><span class="p">}:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">h1_dimension</span>
+
+<div class="viewcode-block" id="MotifRadiusSaturationReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.MotifRadiusSaturationReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;classification&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">classification</span><span class="p">,</span>
+            <span class="s2">&quot;saturated_nu_mb&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">saturated_nu_mb</span><span class="p">,</span>
+            <span class="s2">&quot;plateau_length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">plateau_length</span><span class="p">,</span>
+            <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+            <span class="s2">&quot;points&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span>
+                    <span class="s2">&quot;generator_rank&quot;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">generator_rank</span><span class="p">,</span>
+                    <span class="s2">&quot;h1_dimension&quot;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">h1_dimension</span><span class="p">,</span>
+                    <span class="s2">&quot;h2_dimension&quot;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">h2_dimension</span><span class="p">,</span>
+                    <span class="s2">&quot;chain_residual&quot;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">chain_residual</span><span class="p">,</span>
+                    <span class="s2">&quot;hodge_gap&quot;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">hodge_gap</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span>
+            <span class="p">),</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LaurentPeriodicKernelPoint">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.LaurentPeriodicKernelPoint">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LaurentPeriodicKernelPoint</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Kernel diagnostic for one Laurent operator on a twisted finite ring.&quot;&quot;&quot;</span>
+
+    <span class="n">length</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">twist</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">nullity</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">singular_values</span><span class="p">:</span> <span class="n">FloatArray</span>
+    <span class="n">smallest_positive_singular_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="LaurentPeriodicKernelPoint.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.LaurentPeriodicKernelPoint.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">,</span>
+            <span class="s2">&quot;twist&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">twist</span><span class="p">,</span>
+            <span class="s2">&quot;rank&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span>
+            <span class="s2">&quot;nullity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nullity</span><span class="p">,</span>
+            <span class="s2">&quot;smallest_positive_singular_value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">smallest_positive_singular_value</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ScalarLaurentBulkPhaseReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.ScalarLaurentBulkPhaseReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScalarLaurentBulkPhaseReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fredholm phase data for a scalar first-order Laurent constraint.</span>
+
+<span class="sd">    The local relation is ``psi[j + 1] = transport * psi[j]`` with symbol</span>
+<span class="sd">    ``b(z) = z - transport``.  When ``abs(transport) != 1`` the symbol is</span>
+<span class="sd">    nonzero on the unit circle and its winding is well defined.  Unit-modulus</span>
+<span class="sd">    transport lies exactly on the non-Fredholm transition locus.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">transport</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">root_modulus</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">unit_circle_gap</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">winding_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">toeplitz_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">is_fredholm</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">localization_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+
+<div class="viewcode-block" id="ScalarLaurentBulkPhaseReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.ScalarLaurentBulkPhaseReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;transport&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">transport</span><span class="p">,</span>
+            <span class="s2">&quot;root_modulus&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_modulus</span><span class="p">,</span>
+            <span class="s2">&quot;unit_circle_gap&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit_circle_gap</span><span class="p">,</span>
+            <span class="s2">&quot;winding_number&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">winding_number</span><span class="p">,</span>
+            <span class="s2">&quot;toeplitz_index&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">toeplitz_index</span><span class="p">,</span>
+            <span class="s2">&quot;is_fredholm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_fredholm</span><span class="p">,</span>
+            <span class="s2">&quot;localization_length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">localization_length</span><span class="p">,</span>
+            <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ScalarLaurentDomainWallReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.ScalarLaurentDomainWallReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScalarLaurentDomainWallReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Finite-chain domain wall between two scalar Laurent constraints.</span>
+
+<span class="sd">    Sites are arranged as ``left_length`` bonds, one interface site, and</span>
+<span class="sd">    ``right_length`` bonds.  The constraint matrix imposes the left transport</span>
+<span class="sd">    on bonds to the left of the interface and the right transport on bonds to</span>
+<span class="sd">    the right.  A right-chiral interface mode is topologically predicted only</span>
+<span class="sd">    when both bulks are Fredholm and their winding numbers differ in the</span>
+<span class="sd">    appropriate orientation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">left_bulk</span><span class="p">:</span> <span class="n">ScalarLaurentBulkPhaseReport</span>
+    <span class="n">right_bulk</span><span class="p">:</span> <span class="n">ScalarLaurentBulkPhaseReport</span>
+    <span class="n">left_length</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">right_length</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">constraint_matrix</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">kernel_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">kernel_basis</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">canonical_mode</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">inverse_participation_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">interface_site_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">interface_window_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">center_of_mass</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">predicted_right_interface_modes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">predicted_left_interface_modes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">is_exponentially_interface_localized</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">classification</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">site_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left_length</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">interface_site</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left_length</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ScalarLaurentDomainWallReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.ScalarLaurentDomainWallReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;left_transport&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_bulk</span><span class="o">.</span><span class="n">transport</span><span class="p">,</span>
+            <span class="s2">&quot;right_transport&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_bulk</span><span class="o">.</span><span class="n">transport</span><span class="p">,</span>
+            <span class="s2">&quot;left_winding&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_bulk</span><span class="o">.</span><span class="n">winding_number</span><span class="p">,</span>
+            <span class="s2">&quot;right_winding&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_bulk</span><span class="o">.</span><span class="n">winding_number</span><span class="p">,</span>
+            <span class="s2">&quot;left_length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_length</span><span class="p">,</span>
+            <span class="s2">&quot;right_length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_length</span><span class="p">,</span>
+            <span class="s2">&quot;kernel_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">,</span>
+            <span class="s2">&quot;inverse_participation_ratio&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">inverse_participation_ratio</span><span class="p">,</span>
+            <span class="s2">&quot;interface_site_weight&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface_site_weight</span><span class="p">,</span>
+            <span class="s2">&quot;interface_window_weight&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface_window_weight</span><span class="p">,</span>
+            <span class="s2">&quot;center_of_mass&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">,</span>
+            <span class="s2">&quot;predicted_right_interface_modes&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted_right_interface_modes</span><span class="p">,</span>
+            <span class="s2">&quot;predicted_left_interface_modes&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted_left_interface_modes</span><span class="p">,</span>
+            <span class="s2">&quot;is_exponentially_interface_localized&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_exponentially_interface_localized</span><span class="p">),</span>
+            <span class="s2">&quot;classification&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">classification</span><span class="p">,</span>
+            <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="IncidenceConstraintInterfaceReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.IncidenceConstraintInterfaceReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">IncidenceConstraintInterfaceReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Interface obtained by gluing two local incidence constraint modules.</span>
+
+<span class="sd">    The combined differential contains both complete bulk constraint maps plus</span>
+<span class="sd">    additional interface rows.  Consequently, any interface kernel lies inside</span>
+<span class="sd">    the direct sum of the two original bulk kernels.  The report tests whether</span>
+<span class="sd">    gluing merely merges the local ``H^0`` sectors, frustrates them, or creates</span>
+<span class="sd">    a higher-arity problem; it cannot create a new quotient mode without</span>
+<span class="sd">    modifying or removing bulk constraints near the interface.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">left_support_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">right_support_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">left_kernel_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">right_kernel_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">decoupled_kernel_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">interface_constraint_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">combined_constraint_map</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">combined_kernel_basis</span><span class="p">:</span> <span class="n">ComplexArray</span>
+    <span class="n">combined_kernel_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">surviving_bulk_kernel_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">interface_created_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">interface_removed_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">active_row_weight_histogram</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">is_two_channel</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">connected_component_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">betti_1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">gauge_flatness_residual</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">kernel_equals_h0</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">classification</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+
+<div class="viewcode-block" id="IncidenceConstraintInterfaceReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.IncidenceConstraintInterfaceReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;left_support_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_support_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;right_support_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_support_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;left_kernel_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_kernel_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;right_kernel_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_kernel_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;decoupled_kernel_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoupled_kernel_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;interface_constraint_count&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface_constraint_count</span><span class="p">,</span>
+            <span class="s2">&quot;combined_kernel_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined_kernel_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;surviving_bulk_kernel_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">surviving_bulk_kernel_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;interface_created_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface_created_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;interface_removed_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface_removed_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;active_row_weight_histogram&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_row_weight_histogram</span><span class="p">,</span>
+            <span class="s2">&quot;is_two_channel&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_two_channel</span><span class="p">,</span>
+            <span class="s2">&quot;connected_component_count&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected_component_count</span><span class="p">,</span>
+            <span class="s2">&quot;betti_1&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">betti_1</span><span class="p">,</span>
+            <span class="s2">&quot;gauge_flatness_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">gauge_flatness_residual</span><span class="p">,</span>
+            <span class="s2">&quot;kernel_equals_h0&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_equals_h0</span><span class="p">,</span>
+            <span class="s2">&quot;classification&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">classification</span><span class="p">,</span>
+            <span class="s2">&quot;tolerance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="diagnose_scalar_laurent_bulk_phase">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnose_scalar_laurent_bulk_phase">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagnose_scalar_laurent_bulk_phase</span><span class="p">(</span>
+    <span class="n">transport</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLaurentBulkPhaseReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagnose the scalar symbol ``b(z)=z-transport`` on the unit circle.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tolerance</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tolerance must be positive.&quot;</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">transport</span><span class="p">)</span>
+    <span class="n">modulus</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="n">gap</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">modulus</span><span class="p">))</span>
+    <span class="n">is_fredholm</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">gap</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">winding</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">toeplitz_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">localization_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">is_fredholm</span><span class="p">:</span>
+        <span class="n">winding</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">modulus</span> <span class="o">&lt;</span> <span class="mf">1.0</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">toeplitz_index</span> <span class="o">=</span> <span class="o">-</span><span class="n">winding</span>
+        <span class="k">if</span> <span class="n">modulus</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+            <span class="n">localization_length</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">modulus</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">localization_length</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">ScalarLaurentBulkPhaseReport</span><span class="p">(</span>
+        <span class="n">transport</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">root_modulus</span><span class="o">=</span><span class="n">modulus</span><span class="p">,</span>
+        <span class="n">unit_circle_gap</span><span class="o">=</span><span class="n">gap</span><span class="p">,</span>
+        <span class="n">winding_number</span><span class="o">=</span><span class="n">winding</span><span class="p">,</span>
+        <span class="n">toeplitz_index</span><span class="o">=</span><span class="n">toeplitz_index</span><span class="p">,</span>
+        <span class="n">is_fredholm</span><span class="o">=</span><span class="n">is_fredholm</span><span class="p">,</span>
+        <span class="n">localization_length</span><span class="o">=</span><span class="n">localization_length</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="diagnose_scalar_laurent_domain_wall">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnose_scalar_laurent_domain_wall">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagnose_scalar_laurent_domain_wall</span><span class="p">(</span>
+    <span class="n">left_transport</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+    <span class="n">right_transport</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">left_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">24</span><span class="p">,</span>
+    <span class="n">right_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">24</span><span class="p">,</span>
+    <span class="n">interface_window_radius</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLaurentDomainWallReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test the bulk--defect correspondence of two scalar transport modules.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">left_length</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">right_length</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;left_length and right_length must be positive.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">interface_window_radius</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;interface_window_radius must be nonnegative.&quot;</span><span class="p">)</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="n">diagnose_scalar_laurent_bulk_phase</span><span class="p">(</span><span class="n">left_transport</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="n">diagnose_scalar_laurent_bulk_phase</span><span class="p">(</span><span class="n">right_transport</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">transport</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tolerance</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">right</span><span class="o">.</span><span class="n">transport</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;domain-wall transport factors must be nonzero.&quot;</span><span class="p">)</span>
+
+    <span class="n">site_count</span> <span class="o">=</span> <span class="n">left_length</span> <span class="o">+</span> <span class="n">right_length</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">interface_site</span> <span class="o">=</span> <span class="n">left_length</span>
+    <span class="n">differential</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">site_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">site_count</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">bond</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">site_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">transport</span> <span class="o">=</span> <span class="n">left</span><span class="o">.</span><span class="n">transport</span> <span class="k">if</span> <span class="n">bond</span> <span class="o">&lt;</span> <span class="n">interface_site</span> <span class="k">else</span> <span class="n">right</span><span class="o">.</span><span class="n">transport</span>
+        <span class="n">differential</span><span class="p">[</span><span class="n">bond</span><span class="p">,</span> <span class="n">bond</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">transport</span>
+        <span class="n">differential</span><span class="p">[</span><span class="n">bond</span><span class="p">,</span> <span class="n">bond</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">nullspace_svd</span><span class="p">(</span><span class="n">differential</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">site_count</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">residual</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">ipr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">interface_site_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">interface_window_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">center_of_mass</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="c1"># The first-order open-chain differential has a one-dimensional kernel.</span>
+        <span class="c1"># Use the SVD vector rather than a recurrence so the diagnostic remains</span>
+        <span class="c1"># stable for large transport contrasts.</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kernel</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mode</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+            <span class="n">mode</span> <span class="o">/=</span> <span class="n">norm</span>
+        <span class="n">probabilities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">differential</span> <span class="o">@</span> <span class="n">mode</span><span class="p">))</span>
+        <span class="n">ipr</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">probabilities</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">interface_site_weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">probabilities</span><span class="p">[</span><span class="n">interface_site</span><span class="p">])</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">interface_site</span> <span class="o">-</span> <span class="n">interface_window_radius</span><span class="p">)</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">site_count</span><span class="p">,</span> <span class="n">interface_site</span> <span class="o">+</span> <span class="n">interface_window_radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">interface_window_weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">probabilities</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]))</span>
+        <span class="n">center_of_mass</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">site_count</span><span class="p">),</span> <span class="n">probabilities</span><span class="p">))</span>
+
+    <span class="n">predicted_right</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">predicted_left</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">left</span><span class="o">.</span><span class="n">is_fredholm</span> <span class="ow">and</span> <span class="n">right</span><span class="o">.</span><span class="n">is_fredholm</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">left</span><span class="o">.</span><span class="n">winding_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">right</span><span class="o">.</span><span class="n">winding_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">difference</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">right</span><span class="o">.</span><span class="n">winding_number</span> <span class="o">-</span> <span class="n">left</span><span class="o">.</span><span class="n">winding_number</span><span class="p">)</span>
+        <span class="n">predicted_right</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">difference</span><span class="p">)</span>
+        <span class="n">predicted_left</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">difference</span><span class="p">)</span>
+
+    <span class="n">localized</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
+        <span class="n">predicted_right</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">predicted_right</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">transport</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">tolerance</span>
+        <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">right</span><span class="o">.</span><span class="n">transport</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">tolerance</span>
+        <span class="ow">and</span> <span class="n">interface_window_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">interface_window_weight</span> <span class="o">&gt;</span> <span class="mf">0.25</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">left</span><span class="o">.</span><span class="n">is_fredholm</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">right</span><span class="o">.</span><span class="n">is_fredholm</span><span class="p">:</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="s2">&quot;critical_transport_no_fredholm_index&quot;</span>
+    <span class="k">elif</span> <span class="n">predicted_right</span> <span class="ow">and</span> <span class="n">localized</span><span class="p">:</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="s2">&quot;fredholm_interface_mode&quot;</span>
+    <span class="k">elif</span> <span class="n">predicted_left</span><span class="p">:</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="s2">&quot;opposite_chirality_interface_mode&quot;</span>
+    <span class="k">elif</span> <span class="n">left</span><span class="o">.</span><span class="n">winding_number</span> <span class="o">==</span> <span class="n">right</span><span class="o">.</span><span class="n">winding_number</span><span class="p">:</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="s2">&quot;same_fredholm_phase_no_interface_index&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="s2">&quot;index_jump_without_resolved_right_mode&quot;</span>
+
+    <span class="k">return</span> <span class="n">ScalarLaurentDomainWallReport</span><span class="p">(</span>
+        <span class="n">left_bulk</span><span class="o">=</span><span class="n">left</span><span class="p">,</span>
+        <span class="n">right_bulk</span><span class="o">=</span><span class="n">right</span><span class="p">,</span>
+        <span class="n">left_length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">left_length</span><span class="p">),</span>
+        <span class="n">right_length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">right_length</span><span class="p">),</span>
+        <span class="n">constraint_matrix</span><span class="o">=</span><span class="n">differential</span><span class="p">,</span>
+        <span class="n">kernel_dimension</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">kernel_basis</span><span class="o">=</span><span class="n">kernel</span><span class="p">,</span>
+        <span class="n">canonical_mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
+        <span class="n">residual</span><span class="o">=</span><span class="n">residual</span><span class="p">,</span>
+        <span class="n">inverse_participation_ratio</span><span class="o">=</span><span class="n">ipr</span><span class="p">,</span>
+        <span class="n">interface_site_weight</span><span class="o">=</span><span class="n">interface_site_weight</span><span class="p">,</span>
+        <span class="n">interface_window_weight</span><span class="o">=</span><span class="n">interface_window_weight</span><span class="p">,</span>
+        <span class="n">center_of_mass</span><span class="o">=</span><span class="n">center_of_mass</span><span class="p">,</span>
+        <span class="n">predicted_right_interface_modes</span><span class="o">=</span><span class="n">predicted_right</span><span class="p">,</span>
+        <span class="n">predicted_left_interface_modes</span><span class="o">=</span><span class="n">predicted_left</span><span class="p">,</span>
+        <span class="n">is_exponentially_interface_localized</span><span class="o">=</span><span class="n">localized</span><span class="p">,</span>
+        <span class="n">classification</span><span class="o">=</span><span class="n">classification</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="diagnose_incidence_constraint_interface">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnose_incidence_constraint_interface">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagnose_incidence_constraint_interface</span><span class="p">(</span>
+    <span class="n">left_constraint_map</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">right_constraint_map</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">interface_constraint_map</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IncidenceConstraintInterfaceReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Glue two local constraint modules and test for an excess interface kernel.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tolerance</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tolerance must be positive.&quot;</span><span class="p">)</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="n">_as_matrix</span><span class="p">(</span><span class="n">left_constraint_map</span><span class="p">)</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="n">_as_matrix</span><span class="p">(</span><span class="n">right_constraint_map</span><span class="p">)</span>
+    <span class="n">interface</span> <span class="o">=</span> <span class="n">_as_matrix</span><span class="p">(</span><span class="n">interface_constraint_map</span><span class="p">)</span>
+    <span class="n">combined_columns</span> <span class="o">=</span> <span class="n">left</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">right</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">interface</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">combined_columns</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;interface_constraint_map has incompatible column dimension.&quot;</span><span class="p">)</span>
+
+    <span class="n">decoupled</span> <span class="o">=</span> <span class="n">scipy_linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">decoupled</span><span class="p">,</span> <span class="n">interface</span><span class="p">])</span>
+    <span class="n">left_kernel</span> <span class="o">=</span> <span class="n">nullspace_svd</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">right_kernel</span> <span class="o">=</span> <span class="n">nullspace_svd</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">bulk_kernel</span> <span class="o">=</span> <span class="n">scipy_linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="n">left_kernel</span><span class="p">,</span> <span class="n">right_kernel</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+        <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">combined_kernel</span> <span class="o">=</span> <span class="n">nullspace_svd</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">overlaps</span> <span class="o">=</span> <span class="n">scipy_linalg</span><span class="o">.</span><span class="n">svdvals</span><span class="p">(</span><span class="n">bulk_kernel</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">combined_kernel</span><span class="p">)</span>
+    <span class="n">surviving</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">overlaps</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">10.0</span> <span class="o">*</span> <span class="n">tolerance</span><span class="p">))</span>
+    <span class="n">created</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">surviving</span><span class="p">)</span>
+    <span class="n">removed</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">bulk_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">surviving</span><span class="p">)</span>
+
+    <span class="n">active_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">active_counts</span> <span class="o">=</span> <span class="n">active_counts</span><span class="p">[</span><span class="n">active_counts</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">unique</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">active_counts</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">histogram</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">weight</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="p">))</span> <span class="k">for</span> <span class="n">weight</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">unique</span><span class="p">,</span> <span class="n">counts</span><span class="p">))</span>
+    <span class="n">is_two_channel</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">active_counts</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">active_counts</span> <span class="o">==</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">component_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">betti_1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">flatness_residual</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">kernel_equals_h0</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">is_two_channel</span><span class="p">:</span>
+        <span class="n">n_vertices</span> <span class="o">=</span> <span class="n">combined</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">adjacency</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_vertices</span><span class="p">)]</span>
+        <span class="n">edge_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">combined</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">combined</span><span class="p">[</span><span class="n">row</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">columns</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># A first-column gauge amplitude transports to the second as</span>
+            <span class="c1"># -c_first/c_second.</span>
+            <span class="n">transport</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="o">-</span><span class="n">combined</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">first</span><span class="p">]</span> <span class="o">/</span> <span class="n">combined</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">second</span><span class="p">])</span>
+            <span class="n">adjacency</span><span class="p">[</span><span class="n">first</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">second</span><span class="p">,</span> <span class="n">transport</span><span class="p">))</span>
+            <span class="n">adjacency</span><span class="p">[</span><span class="n">second</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">first</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">transport</span><span class="p">))</span>
+            <span class="n">edge_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_vertices</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">gauge</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_vertices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">component_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">flatness_residual</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_vertices</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">labels</span><span class="p">[</span><span class="n">start</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">labels</span><span class="p">[</span><span class="n">start</span><span class="p">]</span> <span class="o">=</span> <span class="n">component_count</span>
+            <span class="n">gauge</span><span class="p">[</span><span class="n">start</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.0</span><span class="n">j</span>
+            <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span><span class="n">start</span><span class="p">]</span>
+            <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">transport</span> <span class="ow">in</span> <span class="n">adjacency</span><span class="p">[</span><span class="n">source</span><span class="p">]:</span>
+                    <span class="n">candidate</span> <span class="o">=</span> <span class="n">transport</span> <span class="o">*</span> <span class="n">gauge</span><span class="p">[</span><span class="n">source</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">labels</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">labels</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">component_count</span>
+                        <span class="n">gauge</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">candidate</span>
+                        <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">scale</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">candidate</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">gauge</span><span class="p">[</span><span class="n">target</span><span class="p">]),</span> <span class="n">tolerance</span><span class="p">)</span>
+                        <span class="n">flatness_residual</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                            <span class="n">flatness_residual</span><span class="p">,</span>
+                            <span class="nb">abs</span><span class="p">(</span><span class="n">gauge</span><span class="p">[</span><span class="n">target</span><span class="p">]</span> <span class="o">-</span> <span class="n">candidate</span><span class="p">)</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span>
+                        <span class="p">)</span>
+            <span class="n">component_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">betti_1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">edge_count</span> <span class="o">-</span> <span class="n">n_vertices</span> <span class="o">+</span> <span class="n">component_count</span><span class="p">)</span>
+        <span class="n">kernel_equals_h0</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="n">flatness_residual</span> <span class="o">&lt;=</span> <span class="mf">10.0</span> <span class="o">*</span> <span class="n">tolerance</span> <span class="ow">and</span> <span class="n">combined_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">component_count</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">created</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="s2">&quot;interface_created_excess_kernel&quot;</span>
+    <span class="k">elif</span> <span class="n">is_two_channel</span> <span class="ow">and</span> <span class="n">kernel_equals_h0</span> <span class="ow">and</span> <span class="n">removed</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="s2">&quot;flat_gluing_merges_local_h0_sectors&quot;</span>
+    <span class="k">elif</span> <span class="n">is_two_channel</span> <span class="ow">and</span> <span class="n">flatness_residual</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">flatness_residual</span> <span class="o">&gt;</span> <span class="mf">10.0</span> <span class="o">*</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="s2">&quot;frustrated_interface_lifts_local_h0_sector&quot;</span>
+    <span class="k">elif</span> <span class="n">interface</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="s2">&quot;decoupled_modules&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="s2">&quot;interface_restricts_bulk_kernel_without_excess_mode&quot;</span>
+
+    <span class="k">return</span> <span class="n">IncidenceConstraintInterfaceReport</span><span class="p">(</span>
+        <span class="n">left_support_dimension</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">right_support_dimension</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">right</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">left_kernel_dimension</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">left_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">right_kernel_dimension</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">right_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">decoupled_kernel_dimension</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">bulk_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">interface_constraint_count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+        <span class="n">combined_constraint_map</span><span class="o">=</span><span class="n">combined</span><span class="p">,</span>
+        <span class="n">combined_kernel_basis</span><span class="o">=</span><span class="n">combined_kernel</span><span class="p">,</span>
+        <span class="n">combined_kernel_dimension</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">combined_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">surviving_bulk_kernel_dimension</span><span class="o">=</span><span class="n">surviving</span><span class="p">,</span>
+        <span class="n">interface_created_dimension</span><span class="o">=</span><span class="n">created</span><span class="p">,</span>
+        <span class="n">interface_removed_dimension</span><span class="o">=</span><span class="n">removed</span><span class="p">,</span>
+        <span class="n">active_row_weight_histogram</span><span class="o">=</span><span class="n">histogram</span><span class="p">,</span>
+        <span class="n">is_two_channel</span><span class="o">=</span><span class="n">is_two_channel</span><span class="p">,</span>
+        <span class="n">connected_component_count</span><span class="o">=</span><span class="n">component_count</span><span class="p">,</span>
+        <span class="n">betti_1</span><span class="o">=</span><span class="n">betti_1</span><span class="p">,</span>
+        <span class="n">gauge_flatness_residual</span><span class="o">=</span><span class="n">flatness_residual</span><span class="p">,</span>
+        <span class="n">kernel_equals_h0</span><span class="o">=</span><span class="n">kernel_equals_h0</span><span class="p">,</span>
+        <span class="n">classification</span><span class="o">=</span><span class="n">classification</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_hamiltonian_graph_chain_complex">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.build_hamiltonian_graph_chain_complex">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_hamiltonian_graph_chain_complex</span><span class="p">(</span>
+    <span class="n">hamiltonian</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">support_indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">local_generators</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">energy</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">test_indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">generators_are_full_hilbert_vectors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">generator_labels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HamiltonianGraphChainComplex</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build ``D_E`` and ``T_R`` from a Hamiltonian and a support shell.</span>
+
+<span class="sd">    ``D_E`` is the selected-row block of ``(H - E I) P_support``. Local</span>
+<span class="sd">    generators may be supplied either in support coordinates or as full</span>
+<span class="sd">    Hilbert-space vectors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;hamiltonian must be a square matrix.&quot;</span><span class="p">)</span>
+    <span class="n">hilbert_dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">support</span> <span class="o">=</span> <span class="n">_validate_indices</span><span class="p">(</span><span class="n">support_indices</span><span class="p">,</span> <span class="n">hilbert_dimension</span><span class="p">,</span> <span class="s2">&quot;support_indices&quot;</span><span class="p">)</span>
+    <span class="n">tests</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">hilbert_dimension</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">test_indices</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="n">_validate_indices</span><span class="p">(</span><span class="n">test_indices</span><span class="p">,</span> <span class="n">hilbert_dimension</span><span class="p">,</span> <span class="s2">&quot;test_indices&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">constraint_map</span> <span class="o">=</span> <span class="n">_hamiltonian_constraint_block</span><span class="p">(</span>
+        <span class="n">hamiltonian</span><span class="p">,</span>
+        <span class="n">support</span><span class="p">,</span>
+        <span class="n">tests</span><span class="p">,</span>
+        <span class="n">energy</span><span class="o">=</span><span class="n">energy</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">raw_generators</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">local_generators</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">raw_generators</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">raw_generators</span> <span class="o">=</span> <span class="n">raw_generators</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">raw_generators</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;local_generators must be one- or two-dimensional.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">generators_are_full_hilbert_vectors</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">raw_generators</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">hilbert_dimension</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;full-Hilbert generators have incompatible dimension.&quot;</span><span class="p">)</span>
+        <span class="n">generator_map</span> <span class="o">=</span> <span class="n">raw_generators</span><span class="p">[</span><span class="n">support</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">outside</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">raw_generators</span><span class="p">,</span> <span class="n">support</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">outside</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.0e-10</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;full-Hilbert generators must be supported on support_indices.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">generator_map</span> <span class="o">=</span> <span class="n">_as_column_matrix</span><span class="p">(</span><span class="n">raw_generators</span><span class="p">,</span> <span class="n">support</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">generator_labels</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">labels</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">!=</span> <span class="n">generator_map</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;generator_labels must match the number of generator columns.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">HamiltonianGraphChainComplex</span><span class="p">(</span>
+        <span class="n">constraint_map</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">constraint_map</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+        <span class="n">generator_map</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">generator_map</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+        <span class="n">support_indices</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">support</span><span class="p">),</span>
+        <span class="n">test_indices</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">tests</span><span class="p">),</span>
+        <span class="n">generator_labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="diagnose_hamiltonian_graph_homology">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnose_hamiltonian_graph_homology">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagnose_hamiltonian_graph_homology</span><span class="p">(</span>
+    <span class="n">complex_</span><span class="p">:</span> <span class="n">HamiltonianGraphChainComplex</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+    <span class="n">require_chain_condition</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HamiltonianGraphHomologyReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute finite-volume homology, dual cocycles, and the Hodge gap.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tolerance</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tolerance must be positive.&quot;</span><span class="p">)</span>
+
+    <span class="n">d1</span> <span class="o">=</span> <span class="n">_as_matrix</span><span class="p">(</span><span class="n">complex_</span><span class="o">.</span><span class="n">constraint_map</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">_as_matrix</span><span class="p">(</span><span class="n">complex_</span><span class="o">.</span><span class="n">generator_map</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">d1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">d2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;constraint_map and generator_map have incompatible dimensions.&quot;</span><span class="p">)</span>
+
+    <span class="n">chain_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">d1</span> <span class="o">@</span> <span class="n">d2</span><span class="p">))</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">d2</span><span class="p">)))</span>
+    <span class="n">normalized_chain_residual</span> <span class="o">=</span> <span class="n">chain_residual</span> <span class="o">/</span> <span class="n">scale</span>
+    <span class="k">if</span> <span class="n">require_chain_condition</span> <span class="ow">and</span> <span class="n">normalized_chain_residual</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;constraint_map @ generator_map is nonzero; the supplied maps do not form &quot;</span>
+            <span class="s2">&quot;a chain complex.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">cage_basis</span> <span class="o">=</span> <span class="n">nullspace_svd</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">local_basis</span> <span class="o">=</span> <span class="n">_orthonormal_column_space</span><span class="p">(</span><span class="n">d2</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">h2_basis</span> <span class="o">=</span> <span class="n">nullspace_svd</span><span class="p">(</span><span class="n">d2</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+
+    <span class="n">cage_projector</span> <span class="o">=</span> <span class="n">cage_basis</span> <span class="o">@</span> <span class="n">cage_basis</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">containment_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">cage_projector</span><span class="p">)</span> <span class="o">@</span> <span class="n">d2</span><span class="p">))</span>
+    <span class="n">h1_raw</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">local_basis</span> <span class="o">@</span> <span class="n">local_basis</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">@</span> <span class="n">cage_basis</span>
+    <span class="n">h1_basis</span> <span class="o">=</span> <span class="n">_orthonormal_column_space</span><span class="p">(</span><span class="n">h1_raw</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+
+    <span class="c1"># Use the orthogonal projector onto im(T_R), rather than ``T_R T_R^†``,</span>
+    <span class="c1"># so the harmonic gap is invariant under changes of generator basis and</span>
+    <span class="c1"># nonzero rescalings of individual motif columns.</span>
+    <span class="n">local_projector</span> <span class="o">=</span> <span class="n">local_basis</span> <span class="o">@</span> <span class="n">local_basis</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">hodge</span> <span class="o">=</span> <span class="n">d1</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">d1</span> <span class="o">+</span> <span class="n">local_projector</span>
+    <span class="n">hodge</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">hodge</span> <span class="o">+</span> <span class="n">hodge</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">scipy_linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">hodge</span><span class="p">)</span>
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">zero_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tolerance</span>
+    <span class="n">harmonic_basis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">zero_mask</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="c1"># The harmonic basis is simultaneously a canonical H_1 representative and</span>
+    <span class="c1"># a dual H^1 cocycle basis under the Euclidean inner product.</span>
+    <span class="k">if</span> <span class="n">harmonic_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">h1_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">h1_basis</span> <span class="o">=</span> <span class="n">harmonic_basis</span>
+    <span class="n">positive</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">eigenvalues</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">]</span>
+    <span class="n">hodge_gap</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">positive</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">positive</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="n">constraint_rank</span> <span class="o">=</span> <span class="n">_matrix_rank</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">generator_rank</span> <span class="o">=</span> <span class="n">_matrix_rank</span><span class="p">(</span><span class="n">d2</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">cage_dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cage_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">h1_dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h1_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">h2_dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h2_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">expected_h1</span> <span class="o">=</span> <span class="n">cage_dimension</span> <span class="o">-</span> <span class="n">generator_rank</span>
+    <span class="k">if</span> <span class="n">normalized_chain_residual</span> <span class="o">&lt;=</span> <span class="n">tolerance</span> <span class="ow">and</span> <span class="n">h1_dimension</span> <span class="o">!=</span> <span class="n">expected_h1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;inconsistent H_1 dimension; check the numerical tolerance.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">HamiltonianGraphHomologyReport</span><span class="p">(</span>
+        <span class="n">c0_dimension</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+        <span class="n">c1_dimension</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">c2_dimension</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">d2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">constraint_rank</span><span class="o">=</span><span class="n">constraint_rank</span><span class="p">,</span>
+        <span class="n">generator_rank</span><span class="o">=</span><span class="n">generator_rank</span><span class="p">,</span>
+        <span class="n">cage_dimension</span><span class="o">=</span><span class="n">cage_dimension</span><span class="p">,</span>
+        <span class="n">h1_dimension</span><span class="o">=</span><span class="n">h1_dimension</span><span class="p">,</span>
+        <span class="n">h2_dimension</span><span class="o">=</span><span class="n">h2_dimension</span><span class="p">,</span>
+        <span class="n">chain_residual</span><span class="o">=</span><span class="n">chain_residual</span><span class="p">,</span>
+        <span class="n">relative_chain_residual</span><span class="o">=</span><span class="n">normalized_chain_residual</span><span class="p">,</span>
+        <span class="n">generator_containment_residual</span><span class="o">=</span><span class="n">containment_residual</span><span class="p">,</span>
+        <span class="n">cage_basis</span><span class="o">=</span><span class="n">cage_basis</span><span class="p">,</span>
+        <span class="n">local_generator_basis</span><span class="o">=</span><span class="n">local_basis</span><span class="p">,</span>
+        <span class="n">h1_basis</span><span class="o">=</span><span class="n">h1_basis</span><span class="p">,</span>
+        <span class="n">h2_basis</span><span class="o">=</span><span class="n">h2_basis</span><span class="p">,</span>
+        <span class="n">cocycle_basis</span><span class="o">=</span><span class="n">h1_basis</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="n">hodge_operator</span><span class="o">=</span><span class="n">hodge</span><span class="p">,</span>
+        <span class="n">hodge_eigenvalues</span><span class="o">=</span><span class="n">eigenvalues</span><span class="p">,</span>
+        <span class="n">hodge_gap</span><span class="o">=</span><span class="n">hodge_gap</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="diagnose_term_resolved_caging">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnose_term_resolved_caging">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagnose_term_resolved_caging</span><span class="p">(</span>
+    <span class="n">local_constraint_maps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">coefficients</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">complex</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TermResolvedCagingReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve robust channelwise zeros from collectively cancelled cages.</span>
+
+<span class="sd">    Every local map must have the same row and column dimensions. The physical</span>
+<span class="sd">    differential is their coefficient-weighted sum, while the term-resolved</span>
+<span class="sd">    differential is the vertical stack of the individual weighted maps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">local_constraint_maps</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;at least one local constraint map is required.&quot;</span><span class="p">)</span>
+    <span class="n">maps</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_as_matrix</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">local_constraint_maps</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">maps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">shape</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">maps</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;all local constraint maps must have the same shape.&quot;</span><span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">maps</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">coefficients</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">weights</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">maps</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;coefficients must match local_constraint_maps.&quot;</span><span class="p">)</span>
+
+    <span class="n">weighted</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">weight</span> <span class="o">*</span> <span class="n">value</span> <span class="k">for</span> <span class="n">weight</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">maps</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="n">physical</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">weighted</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">resolved</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">weighted</span><span class="p">)</span>
+    <span class="n">physical_kernel</span> <span class="o">=</span> <span class="n">nullspace_svd</span><span class="p">(</span><span class="n">physical</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">resolved_kernel</span> <span class="o">=</span> <span class="n">nullspace_svd</span><span class="p">(</span><span class="n">resolved</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+
+    <span class="n">physical_projector</span> <span class="o">=</span> <span class="n">physical_kernel</span> <span class="o">@</span> <span class="n">physical_kernel</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">containment</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">physical_projector</span><span class="p">)</span> <span class="o">@</span> <span class="n">resolved_kernel</span><span class="p">))</span>
+    <span class="n">collective_raw</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">resolved_kernel</span> <span class="o">@</span> <span class="n">resolved_kernel</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+    <span class="p">)</span> <span class="o">@</span> <span class="n">physical_kernel</span>
+    <span class="n">collective_basis</span> <span class="o">=</span> <span class="n">_orthonormal_column_space</span><span class="p">(</span><span class="n">collective_raw</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">TermResolvedCagingReport</span><span class="p">(</span>
+        <span class="n">physical_constraint_map</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">physical</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+        <span class="n">resolved_constraint_map</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">resolved</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+        <span class="n">physical_kernel_basis</span><span class="o">=</span><span class="n">physical_kernel</span><span class="p">,</span>
+        <span class="n">resolved_kernel_basis</span><span class="o">=</span><span class="n">resolved_kernel</span><span class="p">,</span>
+        <span class="n">collective_quotient_basis</span><span class="o">=</span><span class="n">collective_basis</span><span class="p">,</span>
+        <span class="n">physical_nullity</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">physical_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">resolved_nullity</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">resolved_kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">collective_quotient_dimension</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">collective_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">resolved_containment_residual</span><span class="o">=</span><span class="n">containment</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="twisted_translation_matrix">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.twisted_translation_matrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">twisted_translation_matrix</span><span class="p">(</span><span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">twist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComplexArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the unitary one-site translation with ``T**L = exp(i twist)``.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;length must be positive.&quot;</span><span class="p">)</span>
+    <span class="n">translation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">length</span><span class="p">,</span> <span class="n">length</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">translation</span><span class="p">[</span><span class="n">source</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">source</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">translation</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">1.0</span><span class="n">j</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">twist</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">translation</span></div>
+
+
+
+<div class="viewcode-block" id="periodic_laurent_operator">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.periodic_laurent_operator">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">periodic_laurent_operator</span><span class="p">(</span>
+    <span class="n">coefficients</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">complex</span> <span class="o">|</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span>
+    <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">twist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComplexArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate a finite Laurent-polynomial matrix at twisted translation.</span>
+
+<span class="sd">    A scalar dictionary such as ``{0: 1, 1: 1}`` constructs ``I + T``. Matrix</span>
+<span class="sd">    coefficients construct a block Laurent operator via Kronecker products.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">coefficients</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;coefficients must not be empty.&quot;</span><span class="p">)</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ComplexArray</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">block_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">shift</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Laurent coefficients must be scalars or matrices.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">block_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">block_shape</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">block_shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;all Laurent coefficient matrices must have the same shape.&quot;</span><span class="p">)</span>
+        <span class="n">blocks</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">shift</span><span class="p">)]</span> <span class="o">=</span> <span class="n">array</span>
+    <span class="k">assert</span> <span class="n">block_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="n">translation</span> <span class="o">=</span> <span class="n">twisted_translation_matrix</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">twist</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">length</span> <span class="o">*</span> <span class="n">block_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">length</span> <span class="o">*</span> <span class="n">block_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">shift</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">shift</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">translated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">translation</span><span class="p">,</span> <span class="n">shift</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">translated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_power</span><span class="p">(</span><span class="n">translation</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="o">-</span><span class="n">shift</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">translated</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="diagnose_periodic_laurent_kernel">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.diagnose_periodic_laurent_kernel">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagnose_periodic_laurent_kernel</span><span class="p">(</span>
+    <span class="n">coefficients</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">complex</span> <span class="o">|</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span>
+    <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">twist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LaurentPeriodicKernelPoint</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the finite-ring nullity and smallest nonzero singular value.&quot;&quot;&quot;</span>
+    <span class="n">operator</span> <span class="o">=</span> <span class="n">periodic_laurent_operator</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">twist</span><span class="o">=</span><span class="n">twist</span><span class="p">)</span>
+    <span class="n">singular_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scipy_linalg</span><span class="o">.</span><span class="n">svdvals</span><span class="p">(</span><span class="n">operator</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">))</span>
+    <span class="n">positive</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">])</span>
+    <span class="n">gap</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">positive</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">positive</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">LaurentPeriodicKernelPoint</span><span class="p">(</span>
+        <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
+        <span class="n">twist</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">twist</span><span class="p">),</span>
+        <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+        <span class="n">nullity</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">rank</span><span class="p">),</span>
+        <span class="n">singular_values</span><span class="o">=</span><span class="n">singular_values</span><span class="p">,</span>
+        <span class="n">smallest_positive_singular_value</span><span class="o">=</span><span class="n">gap</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_hamiltonian_constraint_block</span><span class="p">(</span>
+    <span class="n">hamiltonian</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">support</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+    <span class="n">tests</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">energy</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComplexArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``P_test (H-E) P_support`` without densifying the full matrix.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">):</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">hamiltonian</span><span class="p">[</span><span class="n">tests</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">support</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dense</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dense</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;hamiltonian must be two-dimensional.&quot;</span><span class="p">)</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">dense</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">tests</span><span class="p">,</span> <span class="n">support</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">block</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">test_position</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">):</span> <span class="n">row</span> <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tests</span><span class="p">)}</span>
+    <span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">support_index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">support</span><span class="p">):</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">test_position</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">support_index</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">row</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">block</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">-=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">block</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_matrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComplexArray</span><span class="p">:</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">as_dense_array</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;matrix must be two-dimensional.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_column_matrix</span><span class="p">(</span><span class="n">vectors</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">row_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComplexArray</span><span class="p">:</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vectors</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">row_count</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;vectors have incompatible row dimension.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">array</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_orthonormal_column_space</span><span class="p">(</span><span class="n">matrix</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComplexArray</span><span class="p">:</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">_as_matrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scipy_linalg</span><span class="o">.</span><span class="n">orth</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="n">tolerance</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_matrix_rank</span><span class="p">(</span><span class="n">matrix</span><span class="p">:</span> <span class="n">ComplexArray</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">scipy_linalg</span><span class="o">.</span><span class="n">svdvals</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_indices</span><span class="p">(</span><span class="n">indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">upper</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must not be empty.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">values</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">values</span> <span class="o">&gt;=</span> <span class="n">upper</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must contain unique indices in range(</span><span class="si">{</span><span class="n">upper</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">values</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

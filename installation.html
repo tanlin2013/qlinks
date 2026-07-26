@@ -167,6 +167,8 @@
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
 </ul>
@@ -344,7 +346,10 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-from-pypi">Install from PyPI</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-from-source">Install from source</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker">Docker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-tensor-network-interpreter">Docker tensor-network interpreter</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pycharm-setup">PyCharm setup</a></li>
+</ul>
+</li>
 </ul>
             </nav>
         </div>
@@ -370,6 +375,7 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;qlinks[drawing]&quot;</span><span class="w">       </span><span class="c1"># pyvis, plotly, igraph, pycairo</span>
 pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;qlinks[distributed]&quot;</span><span class="w">   </span><span class="c1"># Ray helpers</span>
 pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;qlinks[storage]&quot;</span><span class="w">       </span><span class="c1"># HDF5 and parquet-oriented IO</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;qlinks[tn]&quot;</span><span class="w">            </span><span class="c1"># quimb + Autograd tensor-network backend (Python 3.11-3.13)</span>
 </pre></div>
 </div>
 </section>
@@ -389,14 +395,74 @@ poetry<span class="w"> </span>run<span class="w"> </span>make<span class="w"> </
 </pre></div>
 </div>
 </section>
-<section id="docker">
-<h2>Docker<a class="headerlink" href="#docker" title="Link to this heading">#</a></h2>
-<p>A feature-complete Docker image is available from the project repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>pull<span class="w"> </span>tanlin2013/qlinks:main
+<section id="docker-tensor-network-interpreter">
+<h2>Docker tensor-network interpreter<a class="headerlink" href="#docker-tensor-network-interpreter" title="Link to this heading">#</a></h2>
+<p>The tensor-network dependencies are intentionally optional.  A normal local
+Poetry environment therefore remains usable on Python 3.14 without installing
+<code class="docutils literal notranslate"><span class="pre">quimb</span></code>, <code class="docutils literal notranslate"><span class="pre">numba</span></code>, or <code class="docutils literal notranslate"><span class="pre">llvmlite</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>poetry<span class="w"> </span>install
 </pre></div>
 </div>
-<p>The image intentionally installs all extras so that visual, storage,
-distributed, and optional solver workflows are available in the same runtime.</p>
+<p>The Docker image installs only the <code class="docutils literal notranslate"><span class="pre">tn</span></code> extra.  Its Linux runtime is isolated
+from the host macOS architecture and selects Linux wheels from the lock file.
+The lock file records versions, markers, and hashes for multiple platforms; it
+does not copy or reuse a wheel installed in the host Poetry environment.</p>
+<p>On an Intel Mac, build and load the image with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/docker_build_tn.sh
+</pre></div>
+</div>
+<p>Docker uses the daemon’s native Linux architecture by default. To request a
+specific target explicitly, set, for example,
+<code class="docutils literal notranslate"><span class="pre">QLINKS_DOCKER_PLATFORM=linux/amd64</span></code> or <code class="docutils literal notranslate"><span class="pre">linux/arm64</span></code>.</p>
+<p>On an Intel Mac, the default is normally <code class="docutils literal notranslate"><span class="pre">linux/amd64</span></code>. This is equivalent to:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>buildx<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--load<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--platform<span class="w"> </span>linux/amd64<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--build-arg<span class="w"> </span><span class="nv">QLINKS_EXTRAS</span><span class="o">=</span>tn<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--tag<span class="w"> </span>qlinks:tn<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>.
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">--load</span></code> flag is important when Docker uses a non-default BuildKit
+builder: it places the completed image in Docker’s local image store, where
+PyCharm can retrieve its image ID.</p>
+<p>To verify the image outside the IDE, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>qlinks:tn<span class="w"> </span>python<span class="w"> </span>scripts/verify_tn_environment.py
+</pre></div>
+</div>
+<p>For an interactive shell with the repository mounted at the same path used by
+the image:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/docker_run.sh
+</pre></div>
+</div>
+<p>The image build enforces wheel-only installation for <code class="docutils literal notranslate"><span class="pre">numba</span></code> and
+<code class="docutils literal notranslate"><span class="pre">llvmlite</span></code>.  If a selected Python/Linux architecture has no compatible
+wheel, the build fails immediately rather than attempting to compile LLVM.
+Both Linux <code class="docutils literal notranslate"><span class="pre">amd64</span></code> and <code class="docutils literal notranslate"><span class="pre">arm64</span></code> are supported by the pinned TN stack.</p>
+<section id="pycharm-setup">
+<h3>PyCharm setup<a class="headerlink" href="#pycharm-setup" title="Link to this heading">#</a></h3>
+<p>Keep the existing local Poetry interpreter for the core package.  Add a second
+interpreter from the prebuilt Docker image:</p>
+<ol class="arabic simple">
+<li><p>Open <strong>Settings | Project | Python Interpreter</strong>.</p></li>
+<li><p>Choose <strong>Add Interpreter | On Docker</strong>.</p></li>
+<li><p>Select <strong>Docker Image</strong>, not <strong>Dockerfile</strong>.</p></li>
+<li><p>Choose <code class="docutils literal notranslate"><span class="pre">qlinks:tn</span></code>.</p></li>
+<li><p>Set the interpreter path to <code class="docutils literal notranslate"><span class="pre">/usr/local/bin/python</span></code>.</p></li>
+</ol>
+<p>Using the prebuilt image avoids PyCharm’s generic
+<code class="docutils literal notranslate"><span class="pre">Can't</span> <span class="pre">retrieve</span> <span class="pre">image</span> <span class="pre">ID</span> <span class="pre">from</span> <span class="pre">build</span> <span class="pre">stream</span></code> wrapper.  If the terminal build
+fails, its output contains the actual package or Docker error.  If the terminal
+build succeeds but PyCharm still cannot see the image, check:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>context<span class="w"> </span>show
+docker<span class="w"> </span>image<span class="w"> </span>inspect<span class="w"> </span>qlinks:tn
+docker<span class="w"> </span>buildx<span class="w"> </span>ls
+</pre></div>
+</div>
+<p>PyCharm and the terminal must use the same Docker context.  With a custom
+<code class="docutils literal notranslate"><span class="pre">docker-container</span></code> buildx driver, always build with <code class="docutils literal notranslate"><span class="pre">--load</span></code> before
+selecting the image in PyCharm.</p>
+</section>
 </section>
 </section>
 
@@ -449,7 +515,10 @@ distributed, and optional solver workflows are available in the same runtime.</p
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-from-pypi">Install from PyPI</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-from-source">Install from source</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker">Docker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-tensor-network-interpreter">Docker tensor-network interpreter</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pycharm-setup">PyCharm setup</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

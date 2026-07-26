@@ -1,0 +1,806 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tensor-network cage ansatzes &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=eeb54e98"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tensor_network';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Minimal examples" href="examples.html" />
+    <link rel="prev" title="Thermodynamic ETH diagnostics" href="thermodynamic_eth.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.3" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Tensor-network cage ansatzes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/source/tensor_network.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2Ftensor_network.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tensor-network cage ansatzes</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rectangular-vertex-tensor">Rectangular vertex tensor</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quimb-networks">Quimb networks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compact-autograd-optimization">Compact Autograd optimization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization">Visualization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#type-1-chiral-specialization">Type-1 chiral specialization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#native-chiral-peps">Native chiral PEPS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seam-resolved-type-1-diagnostics">Seam-resolved type-1 diagnostics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#targeted-enlarged-unit-cells">Targeted enlarged unit cells</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="tensor-network-cage-ansatzes">
+<h1>Tensor-network cage ansatzes<a class="headerlink" href="#tensor-network-cage-ansatzes" title="Link to this heading">#</a></h1>
+<p>Install the optional backend with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;qlinks[tn]&quot;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">tn</span></code> extra installs <code class="docutils literal notranslate"><span class="pre">quimb</span></code> for tensor-network objects and contractions,
+<code class="docutils literal notranslate"><span class="pre">autograd</span></code> for the default differentiable optimizer, and the compatible
+<code class="docutils literal notranslate"><span class="pre">numba</span></code>/<code class="docutils literal notranslate"><span class="pre">llvmlite</span></code> runtime.  The tensor extra currently supports Python
+3.11–3.13.  This upper bound is deliberate: Python 3.13 can use binary
+<code class="docutils literal notranslate"><span class="pre">llvmlite</span></code> wheels on Intel macOS, whereas Python 3.14 would require a custom
+LLVM source build.</p>
+<p>qlinks remains responsible for the constrained local basis, winding-sector
+Hamiltonian, and exact finite-cluster residual.  quimb supplies parametrized
+tensors and optimization infrastructure.</p>
+<section id="rectangular-vertex-tensor">
+<h2>Rectangular vertex tensor<a class="headerlink" href="#rectangular-vertex-tensor" title="Link to this heading">#</a></h2>
+<p>The initial square-QDM tensor uses a rectangular tile.  The tile owns every
+<code class="docutils literal notranslate"><span class="pre">+x</span></code> and <code class="docutils literal notranslate"><span class="pre">+y</span></code> link whose source site lies inside the rectangle.  Translated
+tiles therefore have disjoint physical degrees of freedom.  Incoming left and
+down dimer occupations form virtual indices, while the owned outgoing right and
+up links determine the opposite virtual indices.</p>
+<p>For a horizontal two-plaquette singlet, a <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">2</span></code> tile is natural:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">build_square_qdm_rectangular_tile_tensor_basis</span><span class="p">,</span>
+    <span class="n">build_square_qdm_singlet_peps_ansatz</span><span class="p">,</span>
+    <span class="n">square_qdm_two_plaquette_singlet_blocks</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SquareQDMModel</span>
+
+<span class="n">host</span> <span class="o">=</span> <span class="n">SquareQDMModel</span><span class="p">(</span>
+    <span class="n">lx</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="n">ly</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="n">boundary_condition</span><span class="o">=</span><span class="s2">&quot;periodic&quot;</span><span class="p">,</span>
+    <span class="n">coup_kin</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">coup_pot</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">singlet</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+    <span class="n">block</span>
+    <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">square_qdm_two_plaquette_singlet_blocks</span><span class="p">(</span>
+        <span class="n">host</span><span class="p">,</span>
+        <span class="n">directions</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,),</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">anchor_cells</span><span class="p">)</span> <span class="o">==</span> <span class="p">{(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)}</span>
+<span class="p">)</span>
+<span class="n">tile_basis</span> <span class="o">=</span> <span class="n">build_square_qdm_rectangular_tile_tensor_basis</span><span class="p">(</span>
+    <span class="n">host</span><span class="p">,</span>
+    <span class="n">tile_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">ansatz</span> <span class="o">=</span> <span class="n">build_square_qdm_singlet_peps_ansatz</span><span class="p">(</span>
+    <span class="n">host</span><span class="p">,</span>
+    <span class="n">singlet</span><span class="p">,</span>
+    <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">2</span></code> tile owns 12 links.  The structural constraint reduces the 4096
+binary configurations to 71 locally completable physical states and 108
+allowed tensor entries.  The resulting tensor shape, in quimb’s <code class="docutils literal notranslate"><span class="pre">urdlp</span></code>
+convention, is <code class="docutils literal notranslate"><span class="pre">(8,</span> <span class="pre">4,</span> <span class="pre">8,</span> <span class="pre">4,</span> <span class="pre">71)</span></code>.</p>
+</section>
+<section id="quimb-networks">
+<h2>Quimb networks<a class="headerlink" href="#quimb-networks" title="Link to this heading">#</a></h2>
+<p>For short periodic directions, use the generic constructor, which preserves
+parallel periodic bonds explicitly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tn</span> <span class="o">=</span> <span class="n">ansatz</span><span class="o">.</span><span class="n">to_quimb_tensor_network</span><span class="p">(</span>
+    <span class="n">n_tiles_x</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">n_tiles_y</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>For at least three tiles in each direction, a structured quimb PEPS is
+available:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">peps</span> <span class="o">=</span> <span class="n">ansatz</span><span class="o">.</span><span class="n">to_quimb_peps</span><span class="p">(</span>
+    <span class="n">n_tiles_x</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">n_tiles_y</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="compact-autograd-optimization">
+<h2>Compact Autograd optimization<a class="headerlink" href="#compact-autograd-optimization" title="Link to this heading">#</a></h2>
+<p>Candidate tensors can first be optimized against an exact qlinks Hamiltonian on
+a small torus:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_square_qdm_peps_finite_cluster_problem</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">SquareQDMModel</span><span class="p">(</span>
+    <span class="n">lx</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+    <span class="n">ly</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">boundary_condition</span><span class="o">=</span><span class="s2">&quot;periodic&quot;</span><span class="p">,</span>
+    <span class="n">winding_x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">winding_y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">coup_kin</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">coup_pot</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">build_square_qdm_peps_finite_cluster_problem</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">tile_basis</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The loss is the normalized energy variance,</p>
+<div class="math notranslate nohighlight">
+\[\mathcal V_H(A)
+= \frac{\langle\Psi(A)|(H-\langle H\rangle_A)^2|\Psi(A)\rangle}
+        {\langle\Psi(A)|\Psi(A)\rangle}.\]</div>
+<p>Only the 108 structurally allowed tensor entries are varied.  The dense tensor
+contains many more entries, but quimb’s parametrized tensor maps the compact
+vector into that masked array before contraction.</p>
+<p>The sparse singlet initialization is a stationary point, so activate the
+boundary-compatible sectors with a small perturbation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">initial</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">perturb_parameters</span><span class="p">(</span>
+    <span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+    <span class="n">scale</span><span class="o">=</span><span class="mf">1.0e-2</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">loss</span><span class="p">,</span> <span class="n">gradient</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">loss_and_gradient_autograd</span><span class="p">(</span><span class="n">initial</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A short optimization is then:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">optimize_with_quimb</span><span class="p">(</span>
+    <span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+    <span class="n">max_steps</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">noise_scale</span><span class="o">=</span><span class="mf">1.0e-2</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">autodiff_backend</span><span class="o">=</span><span class="s2">&quot;autograd&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">result</span></code> contains the initial and final exact residual reports, compact
+parameters, and the complete function-evaluation history.  A reduced variance
+is only a discovery signal.  An exact cage candidate must reach zero residual,
+remain stable across larger clusters, and admit a local PEPS eigenstate
+certificate.</p>
+</section>
+<section id="visualization">
+<h2>Visualization<a class="headerlink" href="#visualization" title="Link to this heading">#</a></h2>
+<p>The tensor visualizer draws the repeated graph, local boundary-resolved dimer
+entries, parameter magnitudes, and optimization history:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.visualizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">SquareQDMTensorNetworkVisualizer</span>
+
+<span class="n">visualizer</span> <span class="o">=</span> <span class="n">SquareQDMTensorNetworkVisualizer</span><span class="p">(</span><span class="n">tile_basis</span><span class="p">)</span>
+<span class="n">visualizer</span><span class="o">.</span><span class="n">plot_network</span><span class="p">(</span><span class="n">n_tiles_x</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">n_tiles_y</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">visualizer</span><span class="o">.</span><span class="n">plot_entry</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">visualizer</span><span class="o">.</span><span class="n">plot_parameter_magnitudes</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">optimized_parameters</span><span class="p">)</span>
+<span class="n">visualizer</span><span class="o">.</span><span class="n">plot_optimization_history</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A complete interactive demonstration is provided in
+<code class="docutils literal notranslate"><span class="pre">experimental/notebooks/tensor_network.ipynb</span></code>.  The padding notebook now ends
+at the boundary-resolved handoff and does not duplicate the PEPS optimization.</p>
+</section>
+<section id="type-1-chiral-specialization">
+<h2>Type-1 chiral specialization<a class="headerlink" href="#type-1-chiral-specialization" title="Link to this heading">#</a></h2>
+<p>A generic variance search asks the optimizer to rediscover the defining cage
+mechanism.  The type-1 PEPS problem instead encodes the Fock-space chiral
+structure explicitly.  If <code class="docutils literal notranslate"><span class="pre">C</span></code> anticommutes with the kinetic term and commutes
+with the diagonal potential, a state on one chiral subset obeys</p>
+<div class="math notranslate nohighlight">
+\[\operatorname{Var}(H)
+= \frac{\|K|\Psi_+\rangle\|^2}{\langle\Psi_+|\Psi_+\rangle}
++ \operatorname{Var}_{\Psi_+}(V).\]</div>
+<p>The two non-negative terms are precisely the type-1 conditions: destructive
+kinetic interference on the empty bipartite subset and uniform potential on
+the occupied support.</p>
+<p>Build the separated objective with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_square_qdm_type1_peps_problem</span>
+
+<span class="n">type1_problem</span> <span class="o">=</span> <span class="n">build_square_qdm_type1_peps_problem</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">tile_basis</span><span class="p">,</span>
+    <span class="n">reference_parameters</span><span class="o">=</span><span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">type1_problem</span><span class="o">.</span><span class="n">diagnose</span><span class="p">(</span><span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">kinetic_interference_density</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">potential_variance_density</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">discarded_chiral_weight</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The PEPS amplitudes are projected exactly onto one kinetic-graph bipartite
+subset before the objective is evaluated.  Existing finite type-1 cage records
+can select the same subset and potential value directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">type1_problem</span> <span class="o">=</span> <span class="n">build_square_qdm_type1_peps_problem</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">tile_basis</span><span class="p">,</span>
+    <span class="n">cage_record</span><span class="o">=</span><span class="n">record</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The chiral coloring is also reconstructed as a linear link-occupation parity.
+For the <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">2</span></code> square-QDM tile, qlinks finds a tile-periodic rule with 12
+local link coefficients.  This assigns a <code class="docutils literal notranslate"><span class="pre">Z2</span></code> charge to each of the 71
+compressed physical states.</p>
+</section>
+<section id="native-chiral-peps">
+<h2>Native chiral PEPS<a class="headerlink" href="#native-chiral-peps" title="Link to this heading">#</a></h2>
+<p>The finite-basis projector has a native tensor-network counterpart.  Each
+virtual leg is augmented by one <code class="docutils literal notranslate"><span class="pre">Z2</span></code> charge bit, and tensor entries obey local
+charge conservation.  Contracting a closed torus cancels all virtual charges,
+so only the selected global chiral subset survives.  The charge-resolved tensor
+shares the original 108 variational amplitudes:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">SquareQDMChiralPEPSAnsatz</span>
+
+<span class="n">chiral_ansatz</span> <span class="o">=</span> <span class="n">SquareQDMChiralPEPSAnsatz</span><span class="o">.</span><span class="n">from_type1_problem</span><span class="p">(</span>
+    <span class="n">type1_problem</span><span class="p">,</span>
+    <span class="n">ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">chiral_tn</span> <span class="o">=</span> <span class="n">chiral_ansatz</span><span class="o">.</span><span class="n">to_quimb_tensor_network</span><span class="p">(</span>
+    <span class="n">n_tiles_x</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">n_tiles_y</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>For the <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">2</span></code> tile, the charge-augmented tensor has shape
+<code class="docutils literal notranslate"><span class="pre">(16,</span> <span class="pre">8,</span> <span class="pre">16,</span> <span class="pre">8,</span> <span class="pre">71)</span></code> and 864 nonzero structural entries, but still only 108
+independent parameters.</p>
+<p>The dedicated visualizer separates the physical mechanisms:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">visualizer</span><span class="o">.</span><span class="n">plot_type1_components</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+<span class="n">visualizer</span><span class="o">.</span><span class="n">plot_chiral_physical_charges</span><span class="p">(</span>
+    <span class="n">type1_problem</span><span class="o">.</span><span class="n">parity_rule</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The next analytical target is a local tensor equation equivalent to
+<code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">psi_+(A)</span> <span class="pre">=</span> <span class="pre">0</span></code> together with zero potential variance, valid independently
+of the finite torus used during optimization.</p>
+</section>
+<section id="seam-resolved-type-1-diagnostics">
+<h2>Seam-resolved type-1 diagnostics<a class="headerlink" href="#seam-resolved-type-1-diagnostics" title="Link to this heading">#</a></h2>
+<p>A small total interference norm can hide two very different mechanisms:
+individual plaquettes may cancel coherently inside a tile, or uncancelled
+residuals may remain specifically on tile boundaries.  The type-1 PEPS problem
+therefore resolves</p>
+<div class="math notranslate nohighlight">
+\[B\psi_+(A)=\sum_p B_p\psi_+(A)\]</div>
+<p>by plaquette and by four geometric classes: tile interior, <code class="docutils literal notranslate"><span class="pre">x</span></code> seam, <code class="docutils literal notranslate"><span class="pre">y</span></code>
+seam, and four-tile corner.  For each class, qlinks reports both the incoherent
+sum <code class="docutils literal notranslate"><span class="pre">sum_p</span> <span class="pre">||B_p</span> <span class="pre">psi||^2</span></code> and the norm after coherent summation.  Their
+difference measures destructive interference within that class.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">decomposition</span> <span class="o">=</span> <span class="n">type1_problem</span><span class="o">.</span><span class="n">interference_decomposition</span><span class="p">(</span>
+    <span class="n">singlet_ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">decomposition</span><span class="o">.</span><span class="n">class_records</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">plaquette_class</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">residual_norm_squared</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">incoherent_norm_squared</span><span class="p">,</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">cancellation_fraction</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>For the repeated two-plaquette singlet on the <code class="docutils literal notranslate"><span class="pre">6</span> <span class="pre">x</span> <span class="pre">4</span></code> torus, the interior
+plaquette components have total incoherent norm squared <code class="docutils literal notranslate"><span class="pre">4</span></code> but cancel to
+zero.  The remaining residual is localized on the tile seams, with norm
+squared <code class="docutils literal notranslate"><span class="pre">1</span></code> on <code class="docutils literal notranslate"><span class="pre">x</span></code> seams and <code class="docutils literal notranslate"><span class="pre">2</span></code> on <code class="docutils literal notranslate"><span class="pre">y</span></code> seams.</p>
+<p>The parameter-sensitivity diagnostic differentiates one seam-class loss with
+respect to every compact tensor entry:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sensitivity</span> <span class="o">=</span> <span class="n">type1_problem</span><span class="o">.</span><span class="n">interference_parameter_sensitivity</span><span class="p">(</span>
+    <span class="n">probe_parameters</span><span class="p">,</span>
+    <span class="s2">&quot;y_seam&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sensitivity</span><span class="o">.</span><span class="n">top_entry_indices</span><span class="p">(</span><span class="mi">12</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This identifies boundary sectors whose amplitudes control the non-transferring
+leakage, including entries that are zero in the sparse singlet seed.</p>
+</section>
+<section id="targeted-enlarged-unit-cells">
+<h2>Targeted enlarged unit cells<a class="headerlink" href="#targeted-enlarged-unit-cells" title="Link to this heading">#</a></h2>
+<p>Duplicating all 108 tensor entries in a larger unit cell would expand the
+search space indiscriminately.  The adaptive parameterization instead keeps
+most entries translationally shared and duplicates only the sensitivity-ranked
+entries on a period-two tile sublattice:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">build_square_qdm_type1_adaptive_joint_cluster_problem</span><span class="p">,</span>
+    <span class="n">build_square_qdm_type1_adaptive_parameterization</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">adaptive</span> <span class="o">=</span> <span class="n">build_square_qdm_type1_adaptive_parameterization</span><span class="p">(</span>
+    <span class="n">type1_problem</span><span class="p">,</span>
+    <span class="n">singlet_ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+    <span class="n">plaquette_class</span><span class="o">=</span><span class="s2">&quot;x_seam&quot;</span><span class="p">,</span>
+    <span class="n">split_axis</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span>
+    <span class="n">max_selected_entries</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">enlarged_parameters</span> <span class="o">=</span> <span class="n">adaptive</span><span class="o">.</span><span class="n">lift_parameters</span><span class="p">(</span>
+    <span class="n">singlet_ansatz</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">adaptive_joint</span> <span class="o">=</span> <span class="n">build_square_qdm_type1_adaptive_joint_cluster_problem</span><span class="p">(</span>
+    <span class="n">type1_clusters</span><span class="p">,</span>
+    <span class="n">adaptive</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">adaptive_joint</span><span class="o">.</span><span class="n">optimize_with_quimb</span><span class="p">(</span>
+    <span class="n">enlarged_parameters</span><span class="p">,</span>
+    <span class="n">max_steps</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>A period-two split along <code class="docutils literal notranslate"><span class="pre">x</span></code> requires an even number of tensor columns; the
+analogous <code class="docutils literal notranslate"><span class="pre">y</span></code> split requires an even number of tensor rows.  A checkerboard
+split requires both.  The adaptive ansatz therefore remains a genuine periodic
+PEPS with a controlled multi-tensor unit cell, rather than assigning unrelated
+parameters to every finite-cluster position.</p>
+<p>For environments without the optional tensor-network stack, the same exact
+finite-basis objective has an analytic-gradient fallback:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">adaptive_joint</span><span class="o">.</span><span class="n">optimize_with_scipy</span><span class="p">(</span>
+    <span class="n">enlarged_parameters</span><span class="p">,</span>
+    <span class="n">max_steps</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>A short deterministic benchmark duplicates six <code class="docutils literal notranslate"><span class="pre">x</span></code>-seam-sensitive entries,
+trains on <code class="docutils literal notranslate"><span class="pre">6</span> <span class="pre">x</span> <span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">6</span> <span class="pre">x</span> <span class="pre">4</span></code>, and holds out <code class="docutils literal notranslate"><span class="pre">12</span> <span class="pre">x</span> <span class="pre">2</span></code>.  Eight
+analytic-gradient steps reduce the joint training objective from approximately
+<code class="docutils literal notranslate"><span class="pre">0.180606</span></code> to <code class="docutils literal notranslate"><span class="pre">0.138872</span></code> and the untrained holdout kinetic-interference
+density from <code class="docutils literal notranslate"><span class="pre">0.208334</span></code> to <code class="docutils literal notranslate"><span class="pre">0.162702</span></code>.  Unlike the earlier one-tensor
+search, this targeted enlargement improves rather than degrades the longer
+longitudinal holdout.</p>
+<p>The present adaptive search is still a numerical discovery tool.  The dominant
+transverse seam must be tested on clusters with more tensor rows, and a
+successful candidate must eventually satisfy a local PEPS interference identity
+independent of the finite torus.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="thermodynamic_eth.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Thermodynamic ETH diagnostics</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="examples.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Minimal examples</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rectangular-vertex-tensor">Rectangular vertex tensor</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quimb-networks">Quimb networks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compact-autograd-optimization">Compact Autograd optimization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization">Visualization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#type-1-chiral-specialization">Type-1 chiral specialization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#native-chiral-peps">Native chiral PEPS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seam-resolved-type-1-diagnostics">Seam-resolved type-1 diagnostics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#targeted-enlarged-unit-cells">Targeted enlarged unit cells</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

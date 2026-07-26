@@ -166,6 +166,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
 </ul>
@@ -381,6 +383,540 @@
     <span class="n">density_check_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;full&quot;</span>
     <span class="n">trajectory_counts</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">state_norm_errors</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_orthonormal_target_basis</span><span class="p">(</span>
+    <span class="n">target_states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return orthonormal target states as columns.&quot;&quot;&quot;</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">target_states</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">matrix</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">dim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;target state has dimension </span><span class="si">{</span><span class="n">matrix</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">; expected </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">dim</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">dim</span><span class="p">:</span>
+                <span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">T</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;target states must have shape (dim, n_states) or &quot;</span> <span class="s2">&quot;(n_states, dim).&quot;</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="c1"># Common notebook convention for a small manifold is one state per row.</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;target states must be one- or two-dimensional.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;target_states must contain at least one state.&quot;</span><span class="p">)</span>
+
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="n">diagonal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">diagonal</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;target_states have numerical rank zero.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">q</span><span class="p">[:,</span> <span class="p">:</span><span class="n">rank</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="target_manifold_projector">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.target_manifold_projector">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_projector</span><span class="p">(</span>
+    <span class="n">target_states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the projector onto a target manifold.</span>
+
+<span class="sd">    ``target_states`` may be one target vector, a ``(dim, n_states)`` matrix, or</span>
+<span class="sd">    an ``(n_states, dim)`` matrix.  The columns/rows are orthonormalized before</span>
+<span class="sd">    building the projector, so linearly dependent target vectors are harmless.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">target_basis</span> <span class="o">=</span> <span class="n">_orthonormal_target_basis</span><span class="p">(</span><span class="n">target_states</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">target_basis</span> <span class="o">@</span> <span class="n">target_basis</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span></div>
+
+
+
+<div class="viewcode-block" id="target_manifold_weight">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.target_manifold_weight">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_weight</span><span class="p">(</span>
+    <span class="n">density_matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">projector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``Tr(P_target rho)`` for one density matrix.</span>
+
+<span class="sd">    Pass either ``target_states``/``target_basis`` or an explicit ``projector``.</span>
+<span class="sd">    When a target basis is supplied, the computation uses</span>
+<span class="sd">    ``Tr(Q^dagger rho Q)`` and avoids materializing the full projector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">density_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rho</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;density_matrix must be square.&quot;</span><span class="p">)</span>
+
+    <span class="n">n_target_specs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="n">target_states</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">,</span> <span class="n">projector</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">n_target_specs</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Pass exactly one of target_states, target_basis, or projector.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">projector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">p_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">projector</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p_target</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;projector must have the same shape as density_matrix.&quot;</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">p_target</span> <span class="o">@</span> <span class="n">rho</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+
+    <span class="n">raw_basis</span> <span class="o">=</span> <span class="n">target_basis</span> <span class="k">if</span> <span class="n">target_basis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">target_states</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">_orthonormal_target_basis</span><span class="p">(</span><span class="n">raw_basis</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">rho</span> <span class="o">@</span> <span class="n">q</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="target_manifold_weight_series">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.target_manifold_weight_series">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_weight_series</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">density_matrices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">evolution_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ensemble_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">state_snapshots</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">projector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``Tr(P_target rho(t))`` for evolution or MCWF output.</span>
+
+<span class="sd">    Exactly one data source must be supplied: ``density_matrices``, a</span>
+<span class="sd">    ``LindbladEvolutionResult`` via ``evolution_result``, an ``EnsembleResult``</span>
+<span class="sd">    via ``ensemble_result``, or MCWF ``state_snapshots``.  For state snapshots,</span>
+<span class="sd">    each snapshot is expected to be a ``(dim, n_trajectories)`` state matrix and</span>
+<span class="sd">    the returned weight is the trajectory average of ``&lt;psi|P_target|psi&gt;``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sources</span> <span class="o">=</span> <span class="p">(</span><span class="n">density_matrices</span><span class="p">,</span> <span class="n">evolution_result</span><span class="p">,</span> <span class="n">ensemble_result</span><span class="p">,</span> <span class="n">state_snapshots</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Pass exactly one of density_matrices, evolution_result, &quot;</span>
+            <span class="s2">&quot;ensemble_result, or state_snapshots.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">resolved_density_matrices</span> <span class="o">=</span> <span class="n">density_matrices</span>
+    <span class="n">resolved_state_snapshots</span> <span class="o">=</span> <span class="n">state_snapshots</span>
+
+    <span class="k">if</span> <span class="n">evolution_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">resolved_density_matrices</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">evolution_result</span><span class="p">,</span> <span class="s2">&quot;density_matrices&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">resolved_density_matrices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;evolution_result does not contain density_matrices.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ensemble_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rho_t</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">ensemble_result</span><span class="p">,</span> <span class="s2">&quot;rho_t&quot;</span><span class="p">,</span> <span class="p">())</span> <span class="ow">or</span> <span class="p">())</span>
+        <span class="k">if</span> <span class="n">rho_t</span><span class="p">:</span>
+            <span class="n">resolved_density_matrices</span> <span class="o">=</span> <span class="n">rho_t</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">snapshots</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ensemble_result</span><span class="p">,</span> <span class="s2">&quot;state_snapshots&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">snapshots</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;ensemble_result must contain rho_t or state_snapshots for &quot;</span>
+                    <span class="s2">&quot;target-manifold weights.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">resolved_state_snapshots</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">snapshots</span><span class="p">)</span>
+
+    <span class="n">n_target_specs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="n">target_states</span><span class="p">,</span> <span class="n">target_basis</span><span class="p">,</span> <span class="n">projector</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">n_target_specs</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Pass exactly one of target_states, target_basis, or projector.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">resolved_density_matrices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">target_manifold_weight</span><span class="p">(</span>
+                    <span class="n">density_matrix</span><span class="p">,</span>
+                    <span class="n">target_states</span><span class="o">=</span><span class="n">target_states</span><span class="p">,</span>
+                    <span class="n">target_basis</span><span class="o">=</span><span class="n">target_basis</span><span class="p">,</span>
+                    <span class="n">projector</span><span class="o">=</span><span class="n">projector</span><span class="p">,</span>
+                    <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">density_matrix</span> <span class="ow">in</span> <span class="n">resolved_density_matrices</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">assert</span> <span class="n">resolved_state_snapshots</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">snapshot_tuple</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">resolved_state_snapshots</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">snapshot_tuple</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state_snapshots must be non-empty.&quot;</span><span class="p">)</span>
+
+    <span class="n">first_snapshot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">snapshot_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">first_snapshot</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state snapshots must be 2D state matrices.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">projector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">p_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">projector</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p_target</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">first_snapshot</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">first_snapshot</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;projector has incompatible shape for state_snapshots.&quot;</span><span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">snapshot</span> <span class="ow">in</span> <span class="n">snapshot_tuple</span><span class="p">:</span>
+            <span class="n">states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">snapshot</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ij,ij-&gt;j&quot;</span><span class="p">,</span> <span class="n">states</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">p_target</span> <span class="o">@</span> <span class="n">states</span><span class="p">)</span>
+            <span class="n">weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">values</span><span class="p">))))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="n">raw_basis</span> <span class="o">=</span> <span class="n">target_basis</span> <span class="k">if</span> <span class="n">target_basis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">target_states</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">_orthonormal_target_basis</span><span class="p">(</span>
+        <span class="n">raw_basis</span><span class="p">,</span>
+        <span class="n">dim</span><span class="o">=</span><span class="n">first_snapshot</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">snapshot</span> <span class="ow">in</span> <span class="n">snapshot_tuple</span><span class="p">:</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">snapshot</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">states</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">states</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state snapshot has incompatible shape.&quot;</span><span class="p">)</span>
+        <span class="n">overlaps</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">states</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">overlaps</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">values</span><span class="p">))))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_density_matrix_or_snapshot_series</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">density_matrices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">evolution_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ensemble_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">state_snapshots</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve one density/state time-series source.</span>
+
+<span class="sd">    The returned source kind is either ``&quot;density_matrices&quot;`` or</span>
+<span class="sd">    ``&quot;state_snapshots&quot;``.  This helper intentionally accepts duck-typed solver</span>
+<span class="sd">    outputs so diagnostics can be used with lightweight notebook objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sources</span> <span class="o">=</span> <span class="p">(</span><span class="n">density_matrices</span><span class="p">,</span> <span class="n">evolution_result</span><span class="p">,</span> <span class="n">ensemble_result</span><span class="p">,</span> <span class="n">state_snapshots</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Pass exactly one of density_matrices, evolution_result, &quot;</span>
+            <span class="s2">&quot;ensemble_result, or state_snapshots.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">evolution_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">resolved_density_matrices</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">evolution_result</span><span class="p">,</span> <span class="s2">&quot;density_matrices&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">resolved_density_matrices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;evolution_result does not contain density_matrices.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;density_matrices&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">resolved_density_matrices</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ensemble_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rho_t</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">ensemble_result</span><span class="p">,</span> <span class="s2">&quot;rho_t&quot;</span><span class="p">,</span> <span class="p">())</span> <span class="ow">or</span> <span class="p">())</span>
+        <span class="k">if</span> <span class="n">rho_t</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;density_matrices&quot;</span><span class="p">,</span> <span class="n">rho_t</span>
+        <span class="n">snapshots</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ensemble_result</span><span class="p">,</span> <span class="s2">&quot;state_snapshots&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">snapshots</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;ensemble_result must contain rho_t or state_snapshots for &quot;</span>
+                <span class="s2">&quot;target-manifold diagnostics.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;state_snapshots&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">snapshots</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">density_matrices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;density_matrices&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">density_matrices</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="n">state_snapshots</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="s2">&quot;state_snapshots&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">state_snapshots</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="target_manifold_density_matrix">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.target_manifold_density_matrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_density_matrix</span><span class="p">(</span>
+    <span class="n">density_matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the density matrix reduced to the target manifold basis.</span>
+
+<span class="sd">    The returned matrix is ``Q^dagger rho Q`` where columns of ``Q`` are an</span>
+<span class="sd">    orthonormal target basis.  When ``normalize=True`` this is conditioned on</span>
+<span class="sd">    being in the manifold by dividing by ``Tr(Q^dagger rho Q)``.  If the weight</span>
+<span class="sd">    is numerically zero, the unnormalized zero matrix is returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">density_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rho</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;density_matrix must be square.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">target_states</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">target_basis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Pass exactly one of target_states or target_basis.&quot;</span><span class="p">)</span>
+
+    <span class="n">raw_basis</span> <span class="o">=</span> <span class="n">target_basis</span> <span class="k">if</span> <span class="n">target_basis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">target_states</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">_orthonormal_target_basis</span><span class="p">(</span><span class="n">raw_basis</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">reduced</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">rho</span> <span class="o">@</span> <span class="n">q</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">reduced</span><span class="p">))</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+            <span class="n">reduced</span> <span class="o">=</span> <span class="n">reduced</span> <span class="o">/</span> <span class="n">weight</span>
+
+    <span class="k">return</span> <span class="n">reduced</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_target_manifold_density_matrix_from_snapshot</span><span class="p">(</span>
+    <span class="n">snapshot</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">snapshot</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">states</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state snapshots must be 2D state matrices.&quot;</span><span class="p">)</span>
+
+    <span class="n">q</span> <span class="o">=</span> <span class="n">_orthonormal_target_basis</span><span class="p">(</span>
+        <span class="n">target_basis</span><span class="p">,</span>
+        <span class="n">dim</span><span class="o">=</span><span class="n">states</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">overlaps</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">states</span>
+    <span class="n">reduced</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">overlaps</span> <span class="o">@</span> <span class="n">overlaps</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">reduced</span> <span class="o">/=</span> <span class="nb">float</span><span class="p">(</span><span class="n">states</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">reduced</span><span class="p">))</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+            <span class="n">reduced</span> <span class="o">=</span> <span class="n">reduced</span> <span class="o">/</span> <span class="n">weight</span>
+
+    <span class="k">return</span> <span class="n">reduced</span>
+
+
+<div class="viewcode-block" id="target_manifold_density_matrix_series">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.target_manifold_density_matrix_series">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_density_matrix_series</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">density_matrices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">evolution_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ensemble_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">state_snapshots</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``Q^dagger rho(t) Q`` for a target manifold basis.</span>
+
+<span class="sd">    The result has shape ``(n_times, manifold_dimension, manifold_dimension)``.</span>
+<span class="sd">    With ``normalize=True`` each time slice is conditioned by its target-manifold</span>
+<span class="sd">    weight, i.e. it is divided by ``Tr(P_target rho(t))`` when the weight is</span>
+<span class="sd">    nonzero.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">target_states</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">target_basis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Pass exactly one of target_states or target_basis.&quot;</span><span class="p">)</span>
+
+    <span class="n">raw_basis</span> <span class="o">=</span> <span class="n">target_basis</span> <span class="k">if</span> <span class="n">target_basis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">target_states</span>
+    <span class="n">source_kind</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="n">_resolve_density_matrix_or_snapshot_series</span><span class="p">(</span>
+        <span class="n">density_matrices</span><span class="o">=</span><span class="n">density_matrices</span><span class="p">,</span>
+        <span class="n">evolution_result</span><span class="o">=</span><span class="n">evolution_result</span><span class="p">,</span>
+        <span class="n">ensemble_result</span><span class="o">=</span><span class="n">ensemble_result</span><span class="p">,</span>
+        <span class="n">state_snapshots</span><span class="o">=</span><span class="n">state_snapshots</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">values</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">source_kind</span><span class="si">}</span><span class="s2"> must be non-empty.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">source_kind</span> <span class="o">==</span> <span class="s2">&quot;density_matrices&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">target_manifold_density_matrix</span><span class="p">(</span>
+                    <span class="n">density_matrix</span><span class="p">,</span>
+                    <span class="n">target_basis</span><span class="o">=</span><span class="n">raw_basis</span><span class="p">,</span>
+                    <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">,</span>
+                    <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">density_matrix</span> <span class="ow">in</span> <span class="n">values</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="n">first_snapshot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">first_snapshot</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state snapshots must be 2D state matrices.&quot;</span><span class="p">)</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">_orthonormal_target_basis</span><span class="p">(</span>
+        <span class="n">raw_basis</span><span class="p">,</span>
+        <span class="n">dim</span><span class="o">=</span><span class="n">first_snapshot</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">_target_manifold_density_matrix_from_snapshot</span><span class="p">(</span>
+                <span class="n">snapshot</span><span class="p">,</span>
+                <span class="n">target_basis</span><span class="o">=</span><span class="n">q</span><span class="p">,</span>
+                <span class="n">normalize</span><span class="o">=</span><span class="n">normalize</span><span class="p">,</span>
+                <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">snapshot</span> <span class="ow">in</span> <span class="n">values</span>
+        <span class="p">]</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="target_manifold_populations_series">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.target_manifold_populations_series">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_populations_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return diagonal populations of the target-manifold density matrices.&quot;&quot;&quot;</span>
+    <span class="n">reduced</span> <span class="o">=</span> <span class="n">target_manifold_density_matrix_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">reduced</span><span class="p">,</span> <span class="n">axis1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis2</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="target_manifold_coherence_series">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.target_manifold_coherence_series">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_coherence_series</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">norm</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;fro&quot;</span><span class="p">,</span> <span class="s2">&quot;l1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;fro&quot;</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return off-diagonal coherence of target-manifold density matrices.</span>
+
+<span class="sd">    ``norm=&quot;fro&quot;`` returns the Frobenius norm of off-diagonal entries, while</span>
+<span class="sd">    ``norm=&quot;l1&quot;`` returns their elementwise absolute sum.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">reduced</span> <span class="o">=</span> <span class="n">target_manifold_density_matrix_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">offdiag</span> <span class="o">=</span> <span class="n">reduced</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">offdiag</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">offdiag</span><span class="p">[:,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="s2">&quot;fro&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">offdiag</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">offdiag</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="s2">&quot;l1&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">offdiag</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;norm must be &#39;fro&#39; or &#39;l1&#39;.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="target_manifold_purity_series">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.target_manifold_purity_series">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_purity_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``Tr(rho_target(t)^2)`` for target-manifold density matrices.&quot;&quot;&quot;</span>
+    <span class="n">reduced</span> <span class="o">=</span> <span class="n">target_manifold_density_matrix_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;tij,tji-&gt;t&quot;</span><span class="p">,</span> <span class="n">reduced</span><span class="p">,</span> <span class="n">reduced</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="target_manifold_entropy_series">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.target_manifold_entropy_series">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">target_manifold_entropy_series</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">base</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-12</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return von Neumann entropy of target-manifold density matrices.</span>
+
+<span class="sd">    The input density matrices are usually conditioned by leaving</span>
+<span class="sd">    ``normalize=True`` in ``kwargs``.  Eigenvalues below ``tolerance`` are</span>
+<span class="sd">    ignored in the logarithm.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">reduced</span> <span class="o">=</span> <span class="n">target_manifold_density_matrix_series</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">entropies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">log_base</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">base</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">rho</span> <span class="ow">in</span> <span class="n">reduced</span><span class="p">:</span>
+        <span class="n">hermitian</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">rho</span> <span class="o">+</span> <span class="n">rho</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">eigvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">hermitian</span><span class="p">)</span>
+        <span class="n">eigvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">eigvals</span><span class="p">[</span><span class="n">eigvals</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">eigvals</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">entropies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">entropy</span> <span class="o">=</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">eigvals</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">eigvals</span><span class="p">)))</span>
+        <span class="n">entropies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entropy</span> <span class="o">/</span> <span class="n">log_base</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">entropies</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="jump_activity">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.jump_activity">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">jump_activity</span><span class="p">(</span>
+    <span class="n">density_matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">jumps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return total Lindblad jump activity ``sum_mu Tr(J_mu^dag J_mu rho)``.&quot;&quot;&quot;</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">density_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rho</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;density_matrix must be square.&quot;</span><span class="p">)</span>
+
+    <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">jump</span> <span class="ow">in</span> <span class="n">jumps</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">jump</span><span class="p">):</span>
+            <span class="n">jump_matrix</span> <span class="o">=</span> <span class="n">jump</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+            <span class="n">jumped</span> <span class="o">=</span> <span class="n">jump_matrix</span> <span class="o">@</span> <span class="n">rho</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">jumped</span> <span class="o">@</span> <span class="n">jump_matrix</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">jump_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">jump</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">jump_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;jump has incompatible shape.&quot;</span><span class="p">)</span>
+            <span class="n">jumped</span> <span class="o">=</span> <span class="n">jump_matrix</span> <span class="o">@</span> <span class="n">rho</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">jumped</span> <span class="o">@</span> <span class="n">jump_matrix</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real_if_close</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">total</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_jump_activity_from_snapshot</span><span class="p">(</span>
+    <span class="n">snapshot</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">jumps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">snapshot</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">states</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;state snapshots must be 2D state matrices.&quot;</span><span class="p">)</span>
+
+    <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">jump</span> <span class="ow">in</span> <span class="n">jumps</span><span class="p">:</span>
+        <span class="n">jumped</span> <span class="o">=</span> <span class="n">jump</span> <span class="o">@</span> <span class="n">states</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">jumped</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">values</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">total</span>
+
+
+<div class="viewcode-block" id="jump_activity_series">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnostics.jump_activity_series">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">jump_activity_series</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">jumps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span>
+    <span class="n">density_matrices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">evolution_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ensemble_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">state_snapshots</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return total jump activity for each time point.</span>
+
+<span class="sd">    For density matrices this evaluates</span>
+<span class="sd">    ``sum_mu Tr(J_mu^dagger J_mu rho(t))``.  For MCWF state snapshots it returns</span>
+<span class="sd">    the trajectory average of ``sum_mu ||J_mu |psi(t)&gt;||^2``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source_kind</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="n">_resolve_density_matrix_or_snapshot_series</span><span class="p">(</span>
+        <span class="n">density_matrices</span><span class="o">=</span><span class="n">density_matrices</span><span class="p">,</span>
+        <span class="n">evolution_result</span><span class="o">=</span><span class="n">evolution_result</span><span class="p">,</span>
+        <span class="n">ensemble_result</span><span class="o">=</span><span class="n">ensemble_result</span><span class="p">,</span>
+        <span class="n">state_snapshots</span><span class="o">=</span><span class="n">state_snapshots</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">values</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">source_kind</span><span class="si">}</span><span class="s2"> must be non-empty.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">source_kind</span> <span class="o">==</span> <span class="s2">&quot;density_matrices&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">jump_activity</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">jumps</span><span class="p">)</span> <span class="k">for</span> <span class="n">rho</span> <span class="ow">in</span> <span class="n">values</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">_jump_activity_from_snapshot</span><span class="p">(</span><span class="n">snapshot</span><span class="p">,</span> <span class="n">jumps</span><span class="p">)</span> <span class="k">for</span> <span class="n">snapshot</span> <span class="ow">in</span> <span class="n">values</span><span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+    <span class="p">)</span></div>
 
 
 

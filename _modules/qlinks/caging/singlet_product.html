@@ -1,0 +1,1419 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.caging.singlet_product &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=eeb54e98"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qlinks/caging/singlet_product';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.3" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/caging/singlet_product.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qlinks.caging.singlet_product</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Diagnostics and tensor-network handoff for products of local QDM singlets.</span>
+
+<span class="sd">The routines in this module answer a deliberately sharp question: can an exact</span>
+<span class="sd">square-QDM cage be built inside the tensor-product span of independently solved</span>
+<span class="sd">two-plaquette singlets?  The answer is decided by the leakage map from that</span>
+<span class="sd">finite product support to configurations outside it.  A full-column-rank</span>
+<span class="sd">leakage map is a rigorous no-go statement for *every* coefficient tensor in the</span>
+<span class="sd">chosen support, including arbitrary MPS or PEPS correlations over the singlet</span>
+<span class="sd">labels.</span>
+
+<span class="sd">When the restricted support is insufficient, :class:`QDMSingletTNProblem`</span>
+<span class="sd">provides a small, backend-neutral handoff object for tensor-network experiments.</span>
+<span class="sd">The optional quimb bridge is intentionally isolated so qlinks does not depend on</span>
+<span class="sd">a tensor-network package unless the ``tn`` extra is installed.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">scipy_linalg</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">sparse</span> <span class="k">as</span> <span class="n">scipy_sparse</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LocalQDMCageBlock</span><span class="p">,</span>
+    <span class="n">LocalQDMCageSearchConfig</span><span class="p">,</span>
+    <span class="n">LocalQDMMultiPaddingConfig</span><span class="p">,</span>
+    <span class="n">LocalQDMRegion</span><span class="p">,</span>
+    <span class="n">MultiLocalQDMPadding</span><span class="p">,</span>
+    <span class="n">StripeMotifRegionProposal</span><span class="p">,</span>
+    <span class="n">_config_key</span><span class="p">,</span>
+    <span class="n">_make_qdm_multi_padding_from_exterior</span><span class="p">,</span>
+    <span class="n">_qdm_flip_transition_from_action</span><span class="p">,</span>
+    <span class="n">_qdm_global_plaquette_actions</span><span class="p">,</span>
+    <span class="n">_qdm_global_self_loop_values_from_actions</span><span class="p">,</span>
+    <span class="n">build_qdm_local_kinetic_matrix</span><span class="p">,</span>
+    <span class="n">build_qdm_local_region_from_plaquettes</span><span class="p">,</span>
+    <span class="n">enumerate_qdm_local_basis</span><span class="p">,</span>
+    <span class="n">iter_multi_qdm_block_paddings</span><span class="p">,</span>
+    <span class="n">make_qdm_cage_block</span><span class="p">,</span>
+    <span class="n">qdm_local_self_loop_values</span><span class="p">,</span>
+    <span class="n">run_local_region_proposal</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SquareQDMSingletDirection</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="QDMProductSubspaceEigenstate">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMProductSubspaceEigenstate">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QDMProductSubspaceEigenstate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One exact eigenvector found inside a selected block-product support.&quot;&quot;&quot;</span>
+
+    <span class="n">energy</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">residual</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;coefficients must be one-dimensional.&quot;</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">coefficients</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;coefficients must have nonzero norm.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;coefficients&quot;</span><span class="p">,</span> <span class="n">coefficients</span> <span class="o">/</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;energy&quot;</span><span class="p">,</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;residual&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="QDMBlockProductSubspaceReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMBlockProductSubspaceReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QDMBlockProductSubspaceReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hamiltonian closure diagnostic for one finite block-product support.</span>
+
+<span class="sd">    ``leakage_matrix`` maps coefficient vectors on ``global_support_configs``</span>
+<span class="sd">    to all one-hop configurations outside that support.  Therefore</span>
+<span class="sd">    ``leakage_nullity == 0`` rules out not only the independent product state,</span>
+<span class="sd">    but every correlated coefficient tensor on the same local singlet labels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">block_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">block_support_sizes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">MultiLocalQDMPadding</span>
+    <span class="n">support_hamiltonian</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">leakage_matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">leakage_output_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">leakage_rank</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">leakage_nullity</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">product_energy</span><span class="p">:</span> <span class="nb">complex</span>
+    <span class="n">product_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">exact_states</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">QDMProductSubspaceEigenstate</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">support_hamiltonian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">support_hamiltonian</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">leakage_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leakage_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">leakage_output_configs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leakage_output_configs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">support_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="o">.</span><span class="n">global_support_configs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">support_hamiltonian</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">support_size</span><span class="p">,</span> <span class="n">support_size</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;support_hamiltonian has the wrong shape.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">leakage_matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">leakage_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">support_size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;leakage_matrix width must match the product support size.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">leakage_output_configs</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;leakage_output_configs must be two-dimensional.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">leakage_output_configs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">leakage_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;leakage output rows must align with leakage_matrix.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;support_hamiltonian&quot;</span><span class="p">,</span> <span class="n">support_hamiltonian</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;leakage_matrix&quot;</span><span class="p">,</span> <span class="n">leakage_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;leakage_output_configs&quot;</span><span class="p">,</span> <span class="n">leakage_output_configs</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;leakage_rank&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leakage_rank</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;leakage_nullity&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leakage_nullity</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;product_energy&quot;</span><span class="p">,</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">product_energy</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;product_residual&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">product_residual</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;tolerance&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">support_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="o">.</span><span class="n">global_support_configs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_leakage_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leakage_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">product_state_is_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">product_residual</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_exact_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exact_states</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_ruled_out_within_product_support</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether no coefficient tensor can cancel the external leakage.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">leakage_nullity</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">requires_enlarged_local_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether an MPS/PEPS over the current singlet labels cannot work.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ruled_out_within_product_support</span></div>
+
+
+
+<div class="viewcode-block" id="SquareQDMTwoPlaquetteSingletBlock">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMTwoPlaquetteSingletBlock">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMTwoPlaquetteSingletBlock</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A translated two-plaquette antisymmetric square-QDM cage block.&quot;&quot;&quot;</span>
+
+    <span class="n">block</span><span class="p">:</span> <span class="n">LocalQDMCageBlock</span>
+    <span class="n">plaquette_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">anchor_cells</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span>
+    <span class="n">direction</span><span class="p">:</span> <span class="n">SquareQDMSingletDirection</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">block_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">support_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">support_size</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">covered_site_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">site_counts</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="SquareQDMSingletStripeProductReport">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMSingletStripeProductReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMSingletStripeProductReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;All shared-exterior tests for one regularly spaced singlet stripe.&quot;&quot;&quot;</span>
+
+    <span class="n">direction</span><span class="p">:</span> <span class="n">SquareQDMSingletDirection</span>
+    <span class="n">transverse_coordinate</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">selected_blocks</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SquareQDMTwoPlaquetteSingletBlock</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">subspace_reports</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">QDMBlockProductSubspaceReport</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">failure_reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selected_blocks</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_padding</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subspace_reports</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_exact_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">has_exact_state</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subspace_reports</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_full_rank_no_go</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subspace_reports</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">is_ruled_out_within_product_support</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subspace_reports</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SquareQDMSingletProductTiling">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMSingletProductTiling">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMSingletProductTiling</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One exact cover of all square-lattice sites by singlet rectangles.&quot;&quot;&quot;</span>
+
+    <span class="n">blocks</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SquareQDMTwoPlaquetteSingletBlock</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">n_horizontal</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_vertical</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">support_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">*=</span> <span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">support_size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="SquareQDMSingletTilingRecord">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMSingletTilingRecord">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMSingletTilingRecord</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subspace analysis for one exact-cover singlet tiling.&quot;&quot;&quot;</span>
+
+    <span class="n">tiling</span><span class="p">:</span> <span class="n">SquareQDMSingletProductTiling</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">QDMBlockProductSubspaceReport</span></div>
+
+
+
+<div class="viewcode-block" id="SquareQDMSingletTilingSearchResult">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMSingletTilingSearchResult">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMSingletTilingSearchResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collection of exact-cover singlet-product diagnostics.&quot;&quot;&quot;</span>
+
+    <span class="n">records</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SquareQDMSingletTilingRecord</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">n_tilings_enumerated</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">truncated</span><span class="p">:</span> <span class="nb">bool</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_exact_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">exact_states</span><span class="p">)</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_full_rank_no_go</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">report</span><span class="o">.</span><span class="n">is_ruled_out_within_product_support</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">all_full_rank_no_go</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_full_rank_no_go</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="QDMBoundaryResolvedTileBasis">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMBoundaryResolvedTileBasis">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QDMBoundaryResolvedTileBasis</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Finite local QDM basis resolved by the dimer deficit at boundary sites.</span>
+
+<span class="sd">    A signature entry is the number of dimers that must be supplied by links</span>
+<span class="sd">    outside the tile.  These signatures are the natural virtual labels for a</span>
+<span class="sd">    constrained tensor network.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">region</span><span class="p">:</span> <span class="n">LocalQDMRegion</span>
+    <span class="n">configurations</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">boundary_site_ids</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">boundary_deficits</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">unique_boundary_signatures</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">signature_indices</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+    <span class="n">local_hamiltonian</span><span class="p">:</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_array</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">configurations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configurations</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">boundary_site_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">boundary_site_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">boundary_deficits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">boundary_deficits</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">signatures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unique_boundary_signatures</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">signature_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signature_indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">configurations</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;configurations must be two-dimensional.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">boundary_site_ids</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;boundary_site_ids must be one-dimensional.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">boundary_deficits</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">configurations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">boundary_site_ids</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;boundary_deficits has the wrong shape.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">signatures</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">signatures</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">boundary_site_ids</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unique_boundary_signatures has the wrong shape.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">signature_indices</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">configurations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;signature_indices has the wrong shape.&quot;</span><span class="p">)</span>
+        <span class="n">local_hamiltonian</span> <span class="o">=</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">local_hamiltonian</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">local_hamiltonian</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">configurations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">configurations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;local_hamiltonian has the wrong shape.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;configurations&quot;</span><span class="p">,</span> <span class="n">configurations</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;boundary_site_ids&quot;</span><span class="p">,</span> <span class="n">boundary_site_ids</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;boundary_deficits&quot;</span><span class="p">,</span> <span class="n">boundary_deficits</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;unique_boundary_signatures&quot;</span><span class="p">,</span> <span class="n">signatures</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;signature_indices&quot;</span><span class="p">,</span> <span class="n">signature_indices</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;local_hamiltonian&quot;</span><span class="p">,</span> <span class="n">local_hamiltonian</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_boundary_signatures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unique_boundary_signatures</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<div class="viewcode-block" id="QDMBoundaryResolvedTileBasis.indices_for_signature">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMBoundaryResolvedTileBasis.indices_for_signature">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">indices_for_signature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signature_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signature_indices</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">signature_index</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SquareQDMSingletBoundaryTile">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.SquareQDMSingletBoundaryTile">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SquareQDMSingletBoundaryTile</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One singlet core embedded in an enlarged boundary-resolved halo basis.&quot;&quot;&quot;</span>
+
+    <span class="n">singlet</span><span class="p">:</span> <span class="n">SquareQDMTwoPlaquetteSingletBlock</span>
+    <span class="n">basis</span><span class="p">:</span> <span class="n">QDMBoundaryResolvedTileBasis</span>
+    <span class="n">core_sector_indices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sectors</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span> <span class="k">for</span> <span class="n">indices</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_sector_indices</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sectors</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;core_sector_indices must contain the two singlet core sectors.&quot;</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;core_sector_indices&quot;</span><span class="p">,</span> <span class="n">sectors</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">enlarged_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">dimension</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">core_compatible_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">indices</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_sector_indices</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">virtual_signature_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">n_boundary_signatures</span></div>
+
+
+
+<div class="viewcode-block" id="QDMSingletTNProblem">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMSingletTNProblem">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QDMSingletTNProblem</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Backend-neutral finite objective for a singlet-label TN ansatz.</span>
+
+<span class="sd">    This object is useful for prototyping MPS/PEPS optimizers with an external</span>
+<span class="sd">    tensor-network package.  It also states a rigorous limitation: when</span>
+<span class="sd">    ``leakage_nullity == 0``, increasing the bond dimension while keeping the</span>
+<span class="sd">    same physical singlet label cannot yield an exact state.  The local physical</span>
+<span class="sd">    basis must first be enlarged, e.g. by adding halo/boundary configurations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">physical_dimensions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">support_hamiltonian</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">leakage_matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">reference_coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+<div class="viewcode-block" id="QDMSingletTNProblem.from_report">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMSingletTNProblem.from_report">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_report</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">QDMBlockProductSubspaceReport</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QDMSingletTNProblem</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">physical_dimensions</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">block_support_sizes</span><span class="p">,</span>
+            <span class="n">support_hamiltonian</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">support_hamiltonian</span><span class="p">,</span>
+            <span class="n">leakage_matrix</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">leakage_matrix</span><span class="p">,</span>
+            <span class="n">reference_coefficients</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">padding</span><span class="o">.</span><span class="n">global_amplitudes</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;block_ids&quot;</span><span class="p">:</span> <span class="n">report</span><span class="o">.</span><span class="n">block_ids</span><span class="p">,</span>
+                <span class="s2">&quot;leakage_rank&quot;</span><span class="p">:</span> <span class="n">report</span><span class="o">.</span><span class="n">leakage_rank</span><span class="p">,</span>
+                <span class="s2">&quot;leakage_nullity&quot;</span><span class="p">:</span> <span class="n">report</span><span class="o">.</span><span class="n">leakage_nullity</span><span class="p">,</span>
+                <span class="s2">&quot;requires_enlarged_local_basis&quot;</span><span class="p">:</span> <span class="n">report</span><span class="o">.</span><span class="n">requires_enlarged_local_basis</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">support_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">physical_dimensions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">leakage_nullity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">leakage_matrix</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_size</span> <span class="o">-</span> <span class="n">rank</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">requires_enlarged_local_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">leakage_nullity</span> <span class="o">==</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="QDMSingletTNProblem.loss">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMSingletTNProblem.loss">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">energy</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``||Kc||² + ||Hc-Ec||²`` for a normalized dense vector.&quot;&quot;&quot;</span>
+        <span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vector</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;coefficient vector size does not match physical_dimensions.&quot;</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">vector</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;coefficients must have nonzero norm.&quot;</span><span class="p">)</span>
+        <span class="n">vector</span> <span class="o">=</span> <span class="n">vector</span> <span class="o">/</span> <span class="n">norm</span>
+        <span class="n">h_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_hamiltonian</span> <span class="o">@</span> <span class="n">vector</span>
+        <span class="n">effective_energy</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">h_vector</span><span class="p">))</span> <span class="k">if</span> <span class="n">energy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">complex</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
+        <span class="n">leakage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">leakage_matrix</span> <span class="o">@</span> <span class="n">vector</span>
+        <span class="n">internal</span> <span class="o">=</span> <span class="n">h_vector</span> <span class="o">-</span> <span class="n">effective_energy</span> <span class="o">*</span> <span class="n">vector</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">leakage</span><span class="p">,</span> <span class="n">leakage</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">internal</span><span class="p">,</span> <span class="n">internal</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="QDMSingletTNProblem.to_quimb_mps">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.QDMSingletTNProblem.to_quimb_mps">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_quimb_mps</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">max_bond</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a dense coefficient tensor to a quimb MPS.</span>
+
+<span class="sd">        This bridge is intended for diagnostics and initialization.  It does not</span>
+<span class="sd">        imply that the current physical support is sufficient for an exact</span>
+<span class="sd">        state; check :attr:`requires_enlarged_local_basis` first.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">quimb_available</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="s2">&quot;quimb is not installed. Install qlinks with the &#39;tn&#39; extra or &quot;</span>
+                <span class="s2">&quot;install quimb&gt;=1.14.0.&quot;</span>
+            <span class="p">)</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">quimb.tensor</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">qtn</span>  <span class="c1"># type: ignore[import-not-found]</span>
+
+        <span class="n">vector</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_coefficients</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">coefficients</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vector</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">support_size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;coefficient vector size does not match physical_dimensions.&quot;</span><span class="p">)</span>
+        <span class="n">split_opts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;cutoff&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">cutoff</span><span class="p">)}</span>
+        <span class="k">if</span> <span class="n">max_bond</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">split_opts</span><span class="p">[</span><span class="s2">&quot;max_bond&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_bond</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">qtn</span><span class="o">.</span><span class="n">MatrixProductState</span><span class="o">.</span><span class="n">from_dense</span><span class="p">(</span>
+            <span class="n">vector</span><span class="p">,</span>
+            <span class="n">dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">physical_dimensions</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">split_opts</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="quimb_available">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.quimb_available">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">quimb_available</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return whether the optional quimb tensor-network backend is installed.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;quimb&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="analyze_qdm_block_product_subspace">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.analyze_qdm_block_product_subspace">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">analyze_qdm_block_product_subspace</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LocalQDMCageBlock</span><span class="p">],</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">MultiLocalQDMPadding</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QDMBlockProductSubspaceReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the exact restricted Hamiltonian and external leakage map.&quot;&quot;&quot;</span>
+    <span class="n">fixed_blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">fixed_blocks</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">padding</span><span class="o">.</span><span class="n">block_ids</span><span class="p">):</span>
+        <span class="n">by_id</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span><span class="p">):</span> <span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">fixed_blocks</span><span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fixed_blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">by_id</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">block_id</span><span class="p">)]</span> <span class="k">for</span> <span class="n">block_id</span> <span class="ow">in</span> <span class="n">padding</span><span class="o">.</span><span class="n">block_ids</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;blocks do not cover padding.block_ids.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+
+    <span class="n">configs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">padding</span><span class="o">.</span><span class="n">global_support_configs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">support_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">configs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">support_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;padding product support must be non-empty.&quot;</span><span class="p">)</span>
+    <span class="n">support_index</span> <span class="o">=</span> <span class="p">{</span><span class="n">_config_key</span><span class="p">(</span><span class="n">config</span><span class="p">):</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">configs</span><span class="p">)}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">support_index</span><span class="p">)</span> <span class="o">!=</span> <span class="n">support_size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;padding contains duplicate global support configurations.&quot;</span><span class="p">)</span>
+
+    <span class="n">actions</span> <span class="o">=</span> <span class="n">_qdm_global_plaquette_actions</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">support_hamiltonian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">support_size</span><span class="p">,</span> <span class="n">support_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">diagonal</span> <span class="o">=</span> <span class="n">_qdm_global_self_loop_values_from_actions</span><span class="p">(</span><span class="n">configs</span><span class="p">,</span> <span class="n">actions</span><span class="p">)</span>
+    <span class="n">support_hamiltonian</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">support_size</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">support_size</span><span class="p">)]</span> <span class="o">=</span> <span class="n">diagonal</span>
+
+    <span class="n">leakage_rows</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">leakage_configs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">configs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
+            <span class="n">transition</span> <span class="o">=</span> <span class="n">_qdm_flip_transition_from_action</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">transition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">final_config</span><span class="p">,</span> <span class="n">coefficient</span> <span class="o">=</span> <span class="n">transition</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">_config_key</span><span class="p">(</span><span class="n">final_config</span><span class="p">)</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">support_index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">row</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">support_hamiltonian</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coefficient</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">leakage_rows</span><span class="p">:</span>
+                <span class="n">leakage_rows</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">support_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+                <span class="n">leakage_configs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">final_config</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+            <span class="n">leakage_rows</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">column</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coefficient</span>
+
+    <span class="n">ordered_keys</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">leakage_rows</span><span class="p">))</span>
+    <span class="n">leakage_matrix</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">leakage_rows</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ordered_keys</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ordered_keys</span>
+        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">support_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">leakage_output_configs</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">leakage_configs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ordered_keys</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ordered_keys</span>
+        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">configs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">hermitian_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">support_hamiltonian</span> <span class="o">-</span> <span class="n">support_hamiltonian</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">hermitian_residual</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">tolerance</span><span class="p">,</span> <span class="mf">1.0e-14</span><span class="p">)</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">support_size</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Restricted product-space Hamiltonian is not Hermitian; &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;residual=</span><span class="si">{</span><span class="n">hermitian_residual</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">support_hamiltonian</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">support_hamiltonian</span> <span class="o">+</span> <span class="n">support_hamiltonian</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="n">leakage_rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">leakage_matrix</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tolerance</span><span class="p">))</span>
+    <span class="n">leakage_nullity</span> <span class="o">=</span> <span class="n">support_size</span> <span class="o">-</span> <span class="n">leakage_rank</span>
+
+    <span class="n">product_coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">padding</span><span class="o">.</span><span class="n">global_amplitudes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">product_coefficients</span> <span class="o">=</span> <span class="n">product_coefficients</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">product_coefficients</span><span class="p">)</span>
+    <span class="n">product_h</span> <span class="o">=</span> <span class="n">support_hamiltonian</span> <span class="o">@</span> <span class="n">product_coefficients</span>
+    <span class="n">product_energy</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">product_coefficients</span><span class="p">,</span> <span class="n">product_h</span><span class="p">))</span>
+    <span class="n">product_internal</span> <span class="o">=</span> <span class="n">product_h</span> <span class="o">-</span> <span class="n">product_energy</span> <span class="o">*</span> <span class="n">product_coefficients</span>
+    <span class="n">product_leakage</span> <span class="o">=</span> <span class="n">leakage_matrix</span> <span class="o">@</span> <span class="n">product_coefficients</span>
+    <span class="n">product_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">product_internal</span><span class="p">,</span> <span class="n">product_internal</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+            <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">product_leakage</span><span class="p">,</span> <span class="n">product_leakage</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">exact_states</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QDMProductSubspaceEigenstate</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">leakage_nullity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">support_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">support_size</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">support_hamiltonian</span><span class="p">)</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="n">support_size</span><span class="p">:</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">stop</span> <span class="o">&lt;</span> <span class="n">support_size</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">[</span><span class="n">stop</span><span class="p">]</span> <span class="o">-</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">start</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+            <span class="n">stop</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">eigenspace</span> <span class="o">=</span> <span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">leakage_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">kernel_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">stop</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kernel_coordinates</span> <span class="o">=</span> <span class="n">scipy_linalg</span><span class="o">.</span><span class="n">null_space</span><span class="p">(</span>
+                <span class="n">leakage_matrix</span> <span class="o">@</span> <span class="n">eigenspace</span><span class="p">,</span>
+                <span class="n">rcond</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">coordinate_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">kernel_coordinates</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">coefficients</span> <span class="o">=</span> <span class="n">eigenspace</span> <span class="o">@</span> <span class="n">kernel_coordinates</span><span class="p">[:,</span> <span class="n">coordinate_index</span><span class="p">]</span>
+            <span class="n">coefficients</span> <span class="o">=</span> <span class="n">coefficients</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
+            <span class="n">energy</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">[</span><span class="n">start</span><span class="p">])</span>
+            <span class="n">internal</span> <span class="o">=</span> <span class="n">support_hamiltonian</span> <span class="o">@</span> <span class="n">coefficients</span> <span class="o">-</span> <span class="n">energy</span> <span class="o">*</span> <span class="n">coefficients</span>
+            <span class="n">leakage</span> <span class="o">=</span> <span class="n">leakage_matrix</span> <span class="o">@</span> <span class="n">coefficients</span>
+            <span class="n">residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">internal</span><span class="p">,</span> <span class="n">internal</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">leakage</span><span class="p">,</span> <span class="n">leakage</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">residual</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+                <span class="n">exact_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">QDMProductSubspaceEigenstate</span><span class="p">(</span>
+                        <span class="n">energy</span><span class="o">=</span><span class="n">energy</span><span class="p">,</span>
+                        <span class="n">coefficients</span><span class="o">=</span><span class="n">coefficients</span><span class="p">,</span>
+                        <span class="n">residual</span><span class="o">=</span><span class="n">residual</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">stop</span>
+
+    <span class="k">return</span> <span class="n">QDMBlockProductSubspaceReport</span><span class="p">(</span>
+        <span class="n">block_ids</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">block_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">fixed_blocks</span><span class="p">),</span>
+        <span class="n">block_support_sizes</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">support_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">fixed_blocks</span><span class="p">),</span>
+        <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span>
+        <span class="n">support_hamiltonian</span><span class="o">=</span><span class="n">support_hamiltonian</span><span class="p">,</span>
+        <span class="n">leakage_matrix</span><span class="o">=</span><span class="n">leakage_matrix</span><span class="p">,</span>
+        <span class="n">leakage_output_configs</span><span class="o">=</span><span class="n">leakage_output_configs</span><span class="p">,</span>
+        <span class="n">leakage_rank</span><span class="o">=</span><span class="n">leakage_rank</span><span class="p">,</span>
+        <span class="n">leakage_nullity</span><span class="o">=</span><span class="n">leakage_nullity</span><span class="p">,</span>
+        <span class="n">product_energy</span><span class="o">=</span><span class="n">product_energy</span><span class="p">,</span>
+        <span class="n">product_residual</span><span class="o">=</span><span class="n">product_residual</span><span class="p">,</span>
+        <span class="n">exact_states</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">exact_states</span><span class="p">),</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="square_qdm_two_plaquette_singlet_blocks">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.square_qdm_two_plaquette_singlet_blocks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">square_qdm_two_plaquette_singlet_blocks</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">directions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">SquareQDMSingletDirection</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">),</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+    <span class="n">block_id_start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SquareQDMTwoPlaquetteSingletBlock</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find all translated antisymmetric two-plaquette square-QDM blocks.&quot;&quot;&quot;</span>
+    <span class="n">direction_set</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span> <span class="k">for</span> <span class="n">direction</span> <span class="ow">in</span> <span class="n">directions</span><span class="p">}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">direction_set</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">direction_set</span><span class="o">.</span><span class="n">issubset</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">}):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;directions must be a non-empty subset of {&#39;x&#39;, &#39;y&#39;}.&quot;</span><span class="p">)</span>
+    <span class="n">proposal</span> <span class="o">=</span> <span class="n">StripeMotifRegionProposal</span><span class="p">(</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">LocalQDMCageSearchConfig</span><span class="p">(</span>
+            <span class="n">halo_layers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">boundary_mode</span><span class="o">=</span><span class="s2">&quot;relaxed&quot;</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+            <span class="n">degenerate_basis_strategy</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">motif_sizes</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,),</span>
+        <span class="n">sources</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;stripe&quot;</span><span class="p">,),</span>
+        <span class="n">subset_mode</span><span class="o">=</span><span class="s2">&quot;windows&quot;</span><span class="p">,</span>
+        <span class="n">stripe_directions</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">scan</span> <span class="o">=</span> <span class="n">run_local_region_proposal</span><span class="p">(</span><span class="n">proposal</span><span class="p">)</span>
+    <span class="n">wrappers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SquareQDMTwoPlaquetteSingletBlock</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">next_block_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">block_id_start</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">scan_record</span> <span class="ow">in</span> <span class="n">scan</span><span class="o">.</span><span class="n">records</span><span class="p">:</span>
+        <span class="n">proposal_record</span> <span class="o">=</span> <span class="n">scan_record</span><span class="o">.</span><span class="n">proposal_record</span>
+        <span class="n">plaquette_ids</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span> <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">proposal_record</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">plaquette_ids</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">anchors</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">plaquette_anchor_cell</span><span class="p">(</span><span class="n">pid</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">plaquette_ids</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">anchors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">anchors</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">direction</span><span class="p">:</span> <span class="n">SquareQDMSingletDirection</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
+        <span class="k">elif</span> <span class="n">anchors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">anchors</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="s2">&quot;y&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">direction_set</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">for</span> <span class="n">local_record</span> <span class="ow">in</span> <span class="n">scan_record</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">records</span><span class="p">:</span>
+            <span class="n">support</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">local_record</span><span class="o">.</span><span class="n">cage_state</span><span class="o">.</span><span class="n">support</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">support</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">amplitudes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">local_record</span><span class="o">.</span><span class="n">local_state</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">amplitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">amplitudes</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">atol</span><span class="o">=</span><span class="n">tolerance</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">ratio</span> <span class="o">=</span> <span class="n">amplitudes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">amplitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">ratio</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tolerance</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">block</span> <span class="o">=</span> <span class="n">make_qdm_cage_block</span><span class="p">(</span>
+                    <span class="n">model</span><span class="p">,</span>
+                    <span class="n">local_record</span><span class="p">,</span>
+                    <span class="n">block_id</span><span class="o">=</span><span class="n">next_block_id</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">wrappers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">SquareQDMTwoPlaquetteSingletBlock</span><span class="p">(</span>
+                    <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">,</span>
+                    <span class="n">plaquette_ids</span><span class="o">=</span><span class="p">(</span><span class="n">plaquette_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">plaquette_ids</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                    <span class="n">anchor_cells</span><span class="o">=</span><span class="p">(</span><span class="n">anchors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">anchors</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                    <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">next_block_id</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">wrappers</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="analyze_square_qdm_singlet_stripe_product">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.analyze_square_qdm_singlet_stripe_product">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">analyze_square_qdm_singlet_stripe_product</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">direction</span><span class="p">:</span> <span class="n">SquareQDMSingletDirection</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span>
+    <span class="n">transverse_coordinate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">max_paddings</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">include_sectors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">require_static_exterior</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareQDMSingletStripeProductReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test a regular stripe of independent two-plaquette singlet factors.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;direction must be &#39;x&#39; or &#39;y&#39;.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spacing</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;spacing must be at least two plaquettes.&quot;</span><span class="p">)</span>
+    <span class="n">longitudinal_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">lx</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span> <span class="k">else</span> <span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">ly</span><span class="p">)</span>
+    <span class="n">transverse_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">ly</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span> <span class="k">else</span> <span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">lx</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">longitudinal_size</span> <span class="o">%</span> <span class="n">spacing</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SquareQDMSingletStripeProductReport</span><span class="p">(</span>
+            <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span>
+            <span class="n">transverse_coordinate</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">transverse_coordinate</span><span class="p">),</span>
+            <span class="n">selected_blocks</span><span class="o">=</span><span class="p">(),</span>
+            <span class="n">subspace_reports</span><span class="o">=</span><span class="p">(),</span>
+            <span class="n">failure_reason</span><span class="o">=</span><span class="s2">&quot;longitudinal_size_not_divisible_by_spacing&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">transverse_coordinate</span> <span class="o">%=</span> <span class="n">transverse_size</span>
+    <span class="n">wrappers</span> <span class="o">=</span> <span class="n">square_qdm_two_plaquette_singlet_blocks</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">directions</span><span class="o">=</span><span class="p">(</span><span class="n">direction</span><span class="p">,),</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">by_anchor_set</span> <span class="o">=</span> <span class="p">{</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">wrapper</span><span class="o">.</span><span class="n">anchor_cells</span><span class="p">):</span> <span class="n">wrapper</span> <span class="k">for</span> <span class="n">wrapper</span> <span class="ow">in</span> <span class="n">wrappers</span><span class="p">}</span>
+    <span class="n">selected</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SquareQDMTwoPlaquetteSingletBlock</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">offset</span> <span class="o">%</span> <span class="n">spacing</span><span class="p">,</span> <span class="n">longitudinal_size</span><span class="p">,</span> <span class="n">spacing</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span>
+            <span class="n">anchors</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="p">(</span><span class="n">start</span> <span class="o">%</span> <span class="n">longitudinal_size</span><span class="p">,</span> <span class="n">transverse_coordinate</span><span class="p">),</span>
+                    <span class="p">((</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">longitudinal_size</span><span class="p">,</span> <span class="n">transverse_coordinate</span><span class="p">),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">anchors</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="p">(</span><span class="n">transverse_coordinate</span><span class="p">,</span> <span class="n">start</span> <span class="o">%</span> <span class="n">longitudinal_size</span><span class="p">),</span>
+                    <span class="p">(</span><span class="n">transverse_coordinate</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">longitudinal_size</span><span class="p">),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="n">wrapper</span> <span class="o">=</span> <span class="n">by_anchor_set</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">anchors</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">wrapper</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SquareQDMSingletStripeProductReport</span><span class="p">(</span>
+                <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span>
+                <span class="n">transverse_coordinate</span><span class="o">=</span><span class="n">transverse_coordinate</span><span class="p">,</span>
+                <span class="n">selected_blocks</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">selected</span><span class="p">),</span>
+                <span class="n">subspace_reports</span><span class="o">=</span><span class="p">(),</span>
+                <span class="n">failure_reason</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;missing_singlet_block_at_</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">anchors</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">selected</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wrapper</span><span class="p">)</span>
+
+    <span class="n">blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">wrapper</span><span class="o">.</span><span class="n">block</span> <span class="k">for</span> <span class="n">wrapper</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">LocalQDMMultiPaddingConfig</span><span class="p">(</span>
+        <span class="n">min_blocks</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">),</span>
+        <span class="n">max_blocks</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">),</span>
+        <span class="n">max_paddings</span><span class="o">=</span><span class="n">max_paddings</span><span class="p">,</span>
+        <span class="n">max_padding_attempts</span><span class="o">=</span><span class="n">max_paddings</span><span class="p">,</span>
+        <span class="n">max_paddings_per_packing</span><span class="o">=</span><span class="n">max_paddings</span><span class="p">,</span>
+        <span class="n">include_sectors</span><span class="o">=</span><span class="n">include_sectors</span><span class="p">,</span>
+        <span class="n">require_static_exterior</span><span class="o">=</span><span class="n">require_static_exterior</span><span class="p">,</span>
+        <span class="n">require_kinetic_separation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">max_product_support_size</span><span class="o">=</span><span class="mi">2</span> <span class="o">**</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">),</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">reports</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QDMBlockProductSubspaceReport</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">padding</span> <span class="ow">in</span> <span class="n">iter_multi_qdm_block_paddings</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">blocks</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">max_yielded</span><span class="o">=</span><span class="n">max_paddings</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">reports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">analyze_qdm_block_product_subspace</span><span class="p">(</span>
+                <span class="n">model</span><span class="p">,</span>
+                <span class="n">blocks</span><span class="p">,</span>
+                <span class="n">padding</span><span class="p">,</span>
+                <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">SquareQDMSingletStripeProductReport</span><span class="p">(</span>
+        <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span>
+        <span class="n">transverse_coordinate</span><span class="o">=</span><span class="n">transverse_coordinate</span><span class="p">,</span>
+        <span class="n">selected_blocks</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">selected</span><span class="p">),</span>
+        <span class="n">subspace_reports</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">reports</span><span class="p">),</span>
+        <span class="n">failure_reason</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">reports</span> <span class="k">else</span> <span class="s2">&quot;no_shared_static_exterior_padding&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="enumerate_square_qdm_singlet_exact_covers">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.enumerate_square_qdm_singlet_exact_covers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">enumerate_square_qdm_singlet_exact_covers</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">singlet_blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">SquareQDMTwoPlaquetteSingletBlock</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_tilings</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">SquareQDMSingletProductTiling</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enumerate exact site covers by horizontal/vertical singlet rectangles.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">max_tilings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_tilings</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_tilings must be non-negative or None.&quot;</span><span class="p">)</span>
+    <span class="n">wrappers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="n">square_qdm_two_plaquette_singlet_blocks</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="k">if</span> <span class="n">singlet_blocks</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">singlet_blocks</span>
+    <span class="p">)</span>
+    <span class="n">n_sites</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_sites</span><span class="p">)</span>
+    <span class="n">full_mask</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">n_sites</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">block_masks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">blocks_by_site</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_sites</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">block_index</span><span class="p">,</span> <span class="n">wrapper</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">wrappers</span><span class="p">):</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="n">wrapper</span><span class="o">.</span><span class="n">covered_site_ids</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">|=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)</span>
+        <span class="n">block_masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="n">wrapper</span><span class="o">.</span><span class="n">covered_site_ids</span><span class="p">:</span>
+            <span class="n">blocks_by_site</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_index</span><span class="p">)</span>
+
+    <span class="n">tilings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SquareQDMSingletProductTiling</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">chosen</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="n">covered_mask</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_tilings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">tilings</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_tilings</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">covered_mask</span> <span class="o">==</span> <span class="n">full_mask</span><span class="p">:</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">wrappers</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">chosen</span><span class="p">)</span>
+            <span class="n">tilings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">SquareQDMSingletProductTiling</span><span class="p">(</span>
+                    <span class="n">blocks</span><span class="o">=</span><span class="n">selected</span><span class="p">,</span>
+                    <span class="n">n_horizontal</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">),</span>
+                    <span class="n">n_vertical</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">best_site</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">best_candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">remaining</span> <span class="o">=</span> <span class="n">full_mask</span> <span class="o">^</span> <span class="n">covered_mask</span>
+        <span class="k">while</span> <span class="n">remaining</span><span class="p">:</span>
+            <span class="n">low_bit</span> <span class="o">=</span> <span class="n">remaining</span> <span class="o">&amp;</span> <span class="o">-</span><span class="n">remaining</span>
+            <span class="n">site_id</span> <span class="o">=</span> <span class="n">low_bit</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">index</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">blocks_by_site</span><span class="p">[</span><span class="n">site_id</span><span class="p">]</span> <span class="k">if</span> <span class="n">block_masks</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">covered_mask</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">candidates</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="n">best_candidates</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">best_candidates</span><span class="p">):</span>
+                <span class="n">best_site</span> <span class="o">=</span> <span class="n">site_id</span>
+                <span class="n">best_candidates</span> <span class="o">=</span> <span class="n">candidates</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="n">remaining</span> <span class="o">^=</span> <span class="n">low_bit</span>
+        <span class="k">if</span> <span class="n">best_site</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">best_candidates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">block_index</span> <span class="ow">in</span> <span class="n">best_candidates</span><span class="p">:</span>
+            <span class="n">chosen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_index</span><span class="p">)</span>
+            <span class="n">dfs</span><span class="p">(</span><span class="n">covered_mask</span> <span class="o">|</span> <span class="n">block_masks</span><span class="p">[</span><span class="n">block_index</span><span class="p">])</span>
+            <span class="n">chosen</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">max_tilings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">tilings</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_tilings</span><span class="p">:</span>
+                <span class="k">return</span>
+
+    <span class="n">dfs</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tilings</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="analyze_square_qdm_singlet_product_tilings">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.analyze_square_qdm_singlet_product_tilings">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">analyze_square_qdm_singlet_product_tilings</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">max_tilings</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareQDMSingletTilingSearchResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Analyze exact-cover tilings without invoking a global cage search.&quot;&quot;&quot;</span>
+    <span class="n">wrappers</span> <span class="o">=</span> <span class="n">square_qdm_two_plaquette_singlet_blocks</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">tilings</span> <span class="o">=</span> <span class="n">enumerate_square_qdm_singlet_exact_covers</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">singlet_blocks</span><span class="o">=</span><span class="n">wrappers</span><span class="p">,</span>
+        <span class="n">max_tilings</span><span class="o">=</span><span class="n">max_tilings</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SquareQDMSingletTilingRecord</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n_global_links</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_links</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">tiling</span> <span class="ow">in</span> <span class="n">tilings</span><span class="p">:</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">wrapper</span><span class="o">.</span><span class="n">block</span> <span class="k">for</span> <span class="n">wrapper</span> <span class="ow">in</span> <span class="n">tiling</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+        <span class="n">used_links</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span>
+            <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">link_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">exterior_link_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">link_id</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_global_links</span><span class="p">)</span> <span class="k">if</span> <span class="n">link_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used_links</span><span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">padding</span> <span class="o">=</span> <span class="n">_make_qdm_multi_padding_from_exterior</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">blocks</span><span class="p">,</span>
+            <span class="n">exterior_link_ids</span><span class="o">=</span><span class="n">exterior_link_ids</span><span class="p">,</span>
+            <span class="n">exterior_config</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">exterior_link_ids</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">analyze_qdm_block_product_subspace</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">blocks</span><span class="p">,</span>
+            <span class="n">padding</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SquareQDMSingletTilingRecord</span><span class="p">(</span><span class="n">tiling</span><span class="o">=</span><span class="n">tiling</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="n">report</span><span class="p">))</span>
+    <span class="n">truncated</span> <span class="o">=</span> <span class="n">max_tilings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">tilings</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_tilings</span>
+    <span class="k">return</span> <span class="n">SquareQDMSingletTilingSearchResult</span><span class="p">(</span>
+        <span class="n">records</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">records</span><span class="p">),</span>
+        <span class="n">n_tilings_enumerated</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">tilings</span><span class="p">),</span>
+        <span class="n">truncated</span><span class="o">=</span><span class="n">truncated</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_qdm_boundary_resolved_tile_basis">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.build_qdm_boundary_resolved_tile_basis">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_qdm_boundary_resolved_tile_basis</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">plaquette_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">halo_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">max_states</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">100_000</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QDMBoundaryResolvedTileBasis</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the enlarged local basis needed after a singlet-support no-go.</span>
+
+<span class="sd">    The basis keeps every locally valid configuration in a finite plaquette</span>
+<span class="sd">    halo and groups configurations by the outside dimer deficits on boundary</span>
+<span class="sd">    sites.  No tensor-network backend is required for this preprocessing step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">halo_layers</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;halo_layers must be non-negative.&quot;</span><span class="p">)</span>
+    <span class="n">region</span> <span class="o">=</span> <span class="n">build_qdm_local_region_from_plaquettes</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">plaquette_ids</span><span class="o">=</span><span class="n">plaquette_ids</span><span class="p">,</span>
+        <span class="n">halo_layers</span><span class="o">=</span><span class="n">halo_layers</span><span class="p">,</span>
+        <span class="n">boundary_mode</span><span class="o">=</span><span class="s2">&quot;relaxed&quot;</span><span class="p">,</span>
+        <span class="n">scoring_plaquette_ids</span><span class="o">=</span><span class="n">plaquette_ids</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">local_basis</span> <span class="o">=</span> <span class="n">enumerate_qdm_local_basis</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">region</span><span class="p">,</span>
+        <span class="n">include_sectors_when_full</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">max_states</span><span class="o">=</span><span class="n">max_states</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">configurations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">local_basis</span><span class="o">.</span><span class="n">states</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">link_position</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">):</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">link_ids</span><span class="p">)}</span>
+    <span class="n">required_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;required_count&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">boundary_site_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">boundary_site_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">deficits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">configurations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">boundary_site_ids</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">boundary_position</span><span class="p">,</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">boundary_site_ids</span><span class="p">):</span>
+        <span class="n">local_incident</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">link_position</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">incident_links</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)</span> <span class="ow">in</span> <span class="n">link_position</span>
+        <span class="p">]</span>
+        <span class="n">local_counts</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">configurations</span><span class="p">[:,</span> <span class="n">local_incident</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">local_incident</span>
+            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">configurations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">deficits</span><span class="p">[:,</span> <span class="n">boundary_position</span><span class="p">]</span> <span class="o">=</span> <span class="n">required_count</span> <span class="o">-</span> <span class="n">local_counts</span>
+    <span class="n">signatures</span><span class="p">,</span> <span class="n">signature_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">deficits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">kinetic</span> <span class="o">=</span> <span class="n">build_qdm_local_kinetic_matrix</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">local_basis</span><span class="p">)</span>
+    <span class="n">diagonal</span> <span class="o">=</span> <span class="n">qdm_local_self_loop_values</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">local_basis</span><span class="p">)</span>
+    <span class="n">local_hamiltonian</span> <span class="o">=</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">kinetic</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span> <span class="o">+</span> <span class="n">scipy_sparse</span><span class="o">.</span><span class="n">diags</span><span class="p">(</span>
+        <span class="n">diagonal</span><span class="p">,</span>
+        <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">QDMBoundaryResolvedTileBasis</span><span class="p">(</span>
+        <span class="n">region</span><span class="o">=</span><span class="n">region</span><span class="p">,</span>
+        <span class="n">configurations</span><span class="o">=</span><span class="n">configurations</span><span class="p">,</span>
+        <span class="n">boundary_site_ids</span><span class="o">=</span><span class="n">boundary_site_ids</span><span class="p">,</span>
+        <span class="n">boundary_deficits</span><span class="o">=</span><span class="n">deficits</span><span class="p">,</span>
+        <span class="n">unique_boundary_signatures</span><span class="o">=</span><span class="n">signatures</span><span class="p">,</span>
+        <span class="n">signature_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">signature_indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+        <span class="n">local_hamiltonian</span><span class="o">=</span><span class="n">local_hamiltonian</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_square_qdm_singlet_boundary_tile">
+<a class="viewcode-back" href="../../../qlinks.caging.html#qlinks.caging.build_square_qdm_singlet_boundary_tile">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_square_qdm_singlet_boundary_tile</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="n">singlet</span><span class="p">:</span> <span class="n">SquareQDMTwoPlaquetteSingletBlock</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">halo_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">max_states</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">100_000</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareQDMSingletBoundaryTile</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Embed a two-state singlet core in a halo basis for TN construction.&quot;&quot;&quot;</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="n">build_qdm_boundary_resolved_tile_basis</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">plaquette_ids</span><span class="o">=</span><span class="n">singlet</span><span class="o">.</span><span class="n">plaquette_ids</span><span class="p">,</span>
+        <span class="n">halo_layers</span><span class="o">=</span><span class="n">halo_layers</span><span class="p">,</span>
+        <span class="n">max_states</span><span class="o">=</span><span class="n">max_states</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">local_position</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">):</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">basis</span><span class="o">.</span><span class="n">region</span><span class="o">.</span><span class="n">link_ids</span><span class="p">)}</span>
+    <span class="n">core_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">local_position</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">)]</span> <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="n">singlet</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">link_ids</span><span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">sectors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">core_config</span> <span class="ow">in</span> <span class="n">singlet</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">support_configs</span><span class="p">:</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span>
+            <span class="n">basis</span><span class="o">.</span><span class="n">configurations</span><span class="p">[:,</span> <span class="n">core_positions</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">core_config</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">sectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">SquareQDMSingletBoundaryTile</span><span class="p">(</span>
+        <span class="n">singlet</span><span class="o">=</span><span class="n">singlet</span><span class="p">,</span>
+        <span class="n">basis</span><span class="o">=</span><span class="n">basis</span><span class="p">,</span>
+        <span class="n">core_sector_indices</span><span class="o">=</span><span class="p">(</span><span class="n">sectors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sectors</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

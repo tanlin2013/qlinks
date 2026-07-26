@@ -1,0 +1,987 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Thermodynamic ETH diagnostics &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=eeb54e98"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'thermodynamic_eth';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tensor-network cage ansatzes" href="tensor_network.html" />
+    <link rel="prev" title="Typical workflow" href="workflow.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.3" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Typical workflow</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensor_network.html">Tensor-network cage ansatzes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/edit/main/docs/source/thermodynamic_eth.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2Fthermodynamic_eth.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Thermodynamic ETH diagnostics</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#match-one-local-witness-across-sizes">Match one local witness across sizes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-cage-and-thermal-expectations">Evaluate cage and thermal expectations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#factorized-multi-block-certification">Factorized multi-block certification</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#square-qdm-strip-transfer-matrix">Square-QDM strip transfer matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#winding-resolved-periodic-contractions">Winding-resolved periodic contractions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-a-common-cage-witness-family">Evaluate a common cage witness family</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#normalize-and-evaluate-the-actual-cage-derived-witness">Normalize and evaluate the actual cage-derived witness</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exact-arbitrary-repeat-cage-sequences">Exact arbitrary-repeat cage sequences</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#match-the-cage-energy-density-to-beta-zero">Match the cage energy density to beta zero</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bi-periodic-product-tile-certification">Bi-periodic product-tile certification</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-finite-tile-search">Direct finite-tile search</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#singlet-product-stripes-and-the-tensor-network-handoff">Singlet-product stripes and the tensor-network handoff</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="thermodynamic-eth-diagnostics">
+<h1>Thermodynamic ETH diagnostics<a class="headerlink" href="#thermodynamic-eth-diagnostics" title="Link to this heading">#</a></h1>
+<p>The thermodynamic caging workflow separates two finite-size questions:</p>
+<ol class="arabic simple">
+<li><p>whether the same bounded local row operator <span class="math notranslate nohighlight">\(L_R\)</span> annihilates a cage
+state at every size, and</p></li>
+<li><p>whether <span class="math notranslate nohighlight">\(Q_R=L_R^\dagger L_R\)</span> has a nonzero expectation value in a
+thermal ensemble from the same constrained symmetry sector.</p></li>
+</ol>
+<p>The APIs in <a class="reference internal" href="qlinks.caging.html#module-qlinks.caging.thermodynamic" title="qlinks.caging.thermodynamic"><code class="xref py py-mod docutils literal notranslate"><span class="pre">qlinks.caging.thermodynamic</span></code></a> keep the local transition pattern
+independent of global variable labels, evaluate the projected constrained-basis
+operator exactly, and store finite-size scaling data without interpreting a
+short fit as a proof of a thermodynamic limit.</p>
+<section id="match-one-local-witness-across-sizes">
+<h2>Match one local witness across sizes<a class="headerlink" href="#match-one-local-witness-across-sizes" title="Link to this heading">#</a></h2>
+<p>After classifying one cage state at each size, identify reduced-IZ patterns that
+are exactly common to all reports:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">common_local_witness_families</span>
+
+<span class="n">families</span> <span class="o">=</span> <span class="n">common_local_witness_families</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;4x4&quot;</span><span class="p">:</span> <span class="n">report_4x4</span><span class="p">,</span>
+        <span class="s2">&quot;4x6&quot;</span><span class="p">:</span> <span class="n">report_4x6</span><span class="p">,</span>
+        <span class="s2">&quot;4x8&quot;</span><span class="p">:</span> <span class="n">report_4x8</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="n">family</span> <span class="o">=</span> <span class="n">families</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">witness_4x4</span> <span class="o">=</span> <span class="n">family</span><span class="o">.</span><span class="n">witnesses_for</span><span class="p">(</span><span class="s2">&quot;4x4&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Translations are matched automatically because global variable indices are not
+part of the template key.  Rotated or reflected copies must currently use a
+consistent local variable ordering before classification.</p>
+</section>
+<section id="evaluate-cage-and-thermal-expectations">
+<h2>Evaluate cage and thermal expectations<a class="headerlink" href="#evaluate-cage-and-thermal-expectations" title="Link to this heading">#</a></h2>
+<p>For a cage vector and the exact infinite-temperature ensemble in a constrained
+basis:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_eth_scaling_point</span>
+
+<span class="n">point_4x4</span> <span class="o">=</span> <span class="n">make_eth_scaling_point</span><span class="p">(</span>
+    <span class="n">system_size</span><span class="o">=</span><span class="n">model_4x4</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_plaquettes</span><span class="p">,</span>
+    <span class="n">witness</span><span class="o">=</span><span class="n">witness_4x4</span><span class="p">,</span>
+    <span class="n">basis_configs</span><span class="o">=</span><span class="n">build_4x4</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">states</span><span class="p">,</span>
+    <span class="n">cage_state</span><span class="o">=</span><span class="n">cage_vector_4x4</span><span class="p">,</span>
+    <span class="n">energy</span><span class="o">=</span><span class="n">cage_energy_4x4</span><span class="p">,</span>
+    <span class="n">system_label</span><span class="o">=</span><span class="s2">&quot;4x4&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">thermal_states</span></code> is supplied, the same helper evaluates an equal-weight or
+weighted state ensemble.  A finite-size microcanonical shell can be selected
+with <a class="reference internal" href="qlinks.caging.html#qlinks.caging.evaluate_local_witness_microcanonical" title="qlinks.caging.evaluate_local_witness_microcanonical"><code class="xref py py-func docutils literal notranslate"><span class="pre">qlinks.caging.evaluate_local_witness_microcanonical()</span></code></a>.</p>
+<p>Collect points built from the same template in an
+<a class="reference internal" href="qlinks.caging.html#qlinks.caging.ETHScalingReport" title="qlinks.caging.ETHScalingReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">qlinks.caging.ETHScalingReport</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">ETHScalingReport</span>
+
+<span class="n">scaling</span> <span class="o">=</span> <span class="n">ETHScalingReport</span><span class="p">(</span>
+    <span class="n">template</span><span class="o">=</span><span class="n">family</span><span class="o">.</span><span class="n">template</span><span class="p">,</span>
+    <span class="n">points</span><span class="o">=</span><span class="p">(</span><span class="n">point_4x4</span><span class="p">,</span> <span class="n">point_4x6</span><span class="p">,</span> <span class="n">point_4x8</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">fit</span> <span class="o">=</span> <span class="n">scaling</span><span class="o">.</span><span class="n">fit_expectation_gap</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">fit.thermodynamic_limit</span></code> is the intercept of a descriptive
+<span class="math notranslate nohighlight">\(c_0+c_1/N\)</span> fit.  <code class="docutils literal notranslate"><span class="pre">tail_liminf_lower_bound</span></code> reports the minimum absolute
+gap among the largest supplied sizes and is deliberately named as a finite-data
+bound rather than a thermodynamic proof.</p>
+</section>
+<section id="factorized-multi-block-certification">
+<h2>Factorized multi-block certification<a class="headerlink" href="#factorized-multi-block-certification" title="Link to this heading">#</a></h2>
+<p>The old multi-block padding path materializes a global support of size
+<span class="math notranslate nohighlight">\(\prod_i d_i\)</span>, where <span class="math notranslate nohighlight">\(d_i\)</span> is the support size of block <code class="docutils literal notranslate"><span class="pre">i</span></code>.  The
+factorized path stores only the shared exterior assignment and contracts the
+Hamiltonian action as a sum of product vectors:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">certify_qdm_factorized_product_state</span><span class="p">,</span>
+    <span class="n">find_factorized_qdm_block_paddings</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">paddings</span> <span class="o">=</span> <span class="n">find_factorized_qdm_block_paddings</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">block_pool</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">padding_config</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">certificate</span> <span class="o">=</span> <span class="n">certify_qdm_factorized_product_state</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">selected_blocks</span><span class="p">,</span>
+    <span class="n">paddings</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">padding_config</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The factorized certificate is exact when each plaquette touches at most one
+selected block, corresponding to <code class="docutils literal notranslate"><span class="pre">require_kinetic_separation=True</span></code>.  Its cost
+is controlled by the largest individual block support and the number of local
+Hamiltonian terms, not by the Cartesian product support.  Sector validation is
+performed on a reference configuration and every single-block support
+variation; the report records this validation mode explicitly.</p>
+</section>
+<section id="square-qdm-strip-transfer-matrix">
+<h2>Square-QDM strip transfer matrix<a class="headerlink" href="#square-qdm-strip-transfer-matrix" title="Link to this heading">#</a></h2>
+<p>For the square QDM, the constrained infinite-temperature expectation can be
+computed without constructing the global dimer basis.  The y direction is a
+periodic cylinder of fixed circumference <code class="docutils literal notranslate"><span class="pre">Ly</span></code>.  A transfer state is the bit
+mask of horizontal dimers entering one site column.  Each allowed column
+transition specifies the outgoing horizontal dimers and the vertical dimers
+inside that column.</p>
+<p>A local witness is first converted from finite-system variable indices to
+size-independent strip coordinates:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SquareQDMStripTransferMatrix</span><span class="p">,</span>
+    <span class="n">SquareQDMWitnessPlacement</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">placement</span> <span class="o">=</span> <span class="n">SquareQDMWitnessPlacement</span><span class="o">.</span><span class="n">from_local_witness</span><span class="p">(</span>
+    <span class="n">reference_model</span><span class="p">,</span>
+    <span class="n">witness</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">transfer</span> <span class="o">=</span> <span class="n">SquareQDMStripTransferMatrix</span><span class="p">(</span>
+    <span class="n">circumference</span><span class="o">=</span><span class="n">reference_model</span><span class="o">.</span><span class="n">ly</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The conversion automatically unwraps a witness that crosses the x seam of a
+periodic reference torus.  The local-variable order is preserved exactly.</p>
+<p>Evaluate a finite torus with periodic x boundaries:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">finite_torus</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">evaluate_witness</span><span class="p">(</span>
+    <span class="n">placement</span><span class="p">,</span>
+    <span class="n">length</span><span class="o">=</span><span class="n">reference_model</span><span class="o">.</span><span class="n">lx</span><span class="p">,</span>
+    <span class="n">boundary_x</span><span class="o">=</span><span class="s2">&quot;periodic&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">finite_torus.expectation</span></code> is</p>
+<div class="math notranslate nohighlight">
+\[\frac{\operatorname{Tr}_{\mathcal H_{\rm dimer}} Q_R}
+     {\dim \mathcal H_{\rm dimer}}.\]</div>
+<p>The contraction reproduces the projected constrained-basis operator, not a
+naive local trace.  For each source local pattern it tests whether replacing it
+by a target pattern leaves every incident dimer constraint satisfied while the
+exterior configuration is kept fixed.  Consequently, a one-link lowering
+operator has zero projected weight, whereas a plaquette flip has the expected
+flippability probability.</p>
+<p>For an infinite-cylinder sequence, keep <code class="docutils literal notranslate"><span class="pre">Ly</span></code> fixed and increase the x
+length:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scaling</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">scan_witness</span><span class="p">(</span>
+    <span class="n">placement</span><span class="p">,</span>
+    <span class="n">lengths</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span>
+    <span class="n">boundary_x</span><span class="o">=</span><span class="s2">&quot;open&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">scaling</span><span class="o">.</span><span class="n">tail_estimate</span><span class="p">(</span><span class="n">tail_points</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The open-strip contraction places the witness in the center by default and
+normalizes the left and right transfer vectors at every step, so lengths can be
+increased without overflowing the raw number of coverings.  Periodic-x
+contractions use a symmetric transfer-matrix eigendecomposition and are
+currently limited to at most 2048 boundary states.</p>
+</section>
+<section id="winding-resolved-periodic-contractions">
+<h2>Winding-resolved periodic contractions<a class="headerlink" href="#winding-resolved-periodic-contractions" title="Link to this heading">#</a></h2>
+<p>For a strict ETH comparison, the finite torus can be projected into the same
+electric winding sector as the cage state.  The labels use the same convention
+as <code class="docutils literal notranslate"><span class="pre">SquareQDMModel(winding_convention=&quot;electric&quot;)</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">SquareQDMStripWindingSector</span>
+
+<span class="n">sector</span> <span class="o">=</span> <span class="n">SquareQDMStripWindingSector</span><span class="p">(</span>
+    <span class="n">winding_x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">winding_y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">w00</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">evaluate_witness</span><span class="p">(</span>
+    <span class="n">placement</span><span class="p">,</span>
+    <span class="n">length</span><span class="o">=</span><span class="n">reference_model</span><span class="o">.</span><span class="n">lx</span><span class="p">,</span>
+    <span class="n">boundary_x</span><span class="o">=</span><span class="s2">&quot;periodic&quot;</span><span class="p">,</span>
+    <span class="n">winding_sector</span><span class="o">=</span><span class="n">sector</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The x winding is selected from the transfer boundary mask.  The y winding is
+accumulated as an integer charge on each column transition.  The witness
+insertion is resolved by the same charge before the numerator is contracted.
+Thus both the partition count and <code class="docutils literal notranslate"><span class="pre">Tr(Q_R)</span></code> are evaluated inside one exact
+winding sector.</p>
+<p>All nonempty sectors can be counted without constructing the global basis:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">counts</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">periodic_winding_sector_counts</span><span class="p">(</span>
+    <span class="n">length</span><span class="o">=</span><span class="n">reference_model</span><span class="o">.</span><span class="n">lx</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>For the square <code class="docutils literal notranslate"><span class="pre">4x4</span></code> QDM, this reproduces the known decomposition, including
+<code class="docutils literal notranslate"><span class="pre">counts[(0,</span> <span class="pre">0)]</span> <span class="pre">=</span> <span class="pre">132</span></code> after indexing by <code class="docutils literal notranslate"><span class="pre">sector.label</span></code>.</p>
+<p>Two winding-projection backends are available.  The charge-resolved dynamic
+program is the small-width reference implementation.  The Fourier backend
+introduces a phase for every positive y-winding charge, evaluates the twisted
+transfer product at roots of unity, and extracts the requested coefficient by
+a discrete Fourier transform:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">w00_fourier</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">evaluate_witness</span><span class="p">(</span>
+    <span class="n">placement</span><span class="p">,</span>
+    <span class="n">length</span><span class="o">=</span><span class="n">reference_model</span><span class="o">.</span><span class="n">lx</span><span class="p">,</span>
+    <span class="n">boundary_x</span><span class="o">=</span><span class="s2">&quot;periodic&quot;</span><span class="p">,</span>
+    <span class="n">winding_sector</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">winding_projection</span><span class="o">=</span><span class="s2">&quot;fourier&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">winding_projection=&quot;auto&quot;</span></code> uses dynamic programming for at most 512
+boundary states and Fourier projection beyond that point.  Exact projection
+uses <code class="docutils literal notranslate"><span class="pre">length</span> <span class="pre">+</span> <span class="pre">1</span></code> roots of unity by default.  A smaller <code class="docutils literal notranslate"><span class="pre">fourier_points</span></code>
+value gives an explicitly labelled aliased approximation, useful for exploratory
+long-strip scans.  The metadata fields <code class="docutils literal notranslate"><span class="pre">exact_fourier_projection</span></code> and
+<code class="docutils literal notranslate"><span class="pre">aliased_fourier_projection</span></code> distinguish these cases.</p>
+<p>The dense Fourier backend supports at most 1024 states in one x-winding block,
+which reaches the central sector through <code class="docutils literal notranslate"><span class="pre">Ly=12</span></code>.  Unlike the dynamic program,
+it also permits a local insertion that crosses the canonical x seam.  The
+current Fourier implementation assumes even <code class="docutils literal notranslate"><span class="pre">Lx</span></code> and <code class="docutils literal notranslate"><span class="pre">Ly</span></code>.</p>
+</section>
+<section id="evaluate-a-common-cage-witness-family">
+<h2>Evaluate a common cage witness family<a class="headerlink" href="#evaluate-a-common-cage-witness-family" title="Link to this heading">#</a></h2>
+<p>The output of <a class="reference internal" href="qlinks.caging.html#qlinks.caging.common_local_witness_families" title="qlinks.caging.common_local_witness_families"><code class="xref py py-func docutils literal notranslate"><span class="pre">qlinks.caging.common_local_witness_families()</span></code></a> can be sent
+directly to the strip backend:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluate_square_qdm_witness_family_on_strips</span>
+
+<span class="n">strip_family</span> <span class="o">=</span> <span class="n">evaluate_square_qdm_witness_family_on_strips</span><span class="p">(</span>
+    <span class="n">family</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;4x4&quot;</span><span class="p">:</span> <span class="n">model_4x4</span><span class="p">,</span>
+        <span class="s2">&quot;6x4&quot;</span><span class="p">:</span> <span class="n">model_6x4</span><span class="p">,</span>
+        <span class="s2">&quot;8x4&quot;</span><span class="p">:</span> <span class="n">model_8x4</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">lengths</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;4x4&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">4</span><span class="p">,),</span>
+        <span class="s2">&quot;6x4&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">6</span><span class="p">,),</span>
+        <span class="s2">&quot;8x4&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">8</span><span class="p">,),</span>
+    <span class="p">},</span>
+    <span class="n">boundary_x</span><span class="o">=</span><span class="s2">&quot;periodic&quot;</span><span class="p">,</span>
+    <span class="n">winding_sector</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Each record retains the finite-system embedding, the normalized strip
+placement, and its scaling report.  This closes the loop between a reduced-IZ
+classification report and a same-sector thermal witness calculation.</p>
+</section>
+<section id="normalize-and-evaluate-the-actual-cage-derived-witness">
+<h2>Normalize and evaluate the actual cage-derived witness<a class="headerlink" href="#normalize-and-evaluate-the-actual-cage-derived-witness" title="Link to this heading">#</a></h2>
+<p>A reduced-IZ row has an arbitrary overall coefficient.  For thermodynamic
+comparisons use operator-norm normalization, which fixes
+<code class="docutils literal notranslate"><span class="pre">||Q_R||</span> <span class="pre">=</span> <span class="pre">||L_R||^2</span> <span class="pre">=</span> <span class="pre">1</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">witnesses</span> <span class="o">=</span> <span class="n">local_witnesses_from_classification_report</span><span class="p">(</span>
+    <span class="n">classification</span><span class="p">,</span>
+    <span class="n">normalization</span><span class="o">=</span><span class="s2">&quot;operator_norm&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The whole classification report can be sent directly to the strip backend:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">actual_witnesses</span> <span class="o">=</span> <span class="n">evaluate_square_qdm_classification_witnesses_on_strips</span><span class="p">(</span>
+    <span class="n">classification</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model_4x4</span><span class="p">,</span>
+    <span class="n">lengths</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+    <span class="n">winding_sector</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">normalization</span><span class="o">=</span><span class="s2">&quot;operator_norm&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The returned records retain the original interference-zero indices and local
+matrix-unit pattern.  This is the preferred API for replacing the pedagogical
+directed-plaquette witness by the operator that actually annihilates a cage.
+A bounded placement can also be reused on a wider cylinder with
+<code class="docutils literal notranslate"><span class="pre">placement.with_circumference(new_ly)</span></code>.</p>
+</section>
+<section id="exact-arbitrary-repeat-cage-sequences">
+<h2>Exact arbitrary-repeat cage sequences<a class="headerlink" href="#exact-arbitrary-repeat-cage-sequences" title="Link to this heading">#</a></h2>
+<p>For the square-QDM stripe cages, the global product support need not be formed.
+Construct a coordinate-level unit cell from one certified multi-block padding:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SquareQDMPeriodicProductUnitCell</span><span class="p">,</span>
+    <span class="n">certify_square_qdm_periodic_product_sequence</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">unit_cell</span> <span class="o">=</span> <span class="n">SquareQDMPeriodicProductUnitCell</span><span class="o">.</span><span class="n">from_padding</span><span class="p">(</span>
+    <span class="n">model_4x4</span><span class="p">,</span>
+    <span class="n">search_context</span><span class="o">.</span><span class="n">blocks</span><span class="p">,</span>
+    <span class="n">certified</span><span class="o">.</span><span class="n">reports</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
+    <span class="n">repeat_axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">sequence</span> <span class="o">=</span> <span class="n">certify_square_qdm_periodic_product_sequence</span><span class="p">(</span><span class="n">unit_cell</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The certificate checks the following local identities.</p>
+<ul class="simple">
+<li><p>Every block contributes a support-independent dimer count at each site.</p></li>
+<li><p>Plaquettes touching more than one coherent factor are nonflippable for every
+combination of the local support patterns.</p></li>
+<li><p>All plaquettes touching exactly one factor close on that factor with a fixed
+kinetic eigenvalue and a constant potential value.</p></li>
+<li><p>The unit cell is repeated by an exact coordinate translation and the
+couplings are translation invariant.</p></li>
+</ul>
+<p>Three repeats expose both neighboring cells for a range-one plaquette
+Hamiltonian.  Once these local action classes pass, the same identities hold
+for every larger repeat count without diagonalizing or even materializing the
+formal product support.  The smaller one- and two-cell rings are checked
+separately, so a successful report certifies every positive integer <code class="docutils literal notranslate"><span class="pre">n</span></code>.
+The electric winding label is evaluated without materializing the product
+support and propagated to every repeat.  For the rotated current <code class="docutils literal notranslate"><span class="pre">4x4</span></code> stripe unit cell, all members lie in
+<code class="docutils literal notranslate"><span class="pre">(w_x,w_y)=(0,0)</span></code> and the result is an exact sequence on <code class="docutils literal notranslate"><span class="pre">(4</span> <span class="pre">n)</span> <span class="pre">x</span> <span class="pre">4</span></code>
+tori with</p>
+<div class="math notranslate nohighlight">
+\[E_n = 4 n,
+\qquad
+\frac{E_n}{N_n} = \frac{1}{4},
+\qquad
+|\operatorname{supp}\Psi_n| = 4^n,\]</div>
+<p>while the stored representation grows only linearly in <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+<p>Propagate a local ETH witness to the whole sequence:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sequence_witness</span> <span class="o">=</span> <span class="n">certify_local_witness_on_square_qdm_periodic_sequence</span><span class="p">(</span>
+    <span class="n">sequence</span><span class="p">,</span>
+    <span class="n">witnesses</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">normalization</span><span class="o">=</span><span class="s2">&quot;operator_norm&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">sequence_witness</span><span class="o">.</span><span class="n">is_infinite_sequence_witness</span>
+</pre></div>
+</div>
+<p>This proves <code class="docutils literal notranslate"><span class="pre">L_R</span> <span class="pre">|Psi_n&gt;</span> <span class="pre">=</span> <span class="pre">0</span></code> for every certified repeat, not merely for the
+finite reference state.</p>
+<p>This is a rigorous fixed-width thermodynamic sequence: <code class="docutils literal notranslate"><span class="pre">N=16</span> <span class="pre">n</span></code> diverges and
+the local ETH discrepancy can remain order one, but the transverse width is
+still four.  It should therefore be described as a strip or quasi-one-dimensional
+thermodynamic theorem.  Establishing a genuine two-dimensional sequence with
+both linear dimensions diverging remains a separate construction problem.</p>
+</section>
+<section id="match-the-cage-energy-density-to-beta-zero">
+<h2>Match the cage energy density to beta zero<a class="headerlink" href="#match-the-cage-energy-density-to-beta-zero" title="Link to this heading">#</a></h2>
+<p>For a uniform square QDM, the kinetic term is off-diagonal in the dimer basis
+and has zero infinite-temperature trace.  The potential energy density is the
+potential coupling times the probability that a plaquette is flippable in
+either orientation.</p>
+<p>For the fixed-width sequence with a nonzero potential coupling, the cage value
+<code class="docutils literal notranslate"><span class="pre">e_cage</span> <span class="pre">=</span> <span class="pre">1/4</span></code> does not coincide exactly with the fixed-width beta-zero value.
+That Hamiltonian therefore requires a finite-temperature calculation at
+<code class="docutils literal notranslate"><span class="pre">beta_*</span></code> determined by <code class="docutils literal notranslate"><span class="pre">e_th(beta_*)</span> <span class="pre">=</span> <span class="pre">e_cage</span></code>; the beta-zero API alone must
+not be used to claim energy-shell matching.</p>
+<p>An exact beta-zero match is already available for the pure kinetic square QDM.
+Reuse the certified geometry while setting the potential coupling to zero:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kinetic_cell</span> <span class="o">=</span> <span class="n">unit_cell</span><span class="o">.</span><span class="n">with_couplings</span><span class="p">(</span><span class="n">coup_pot</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="n">kinetic_sequence</span> <span class="o">=</span> <span class="n">certify_square_qdm_periodic_product_sequence</span><span class="p">(</span><span class="n">kinetic_cell</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then <code class="docutils literal notranslate"><span class="pre">E_n</span> <span class="pre">=</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">e_cage</span> <span class="pre">=</span> <span class="pre">0</span></code> exactly.  Because the pure kinetic
+Hamiltonian is off-diagonal in the dimer basis, <code class="docutils literal notranslate"><span class="pre">Tr</span> <span class="pre">H</span> <span class="pre">=</span> <span class="pre">0</span></code> in every finite
+winding sector.  Hence the beta-zero energy density is also exactly zero at
+every size:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">beta_zero</span> <span class="o">=</span> <span class="n">scan_square_qdm_beta_zero_energy_density</span><span class="p">(</span>
+    <span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+    <span class="n">potential_coupling</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">winding_sector</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">match</span> <span class="o">=</span> <span class="n">kinetic_sequence</span><span class="o">.</span><span class="n">match_energy_density</span><span class="p">(</span>
+    <span class="n">beta_zero</span><span class="o">.</span><span class="n">evaluations</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">energy_density</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="mf">1.0e-12</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">match</span><span class="o">.</span><span class="n">is_matched</span>
+</pre></div>
+</div>
+<p>Thus the pure kinetic family supplies the cleanest current strong-ETH test:
+an exact infinite cage sequence, an exactly matched beta-zero energy density,
+and an operator-norm-normalized local cage witness with nonzero same-sector
+thermal weight.  The nonzero-potential model remains a finite-temperature
+extension rather than an established beta-zero result.</p>
+</section>
+<section id="bi-periodic-product-tile-certification">
+<h2>Bi-periodic product-tile certification<a class="headerlink" href="#bi-periodic-product-tile-certification" title="Link to this heading">#</a></h2>
+<p>A one-axis sequence such as <code class="docutils literal notranslate"><span class="pre">(4n)</span> <span class="pre">x</span> <span class="pre">4</span></code> is only a fixed-width thermodynamic
+limit.  The bi-periodic API tests whether one finite product tile can be
+repeated with two independent integers <code class="docutils literal notranslate"><span class="pre">nx</span></code> and <code class="docutils literal notranslate"><span class="pre">ny</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SquareQDMBiperiodicProductTile</span><span class="p">,</span>
+    <span class="n">diagnose_square_qdm_biperiodic_repeatability</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">tile</span> <span class="o">=</span> <span class="n">SquareQDMBiperiodicProductTile</span><span class="o">.</span><span class="n">from_padding</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">block_pool</span><span class="p">,</span>
+    <span class="n">padding</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">diagnosis</span> <span class="o">=</span> <span class="n">diagnose_square_qdm_biperiodic_repeatability</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The default certificate checks all arrays with <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">nx,</span> <span class="pre">ny</span> <span class="pre">&lt;=</span> <span class="pre">3</span></code>.  The
+<code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">3</span></code> array contains every range-one local environment: tile interiors,
+x seams, y seams, and four-tile corners.  The one- and two-tile tori are checked
+separately because their periodic identifications can create exceptional short
+rings.  If all checks pass, coordinate translation and uniform couplings prove
+an exact family for every pair of positive repeat counts.</p>
+<p>The returned seam diagnostics distinguish:</p>
+<ul class="simple">
+<li><p>support-dependent dimer charge at x/y seams or corners;</p></li>
+<li><p>nominally inert seam plaquettes that become flippable;</p></li>
+<li><p>leakage or nonclosure of a single coherent block;</p></li>
+<li><p>support-dependent winding labels.</p></li>
+</ul>
+<p>This distinction is essential for the known square-QDM stripe cage: its tile
+interior closes, but transverse repetition changes the boundary dimer charge.
+The result is therefore a precise local obstruction, rather than a large-system
+residual.</p>
+</section>
+<section id="direct-finite-tile-search">
+<h2>Direct finite-tile search<a class="headerlink" href="#direct-finite-tile-search" title="Link to this heading">#</a></h2>
+<p>A pool of already discovered local cage blocks can be searched directly for a
+periodic exterior and then subjected to the bi-periodic certificate:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SquareQDMBiperiodicTileSearchConfig</span><span class="p">,</span>
+    <span class="n">search_square_qdm_biperiodic_product_tiles</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">search</span> <span class="o">=</span> <span class="n">search_square_qdm_biperiodic_product_tiles</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">block_pool</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">SquareQDMBiperiodicTileSearchConfig</span><span class="p">(</span>
+        <span class="n">min_blocks</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">max_blocks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">require_kinetic_separation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">max_tile_support_size</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Only the finite reference-tile product support is materialized, with an
+explicit <code class="docutils literal notranslate"><span class="pre">max_tile_support_size</span></code> bound.  The exponentially larger support of
+the repeated two-dimensional state is never formed.  Failed candidates are
+retained and grouped by failure mechanism, allowing a systematic finite-period
+no-go scan instead of repeatedly enlarging a global active region.</p>
+<p>This product-tile layer is intentionally independent of a tensor-network
+backend.  If finite static gluing fails at moderate periods, the boundary
+signatures and local action maps produced here should become the physical and
+virtual data supplied to an established tensor-network library rather than a
+new contraction engine implemented inside qlinks.</p>
+</section>
+<section id="singlet-product-stripes-and-the-tensor-network-handoff">
+<h2>Singlet-product stripes and the tensor-network handoff<a class="headerlink" href="#singlet-product-stripes-and-the-tensor-network-handoff" title="Link to this heading">#</a></h2>
+<p>The square-QDM helper <a class="reference internal" href="qlinks.caging.html#qlinks.caging.square_qdm_two_plaquette_singlet_blocks" title="qlinks.caging.square_qdm_two_plaquette_singlet_blocks"><code class="xref py py-func docutils literal notranslate"><span class="pre">qlinks.caging.square_qdm_two_plaquette_singlet_blocks()</span></code></a>
+collects every translated antisymmetric two-plaquette block.  A proposed stripe
+of independent singlets can be tested without diagonalizing the global model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyze_square_qdm_singlet_stripe_product</span>
+
+<span class="n">stripe</span> <span class="o">=</span> <span class="n">analyze_square_qdm_singlet_stripe_product</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span>
+    <span class="n">transverse_coordinate</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">stripe</span><span class="o">.</span><span class="n">subspace_reports</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The report constructs two finite matrices.  <code class="docutils literal notranslate"><span class="pre">support_hamiltonian</span></code> is the
+Hamiltonian projected into the complete Cartesian product of the selected local
+supports.  <code class="docutils literal notranslate"><span class="pre">leakage_matrix</span></code> maps that product space to all one-hop
+configurations outside it.  Therefore</p>
+<div class="math notranslate nohighlight">
+\[\operatorname{nullity} K_{\rm leak}=0\]</div>
+<p>is a no-go statement for every coefficient tensor on the same local singlet
+labels.  It rules out not only the equal-amplitude product state, but an MPS or
+PEPS of arbitrary virtual bond dimension whose local physical space remains the
+two singlet configurations.</p>
+<p>For a finite-density two-dimensional test, enumerate exact covers of all sites
+by the <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">x</span> <span class="pre">3</span></code> singlet rectangles:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">analyze_square_qdm_singlet_product_tilings</span><span class="p">,</span>
+    <span class="n">enumerate_square_qdm_singlet_exact_covers</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">tilings</span> <span class="o">=</span> <span class="n">enumerate_square_qdm_singlet_exact_covers</span><span class="p">(</span><span class="n">model_6x6</span><span class="p">)</span>
+<span class="n">scan</span> <span class="o">=</span> <span class="n">analyze_square_qdm_singlet_product_tilings</span><span class="p">(</span>
+    <span class="n">model_6x6</span><span class="p">,</span>
+    <span class="n">max_tilings</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>On the pure-kinetic periodic <code class="docutils literal notranslate"><span class="pre">6</span> <span class="pre">x</span> <span class="pre">6</span></code> square QDM there are 120 exact covers.
+The current calculation finds full-column-rank leakage for every cover, so the
+bare singlet-product physical support is insufficient.</p>
+<p>The next tensor-network stage begins by enlarging one singlet with a finite
+plaquette halo:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_square_qdm_singlet_boundary_tile</span>
+
+<span class="n">tile</span> <span class="o">=</span> <span class="n">build_square_qdm_singlet_boundary_tile</span><span class="p">(</span>
+    <span class="n">model_6x6</span><span class="p">,</span>
+    <span class="n">horizontal_singlet</span><span class="p">,</span>
+    <span class="n">halo_layers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">tile.basis</span></code> groups all locally valid halo configurations by the dimer deficit
+on every boundary site.  These support-dependent deficit patterns are the
+natural virtual labels for a constrained MPS or PEPS.  This preprocessing is
+backend-neutral.  <a class="reference internal" href="qlinks.caging.html#qlinks.caging.QDMSingletTNProblem" title="qlinks.caging.QDMSingletTNProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">qlinks.caging.QDMSingletTNProblem</span></code></a> provides an
+optional bridge to <code class="docutils literal notranslate"><span class="pre">quimb</span></code> for dense-to-MPS initialization and later tensor
+network optimization experiments.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="workflow.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Typical workflow</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tensor_network.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tensor-network cage ansatzes</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#match-one-local-witness-across-sizes">Match one local witness across sizes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-cage-and-thermal-expectations">Evaluate cage and thermal expectations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#factorized-multi-block-certification">Factorized multi-block certification</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#square-qdm-strip-transfer-matrix">Square-QDM strip transfer matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#winding-resolved-periodic-contractions">Winding-resolved periodic contractions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-a-common-cage-witness-family">Evaluate a common cage witness family</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#normalize-and-evaluate-the-actual-cage-derived-witness">Normalize and evaluate the actual cage-derived witness</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exact-arbitrary-repeat-cage-sequences">Exact arbitrary-repeat cage sequences</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#match-the-cage-energy-density-to-beta-zero">Match the cage energy density to beta zero</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bi-periodic-product-tile-certification">Bi-periodic product-tile certification</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-finite-tile-search">Direct finite-tile search</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#singlet-product-stripes-and-the-tensor-network-handoff">Singlet-product stripes and the tensor-network handoff</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -166,6 +166,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
 </ul>
@@ -351,7 +353,9 @@
     <span class="n">LocalSquareValueDiagonalOperator</span><span class="p">,</span>
     <span class="n">LocalValueDiagonalOperator</span><span class="p">,</span>
     <span class="n">SpinOneXYBondOperator</span><span class="p">,</span>
+    <span class="n">SpinOneXYPairOperator</span><span class="p">,</span>
     <span class="n">UpdateSpinOneXYBondOperator</span><span class="p">,</span>
+    <span class="n">UpdateSpinOneXYPairOperator</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalSpace</span><span class="p">,</span> <span class="n">VariableLayout</span>
 
@@ -381,6 +385,40 @@
     <span class="n">h_z</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="n">d_z</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="n">total_sz</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">extra_xy_couplings</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">complex</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">h_z_by_site</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">d_z_by_site</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;length must be positive.&quot;</span><span class="p">)</span>
+
+        <span class="n">couplings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">raw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_xy_couplings</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;each extra_xy_coupling must be (site_i, site_j, coefficient).&quot;</span><span class="p">)</span>
+            <span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span><span class="p">,</span> <span class="n">coefficient</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">complex</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">site_i</span> <span class="o">==</span> <span class="n">site_j</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;extra XY couplings require distinct sites.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">site_i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">site_j</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;extra XY coupling site is outside the chain.&quot;</span><span class="p">)</span>
+            <span class="n">couplings</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span><span class="p">,</span> <span class="n">coefficient</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;extra_xy_couplings&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">couplings</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;h_z_by_site&quot;</span><span class="p">,</span> <span class="s2">&quot;d_z_by_site&quot;</span><span class="p">):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">normalized</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must have length equal to the chain length.&quot;</span><span class="p">)</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">normalized</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_site_coefficient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">site_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
+        <span class="n">by_site</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_by_site&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">by_site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">by_site</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_make_lattice</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainLattice</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ChainLattice</span><span class="p">(</span>
@@ -437,32 +475,53 @@
         <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span>
 
-        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="n">SpinOneXYBondOperator</span><span class="p">(</span>
-                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                    <span class="n">link_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">),</span>
-                    <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">j_xy</span><span class="p">,</span>
+        <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">link_ids</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
+                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">SpinOneXYBondOperator</span><span class="p">(</span>
+                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                        <span class="n">link_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">),</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">j_xy</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
-                <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">link_ids</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;optimized&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="n">UpdateSpinOneXYBondOperator</span><span class="p">(</span>
-                    <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                    <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
-                    <span class="n">link_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">),</span>
-                    <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">j_xy</span><span class="p">,</span>
+            <span class="k">elif</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;optimized&quot;</span><span class="p">:</span>
+                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">UpdateSpinOneXYBondOperator</span><span class="p">(</span>
+                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                        <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
+                        <span class="n">link_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">link_id</span><span class="p">),</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">j_xy</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
-                <span class="k">for</span> <span class="n">link_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">link_ids</span>
-            <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="s2">&quot;SpinOneXYChainModel currently supports kinetic terms only for &quot;</span>
+                    <span class="s2">&quot;builder=&#39;sparse&#39; or builder=&#39;optimized&#39;.&quot;</span>
+                <span class="p">)</span>
 
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="s2">&quot;SpinOneXYChainModel currently supports kinetic terms only for &quot;</span>
-            <span class="s2">&quot;builder=&#39;sparse&#39; or builder=&#39;optimized&#39;.&quot;</span>
-        <span class="p">)</span></div>
+        <span class="k">for</span> <span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span><span class="p">,</span> <span class="n">coefficient</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_xy_couplings</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span>
+                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">SpinOneXYPairOperator</span><span class="p">(</span>
+                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                        <span class="n">site_i</span><span class="o">=</span><span class="n">site_i</span><span class="p">,</span>
+                        <span class="n">site_j</span><span class="o">=</span><span class="n">site_j</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;optimized&quot;</span><span class="p">:</span>
+                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">UpdateSpinOneXYPairOperator</span><span class="p">(</span>
+                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                        <span class="n">site_i</span><span class="o">=</span><span class="n">site_i</span><span class="p">,</span>
+                        <span class="n">site_j</span><span class="o">=</span><span class="n">site_j</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SpinOneXYChainModel.make_potential_operators">
@@ -478,36 +537,41 @@
         <span class="k">if</span> <span class="n">layout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span>
 
-        <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
         <span class="k">if</span> <span class="n">builder</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;sparse&quot;</span><span class="p">,</span> <span class="s2">&quot;optimized&quot;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">h_z</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_z</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">has_potential</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_site_coefficient</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">site_id</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;h_z&quot;</span><span class="p">,</span> <span class="s2">&quot;d_z&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">has_potential</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">()</span>
-
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s2">&quot;SpinOneXYChainModel currently supports potential terms only for &quot;</span>
                 <span class="s2">&quot;builder=&#39;sparse&#39; or builder=&#39;optimized&#39;.&quot;</span>
             <span class="p">)</span>
 
+        <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">site_ids</span><span class="p">:</span>
             <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">site_variable_index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)))</span>
+            <span class="n">h_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_coefficient</span><span class="p">(</span><span class="s2">&quot;h_z&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span>
+            <span class="n">d_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_coefficient</span><span class="p">(</span><span class="s2">&quot;d_z&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">h_z</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">h_value</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">LocalValueDiagonalOperator</span><span class="p">(</span>
                         <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                         <span class="n">variable_index</span><span class="o">=</span><span class="n">variable_index</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h_z</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">h_value</span><span class="p">,</span>
                         <span class="n">name</span><span class="o">=</span><span class="s2">&quot;spin_one_zeeman_z&quot;</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_z</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">d_value</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">LocalSquareValueDiagonalOperator</span><span class="p">(</span>
                         <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                         <span class="n">variable_index</span><span class="o">=</span><span class="n">variable_index</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d_z</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">d_value</span><span class="p">,</span>
                         <span class="n">name</span><span class="o">=</span><span class="s2">&quot;spin_one_single_ion_anisotropy&quot;</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
@@ -574,7 +638,7 @@
         <span class="n">operator_kind</span><span class="p">:</span> <span class="n">LocalOperatorKind</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">term_kind</span><span class="p">:</span> <span class="n">LocalTermKind</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return site/bond local terms for generic open-system builders.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return site/pair local terms for generic diagnostics and builders.&quot;&quot;&quot;</span>
         <span class="n">descriptors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LocalTermDescriptor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">if</span> <span class="n">term_kind</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;bond&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">operator_kind</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;kinetic&quot;</span><span class="p">,</span> <span class="s2">&quot;hamiltonian&quot;</span><span class="p">):</span>
@@ -595,11 +659,28 @@
                     <span class="p">)</span>
                 <span class="p">)</span>
 
+            <span class="n">offset</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">links</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">pair_index</span><span class="p">,</span> <span class="p">(</span><span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span><span class="p">,</span> <span class="n">_coefficient</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extra_xy_couplings</span><span class="p">):</span>
+                <span class="n">support_sites</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_i</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_j</span><span class="p">))</span>
+                <span class="n">support_variables</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">site_variable_index</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span> <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="n">support_sites</span>
+                <span class="p">)</span>
+                <span class="n">descriptors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">LocalTermDescriptor</span><span class="p">(</span>
+                        <span class="n">term_id</span><span class="o">=</span><span class="n">offset</span> <span class="o">+</span> <span class="n">pair_index</span><span class="p">,</span>
+                        <span class="n">term_kind</span><span class="o">=</span><span class="s2">&quot;bond&quot;</span><span class="p">,</span>
+                        <span class="n">operator_kind</span><span class="o">=</span><span class="s2">&quot;kinetic&quot;</span><span class="p">,</span>
+                        <span class="n">support_links</span><span class="o">=</span><span class="p">(),</span>
+                        <span class="n">support_sites</span><span class="o">=</span><span class="n">support_sites</span><span class="p">,</span>
+                        <span class="n">support_variables</span><span class="o">=</span><span class="n">support_variables</span><span class="p">,</span>
+                        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;XY_pair_</span><span class="si">{</span><span class="n">pair_index</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site_i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">site_j</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">term_kind</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">operator_kind</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;potential&quot;</span><span class="p">,</span> <span class="s2">&quot;hamiltonian&quot;</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">site_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">site_ids</span><span class="p">:</span>
                 <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">site_variable_index</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">)))</span>
-
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">h_z</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_coefficient</span><span class="p">(</span><span class="s2">&quot;h_z&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">descriptors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                         <span class="n">LocalTermDescriptor</span><span class="p">(</span>
                             <span class="n">term_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">),</span>
@@ -611,8 +692,7 @@
                             <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Sz_</span><span class="si">{</span><span class="n">site_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
-
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_z</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_coefficient</span><span class="p">(</span><span class="s2">&quot;d_z&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">descriptors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                         <span class="n">LocalTermDescriptor</span><span class="p">(</span>
                             <span class="n">term_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">site_id</span><span class="p">),</span>
@@ -640,8 +720,9 @@
         <span class="n">validate_builder_name</span><span class="p">(</span><span class="n">builder</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">term_kind</span> <span class="o">==</span> <span class="s2">&quot;bond&quot;</span> <span class="ow">and</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">operator_kind</span> <span class="o">==</span> <span class="s2">&quot;kinetic&quot;</span><span class="p">:</span>
-            <span class="n">operators</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="p">(</span>
+            <span class="n">n_links</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">links</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">term_id</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">n_links</span><span class="p">:</span>
+                <span class="n">operator</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="n">SpinOneXYBondOperator</span><span class="p">(</span>
                         <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
                         <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">,</span>
@@ -655,11 +736,31 @@
                         <span class="n">link_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">term_id</span><span class="p">),</span>
                         <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">j_xy</span><span class="p">,</span>
                     <span class="p">)</span>
-                <span class="p">),</span>
-            <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pair_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">term_id</span><span class="p">)</span> <span class="o">-</span> <span class="n">n_links</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span><span class="p">,</span> <span class="n">coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_xy_couplings</span><span class="p">[</span><span class="n">pair_index</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unknown spin-one XY pair descriptor.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+                <span class="n">operator</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">SpinOneXYPairOperator</span><span class="p">(</span>
+                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                        <span class="n">site_i</span><span class="o">=</span><span class="n">site_i</span><span class="p">,</span>
+                        <span class="n">site_j</span><span class="o">=</span><span class="n">site_j</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">builder</span> <span class="o">==</span> <span class="s2">&quot;sparse&quot;</span>
+                    <span class="k">else</span> <span class="n">UpdateSpinOneXYPairOperator</span><span class="p">(</span>
+                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                        <span class="n">site_i</span><span class="o">=</span><span class="n">site_i</span><span class="p">,</span>
+                        <span class="n">site_j</span><span class="o">=</span><span class="n">site_j</span><span class="p">,</span>
+                        <span class="n">coefficient</span><span class="o">=</span><span class="n">coefficient</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
             <span class="k">return</span> <span class="n">HamiltonianTermSpec</span><span class="o">.</span><span class="n">from_operators</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;kinetic_</span><span class="si">{</span><span class="n">descriptor</span><span class="o">.</span><span class="n">term_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="n">operators</span><span class="o">=</span><span class="n">operators</span><span class="p">,</span>
+                <span class="n">operators</span><span class="o">=</span><span class="p">(</span><span class="n">operator</span><span class="p">,),</span>
                 <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;kinetic&quot;</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -668,29 +769,29 @@
             <span class="n">variable_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">site_variable_index</span><span class="p">(</span><span class="n">site_id</span><span class="p">))</span>
             <span class="n">operators</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">h_z</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span>
-                <span class="n">descriptor</span><span class="o">.</span><span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Sz_&quot;</span><span class="p">)</span>
-            <span class="p">):</span>
-                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">LocalValueDiagonalOperator</span><span class="p">(</span>
-                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                        <span class="n">variable_index</span><span class="o">=</span><span class="n">variable_index</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">h_z</span><span class="p">,</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;spin_one_zeeman_z&quot;</span><span class="p">,</span>
+            <span class="k">if</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Sz_&quot;</span><span class="p">):</span>
+                <span class="n">h_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_coefficient</span><span class="p">(</span><span class="s2">&quot;h_z&quot;</span><span class="p">,</span> <span class="n">site_id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">h_value</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">LocalValueDiagonalOperator</span><span class="p">(</span>
+                            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                            <span class="n">variable_index</span><span class="o">=</span><span class="n">variable_index</span><span class="p">,</span>
+                            <span class="n">coefficient</span><span class="o">=</span><span class="n">h_value</span><span class="p">,</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;spin_one_zeeman_z&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
                     <span class="p">)</span>
-                <span class="p">)</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_z</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span>
-                <span class="n">descriptor</span><span class="o">.</span><span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Sz2_&quot;</span><span class="p">)</span>
-            <span class="p">):</span>
-                <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">LocalSquareValueDiagonalOperator</span><span class="p">(</span>
-                        <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
-                        <span class="n">variable_index</span><span class="o">=</span><span class="n">variable_index</span><span class="p">,</span>
-                        <span class="n">coefficient</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d_z</span><span class="p">,</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;spin_one_single_ion_anisotropy&quot;</span><span class="p">,</span>
+            <span class="k">if</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Sz2_&quot;</span><span class="p">):</span>
+                <span class="n">d_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_coefficient</span><span class="p">(</span><span class="s2">&quot;d_z&quot;</span><span class="p">,</span> <span class="n">site_id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">d_value</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">LocalSquareValueDiagonalOperator</span><span class="p">(</span>
+                            <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span>
+                            <span class="n">variable_index</span><span class="o">=</span><span class="n">variable_index</span><span class="p">,</span>
+                            <span class="n">coefficient</span><span class="o">=</span><span class="n">d_value</span><span class="p">,</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;spin_one_single_ion_anisotropy&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
                     <span class="p">)</span>
-                <span class="p">)</span>
 
             <span class="k">return</span> <span class="n">HamiltonianTermSpec</span><span class="o">.</span><span class="n">from_operators</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;potential_</span><span class="si">{</span><span class="n">descriptor</span><span class="o">.</span><span class="n">label</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">site_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -699,7 +800,7 @@
             <span class="p">)</span>
 
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;SpinOneXYChainModel local terms support bond kinetic terms and site potential terms.&quot;</span>
+            <span class="s2">&quot;SpinOneXYChainModel local terms support pair kinetic terms and site potential terms.&quot;</span>
         <span class="p">)</span></div>
 </div>
 
@@ -764,6 +865,260 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_basis</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span> <span class="p">()</span>
 
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">states</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SpinOneXYTowerThermalActivities">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.spin_one_xy.SpinOneXYTowerThermalActivities">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SpinOneXYTowerThermalActivities</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exact fixed-magnetization witness activities for the pi-bimagnon tower.</span>
+
+<span class="sd">    ``xy_matrix_element`` is the qlinks convention: it is the matrix element</span>
+<span class="sd">    connecting ``|00&gt;`` with ``|+-&gt;``.  In the manuscript convention of</span>
+<span class="sd">    Eq. (104), ``xy_matrix_element = 2 J``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">length</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">total_sz</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">sector_dimension</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">one_zero_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">two_site_remainder_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">y2_activity</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">directed_q_activity</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">z2_activity</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">p0_limit</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">y2_limit</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">directed_q_limit</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">z2_limit</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">xy_matrix_element</span><span class="p">:</span> <span class="nb">complex</span>
+
+<div class="viewcode-block" id="SpinOneXYTowerThermalActivities.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.spin_one_xy.SpinOneXYTowerThermalActivities.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">,</span>
+            <span class="s2">&quot;total_sz&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_sz</span><span class="p">,</span>
+            <span class="s2">&quot;sector_dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sector_dimension</span><span class="p">,</span>
+            <span class="s2">&quot;one_zero_count&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">one_zero_count</span><span class="p">,</span>
+            <span class="s2">&quot;two_site_remainder_count&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">two_site_remainder_count</span><span class="p">,</span>
+            <span class="s2">&quot;y2_activity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">y2_activity</span><span class="p">,</span>
+            <span class="s2">&quot;directed_q_activity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">directed_q_activity</span><span class="p">,</span>
+            <span class="s2">&quot;z2_activity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">z2_activity</span><span class="p">,</span>
+            <span class="s2">&quot;p0_limit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">p0_limit</span><span class="p">,</span>
+            <span class="s2">&quot;y2_limit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">y2_limit</span><span class="p">,</span>
+            <span class="s2">&quot;directed_q_limit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">directed_q_limit</span><span class="p">,</span>
+            <span class="s2">&quot;z2_limit&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">z2_limit</span><span class="p">,</span>
+            <span class="s2">&quot;xy_matrix_element&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">xy_matrix_element</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SpinOneXYPhaseCompatibilityReport">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.spin_one_xy.SpinOneXYPhaseCompatibilityReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SpinOneXYPhaseCompatibilityReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bondwise compatibility of a generalized tower phase with XY exchanges.&quot;&quot;&quot;</span>
+
+    <span class="n">residuals</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">pairs</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">couplings</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">phases</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_residual</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">((</span><span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_compatible</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_residual</span> <span class="o">&lt;=</span> <span class="mf">1.0e-10</span>
+
+<div class="viewcode-block" id="SpinOneXYPhaseCompatibilityReport.to_summary_dict">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.spin_one_xy.SpinOneXYPhaseCompatibilityReport.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;pairs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pairs</span><span class="p">,</span>
+            <span class="s2">&quot;couplings&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">couplings</span><span class="p">,</span>
+            <span class="s2">&quot;phases&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">phases</span><span class="p">,</span>
+            <span class="s2">&quot;residuals&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="p">,</span>
+            <span class="s2">&quot;max_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_residual</span><span class="p">,</span>
+            <span class="s2">&quot;is_compatible&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_compatible</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="spin_one_xy_periodic_range_couplings">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.spin_one_xy.spin_one_xy_periodic_range_couplings">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spin_one_xy_periodic_range_couplings</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">distance</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">coefficient</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">complex</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return unique undirected periodic pairs at one separation.</span>
+
+<span class="sd">    The ordered orientation is chosen from ``r`` to ``r + distance`` before</span>
+<span class="sd">    duplicate undirected pairs are removed.  Real coefficients therefore give</span>
+<span class="sd">    the usual translation-invariant exchange.  For complex coefficients the</span>
+<span class="sd">    orientation fixes the Peierls phase convention.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;length must exceed one.&quot;</span><span class="p">)</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">distance</span><span class="p">)</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;distance must not be a multiple of length.&quot;</span><span class="p">)</span>
+    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">pairs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">site_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">)):</span>
+        <span class="n">site_j</span> <span class="o">=</span> <span class="p">(</span><span class="n">site_i</span> <span class="o">+</span> <span class="n">step</span><span class="p">)</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">((</span><span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span><span class="p">,</span> <span class="nb">complex</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="spin_one_xy_hxy_h3_model">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.spin_one_xy.spin_one_xy_hxy_h3_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spin_one_xy_hxy_h3_model</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">j</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">j3</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">total_sz</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">h_z</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">d_z</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpinOneXYChainModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the periodic manuscript Hamiltonian ``H_XY + H_3``.</span>
+
+<span class="sd">    The manuscript convention is</span>
+
+<span class="sd">    ``H_XY = J sum_r (S_r^+ S_{r+1}^- + h.c.)`` and</span>
+<span class="sd">    ``H_3  = J3 sum_r (S_r^+ S_{r+3}^- + h.c.)``.</span>
+
+<span class="sd">    :class:`SpinOneXYChainModel` uses the conventional ``J_xy/2`` prefactor</span>
+<span class="sd">    for the ladder-operator form, so the corresponding qlinks coefficients are</span>
+<span class="sd">    ``j_xy=2*J`` and ``extra_xy_coupling=2*J3``.  The third-neighbor term is</span>
+<span class="sd">    phase compatible with the staggered tower on even periodic chains.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;length must be positive.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SpinOneXYChainModel</span><span class="p">(</span>
+        <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
+        <span class="n">boundary_condition</span><span class="o">=</span><span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">,</span>
+        <span class="n">j_xy</span><span class="o">=</span><span class="mf">2.0</span> <span class="o">*</span> <span class="nb">complex</span><span class="p">(</span><span class="n">j</span><span class="p">),</span>
+        <span class="n">h_z</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">h_z</span><span class="p">),</span>
+        <span class="n">d_z</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">d_z</span><span class="p">),</span>
+        <span class="n">total_sz</span><span class="o">=</span><span class="n">total_sz</span><span class="p">,</span>
+        <span class="n">extra_xy_couplings</span><span class="o">=</span><span class="n">spin_one_xy_periodic_range_couplings</span><span class="p">(</span>
+            <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
+            <span class="n">distance</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">coefficient</span><span class="o">=</span><span class="mf">2.0</span> <span class="o">*</span> <span class="nb">complex</span><span class="p">(</span><span class="n">j3</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="spin_one_xy_fixed_magnetization_dimension">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.spin_one_xy.spin_one_xy_fixed_magnetization_dimension">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spin_one_xy_fixed_magnetization_dimension</span><span class="p">(</span><span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">total_sz</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``[z^M](z^-1 + 1 + z)^L`` by exact dynamic programming.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;length must be non-negative.&quot;</span><span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">)):</span>
+        <span class="n">updated</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">magnetization</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">local_value</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="n">magnetization</span> <span class="o">+</span> <span class="n">local_value</span>
+                <span class="n">updated</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">count</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">updated</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">total_sz</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="spin_one_xy_tower_thermal_activities">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.spin_one_xy.spin_one_xy_tower_thermal_activities">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spin_one_xy_tower_thermal_activities</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">total_sz</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">xy_matrix_element</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpinOneXYTowerThermalActivities</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate the exact finite-L ratios and their fixed-density limits.</span>
+
+<span class="sd">    The returned quantities are ``Tr(rho Y_r^2)``, the one-sided directed</span>
+<span class="sd">    activity ``Tr(rho A_r^dagger A_r)``, and</span>
+<span class="sd">    ``Tr(rho Z_{r,r+1}^2)`` in the infinite-temperature fixed-magnetization</span>
+<span class="sd">    ensemble.  They correspond to the local channels in the current draft</span>
+<span class="sd">    after identifying ``xy_matrix_element = 2 J``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;length must be at least two.&quot;</span><span class="p">)</span>
+    <span class="n">dimension</span> <span class="o">=</span> <span class="n">spin_one_xy_fixed_magnetization_dimension</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">total_sz</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dimension</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;requested fixed-magnetization sector is empty.&quot;</span><span class="p">)</span>
+    <span class="n">one_zero</span> <span class="o">=</span> <span class="n">spin_one_xy_fixed_magnetization_dimension</span><span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">total_sz</span><span class="p">)</span>
+    <span class="n">remainder</span> <span class="o">=</span> <span class="n">spin_one_xy_fixed_magnetization_dimension</span><span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">total_sz</span><span class="p">)</span>
+    <span class="n">matrix_element</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">xy_matrix_element</span><span class="p">)</span>
+    <span class="n">y2</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">one_zero</span> <span class="o">/</span> <span class="n">dimension</span><span class="p">)</span>
+    <span class="n">directed_q</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">matrix_element</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">remainder</span> <span class="o">/</span> <span class="n">dimension</span><span class="p">)</span>
+    <span class="n">z2</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">matrix_element</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">remainder</span> <span class="o">/</span> <span class="n">dimension</span><span class="p">)</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_sz</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;magnetization density must lie in [-1, 1].&quot;</span><span class="p">)</span>
+    <span class="n">p0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">4.0</span> <span class="o">-</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="n">q</span> <span class="o">*</span> <span class="n">q</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SpinOneXYTowerThermalActivities</span><span class="p">(</span>
+        <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
+        <span class="n">total_sz</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">total_sz</span><span class="p">),</span>
+        <span class="n">sector_dimension</span><span class="o">=</span><span class="n">dimension</span><span class="p">,</span>
+        <span class="n">one_zero_count</span><span class="o">=</span><span class="n">one_zero</span><span class="p">,</span>
+        <span class="n">two_site_remainder_count</span><span class="o">=</span><span class="n">remainder</span><span class="p">,</span>
+        <span class="n">y2_activity</span><span class="o">=</span><span class="n">y2</span><span class="p">,</span>
+        <span class="n">directed_q_activity</span><span class="o">=</span><span class="n">directed_q</span><span class="p">,</span>
+        <span class="n">z2_activity</span><span class="o">=</span><span class="n">z2</span><span class="p">,</span>
+        <span class="n">p0_limit</span><span class="o">=</span><span class="n">p0</span><span class="p">,</span>
+        <span class="n">y2_limit</span><span class="o">=</span><span class="n">p0</span><span class="p">,</span>
+        <span class="n">directed_q_limit</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">matrix_element</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">p0</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">z2_limit</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">matrix_element</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">p0</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">xy_matrix_element</span><span class="o">=</span><span class="n">matrix_element</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="spin_one_xy_phase_compatibility">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.spin_one_xy.spin_one_xy_phase_compatibility">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spin_one_xy_phase_compatibility</span><span class="p">(</span>
+    <span class="n">couplings</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">complex</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">phases</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpinOneXYPhaseCompatibilityReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check ``t* eta_i + t eta_j = 0`` for every Hermitian pair exchange.&quot;&quot;&quot;</span>
+    <span class="n">eta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">phases</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">eta</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;phases must not be empty.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eta</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.0e-10</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tower phases must have unit modulus.&quot;</span><span class="p">)</span>
+    <span class="n">pairs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">complex</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">residuals</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">complex</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">site_i</span><span class="p">,</span> <span class="n">site_j</span><span class="p">,</span> <span class="n">coupling</span> <span class="ow">in</span> <span class="n">couplings</span><span class="p">:</span>
+        <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_i</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_j</span><span class="p">),</span> <span class="nb">complex</span><span class="p">(</span><span class="n">coupling</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">eta</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">eta</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;coupling site lies outside the phase array.&quot;</span><span class="p">)</span>
+        <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">residuals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="n">eta</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">value</span> <span class="o">*</span> <span class="n">eta</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">SpinOneXYPhaseCompatibilityReport</span><span class="p">(</span>
+        <span class="n">residuals</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">residuals</span><span class="p">),</span>
+        <span class="n">pairs</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">pairs</span><span class="p">),</span>
+        <span class="n">couplings</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">values</span><span class="p">),</span>
+        <span class="n">phases</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">eta</span><span class="p">),</span>
+    <span class="p">)</span></div>
 
 </pre></div>
 

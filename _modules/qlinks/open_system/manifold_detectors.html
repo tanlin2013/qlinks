@@ -166,6 +166,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
 </ul>
@@ -3063,11 +3065,13 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return bounded unions of multiple local regions.</span>
 
-<span class="sd">    This generalizes :func:`expand_local_regions_to_pair_unions` to three- or</span>
-<span class="sd">    four-region recycler/patch supports.  ``cluster_mode=&quot;overlap_connected&quot;``</span>
-<span class="sd">    keeps only clusters that are connected in the overlap graph of the base</span>
-<span class="sd">    regions; this is the natural setting for connected multi-plaquette QDM</span>
-<span class="sd">    patches.</span>
+<span class="sd">    This generalizes :func:`expand_local_regions_to_pair_unions` to one or</span>
+<span class="sd">    more regional units.  ``cluster_size=1`` returns the normalized base</span>
+<span class="sd">    regions themselves, which is useful when each base region is already a</span>
+<span class="sd">    model-natural non-onsite unit such as a plaquette, rhombus, hexagon, or</span>
+<span class="sd">    bond.  ``cluster_mode=&quot;overlap_connected&quot;`` keeps larger clusters that are</span>
+<span class="sd">    connected in the overlap graph of the base regions; this is the natural</span>
+<span class="sd">    setting for connected multi-plaquette QDM patches.</span>
 
 <span class="sd">    The normalized expansion is cached and the connected mode grows clusters on</span>
 <span class="sd">    the overlap graph directly.  This makes repeated</span>
@@ -3077,8 +3081,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">cluster_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;overlap_connected&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">}:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cluster_mode must be &quot;overlap_connected&quot; or &quot;all&quot;.&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">cluster_size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cluster_size must be at least two.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cluster_size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cluster_size must be at least one.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">min_overlap</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;min_overlap must be non-negative.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">max_region_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_region_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
