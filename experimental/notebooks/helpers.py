@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import shutil
 import warnings
+from pathlib import Path
+from typing import Sequence
 
 import matplotlib as mpl
 import numpy as np
@@ -273,3 +275,65 @@ def interference_zero_dataframe(classification_report, basis_configs, *, mechani
     df = basis_dataframe(basis_configs, indices=indices)
     df.insert(1, "mechanism", [mechanism_by_index.get(int(index), "unknown") for index in indices])
     return df
+
+
+def save_prx_figure(
+    fig,
+    stem: str,
+    *,
+    directory: str | Path,
+    formats: Sequence[str] = ("pdf", "svg"),
+    dpi: int = 300,
+    pad_inches: float = 0.02,
+    transparent: bool = False,
+    close: bool = False,
+):
+    """Save a Matplotlib figure in manuscript-friendly formats.
+
+    Parameters
+    ----------
+    fig:
+        Matplotlib figure object.
+    stem:
+        File stem without the extension.
+    directory:
+        Output directory. It is created automatically.
+    formats:
+        Iterable of extensions such as ("pdf", "svg") or ("pdf", "svg", "png").
+    dpi:
+        Raster DPI used when a raster format is requested.
+    pad_inches:
+        Passed to :meth:`matplotlib.figure.Figure.savefig`.
+    transparent:
+        Whether to save with a transparent background.
+    close:
+        Whether to close the figure after saving.
+
+    Returns
+    -------
+    list[Path]
+        The saved file paths.
+    """
+
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+
+    saved_paths = []
+    for fmt in formats:
+        output_path = directory / f"{stem}.{fmt}"
+        save_kwargs = {
+            "pad_inches": pad_inches,
+            "transparent": transparent,
+            "facecolor": "white",
+        }
+        if fmt.lower() in {"png", "jpg", "jpeg", "tif", "tiff", "webp"}:
+            save_kwargs["dpi"] = dpi
+        fig.savefig(output_path, **save_kwargs)
+        saved_paths.append(output_path)
+
+    if close:
+        import matplotlib.pyplot as plt
+
+        plt.close(fig)
+
+    return saved_paths
