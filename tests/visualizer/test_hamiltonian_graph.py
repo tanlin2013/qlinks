@@ -1162,3 +1162,176 @@ def test_save_graph_rejects_unknown_suffix(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="Graph export path"):
         visualizer.save_graph(tmp_path / "graph.unknown")
+
+
+def test_state_amplitude_colorbar_includes_exact_endpoints() -> None:
+    pytest.importorskip("networkx")
+
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0, 0.0],
+                [1.0, 0.0, 1.0],
+                [0.0, 1.0, 0.0],
+            ]
+        )
+    )
+    style = HamiltonianGraphStyle(
+        cmap="coolwarm",
+        edge_colorbar=False,
+        colorbar_include_endpoints=True,
+        colorbar_max_ticks=7,
+    )
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix, style=style)
+
+    fig, ax = plt.subplots()
+    visualizer.plot(
+        backend="networkx",
+        ax=ax,
+        show=False,
+        color_by="state_amplitude_real",
+        state_vector=np.asarray([0.5, -0.5, 0.0]),
+        seed=1,
+    )
+
+    assert len(fig.axes) == 2
+    ticks = np.asarray(fig.axes[1].get_yticks(), dtype=float)
+    assert np.any(np.isclose(ticks, -0.5))
+    assert np.any(np.isclose(ticks, 0.5))
+
+    plt.close(fig)
+
+
+def test_latex_font_style_is_local_and_does_not_require_external_usetex() -> None:
+    pytest.importorskip("networkx")
+
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0],
+                [1.0, 0.0],
+            ]
+        )
+    )
+    style = HamiltonianGraphStyle(
+        cmap="coolwarm",
+        edge_colorbar=False,
+        font_style="latex",
+        colorbar_label="state amplitude",
+    )
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(matrix, style=style)
+
+    with plt.rc_context({"text.usetex": True}):
+        fig, ax = plt.subplots()
+        visualizer.plot(
+            backend="networkx",
+            ax=ax,
+            show=False,
+            color_by="state_amplitude_real",
+            state_vector=np.asarray([0.5, -0.5]),
+            title="Hamiltonian graph",
+            seed=1,
+        )
+
+        colorbar_ax = fig.axes[1]
+        assert colorbar_ax.yaxis.label.get_text() == "state amplitude"
+        assert colorbar_ax.yaxis.label.get_usetex() is False
+        assert all(label.get_usetex() is False for label in colorbar_ax.get_yticklabels())
+        assert ax.title.get_usetex() is False
+
+        # Rendering is the important regression check: global usetex=True must
+        # not send these graph-local labels through an external LaTeX process.
+        fig.canvas.draw()
+        plt.close(fig)
+
+
+def test_configuration_vertex_labels_render_as_mathtext_kets_beside_nodes() -> None:
+    pytest.importorskip("networkx")
+
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0],
+                [1.0, 0.0],
+            ]
+        )
+    )
+    basis_configurations = np.asarray(
+        [
+            [1, -1, 0, 0],
+            [-1, 1, 0, 0],
+        ],
+        dtype=np.int64,
+    )
+    style = HamiltonianGraphStyle(
+        label_vertices=True,
+        vertex_label_source="configuration",
+        vertex_label_offset_points=(7.0, 1.0),
+        font_style="latex",
+        colorbar=False,
+        edge_colorbar=False,
+    )
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(
+        matrix,
+        basis_configurations=basis_configurations,
+        style=style,
+    )
+
+    fig, ax = plt.subplots()
+    visualizer.plot(
+        backend="networkx",
+        ax=ax,
+        show=False,
+        layout="spring",
+        seed=1,
+    )
+
+    labels = {text.get_text() for text in ax.texts}
+    assert r"$\left|{+}{-}{0}{0}\right\rangle$" in labels
+    assert r"$\left|{-}{+}{0}{0}\right\rangle$" in labels
+    assert all(text.get_usetex() is False for text in ax.texts)
+    assert all(text.get_position() == (7.0, 1.0) for text in ax.texts)
+
+    plt.close(fig)
+
+
+def test_configuration_vertex_labels_require_matching_basis_configurations() -> None:
+    matrix = _small_hamiltonian()
+
+    with pytest.raises(ValueError, match="one row per graph vertex"):
+        HamiltonianGraphVisualizer.from_sparse_matrix(
+            matrix,
+            basis_configurations=np.asarray([[1, 0], [0, 1]], dtype=np.int64),
+        )
+
+
+def test_cage_subgraph_preserves_basis_configurations() -> None:
+    matrix = scipy_sparse.csr_array(
+        np.asarray(
+            [
+                [0.0, 1.0, 0.0],
+                [1.0, 0.0, 1.0],
+                [0.0, 1.0, 0.0],
+            ]
+        )
+    )
+    basis_configurations = np.asarray(
+        [
+            [1, 0],
+            [0, 1],
+            [-1, 0],
+        ],
+        dtype=np.int64,
+    )
+    visualizer = HamiltonianGraphVisualizer.from_sparse_matrix(
+        matrix,
+        basis_configurations=basis_configurations,
+    )
+    vector = np.asarray([0.0, 1.0, 0.0])
+
+    subgraph = visualizer.subgraph_for_cage_state(vector, zero_indices=[2])
+
+    np.testing.assert_array_equal(
+        subgraph.graph_data.basis_configurations,
+        basis_configurations[[1, 2]],
+    )

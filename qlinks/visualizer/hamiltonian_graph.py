@@ -42,6 +42,8 @@ LayoutName = Literal[
     "spring",
 ]
 AutomorphismBackend = Literal["auto", "pynauty", "igraph"]
+GraphFontStyle = Literal["default", "latex"]
+VertexLabelSource = Literal["auto", "configuration"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,15 +65,33 @@ class HamiltonianGraphStyle:
     # Labels
     label_vertices: bool = False
     vertex_label_size: float = 8.0
+    vertex_label_source: VertexLabelSource = "auto"
+    vertex_label_offset_points: tuple[float, float] = (6.0, 0.0)
+    configuration_symbol_map: tuple[tuple[int, str], ...] = (
+        (-1, "-"),
+        (0, "0"),
+        (1, "+"),
+    )
+
+    # Typography. ``latex`` uses Matplotlib's built-in mathtext/Computer
+    # Modern-like fonts and explicitly avoids external ``text.usetex``.
+    font_style: GraphFontStyle = "default"
+    latex_math_fontfamily: str = "cm"
 
     # Vertex colormap / colorbar
     cmap: str = "viridis"
     colorbar: bool = True
+    colorbar_label: str | None = None
+    colorbar_label_size: float = 9.0
+    colorbar_tick_size: float = 8.0
+    colorbar_include_endpoints: bool = True
+    colorbar_max_ticks: int = 7
 
     # Edge colormap / colorbar
     edge_cmap: str = "coolwarm"
     edge_phase_cmap: str = "twilight"
     edge_colorbar: bool = True
+    edge_colorbar_label: str | None = None
 
     # Complex edge coloring
     edge_complex_min_alpha: float = 0.20
@@ -92,6 +112,7 @@ class HamiltonianGraphData:
     state_vector: npt.NDArray[np.complex128] | None = None
     vertex_labels: Sequence[str] | None = None
     directed: bool = False
+    basis_configurations: npt.NDArray[np.int64] | None = None
 
     @property
     def n_vertices(self) -> int:
@@ -123,6 +144,7 @@ class HamiltonianGraphVisualizer:
         include_self_loops: bool = False,
         weight_tolerance: float = 0.0,
         directed: bool = False,
+        basis_configurations: npt.ArrayLike | None = None,
         style: HamiltonianGraphStyle | None = None,
     ) -> HamiltonianGraphVisualizer:
         """Construct a visualizer from a sparse or dense Hamiltonian matrix.
@@ -166,12 +188,17 @@ class HamiltonianGraphVisualizer:
             adjacency = sp.csr_array(adjacency)
 
         n_vertices = int(adjacency.shape[0])
+        resolved_basis_configurations = _validate_basis_configurations(
+            basis_configurations,
+            n_vertices=n_vertices,
+        )
 
         return cls(
             graph_data=HamiltonianGraphData(
                 adjacency=adjacency,
                 self_loop_values=self_loop_values,
                 original_indices=np.arange(n_vertices, dtype=np.int64),
+                basis_configurations=resolved_basis_configurations,
                 directed=directed,
             ),
             style=HamiltonianGraphStyle() if style is None else style,
@@ -184,6 +211,7 @@ class HamiltonianGraphVisualizer:
         *,
         include_self_loops: bool = False,
         weight_tolerance: float = 0.0,
+        basis_configurations: npt.ArrayLike | None = None,
         style: HamiltonianGraphStyle | None = None,
     ) -> HamiltonianGraphVisualizer:
         """Construct a directed graph visualizer from a sparse matrix."""
@@ -192,6 +220,7 @@ class HamiltonianGraphVisualizer:
             include_self_loops=include_self_loops,
             weight_tolerance=weight_tolerance,
             directed=True,
+            basis_configurations=basis_configurations,
             style=style,
         )
 
@@ -409,28 +438,40 @@ class HamiltonianGraphVisualizer:
         else:
             fig = ax.figure
 
-        ig.plot(
-            graph,
+        vertex_labels = None
+        if self.style.label_vertices:
+            vertex_labels = self.vertex_plot_labels(matplotlib_mathtext=True)
+
+        igraph_style = dict(
             target=ax,
             layout=layout_object,
             vertex_size=self.style.vertex_size,
             vertex_color=vertex_colors,
-            vertex_label=(self.vertex_display_labels() if self.style.label_vertices else None),
+            vertex_label=vertex_labels,
             vertex_label_size=self.style.vertex_label_size,
             edge_width=self.style.edge_width,
             edge_color=edge_colors,
         )
 
+        # Configuration kets are more readable beside a node than centered on it.
+        if self.style.label_vertices and self.style.vertex_label_source == "configuration":
+            igraph_style["vertex_label_dist"] = 1.25
+
+        ig.plot(graph, **igraph_style)
+
         if title is not None:
-            ax.set_title(title)
+            _set_graph_title(ax, title=title, style=self.style)
+
+        _apply_graph_text_style(ax, style=self.style)
 
         if self.style.colorbar and color_by not in ("constant", "automorphism_orbit"):
             _add_colorbar(
                 ax=ax,
                 values=values,
                 cmap=self.style.cmap,
-                label=color_by,
+                label=self.style.colorbar_label or color_by,
                 color_by=color_by,
+                style=self.style,
             )
 
         if self.style.edge_colorbar and edge_color_by not in ("constant", "weight_complex"):
@@ -445,8 +486,9 @@ class HamiltonianGraphVisualizer:
                 ax=ax,
                 values=edge_values,
                 cmap=edge_cmap,
-                label=edge_color_by,
+                label=self.style.edge_colorbar_label or edge_color_by,
                 color_by=edge_color_by,
+                style=self.style,
             )
 
         if save_path is not None:
@@ -521,7 +563,11 @@ class HamiltonianGraphVisualizer:
 
         layout_object = _igraph_layout(graph, layout, **layout_kwargs)
 
-        vertex_labels = self.vertex_display_labels() if self.style.label_vertices else None
+        vertex_labels = (
+            self.vertex_plot_labels(matplotlib_mathtext=False)
+            if self.style.label_vertices
+            else None
+        )
 
         visual_style = {
             "layout": layout_object,
@@ -536,6 +582,9 @@ class HamiltonianGraphVisualizer:
                 edge_color_by=edge_color_by,
             ),
         }
+
+        if self.style.label_vertices and self.style.vertex_label_source == "configuration":
+            visual_style["vertex_label_dist"] = 1.25
 
         # Optional graph title. Cairo plots do not have a Matplotlib Axes title,
         # so attach a graph label instead.
@@ -627,19 +676,38 @@ class HamiltonianGraphVisualizer:
 
         if self.style.label_vertices:
             labels = {
-                local_index: label for local_index, label in enumerate(self.vertex_display_labels())
+                local_index: label
+                for local_index, label in enumerate(
+                    self.vertex_plot_labels(matplotlib_mathtext=True)
+                )
             }
 
-            nx.draw_networkx_labels(
-                graph,
-                positions,
-                labels=labels,
-                font_size=self.style.vertex_label_size,
-                ax=ax,
-            )
+            if self.style.vertex_label_source == "configuration":
+                offset_x, offset_y = self.style.vertex_label_offset_points
+                for local_index, label in labels.items():
+                    ax.annotate(
+                        label,
+                        xy=positions[local_index],
+                        xytext=(offset_x, offset_y),
+                        textcoords="offset points",
+                        ha="left",
+                        va="center",
+                        fontsize=self.style.vertex_label_size,
+                        annotation_clip=False,
+                    )
+            else:
+                nx.draw_networkx_labels(
+                    graph,
+                    positions,
+                    labels=labels,
+                    font_size=self.style.vertex_label_size,
+                    ax=ax,
+                )
 
         if title is not None:
-            ax.set_title(title)
+            _set_graph_title(ax, title=title, style=self.style)
+
+        _apply_graph_text_style(ax, style=self.style)
 
         ax.set_axis_off()
 
@@ -648,8 +716,9 @@ class HamiltonianGraphVisualizer:
                 ax=ax,
                 values=values,
                 cmap=self.style.cmap,
-                label=color_by,
+                label=self.style.colorbar_label or color_by,
                 color_by=color_by,
+                style=self.style,
             )
 
         if self.style.edge_colorbar and edge_color_by not in ("constant", "weight_complex"):
@@ -664,8 +733,9 @@ class HamiltonianGraphVisualizer:
                 ax=ax,
                 values=edge_values,
                 cmap=edge_cmap,
-                label=edge_color_by,
+                label=self.style.edge_colorbar_label or edge_color_by,
                 color_by=edge_color_by,
+                style=self.style,
             )
 
         if color_by == "automorphism_orbit":
@@ -701,6 +771,54 @@ class HamiltonianGraphVisualizer:
             raise ValueError("graph_data.original_indices must have length n_vertices.")
 
         return [str(int(index)) for index in original_indices]
+
+    def vertex_configuration_labels(
+        self,
+        *,
+        matplotlib_mathtext: bool = False,
+    ) -> list[str]:
+        """Return basis configurations formatted as ket labels.
+
+        The default symbol map is suitable for spin-1 / spin-chain basis
+        values: ``-1 -> -``, ``0 -> 0``, and ``+1 -> +``.  Matplotlib
+        backends may request mathtext labels, yielding e.g.
+        ``$\\left|+-00\\right\\rangle$`` without invoking external LaTeX.
+        """
+        configurations = self.graph_data.basis_configurations
+        if configurations is None:
+            raise ValueError(
+                "vertex_label_source='configuration' requires basis_configurations. "
+                "Pass basis_configurations=... to from_sparse_matrix()."
+            )
+
+        configurations = _validate_basis_configurations(
+            configurations,
+            n_vertices=self.graph_data.n_vertices,
+        )
+        assert configurations is not None
+
+        symbol_map = dict(self.style.configuration_symbol_map)
+        return [
+            _format_basis_configuration_ket(
+                row,
+                symbol_map=symbol_map,
+                matplotlib_mathtext=matplotlib_mathtext,
+            )
+            for row in configurations
+        ]
+
+    def vertex_plot_labels(
+        self,
+        *,
+        matplotlib_mathtext: bool,
+    ) -> list[str]:
+        """Resolve the labels requested by :class:`HamiltonianGraphStyle`."""
+        if self.style.vertex_label_source == "configuration":
+            return self.vertex_configuration_labels(
+                matplotlib_mathtext=matplotlib_mathtext,
+            )
+
+        return self.vertex_display_labels()
 
     def to_igraph(self):
         """Convert to an igraph.Graph."""
@@ -1402,6 +1520,12 @@ class HamiltonianGraphVisualizer:
 
         sub_self_loops = self.graph_data.self_loop_values[selected_indices]
         sub_state_vector = vector[selected_indices]
+        sub_basis_configurations = None
+        if self.graph_data.basis_configurations is not None:
+            sub_basis_configurations = np.asarray(
+                self.graph_data.basis_configurations,
+                dtype=np.int64,
+            )[selected_indices]
 
         region_labels = np.zeros(selected_indices.size, dtype=np.int64)
         region_labels[np.isin(selected_indices, support_indices)] = 1
@@ -1416,6 +1540,7 @@ class HamiltonianGraphVisualizer:
                 self_loop_values=np.asarray(sub_self_loops, dtype=np.complex128),
                 original_indices=selected_indices.astype(np.int64),
                 state_vector=np.asarray(sub_state_vector, dtype=np.complex128),
+                basis_configurations=sub_basis_configurations,
             ),
             style=self.style,
         )
@@ -1658,6 +1783,182 @@ def _edge_scalar_values_to_hex_colors(
     return [to_hex(colormap(float(norm(value)))) for value in values]
 
 
+def _validate_basis_configurations(
+    basis_configurations: npt.ArrayLike | None,
+    *,
+    n_vertices: int,
+) -> npt.NDArray[np.int64] | None:
+    """Validate optional per-vertex basis configurations."""
+    if basis_configurations is None:
+        return None
+
+    configurations = np.asarray(basis_configurations, dtype=np.int64)
+    if configurations.ndim != 2:
+        raise ValueError("basis_configurations must have shape (n_vertices, n_local_sites).")
+
+    if configurations.shape[0] != int(n_vertices):
+        raise ValueError(
+            "basis_configurations must have one row per graph vertex: "
+            f"{configurations.shape[0]} != {n_vertices}."
+        )
+
+    return configurations
+
+
+def _format_basis_configuration_ket(
+    configuration: npt.ArrayLike,
+    *,
+    symbol_map: dict[int, str],
+    matplotlib_mathtext: bool,
+) -> str:
+    """Format a compact spin/configuration string as a ket."""
+    values = np.asarray(configuration, dtype=np.int64).ravel()
+    symbols = [symbol_map.get(int(value), str(int(value))) for value in values]
+    body = "".join(symbols)
+
+    if matplotlib_mathtext:
+        # ``\\ket`` is not part of Matplotlib mathtext; use the equivalent
+        # delimiter form so no external LaTeX installation is required.  Each
+        # local-state symbol is grouped separately so + and - are treated as
+        # compact ket entries rather than spaced binary operators.
+        math_body = "".join(f"{{{symbol}}}" for symbol in symbols)
+        return rf"$\left|{math_body}\right\rangle$"
+
+    return f"|{body}⟩"
+
+
+def _graph_font_properties(
+    style: HamiltonianGraphStyle,
+    *,
+    size: float | None = None,
+):
+    """Return local font properties without touching global rcParams."""
+    if style.font_style != "latex":
+        return None
+
+    from matplotlib.font_manager import FontProperties
+
+    return FontProperties(
+        family="serif",
+        size=size,
+        math_fontfamily=style.latex_math_fontfamily,
+    )
+
+
+def _apply_text_font_style(
+    text,
+    *,
+    style: HamiltonianGraphStyle,
+    size: float | None = None,
+) -> None:
+    """Apply graph-local typography to one Matplotlib Text artist."""
+    if style.font_style != "latex":
+        return
+
+    # Explicitly disable external LaTeX. This keeps the visualizer robust even
+    # if a notebook globally enabled ``text.usetex`` in rcParams.
+    if hasattr(text, "set_usetex"):
+        text.set_usetex(False)
+
+    font_properties = _graph_font_properties(style, size=size)
+    if font_properties is not None:
+        text.set_fontproperties(font_properties)
+
+
+def _apply_graph_text_style(ax, *, style: HamiltonianGraphStyle) -> None:
+    """Apply local typography to vertex labels and axis title."""
+    if style.font_style != "latex":
+        return
+
+    for text in ax.texts:
+        _apply_text_font_style(
+            text,
+            style=style,
+            size=style.vertex_label_size,
+        )
+
+    _apply_text_font_style(ax.title, style=style)
+
+
+def _set_graph_title(ax, *, title: str, style: HamiltonianGraphStyle) -> None:
+    title_artist = ax.set_title(title)
+    _apply_text_font_style(title_artist, style=style)
+
+
+def _inclusive_colorbar_ticks(
+    norm,
+    *,
+    max_ticks: int,
+) -> npt.NDArray[np.float64]:
+    """Return readable ticks while always preserving the color limits."""
+    from matplotlib.ticker import MaxNLocator
+
+    vmin = float(norm.vmin)
+    vmax = float(norm.vmax)
+    if not np.isfinite(vmin) or not np.isfinite(vmax) or vmax <= vmin:
+        return np.asarray([vmin, vmax], dtype=np.float64)
+
+    max_ticks = max(int(max_ticks), 2)
+    # Reserve room for two extrema that Matplotlib's automatic locator often
+    # omits (e.g. ±0.5 for a state-amplitude scale).
+    interior_bins = max(max_ticks - 2, 2)
+    candidate = MaxNLocator(nbins=interior_bins).tick_values(vmin, vmax)
+    tolerance = 1e-12 * max(1.0, abs(vmin), abs(vmax))
+    candidate = candidate[(candidate >= vmin - tolerance) & (candidate <= vmax + tolerance)]
+
+    ticks = np.unique(np.concatenate(([vmin], candidate, [vmax]))).astype(np.float64)
+    return ticks
+
+
+def _format_colorbar_tick(value: float) -> str:
+    if abs(value) < 1e-14:
+        value = 0.0
+    return f"{value:.6g}"
+
+
+def _style_colorbar(
+    colorbar,
+    *,
+    norm,
+    style: HamiltonianGraphStyle,
+) -> None:
+    """Apply endpoint-aware ticks and local publication typography."""
+    from matplotlib.ticker import FuncFormatter
+
+    if style.colorbar_include_endpoints:
+        ticks = _inclusive_colorbar_ticks(
+            norm,
+            max_ticks=style.colorbar_max_ticks,
+        )
+        colorbar.set_ticks(ticks)
+
+    if style.font_style == "latex":
+        colorbar.ax.yaxis.set_major_formatter(
+            FuncFormatter(lambda value, _position: f"${_format_colorbar_tick(value)}$")
+        )
+    else:
+        colorbar.ax.yaxis.set_major_formatter(
+            FuncFormatter(lambda value, _position: _format_colorbar_tick(value))
+        )
+
+    colorbar.ax.tick_params(labelsize=style.colorbar_tick_size)
+
+    label_artist = colorbar.ax.yaxis.label
+    _apply_text_font_style(
+        label_artist,
+        style=style,
+        size=style.colorbar_label_size,
+    )
+    label_artist.set_fontsize(style.colorbar_label_size)
+
+    for tick_label in colorbar.ax.get_yticklabels():
+        _apply_text_font_style(
+            tick_label,
+            style=style,
+            size=style.colorbar_tick_size,
+        )
+
+
 def _add_colorbar(
     *,
     ax,
@@ -1665,7 +1966,8 @@ def _add_colorbar(
     cmap: str,
     label: str,
     color_by: NodeColorRule,
-) -> None:
+    style: HamiltonianGraphStyle,
+):
     """Attach a scalar colorbar to an axis."""
     import matplotlib.pyplot as plt
     from matplotlib.cm import ScalarMappable
@@ -1683,12 +1985,18 @@ def _add_colorbar(
     )
     scalar_mappable.set_array([])
 
-    ax.figure.colorbar(
+    colorbar = ax.figure.colorbar(
         scalar_mappable,
         ax=ax,
         label=label,
         shrink=0.8,
     )
+    _style_colorbar(
+        colorbar,
+        norm=norm,
+        style=style,
+    )
+    return colorbar
 
 
 def _add_edge_colorbar(
@@ -1698,7 +2006,8 @@ def _add_edge_colorbar(
     cmap: str,
     label: str,
     color_by: EdgeColorRule,
-) -> None:
+    style: HamiltonianGraphStyle,
+):
     """Attach a scalar edge-color colorbar to an axis."""
     import matplotlib.pyplot as plt
     from matplotlib.cm import ScalarMappable
@@ -1716,12 +2025,18 @@ def _add_edge_colorbar(
     )
     scalar_mappable.set_array([])
 
-    ax.figure.colorbar(
+    colorbar = ax.figure.colorbar(
         scalar_mappable,
         ax=ax,
         label=label,
         shrink=0.8,
     )
+    _style_colorbar(
+        colorbar,
+        norm=norm,
+        style=style,
+    )
+    return colorbar
 
 
 def _add_orbit_legend(
