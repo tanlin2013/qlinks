@@ -27,6 +27,16 @@ ZERO_MECHANISM_FIELDS = {
 }
 
 
+# Generous working canvases for manuscript figures.  The evidence notebooks
+# export vector PDF/SVG and the draft can scale them at inclusion time.  These
+# sizes match the visual density of the current full-width Fig. 3 better than
+# the older 3.35-inch standalone canvases.
+PRX_SINGLE_PANEL_FIGSIZE = (6.4, 4.0)
+PRX_WIDE_FIGSIZE = (7.2, 4.2)
+PRX_TWO_PANEL_FIGSIZE = (7.2, 3.8)
+PRX_FOUR_PANEL_FIGSIZE = (7.2, 6.4)
+
+
 def set_revtex_matplotlib_style(
     *,
     base_font_size: float = 8.0,
@@ -75,12 +85,16 @@ def set_revtex_matplotlib_style(
             "ytick.labelsize": base_font_size - 1,
             "legend.fontsize": base_font_size - 1,
             "figure.titlesize": base_font_size,
+            "legend.frameon": False,
+            "figure.dpi": 120,
+            "svg.fonttype": "path",
+            "pdf.fonttype": 42,
             # Keep mathematical minus signs and ordinary text consistent.
             "axes.unicode_minus": False,
             # Avoid overly thick default figure elements.
             "axes.linewidth": 0.7,
             "lines.linewidth": 1.0,
-            "lines.markersize": 4.0,
+            "lines.markersize": 4.5,
             "xtick.major.width": 0.7,
             "ytick.major.width": 0.7,
             "xtick.minor.width": 0.5,
