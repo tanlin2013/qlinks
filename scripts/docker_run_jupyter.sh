@@ -4,8 +4,8 @@ set -euo pipefail
 IMAGE_NAME="${QLINKS_DOCKER_IMAGE:-tanlin2013/qlinks:notebook}"
 CONTAINER_NAME="${QLINKS_CONTAINER_NAME:-qlinks-jupyter}"
 HOST_PORT="${QLINKS_HOST_PORT:-8888}"
-NOTEBOOK_DIR="${QLINKS_NOTEBOOK_DIR:-$(pwd)/notebooks}"
-OUTPUT_DIR="${QLINKS_OUTPUT_DIR:-$(pwd)/output}"
+NOTEBOOK_DIR="${QLINKS_NOTEBOOK_DIR:-$(pwd)/experimental/notebooks}"
+OUTPUT_DIR="${QLINKS_OUTPUT_DIR:-$(pwd)/experimental/data}"
 JUPYTER_TOKEN_VALUE="${JUPYTER_TOKEN:-}"
 
 mkdir -p "${NOTEBOOK_DIR}" "${OUTPUT_DIR}"
@@ -23,7 +23,7 @@ docker run -d \
     --env JUPYTER_TOKEN="${JUPYTER_TOKEN_VALUE}" \
     --volume "$(pwd):/workspace/qlinks" \
     --volume "${NOTEBOOK_DIR}:/workspace/notebooks" \
-    --volume "${OUTPUT_DIR}:/workspace/output" \
+    --volume "${OUTPUT_DIR}:/workspace/data" \
     --workdir /workspace/qlinks \
     "${IMAGE_NAME}" \
     sh -lc 'python -m jupyterlab \
@@ -47,5 +47,5 @@ Open locally:
 Mounted paths:
   repo:      /workspace/qlinks
   notebooks: /workspace/notebooks
-  output:    /workspace/output
+  data:    /workspace/data
 EOF
