@@ -41,6 +41,49 @@ Useful development commands are:
    poetry run pre-commit run --all-files
    poetry run make -C docs html
 
+
+Remote Jupyter notebook Docker image
+------------------------------------
+
+The regular Docker image remains a minimal runtime image.  CI also publishes
+notebook-oriented variants so that remote Jupyter workflows do not require a
+local Docker build:
+
+.. code-block:: bash
+
+   docker pull tanlin2013/qlinks:notebook
+   docker pull tanlin2013/qlinks:tn-notebook
+
+Use ``tanlin2013/qlinks:notebook`` for ordinary qlinks notebooks on the
+default Python version.  Use ``tanlin2013/qlinks:tn-notebook`` only when the
+tensor-network stack is needed; that image is built with Python 3.13 because
+the ``tn`` extra is intentionally constrained to Python 3.11--3.13.
+
+On the remote machine, start a local-only Jupyter server with:
+
+.. code-block:: bash
+
+   ./scripts/docker_run_jupyter.sh
+
+The script binds Jupyter to ``127.0.0.1`` on the remote host, prints a random
+token, mounts the current repository at ``/workspace/qlinks``, and mounts
+``./notebooks`` at ``/workspace/notebooks``.  From the local machine, forward
+the port through SSH:
+
+.. code-block:: bash
+
+   ssh -N -L 8888:127.0.0.1:8888 user@remote-host
+
+Then open the URL printed by the script.  To use the tensor-network notebook
+image instead, set:
+
+.. code-block:: bash
+
+   QLINKS_DOCKER_IMAGE=tanlin2013/qlinks:tn-notebook ./scripts/docker_run_jupyter.sh
+
+To change the host-side port or notebook directory, set
+``QLINKS_JUPYTER_PORT`` or ``QLINKS_NOTEBOOK_DIR``.
+
 Docker tensor-network interpreter
 ---------------------------------
 
