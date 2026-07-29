@@ -351,3 +351,193 @@ def save_prx_figure(
         plt.close(fig)
 
     return saved_paths
+
+
+def orthonormalize_columns(vectors, *, tolerance: float = 1.0e-10):
+    """Return an orthonormal basis for the supplied column span."""
+    array = np.asarray(vectors, dtype=np.complex128)
+    if array.ndim == 1:
+        array = array[:, None]
+    if array.ndim != 2:
+        raise ValueError("vectors must be one- or two-dimensional")
+    if array.shape[1] == 0:
+        return np.zeros((array.shape[0], 0), dtype=np.complex128)
+    q, r = np.linalg.qr(array)
+    keep = np.abs(np.diag(r)) > tolerance
+    return np.asarray(q[:, keep], dtype=np.complex128)
+
+
+def projector_deleted_observable_moments(
+    window_vectors,
+    exceptional_vectors,
+    operator,
+    *,
+    squared_operator=None,
+    tolerance: float = 1.0e-10,
+):
+    """Evaluate a basis-independent microcanonical trace after projector deletion.
+
+    ``window_vectors`` spans the complete energy-window projector.  The
+    exceptional vectors are projected into that window and removed as a whole
+    subspace, so the result is invariant under rotations inside degenerate
+    energy multiplets.
+    """
+    window = orthonormalize_columns(window_vectors, tolerance=tolerance)
+    exceptional = np.asarray(exceptional_vectors, dtype=np.complex128)
+    if exceptional.ndim == 1:
+        exceptional = exceptional[:, None]
+    if exceptional.size == 0:
+        exceptional = np.zeros((window.shape[0], 0), dtype=np.complex128)
+    projected = window @ (window.conj().T @ exceptional)
+    exceptional = orthonormalize_columns(projected, tolerance=tolerance)
+
+    n_window = int(window.shape[1])
+    n_exceptional = int(exceptional.shape[1])
+    n_retained = n_window - n_exceptional
+    if n_retained <= 0:
+        raise ValueError("projector deletion removed the complete energy window")
+
+    def projected_trace(matrix, basis):
+        if basis.shape[1] == 0:
+            return 0.0
+        action = matrix @ basis
+        return float(np.trace(basis.conj().T @ action).real)
+
+    trace_window = projected_trace(operator, window)
+    trace_exceptional = projected_trace(operator, exceptional)
+    mean = (trace_window - trace_exceptional) / n_retained
+
+    if squared_operator is None:
+        squared_operator = operator.conj().T @ operator
+    trace2_window = projected_trace(squared_operator, window)
+    trace2_exceptional = projected_trace(squared_operator, exceptional)
+    second_moment = (trace2_window - trace2_exceptional) / n_retained
+
+    return {
+        "window_rank": n_window,
+        "exceptional_rank": n_exceptional,
+        "retained_rank": n_retained,
+        "removed_fraction": n_exceptional / n_window,
+        "mean": float(mean),
+        "second_moment": float(second_moment),
+        "variance": float(max(0.0, second_moment - mean * mean)),
+        "exceptional_projection_residual": (
+            float(np.linalg.norm(exceptional - window @ (window.conj().T @ exceptional)))
+            if n_exceptional
+            else 0.0
+        ),
+    }
+
+
+def canonical_beta_match(
+    energies,
+    target_energy: float,
+    *,
+    tolerance: float = 1.0e-12,
+    maximum_abs_beta: float = 1.0e4,
+):
+    """Match the canonical mean energy to a finite-sector target energy."""
+    from scipy.optimize import brentq
+
+    spectrum = np.asarray(energies, dtype=np.float64).reshape(-1)
+    if spectrum.size == 0:
+        raise ValueError("energies must not be empty")
+    target = float(target_energy)
+    if target < spectrum.min() - tolerance or target > spectrum.max() + tolerance:
+        raise ValueError("target energy lies outside the spectrum")
+
+    def weights(beta):
+        logits = -float(beta) * spectrum
+        logits -= np.max(logits)
+        raw = np.exp(logits)
+        return raw / np.sum(raw)
+
+    def energy_difference(beta):
+        return float(np.dot(weights(beta), spectrum) - target)
+
+    at_zero = energy_difference(0.0)
+    if abs(at_zero) <= tolerance:
+        beta = 0.0
+    else:
+        direction = 1.0 if at_zero > 0.0 else -1.0
+        bound = direction
+        while abs(bound) <= maximum_abs_beta and energy_difference(bound) * at_zero > 0.0:
+            bound *= 2.0
+        if abs(bound) > maximum_abs_beta:
+            raise RuntimeError("failed to bracket the energy-matching inverse temperature")
+        lo, hi = sorted((0.0, bound))
+        beta = float(brentq(energy_difference, lo, hi, xtol=tolerance, rtol=1.0e-12))
+
+    matched_weights = weights(beta)
+    return {
+        "beta": beta,
+        "target_energy": target,
+        "matched_energy": float(np.dot(matched_weights, spectrum)),
+        "energy_residual": float(np.dot(matched_weights, spectrum) - target),
+        "effective_state_count": float(1.0 / np.sum(matched_weights**2)),
+        "weights": matched_weights,
+    }
+
+
+def degeneracy_resolved_concentration(
+    energies,
+    eigenvectors,
+    operator,
+    indices,
+    *,
+    energy_tolerance: float = 1.0e-10,
+):
+    """Basis-independent concentration diagnostic inside an energy window.
+
+    Exact degeneracy blocks are treated as projectors.  Within each block we
+    diagonalize the projected observable, so the reported spread does not
+    depend on the arbitrary basis returned by the Hamiltonian eigensolver.
+    """
+    spectrum = np.asarray(energies, dtype=np.float64).reshape(-1)
+    vectors = np.asarray(eigenvectors, dtype=np.complex128)
+    selected = np.sort(np.asarray(indices, dtype=np.int64).reshape(-1))
+    if selected.size == 0:
+        raise ValueError("indices must not be empty")
+
+    groups = []
+    current = [int(selected[0])]
+    for index in selected[1:]:
+        if abs(spectrum[int(index)] - spectrum[current[-1]]) <= energy_tolerance:
+            current.append(int(index))
+        else:
+            groups.append(current)
+            current = [int(index)]
+    groups.append(current)
+
+    possible_values = []
+    block_means = []
+    block_sizes = []
+    degenerate_states = 0
+    for group in groups:
+        basis = vectors[:, group]
+        block = basis.conj().T @ (operator @ basis)
+        block = 0.5 * (block + block.conj().T)
+        values = np.linalg.eigvalsh(block).real
+        possible_values.extend(values.tolist())
+        block_means.append(float(np.mean(values)))
+        block_sizes.append(len(group))
+        if len(group) > 1:
+            degenerate_states += len(group)
+
+    possible = np.asarray(possible_values, dtype=np.float64)
+    weights = np.asarray(block_sizes, dtype=np.float64)
+    means = np.asarray(block_means, dtype=np.float64)
+    global_mean = float(np.mean(possible))
+    deviations = np.abs(possible - global_mean)
+    block_mean_variance = float(np.average((means - global_mean) ** 2, weights=weights))
+    return {
+        "window_state_count": int(selected.size),
+        "energy_block_count": int(len(groups)),
+        "degenerate_state_fraction": float(degenerate_states / selected.size),
+        "mean": global_mean,
+        "basis_independent_std": float(np.std(possible)),
+        "block_mean_std": float(np.sqrt(block_mean_variance)),
+        "median_abs_deviation": float(np.median(deviations)),
+        "p90_abs_deviation": float(np.quantile(deviations, 0.90)),
+        "max_abs_deviation": float(np.max(deviations)),
+    }
