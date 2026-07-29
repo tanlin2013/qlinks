@@ -77,6 +77,7 @@ def patch_notebook_parameters(
     """Copy ``notebook_path`` to ``output_path`` after replacing assignments."""
 
     notebook = json.loads(notebook_path.read_text(encoding="utf-8"))
+    normalize_notebook_cells(notebook)
     pending = dict(replacements)
 
     for cell in notebook.get("cells", []):
@@ -214,6 +215,33 @@ def parse_figure_formats(raw: str) -> tuple[str, ...]:
     return tuple(part.strip() for part in raw.split(",") if part.strip())
 
 
+def normalize_notebook_cells(notebook: dict[str, Any]) -> None:
+    """Remove execution-only fields from non-code cells before nbconvert."""
+
+    for cell in notebook.get("cells", []):
+        if cell.get("cell_type") == "code":
+            cell.setdefault("outputs", [])
+            cell.setdefault("execution_count", None)
+            continue
+        cell.pop("outputs", None)
+        cell.pop("execution_count", None)
+
+
+def print_log_tail(log_path: Path, *, n_lines: int = 80) -> None:
+    """Print the last lines of an nbconvert log after a failed notebook run."""
+
+    if not log_path.is_file():
+        return
+    try:
+        lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return
+    print("\n--- nbconvert.log tail ---", file=sys.stderr)
+    for line in lines[-n_lines:]:
+        print(line, file=sys.stderr)
+    print("--- end nbconvert.log tail ---\n", file=sys.stderr)
+
+
 def run_evidence_notebook(
     *,
     job_name: str,
@@ -322,6 +350,7 @@ os.environ.setdefault("MPLBACKEND", "Agg")
             )
         return_code = result.returncode
         if result.returncode != 0:
+            print_log_tail(log_path)
             raise subprocess.CalledProcessError(result.returncode, cmd)
     finally:
         finished_at = _dt.datetime.now(_dt.timezone.utc).isoformat()
