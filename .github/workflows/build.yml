@@ -22,6 +22,38 @@ jobs:
     needs: versions
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: runtime
+            tag-suffix: ""
+            floating-tag: latest
+            python-version: ${{ needs.versions.outputs.default-python }}
+            extras: ""
+            pr-smoke: true
+            smoke-command: >-
+              import qlinks;
+              print('qlinks import OK')
+          - variant: notebook
+            tag-suffix: -notebook
+            floating-tag: notebook
+            python-version: ${{ needs.versions.outputs.default-python }}
+            extras: notebook drawing storage
+            pr-smoke: false
+            smoke-command: >-
+              import ipykernel, jupyterlab, qlinks;
+              print('qlinks notebook image OK')
+          - variant: tn-notebook
+            tag-suffix: -tn-notebook
+            floating-tag: tn-notebook
+            python-version: "3.13"
+            extras: notebook tn drawing storage
+            pr-smoke: false
+            smoke-command: >-
+              import autograd, ipykernel, jupyterlab, qlinks, quimb;
+              print('qlinks TN notebook image OK')
+
     steps:
       - uses: actions/checkout@v4
 
@@ -37,12 +69,12 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/qlinks
           tags: |
-            type=ref,event=branch
-            type=ref,event=tag
-            type=ref,event=pr
-            type=sha,format=long
-            type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Asia/Taipei'}},enable=${{ github.event_name == 'push' }}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch,suffix=${{ matrix.tag-suffix }}
+            type=ref,event=tag,suffix=${{ matrix.tag-suffix }}
+            type=ref,event=pr,suffix=${{ matrix.tag-suffix }}
+            type=sha,format=long,suffix=${{ matrix.tag-suffix }}
+            type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Asia/Taipei'}}${{ matrix.tag-suffix }},enable=${{ github.event_name == 'push' }}
+            type=raw,value=${{ matrix.floating-tag }},enable={{is_default_branch}}
 
       - name: Login to DockerHub
         if: github.event_name == 'push'
@@ -55,29 +87,33 @@ jobs:
         if: github.event_name == 'push'
         uses: docker/build-push-action@v6
         with:
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=docker-${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=docker-${{ matrix.variant }}
           push: true
           build-args: |
-            PYTHON_VERSION=${{ needs.versions.outputs.default-python }}
+            PYTHON_VERSION=${{ matrix.python-version }}
             POETRY_VERSION=${{ needs.versions.outputs.poetry-version }}
+            QLINKS_EXTRAS=${{ matrix.extras }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build Docker image for PR smoke test
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && matrix.pr-smoke
         uses: docker/build-push-action@v6
         with:
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=docker-${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=docker-${{ matrix.variant }}
           push: false
           load: true
           build-args: |
-            PYTHON_VERSION=${{ needs.versions.outputs.default-python }}
+            PYTHON_VERSION=${{ matrix.python-version }}
             POETRY_VERSION=${{ needs.versions.outputs.poetry-version }}
-          tags: qlinks:ci
+            QLINKS_EXTRAS=${{ matrix.extras }}
+          tags: qlinks:ci-${{ matrix.variant }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Smoke test Docker image
-        if: github.event_name == 'pull_request'
-        run: docker run --rm qlinks:ci python -c "import qlinks; print('qlinks import OK')"
+        if: github.event_name == 'pull_request' && matrix.pr-smoke
+        run: >-
+          docker run --rm qlinks:ci-${{ matrix.variant }}
+          python -c "${{ matrix.smoke-command }}"

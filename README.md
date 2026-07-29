@@ -48,10 +48,12 @@ Install from source:
 poetry install --all-extras
 ```
 
-Docker image:
+Docker images:
 
 ```bash
-docker pull tanlin2013/qlinks:main
+docker pull tanlin2013/qlinks:main          # core runtime
+docker pull tanlin2013/qlinks:notebook      # JupyterLab/ipykernel runtime
+docker pull tanlin2013/qlinks:tn-notebook   # Python 3.13 + tensor-network notebook
 ```
 
 ---

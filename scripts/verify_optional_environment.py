@@ -44,6 +44,16 @@ def _verify_tn_extra() -> None:
     verify_tn_environment()
 
 
+def _verify_notebook_feature() -> None:
+    for module_name in ("ipykernel", "jupyterlab"):
+        _require_import(module_name, extra="notebook")
+
+
+def _verify_import_extra(extra: str, module_names: tuple[str, ...]) -> None:
+    for module_name in module_names:
+        _require_import(module_name, extra=extra)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -62,7 +72,22 @@ def main() -> None:
         print("No optional Docker extras requested.")
         return
 
-    print(f"Requested optional Docker extras: {', '.join(sorted(extras))}")
+    print(f"Requested optional Docker features/extras: {', '.join(sorted(extras))}")
+
+    if "automorphism" in extras:
+        _verify_import_extra("automorphism", ("pynauty",))
+    if "cpsat" in extras:
+        _verify_import_extra("cpsat", ("ortools.sat.python.cp_model",))
+    if "cupy" in extras:
+        _verify_import_extra("cupy", ("cupy", "cupyx.scipy.sparse"))
+    if "distributed" in extras:
+        _verify_import_extra("distributed", ("ray",))
+    if "drawing" in extras:
+        _verify_import_extra("drawing", ("cairo", "igraph", "plotly", "pyvis"))
+    if "notebook" in extras:
+        _verify_notebook_feature()
+    if "storage" in extras:
+        _verify_import_extra("storage", ("h5py", "pyarrow"))
     if "tn" in extras:
         _verify_tn_extra()
 
