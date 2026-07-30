@@ -215,6 +215,20 @@ def parse_figure_formats(raw: str) -> tuple[str, ...]:
     return tuple(part.strip() for part in raw.split(",") if part.strip())
 
 
+def parse_int_tuple(raw: str | None) -> tuple[int, ...] | None:
+    """Parse a comma-separated positive-integer tuple from CLI/env input."""
+
+    if raw is None:
+        return None
+    parts = tuple(part.strip() for part in raw.split(",") if part.strip())
+    if not parts:
+        return None
+    values = tuple(int(part) for part in parts)
+    if any(value <= 0 for value in values):
+        raise ValueError(f"expected positive integers, got {raw!r}")
+    return values
+
+
 def normalize_notebook_cells(notebook: dict[str, Any]) -> None:
     """Remove execution-only fields from non-code cells before nbconvert."""
 
@@ -275,10 +289,11 @@ def run_evidence_notebook(
         "DATA_DIR": data_dir,
         **assignment_overrides,
     }
-    header = """\
+    header = f"""\
 from __future__ import annotations
 import os
 os.environ.setdefault("MPLBACKEND", "Agg")
+os.chdir({str(notebook_dir)!r})
 """
     patch_notebook_parameters(
         notebook_path=notebook_path,
@@ -313,6 +328,18 @@ os.environ.setdefault("MPLBACKEND", "Agg")
         pythonpath_parts.append(env["PYTHONPATH"])
     env["PYTHONPATH"] = os.pathsep.join(pythonpath_parts)
     env.setdefault("MPLBACKEND", "Agg")
+    # Keep unattended evidence jobs predictable inside shared Docker hosts.
+    # Dense BLAS/LAPACK temporaries are usually the limiting resource; limiting
+    # implicit thread pools avoids memory oversubscription and makes OOM
+    # behaviour easier to diagnose. Users can override these via docker env.
+    for name in (
+        "OPENBLAS_NUM_THREADS",
+        "OMP_NUM_THREADS",
+        "MKL_NUM_THREADS",
+        "NUMEXPR_NUM_THREADS",
+        "VECLIB_MAXIMUM_THREADS",
+    ):
+        env.setdefault(name, "1")
 
     cmd = [
         sys.executable,

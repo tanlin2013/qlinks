@@ -45,14 +45,35 @@ CONTAINER_DATA_DIR="${CONTAINER_REPO_DIR}/experimental/data"
 HOST_DATA_DIR="${QLINKS_DATA_DIR:-${REPO_ROOT}/experimental/data}"
 HOST_OUTPUT_DIR="${QLINKS_OUTPUT_DIR:-${REPO_ROOT}/output}"
 CONTAINER_OUTPUT_DIR="/workspace/output"
+THREADS="${QLINKS_NUM_THREADS:-1}"
+MEMORY_LIMIT="${QLINKS_DOCKER_MEMORY_LIMIT:-}"
+CPUS_LIMIT="${QLINKS_DOCKER_CPUS:-}"
+SHM_SIZE="${QLINKS_DOCKER_SHM_SIZE:-16g}"
+
+DOCKER_LIMIT_ARGS=()
+if [[ -n "${MEMORY_LIMIT}" ]]; then
+    DOCKER_LIMIT_ARGS+=(--memory "${MEMORY_LIMIT}")
+fi
+if [[ -n "${CPUS_LIMIT}" ]]; then
+    DOCKER_LIMIT_ARGS+=(--cpus "${CPUS_LIMIT}")
+fi
+if [[ -n "${SHM_SIZE}" ]]; then
+    DOCKER_LIMIT_ARGS+=(--shm-size "${SHM_SIZE}")
+fi
 
 mkdir -p "${HOST_DATA_DIR}" "${HOST_OUTPUT_DIR}"
 
 docker run -d \
     --name "${CONTAINER_NAME}" \
     --restart no \
+    "${DOCKER_LIMIT_ARGS[@]}" \
     --env PYTHONUNBUFFERED=1 \
     --env MPLBACKEND=Agg \
+    --env OPENBLAS_NUM_THREADS="${THREADS}" \
+    --env OMP_NUM_THREADS="${THREADS}" \
+    --env MKL_NUM_THREADS="${THREADS}" \
+    --env NUMEXPR_NUM_THREADS="${THREADS}" \
+    --env VECLIB_MAXIMUM_THREADS="${THREADS}" \
     --env PYTHONPATH="${CONTAINER_REPO_DIR}:${CONTAINER_NOTEBOOK_DIR}" \
     --volume "${REPO_ROOT}:${CONTAINER_REPO_DIR}" \
     --volume "${HOST_DATA_DIR}:${CONTAINER_DATA_DIR}" \
@@ -67,6 +88,10 @@ Image: ${IMAGE_NAME}
 Repo mount: ${REPO_ROOT} -> ${CONTAINER_REPO_DIR}
 Data mount: ${HOST_DATA_DIR} -> ${CONTAINER_DATA_DIR}
 Output mount: ${HOST_OUTPUT_DIR} -> ${CONTAINER_OUTPUT_DIR}
+Thread limit: ${THREADS}
+Memory limit: ${MEMORY_LIMIT:-unlimited}
+CPU limit: ${CPUS_LIMIT:-unlimited}
+Shared memory: ${SHM_SIZE:-docker default}
 
 Follow logs:
   docker logs -f ${CONTAINER_NAME}
