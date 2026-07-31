@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import warnings
 from pathlib import Path
@@ -27,14 +28,19 @@ ZERO_MECHANISM_FIELDS = {
 }
 
 
-# Generous working canvases for manuscript figures.  The evidence notebooks
-# export vector PDF/SVG and the draft can scale them at inclusion time.  These
-# sizes match the visual density of the current full-width Fig. 3 better than
-# the older 3.35-inch standalone canvases.
-PRX_SINGLE_PANEL_FIGSIZE = (6.4, 4.0)
-PRX_WIDE_FIGSIZE = (7.2, 4.2)
-PRX_TWO_PANEL_FIGSIZE = (7.2, 3.8)
-PRX_FOUR_PANEL_FIGSIZE = (7.2, 6.4)
+# Physical dimensions of the active REVTeX PRX reprint layout.  Figures are
+# rendered at their final manuscript size rather than drawn large and scaled
+# down by LaTeX, which would also scale the fonts and line widths.
+PRX_COLUMN_WIDTH = 246.0 / 72.27  # 3.404 in
+PRX_TEXT_WIDTH = 510.0 / 72.27  # 7.057 in
+
+PRX_SINGLE_PANEL_FIGSIZE = (PRX_COLUMN_WIDTH, 2.55)
+PRX_WIDE_FIGSIZE = (PRX_TEXT_WIDTH, 3.20)
+PRX_TWO_PANEL_FIGSIZE = (PRX_TEXT_WIDTH, 3.15)
+PRX_FOUR_PANEL_FIGSIZE = (PRX_TEXT_WIDTH, 5.85)
+PRX_PANEL_LABEL_SIZE = 9.0
+
+_FIGURE_AUDIT_ROWS: list[dict] = []
 
 
 def set_revtex_matplotlib_style(
@@ -94,14 +100,15 @@ def set_revtex_matplotlib_style(
             # Avoid overly thick default figure elements.
             "axes.linewidth": 0.7,
             "lines.linewidth": 1.0,
-            "lines.markersize": 4.5,
+            "lines.markersize": 4.0,
             "xtick.major.width": 0.7,
             "ytick.major.width": 0.7,
             "xtick.minor.width": 0.5,
             "ytick.minor.width": 0.5,
             # Save figures without a rasterized background.
             "savefig.transparent": False,
-            "savefig.bbox": "tight",
+            "savefig.bbox": None,
+            "savefig.pad_inches": 0.0,
         }
     )
 
@@ -291,6 +298,66 @@ def interference_zero_dataframe(classification_report, basis_configs, *, mechani
     return df
 
 
+def _parse_svg_inches(path: Path) -> tuple[float | None, float | None]:
+    try:
+        from xml.etree import ElementTree
+
+        root = ElementTree.parse(path).getroot()
+    except Exception:
+        return None, None
+
+    def to_inches(raw: str | None) -> float | None:
+        if raw is None:
+            return None
+        text = raw.strip().lower()
+        factors = {
+            "in": 1.0,
+            "pt": 1.0 / 72.0,
+            "px": 1.0 / 96.0,
+            "cm": 1.0 / 2.54,
+            "mm": 1.0 / 25.4,
+        }
+        for unit, factor in factors.items():
+            if text.endswith(unit):
+                try:
+                    return float(text[: -len(unit)]) * factor
+                except ValueError:
+                    return None
+        try:
+            return float(text) / 96.0
+        except ValueError:
+            return None
+
+    return to_inches(root.attrib.get("width")), to_inches(root.attrib.get("height"))
+
+
+def _parse_pdf_inches(path: Path) -> tuple[float | None, float | None]:
+    for module_name in ("pypdf", "PyPDF2"):
+        try:
+            module = __import__(module_name)
+            reader = module.PdfReader(str(path))
+            box = reader.pages[0].mediabox
+            return float(box.width) / 72.0, float(box.height) / 72.0
+        except Exception:
+            continue
+    return None, None
+
+
+def add_panel_label(ax, label: str, *, x: float = 0.01, y: float = 0.99) -> None:
+    """Place a REVTeX-sized panel label inside a reserved plot corner."""
+    ax.text(
+        x,
+        y,
+        label,
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=PRX_PANEL_LABEL_SIZE,
+        fontweight="bold",
+        zorder=20,
+    )
+
+
 def save_prx_figure(
     fig,
     stem: str,
@@ -298,52 +365,72 @@ def save_prx_figure(
     directory: str | Path,
     formats: Sequence[str] = ("pdf", "svg"),
     dpi: int = 300,
-    pad_inches: float = 0.02,
     transparent: bool = False,
     close: bool = False,
+    dimension_tolerance_in: float = 0.015,
 ):
-    """Save a Matplotlib figure in manuscript-friendly formats.
+    """Save a figure without changing its declared physical canvas size.
 
-    Parameters
-    ----------
-    fig:
-        Matplotlib figure object.
-    stem:
-        File stem without the extension.
-    directory:
-        Output directory. It is created automatically.
-    formats:
-        Iterable of extensions such as ("pdf", "svg") or ("pdf", "svg", "png").
-    dpi:
-        Raster DPI used when a raster format is requested.
-    pad_inches:
-        Passed to :meth:`matplotlib.figure.Figure.savefig`.
-    transparent:
-        Whether to save with a transparent background.
-    close:
-        Whether to close the figure after saving.
-
-    Returns
-    -------
-    list[Path]
-        The saved file paths.
+    The usual ``bbox_inches='tight'`` shortcut is deliberately avoided because
+    it changes the PDF/SVG dimensions and makes final font sizes depend on the
+    surrounding labels.  A small audit record is retained for each output.
     """
 
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
+    requested_width, requested_height = (float(value) for value in fig.get_size_inches())
 
     saved_paths = []
     for fmt in formats:
+        fmt = str(fmt).lower().lstrip(".")
         output_path = directory / f"{stem}.{fmt}"
         save_kwargs = {
-            "pad_inches": pad_inches,
             "transparent": transparent,
             "facecolor": "white",
+            "bbox_inches": None,
+            "pad_inches": 0.0,
         }
-        if fmt.lower() in {"png", "jpg", "jpeg", "tif", "tiff", "webp"}:
+        if fmt in {"png", "jpg", "jpeg", "tif", "tiff", "webp"}:
             save_kwargs["dpi"] = dpi
         fig.savefig(output_path, **save_kwargs)
         saved_paths.append(output_path)
+
+        if fmt == "svg":
+            actual_width, actual_height = _parse_svg_inches(output_path)
+        elif fmt == "pdf":
+            actual_width, actual_height = _parse_pdf_inches(output_path)
+        else:
+            actual_width, actual_height = requested_width, requested_height
+
+        dimension_ok = (
+            actual_width is None
+            or actual_height is None
+            or (
+                abs(actual_width - requested_width) <= dimension_tolerance_in
+                and abs(actual_height - requested_height) <= dimension_tolerance_in
+            )
+        )
+        _FIGURE_AUDIT_ROWS.append(
+            {
+                "stem": stem,
+                "format": fmt,
+                "path": str(output_path),
+                "requested_width_in": requested_width,
+                "requested_height_in": requested_height,
+                "actual_width_in": actual_width,
+                "actual_height_in": actual_height,
+                "dimension_ok": bool(dimension_ok),
+                "usetex": bool(mpl.rcParams.get("text.usetex", False)),
+                "font_family": repr(mpl.rcParams.get("font.family")),
+                "font_size_pt": float(mpl.rcParams.get("font.size", 0.0)),
+                "legend_font_size_pt": float(mpl.rcParams.get("legend.fontsize", 0.0)),
+            }
+        )
+        if not dimension_ok:
+            raise RuntimeError(
+                f"saved figure {output_path} has size {actual_width}x{actual_height} in, "
+                f"expected {requested_width}x{requested_height} in"
+            )
 
     if close:
         import matplotlib.pyplot as plt
@@ -351,6 +438,22 @@ def save_prx_figure(
         plt.close(fig)
 
     return saved_paths
+
+
+def write_figure_manifest(path: str | Path) -> pd.DataFrame:
+    """Write the accumulated figure-size/font audit to JSON and CSV."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rows = pd.DataFrame(_FIGURE_AUDIT_ROWS)
+    if path.suffix.lower() == ".json":
+        path.write_text(json.dumps({"figures": _FIGURE_AUDIT_ROWS}, indent=2), encoding="utf-8")
+        rows.to_csv(path.with_suffix(".csv"), index=False)
+    else:
+        rows.to_csv(path, index=False)
+        path.with_suffix(".json").write_text(
+            json.dumps({"figures": _FIGURE_AUDIT_ROWS}, indent=2), encoding="utf-8"
+        )
+    return rows
 
 
 def orthonormalize_columns(vectors, *, tolerance: float = 1.0e-10):

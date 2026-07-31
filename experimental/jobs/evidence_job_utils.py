@@ -15,6 +15,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -198,6 +199,34 @@ def build_parser(*, description: str) -> argparse.ArgumentParser:
         help="Enable TeX-backed plotting in the notebook. Keep off for unattended numeric runs.",
     )
     parser.add_argument(
+        "--stage",
+        choices=("compute", "render", "all"),
+        default=os.environ.get("QLINKS_EVIDENCE_STAGE", "all"),
+        help=(
+            "compute writes numerical tables without TeX-backed figure files; "
+            "render loads a completed data directory and writes final PDF/SVG; "
+            "all executes the notebook and saves figures in one pass."
+        ),
+    )
+    parser.add_argument(
+        "--source-data-dir",
+        type=Path,
+        default=None,
+        help="Completed numerical data directory used by --stage render.",
+    )
+    parser.add_argument(
+        "--strict-claims",
+        action="store_true",
+        help="Fail the job when a mandatory evidence validation reports a "
+        "provisional/failed status.",
+    )
+    parser.add_argument(
+        "--export-dir",
+        type=Path,
+        default=None,
+        help="Optional directory receiving a copy of final figures and manifests.",
+    )
+    parser.add_argument(
         "--timeout",
         type=int,
         default=int(os.environ.get("QLINKS_EVIDENCE_TIMEOUT", "-1")),
@@ -226,6 +255,19 @@ def parse_int_tuple(raw: str | None) -> tuple[int, ...] | None:
     values = tuple(int(part) for part in parts)
     if any(value <= 0 for value in values):
         raise ValueError(f"expected positive integers, got {raw!r}")
+    return values
+
+
+def parse_float_tuple(raw: str | None) -> tuple[float, ...] | None:
+    """Parse a comma-separated finite floating-point tuple."""
+    if raw is None:
+        return None
+    parts = tuple(part.strip() for part in raw.split(",") if part.strip())
+    if not parts:
+        return None
+    values = tuple(float(part) for part in parts)
+    if any(not __import__("math").isfinite(value) for value in values):
+        raise ValueError(f"expected finite numbers, got {raw!r}")
     return values
 
 
@@ -278,13 +320,15 @@ def run_evidence_notebook(
     run_artifact_dir.mkdir(parents=True, exist_ok=True)
 
     figure_formats = parse_figure_formats(args.figure_formats)
+    if args.stage == "compute":
+        figure_formats = ()
     patched_notebook = run_artifact_dir / f"{job_name}_input.ipynb"
     executed_notebook = run_artifact_dir / f"{job_name}_executed.ipynb"
     log_path = run_artifact_dir / "nbconvert.log"
 
     replacements = {
         "RUN_PROFILE": args.profile,
-        "USE_TEX": bool(args.use_tex),
+        "USE_TEX": bool(args.use_tex and args.stage != "compute"),
         "FIGURE_FORMATS": figure_formats,
         "DATA_DIR": data_dir,
         **assignment_overrides,
@@ -311,7 +355,9 @@ os.chdir({str(notebook_dir)!r})
         "notebook": str(notebook_path.relative_to(repo_root)),
         "data_dir": str(data_dir),
         "figure_formats": figure_formats,
-        "use_tex": bool(args.use_tex),
+        "use_tex": bool(args.use_tex and args.stage != "compute"),
+        "stage": args.stage,
+        "strict_claims": bool(args.strict_claims),
         "python": sys.version,
         "started_at_utc": started_at,
         "git": git_metadata(repo_root),
@@ -396,3 +442,70 @@ os.chdir({str(notebook_dir)!r})
     print(f"Executed notebook: {executed_notebook}")
     print(f"Manifest: {run_artifact_dir / 'file_manifest.json'}")
     return data_dir
+
+
+def run_evidence_renderer(
+    *,
+    job_name: str,
+    renderer_filename: str,
+    args: argparse.Namespace,
+) -> Path:
+    """Render final manuscript figures from an existing numerical data directory."""
+    if args.source_data_dir is None:
+        raise ValueError("--stage render requires --source-data-dir")
+    repo_root = find_repo_root()
+    source_data_dir = args.source_data_dir.resolve()
+    if not source_data_dir.is_dir():
+        raise FileNotFoundError(source_data_dir)
+    renderer = repo_root / "experimental" / "jobs" / renderer_filename
+    if not renderer.is_file():
+        raise FileNotFoundError(renderer)
+    figure_formats = parse_figure_formats(args.figure_formats)
+    if not figure_formats:
+        raise ValueError("render stage requires at least one --figure-formats entry")
+
+    cmd = [
+        sys.executable,
+        str(renderer),
+        "--data-dir",
+        str(source_data_dir),
+        "--figure-formats",
+        ",".join(figure_formats),
+    ]
+    if args.use_tex:
+        cmd.append("--use-tex")
+    print("Rendering:", " ".join(shlex.quote(part) for part in cmd), flush=True)
+    subprocess.run(cmd, cwd=repo_root, check=True)
+
+    manifest = collect_file_manifest(source_data_dir)
+    run_artifact_dir = source_data_dir / "run_artifacts"
+    run_artifact_dir.mkdir(parents=True, exist_ok=True)
+    write_json(run_artifact_dir / "file_manifest.json", {"files": manifest})
+    write_json(
+        run_artifact_dir / "render_metadata.json",
+        {
+            "job_name": job_name,
+            "stage": "render",
+            "renderer": str(renderer.relative_to(repo_root)),
+            "source_data_dir": str(source_data_dir),
+            "figure_formats": figure_formats,
+            "use_tex": bool(args.use_tex),
+            "git": git_metadata(repo_root),
+        },
+    )
+
+    if args.export_dir is not None:
+        export_dir = args.export_dir.resolve()
+        export_dir.mkdir(parents=True, exist_ok=True)
+        for relative in ("figures", "figure_manifest.json", "figure_manifest.csv"):
+            source = source_data_dir / relative
+            if not source.exists():
+                continue
+            destination = export_dir / source.name
+            if source.is_dir():
+                if destination.exists():
+                    shutil.rmtree(destination)
+                shutil.copytree(source, destination)
+            else:
+                shutil.copy2(source, destination)
+    return source_data_dir
