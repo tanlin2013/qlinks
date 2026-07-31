@@ -168,3 +168,64 @@ find "$OUTPUT_ROOT/jobs" -name summary.json -print0 \
       | add
     '
 ```
+
+---
+
+# Docker evidence jobs
+
+The model-evidence notebooks can be run as detached Docker jobs through:
+
+```bash
+scripts/docker_run_evidence_job.sh spin1 [job options]
+scripts/docker_run_evidence_job.sh qdm [job options]
+```
+
+The wrapper forwards model-specific flags unchanged and understands the common
+`--stage compute|render|all` workflow. Path-bearing options
+`--data-dir`, `--source-data-dir`, and `--export-dir` may be supplied as paths
+relative to the repository root, absolute host paths under a mounted root, or
+container paths under `/workspace/qlinks` and `/workspace/output`. The wrapper
+translates them before starting Docker and prints both host and container paths.
+
+Numerical pass:
+
+```bash
+QLINKS_EVIDENCE_RUN_ID=spin1_production \
+QLINKS_NUM_THREADS=16 \
+scripts/docker_run_evidence_job.sh spin1 \
+  --stage compute \
+  --profile production \
+  --microcanonical-sizes 8,10,12 \
+  --deformation-sizes 8,10,12 \
+  --counting-max-length 60
+```
+
+TeX-backed render pass using a repository-relative host path:
+
+```bash
+scripts/docker_run_evidence_job.sh spin1 \
+  --stage render \
+  --source-data-dir experimental/data/evidence_jobs/spin1_production \
+  --use-tex \
+  --figure-formats pdf,svg \
+  --export-dir output/spin1_production
+```
+
+Use custom host storage by setting the mount roots before invoking the wrapper:
+
+```bash
+QLINKS_DATA_DIR=/large-volume/qlinks-data \
+QLINKS_OUTPUT_DIR=/large-volume/qlinks-output \
+scripts/docker_run_evidence_job.sh qdm \
+  --stage compute \
+  --data-dir /large-volume/qlinks-data/qdm-production \
+  --profile production
+```
+
+To inspect path translation and the complete Docker command without starting a
+container:
+
+```bash
+QLINKS_DOCKER_DRY_RUN=1 \
+scripts/docker_run_evidence_job.sh spin1 --stage compute --profile smoke
+```
