@@ -42,11 +42,31 @@ def main() -> None:
         default=None,
         help="Comma-separated preserving J3/J values for T4.",
     )
-    parser.add_argument("--skip-protocol-m", action="store_true")
+    parser.add_argument(
+        "--exceptional-projector-mode",
+        choices=("type1", "target-only"),
+        default="type1",
+        help=(
+            "Exceptional subspace used by the undeformed cage-excised protocol. "
+            "The default searches all identified Type-I states with an auxiliary "
+            "finite-D shell label and validates them against the undeformed Hamiltonian."
+        ),
+    )
+    parser.add_argument(
+        "--skip-protocol-m",
+        action="store_true",
+        help="Deprecated: the primary evidence workflow requires undeformed cage excision.",
+    )
     parser.add_argument("--skip-background-concentration", action="store_true")
     parser.add_argument("--skip-complex-hermitian-path", action="store_true")
     parser.add_argument("--skip-joint-continuation", action="store_true")
     args = parser.parse_args()
+    if args.skip_protocol_m:
+        raise ValueError(
+            "--skip-protocol-m is no longer supported by the manuscript evidence job: "
+            "T1 requires the undeformed cage-excised ensemble. Use "
+            "--exceptional-projector-mode target-only only for an explicitly diagnostic run."
+        )
 
     if args.stage == "render":
         run_evidence_renderer(
@@ -60,10 +80,10 @@ def main() -> None:
     deformation_sizes = parse_int_tuple(args.deformation_sizes)
     j3_values = parse_float_tuple(args.j3_values)
     overrides = {
-        "RUN_PROTOCOL_M": not args.skip_protocol_m,
         "RUN_BACKGROUND_CONCENTRATION": not args.skip_background_concentration,
         "RUN_COMPLEX_HERMITIAN_PATH": not args.skip_complex_hermitian_path,
         "RUN_JOINT_CONTINUATION_CROSSCHECK": not args.skip_joint_continuation,
+        "EXCEPTIONAL_PROJECTOR_MODE": args.exceptional_projector_mode,
     }
     if micro_sizes is not None:
         overrides["MICROCANONICAL_SIZES"] = micro_sizes

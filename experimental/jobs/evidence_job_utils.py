@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as _dt
+import hashlib
 import json
 import os
 import re
@@ -272,15 +273,28 @@ def parse_float_tuple(raw: str | None) -> tuple[float, ...] | None:
 
 
 def normalize_notebook_cells(notebook: dict[str, Any]) -> None:
-    """Remove execution-only fields from non-code cells before nbconvert."""
+    """Normalize cells for current nbformat and deterministic batch execution."""
 
-    for cell in notebook.get("cells", []):
+    used_ids: set[str] = set()
+    for index, cell in enumerate(notebook.get("cells", [])):
         if cell.get("cell_type") == "code":
             cell.setdefault("outputs", [])
             cell.setdefault("execution_count", None)
-            continue
-        cell.pop("outputs", None)
-        cell.pop("execution_count", None)
+        else:
+            cell.pop("outputs", None)
+            cell.pop("execution_count", None)
+
+        # nbformat now requires cell ids.  Use a deterministic content hash so
+        # patched notebooks do not emit MissingIDFieldWarning and remain easy
+        # to diff across repeated evidence jobs.
+        current = str(cell.get("id", "")).strip()
+        if not current or current in used_ids:
+            payload = (
+                f"{index}:{cell.get('cell_type', '')}:" + "".join(cell.get("source", []))
+            ).encode("utf-8")
+            current = "c" + hashlib.sha1(payload).hexdigest()[:11]
+        used_ids.add(current)
+        cell["id"] = current
 
 
 def print_log_tail(log_path: Path, *, n_lines: int = 80) -> None:
@@ -296,6 +310,38 @@ def print_log_tail(log_path: Path, *, n_lines: int = 80) -> None:
     for line in lines[-n_lines:]:
         print(line, file=sys.stderr)
     print("--- end nbconvert.log tail ---\n", file=sys.stderr)
+
+
+def cgroup_memory_snapshot() -> dict[str, Any]:
+    """Return best-effort cgroup-v2 memory counters for OOM diagnostics."""
+
+    root = Path("/sys/fs/cgroup")
+    snapshot: dict[str, Any] = {}
+    for name in ("memory.current", "memory.peak", "memory.max", "memory.swap.max"):
+        path = root / name
+        if not path.is_file():
+            continue
+        try:
+            raw = path.read_text(encoding="utf-8").strip()
+            snapshot[name.replace(".", "_")] = raw if raw == "max" else int(raw)
+        except (OSError, ValueError):
+            continue
+    events = root / "memory.events"
+    if events.is_file():
+        try:
+            for line in events.read_text(encoding="utf-8").splitlines():
+                key, value = line.split(maxsplit=1)
+                snapshot[f"memory_event_{key}"] = int(value)
+        except (OSError, ValueError):
+            pass
+    return snapshot
+
+
+def cgroup_oom_increased(before: Mapping[str, Any], after: Mapping[str, Any]) -> bool:
+    for key in ("memory_event_oom_kill", "memory_event_oom_group_kill"):
+        if int(after.get(key, 0)) > int(before.get(key, 0)):
+            return True
+    return False
 
 
 def run_evidence_notebook(
@@ -347,6 +393,7 @@ os.chdir({str(notebook_dir)!r})
     )
 
     started_at = _dt.datetime.now(_dt.timezone.utc).isoformat()
+    memory_before = cgroup_memory_snapshot()
     metadata = {
         "job_name": job_name,
         "run_id": run_id,
@@ -361,6 +408,9 @@ os.chdir({str(notebook_dir)!r})
         "python": sys.version,
         "started_at_utc": started_at,
         "git": git_metadata(repo_root),
+        "cgroup_memory_before": memory_before,
+        "docker_memory_limit_env": os.environ.get("QLINKS_DOCKER_MEMORY_LIMIT"),
+        "run_timestamp_env": os.environ.get("QLINKS_EVIDENCE_RUN_TIMESTAMP"),
     }
     write_json(run_artifact_dir / "run_metadata.json", metadata)
 
@@ -429,14 +479,25 @@ os.chdir({str(notebook_dir)!r})
         finished_at = _dt.datetime.now(_dt.timezone.utc).isoformat()
         manifest = collect_file_manifest(data_dir)
         write_json(run_artifact_dir / "file_manifest.json", {"files": manifest})
+        memory_after = cgroup_memory_snapshot()
+        likely_cgroup_oom = cgroup_oom_increased(memory_before, memory_after)
         metadata.update(
             {
                 "finished_at_utc": finished_at,
                 "return_code": return_code,
                 "file_count": len(manifest),
+                "cgroup_memory_after": memory_after,
+                "likely_cgroup_oom": likely_cgroup_oom,
             }
         )
         write_json(run_artifact_dir / "run_metadata.json", metadata)
+        if return_code not in (None, 0) and likely_cgroup_oom:
+            print(
+                "The cgroup OOM-kill counter increased during this run; "
+                "the notebook kernel was very likely killed for exceeding the "
+                "container memory limit. See run_metadata.json.",
+                file=sys.stderr,
+            )
 
     print(f"Completed {job_name}. Data written to {data_dir}")
     print(f"Executed notebook: {executed_notebook}")

@@ -26,6 +26,7 @@ Path options may be given as:
     QLINKS_OUTPUT_DIR, or
   * their container paths under /workspace/qlinks or /workspace/output.
 
+A UTC timestamp is appended to the run id, evidence folder, and container name.
 The job runs in a detached container. Use the printed docker logs command to
 follow it. Set QLINKS_DOCKER_DRY_RUN=1 to print the resolved Docker command
 without starting a container.
@@ -50,7 +51,13 @@ case "${JOB_NAME}" in
         ;;
 esac
 
-RUN_ID="${QLINKS_EVIDENCE_RUN_ID:-${JOB_SLUG}_$(date -u +%Y%m%dT%H%M%SZ)}"
+RUN_LABEL="${QLINKS_EVIDENCE_RUN_ID:-${JOB_SLUG}}"
+RUN_TIMESTAMP="${QLINKS_EVIDENCE_TIMESTAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
+if [[ "${RUN_LABEL}" =~ [0-9]{8}T[0-9]{6}Z$ ]]; then
+    RUN_ID="${RUN_LABEL}"
+else
+    RUN_ID="${RUN_LABEL}_${RUN_TIMESTAMP}"
+fi
 CONTAINER_NAME="${QLINKS_CONTAINER_NAME:-qlinks-${RUN_ID//_/-}}"
 CONTAINER_REPO_DIR="/workspace/qlinks"
 CONTAINER_NOTEBOOK_DIR="${CONTAINER_REPO_DIR}/experimental/notebooks"
@@ -165,6 +172,8 @@ DATA_CONTAINER=""
 EXPORT_HOST=""
 EXPORT_CONTAINER=""
 FORWARDED_ARGS=()
+QDM_MICRO_REPEATS=""
+ALLOW_LARGE_DENSE_ED=0
 
 while (($#)); do
     case "$1" in
@@ -226,6 +235,22 @@ while (($#)); do
             FORWARDED_ARGS+=("--export-dir=${EXPORT_CONTAINER}")
             shift
             ;;
+        --microcanonical-repeats|--ed-repeats)
+            [[ $# -ge 2 ]] || { echo "$1 requires a value" >&2; exit 2; }
+            QDM_MICRO_REPEATS="$2"
+            FORWARDED_ARGS+=("$1" "$2")
+            shift 2
+            ;;
+        --microcanonical-repeats=*|--ed-repeats=*)
+            QDM_MICRO_REPEATS="${1#*=}"
+            FORWARDED_ARGS+=("$1")
+            shift
+            ;;
+        --allow-large-dense-ed)
+            ALLOW_LARGE_DENSE_ED=1
+            FORWARDED_ARGS+=("$1")
+            shift
+            ;;
         *)
             FORWARDED_ARGS+=("$1")
             shift
@@ -246,6 +271,25 @@ case "${STAGE}" in
         exit 2
         ;;
 esac
+
+if [[ "${JOB_NAME}" == "qdm" || "${JOB_NAME}" == "square_qdm" ]]; then
+    if [[ -n "${QDM_MICRO_REPEATS}" && "${ALLOW_LARGE_DENSE_ED}" != "1" ]]; then
+        IFS=',' read -r -a _qdm_repeats <<< "${QDM_MICRO_REPEATS}"
+        for _repeat in "${_qdm_repeats[@]}"; do
+            _repeat="${_repeat//[[:space:]]/}"
+            if [[ "${_repeat}" =~ ^[0-9]+$ ]] && (( _repeat >= 3 )); then
+                cat >&2 <<'EOF_DENSE_GUARD'
+Dense QDM microcanonical repeat >=3 is disabled by default. The complete
+full-spectrum eigendecomposition scales as O(d^2) in memory and has already
+killed a 400 GiB container. Use --microcanonical-repeats 1,2 for production.
+Only add --allow-large-dense-ed after switching to a memory-scalable method or
+confirming an effectively exclusive host with a verified memory estimate.
+EOF_DENSE_GUARD
+                exit 2
+            fi
+        done
+    fi
+fi
 
 mkdir -p "${HOST_DATA_DIR}" "${HOST_OUTPUT_DIR}"
 
@@ -290,11 +334,17 @@ done
 
 DOCKER_COMMAND=(
     docker run -d
+    --init
     --name "${CONTAINER_NAME}"
+    --label "qlinks.evidence.run_id=${RUN_ID}"
+    --label "qlinks.evidence.timestamp=${RUN_TIMESTAMP}"
+    --label "qlinks.evidence.job=${JOB_SLUG}"
     --restart no
     "${DOCKER_LIMIT_ARGS[@]}"
     "${PASSTHROUGH_ENV_ARGS[@]}"
     --env PYTHONUNBUFFERED=1
+    --env QLINKS_EVIDENCE_RUN_TIMESTAMP="${RUN_TIMESTAMP}"
+    --env QLINKS_DOCKER_MEMORY_LIMIT="${MEMORY_LIMIT}"
     --env MPLBACKEND=Agg
     --env OPENBLAS_NUM_THREADS="${THREADS}"
     --env OMP_NUM_THREADS="${THREADS}"
@@ -323,6 +373,9 @@ fi
 
 cat <<EOF_STATUS
 Job: ${JOB_SLUG}
+Run label: ${RUN_LABEL}
+Timestamp: ${RUN_TIMESTAMP}
+Run id: ${RUN_ID}
 Stage: ${STAGE}
 Container: ${CONTAINER_NAME}
 Image: ${IMAGE_NAME}

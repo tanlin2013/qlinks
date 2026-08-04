@@ -532,6 +532,160 @@ def projector_deleted_observable_moments(
     }
 
 
+def projector_deleted_basis(
+    window_vectors,
+    exceptional_vectors,
+    *,
+    tolerance: float = 1.0e-10,
+):
+    """Return orthonormal window, exceptional, and retained projector bases.
+
+    The exceptional vectors are first projected into the complete window
+    projector.  The retained basis is the orthogonal complement inside that
+    window, so the result is invariant under rotations of a degenerate
+    eigensolver basis.
+    """
+
+    window = orthonormalize_columns(window_vectors, tolerance=tolerance)
+    exceptional = np.asarray(exceptional_vectors, dtype=np.complex128)
+    if exceptional.ndim == 1:
+        exceptional = exceptional[:, None]
+    if exceptional.size == 0:
+        exceptional = np.zeros((window.shape[0], 0), dtype=np.complex128)
+    exceptional = orthonormalize_columns(
+        window @ (window.conj().T @ exceptional), tolerance=tolerance
+    )
+
+    if exceptional.shape[1] == 0:
+        retained = window
+    else:
+        coefficients = window.conj().T @ exceptional
+        _u, singular_values, vh = np.linalg.svd(coefficients.conj().T, full_matrices=True)
+        rank = int(np.sum(singular_values > tolerance))
+        null_coefficients = vh.conj().T[:, rank:]
+        retained = orthonormalize_columns(window @ null_coefficients, tolerance=tolerance)
+
+    return {
+        "window_basis": window,
+        "exceptional_basis": exceptional,
+        "retained_basis": retained,
+        "window_rank": int(window.shape[1]),
+        "exceptional_rank": int(exceptional.shape[1]),
+        "retained_rank": int(retained.shape[1]),
+        "removed_fraction": (
+            float(exceptional.shape[1] / window.shape[1]) if window.shape[1] else 0.0
+        ),
+    }
+
+
+def projector_resolved_energy_basis(
+    energies,
+    eigenvectors,
+    exceptional_vectors,
+    *,
+    energy_tolerance: float = 1.0e-10,
+    vector_tolerance: float = 1.0e-10,
+):
+    """Resolve every degenerate energy block into exceptional and retained parts.
+
+    This produces a basis-independent representation suitable for ETH scatter
+    plots: the exceptional projector is aligned inside each exact-degeneracy
+    block before the orthogonal retained complement is constructed.
+    """
+
+    spectrum = np.asarray(energies, dtype=np.float64).reshape(-1)
+    vectors = np.asarray(eigenvectors, dtype=np.complex128)
+    exceptional = np.asarray(exceptional_vectors, dtype=np.complex128)
+    if exceptional.ndim == 1:
+        exceptional = exceptional[:, None]
+    if exceptional.size == 0:
+        exceptional = np.zeros((vectors.shape[0], 0), dtype=np.complex128)
+
+    groups: list[list[int]] = []
+    if spectrum.size:
+        current = [0]
+        for index in range(1, spectrum.size):
+            if abs(spectrum[index] - spectrum[current[-1]]) <= energy_tolerance:
+                current.append(index)
+            else:
+                groups.append(current)
+                current = [index]
+        groups.append(current)
+
+    basis_columns = []
+    resolved_energies = []
+    exceptional_flags = []
+    block_ids = []
+    for block_id, group in enumerate(groups):
+        block = vectors[:, group]
+        exc = orthonormalize_columns(
+            block @ (block.conj().T @ exceptional), tolerance=vector_tolerance
+        )
+        split = projector_deleted_basis(block, exc, tolerance=vector_tolerance)
+        retained = split["retained_basis"]
+        for column in range(exc.shape[1]):
+            basis_columns.append(exc[:, column])
+            resolved_energies.append(float(np.mean(spectrum[group])))
+            exceptional_flags.append(True)
+            block_ids.append(block_id)
+        for column in range(retained.shape[1]):
+            basis_columns.append(retained[:, column])
+            resolved_energies.append(float(np.mean(spectrum[group])))
+            exceptional_flags.append(False)
+            block_ids.append(block_id)
+
+    resolved_basis = (
+        np.column_stack(basis_columns)
+        if basis_columns
+        else np.zeros((vectors.shape[0], 0), dtype=np.complex128)
+    )
+    return {
+        "basis": resolved_basis,
+        "energies": np.asarray(resolved_energies, dtype=np.float64),
+        "is_exceptional": np.asarray(exceptional_flags, dtype=bool),
+        "energy_block_id": np.asarray(block_ids, dtype=np.int64),
+    }
+
+
+def projector_deleted_concentration(
+    window_vectors,
+    exceptional_vectors,
+    operator,
+    *,
+    tolerance: float = 1.0e-10,
+):
+    """Basis-independent local-observable spread after projector excision.
+
+    The eigenvalues of the observable projected to the retained subspace are
+    the possible expectation values under arbitrary rotations of that
+    subspace.  Their spread is therefore a conservative, basis-independent
+    concentration diagnostic.
+    """
+
+    split = projector_deleted_basis(window_vectors, exceptional_vectors, tolerance=tolerance)
+    retained = split["retained_basis"]
+    if retained.shape[1] == 0:
+        raise ValueError("projector deletion left no retained states")
+    block = retained.conj().T @ (operator @ retained)
+    block = 0.5 * (block + block.conj().T)
+    values = np.linalg.eigvalsh(block).real
+    mean = float(np.mean(values))
+    deviations = np.abs(values - mean)
+    return {
+        **{
+            key: split[key]
+            for key in ("window_rank", "exceptional_rank", "retained_rank", "removed_fraction")
+        },
+        "mean": mean,
+        "energy_block_count": np.nan,
+        "degenerate_state_fraction": np.nan,
+        "basis_independent_std": float(np.std(values)),
+        "median_abs_deviation": float(np.median(deviations)),
+        "p90_abs_deviation": float(np.quantile(deviations, 0.90)),
+        "max_abs_deviation": float(np.max(deviations)),
+    }
+
+
 def canonical_beta_match(
     energies,
     target_energy: float,
