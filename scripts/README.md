@@ -192,13 +192,28 @@ Numerical pass:
 ```bash
 QLINKS_EVIDENCE_RUN_ID=spin1_production \
 QLINKS_NUM_THREADS=16 \
+QLINKS_DOCKER_MEMORY_LIMIT=400g \
 scripts/docker_run_evidence_job.sh spin1 \
   --stage compute \
   --profile production \
-  --microcanonical-sizes 8,10,12 \
-  --deformation-sizes 8,10,12 \
-  --counting-max-length 60
+  --microcanonical-sizes 6,8,10,12 \
+  --deformation-sizes 6,8,10,12 \
+  --large-size-sizes 14 \
+  --large-size-eigenpairs 8192 \
+  --window-exponents 0.5,0.25,0 \
+  --window-prefactors 0.75,1.0,1.25 \
+  --fit-bootstrap-repeats 1000 \
+  --counting-max-length 60 \
+  --timeout -1
 ```
+
+The `L=14` point uses a sparse shift-invert partial spectrum and sparse projected
+observables; it is deliberately not added to the complete deformation grid.
+Inspect `spin1_xy_large_size_memory_feasibility.csv` and the
+`window_coverage_complete` columns before accepting it.  If the primary window
+is not covered, increase `--large-size-eigenpairs`.  Add
+`--large-size-concentration` only after the matching run succeeds, because the
+19-operator covariance pass is substantially more expensive.
 
 TeX-backed render pass using a repository-relative host path:
 

@@ -13,6 +13,9 @@ Usage: scripts/docker_run_evidence_job.sh spin1|qdm [job-script-args...]
 Examples:
   scripts/docker_run_evidence_job.sh spin1 --profile known
   scripts/docker_run_evidence_job.sh qdm --profile production --stage compute
+  QLINKS_NUM_THREADS=16 QLINKS_DOCKER_MEMORY_LIMIT=400g \
+    scripts/docker_run_evidence_job.sh spin1 --profile production --stage compute \
+      --large-size-sizes 14 --large-size-eigenpairs 8192 --timeout -1
   scripts/docker_run_evidence_job.sh spin1 \
       --stage render \
       --source-data-dir experimental/data/evidence_jobs/spin1_production \

@@ -9,6 +9,7 @@ from typing import Sequence
 import matplotlib as mpl
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from IPython.display import display
 
 from qlinks.caging import (
@@ -87,9 +88,9 @@ def set_revtex_matplotlib_style(
             "font.size": base_font_size,
             "axes.labelsize": base_font_size,
             "axes.titlesize": base_font_size,
-            "xtick.labelsize": base_font_size - 1,
-            "ytick.labelsize": base_font_size - 1,
-            "legend.fontsize": base_font_size - 1,
+            "xtick.labelsize": base_font_size,
+            "ytick.labelsize": base_font_size,
+            "legend.fontsize": base_font_size,
             "figure.titlesize": base_font_size,
             "legend.frameon": False,
             "figure.dpi": 120,
@@ -115,15 +116,15 @@ def set_revtex_matplotlib_style(
 
 def use_integer_ticks(ax, *, axis: str = "both") -> None:
     """Restrict visibly discrete axes to integer major ticks."""
-    from matplotlib.ticker import MultipleLocator, ScalarFormatter
+    from matplotlib.ticker import MaxNLocator, ScalarFormatter
 
     if axis not in {"x", "y", "both"}:
         raise ValueError("axis must be 'x', 'y', or 'both'")
     if axis in {"x", "both"}:
-        ax.xaxis.set_major_locator(MultipleLocator(1.0))
+        ax.xaxis.set_major_locator(MaxNLocator(nbins="auto", integer=True, min_n_ticks=2))
         ax.xaxis.set_major_formatter(ScalarFormatter())
     if axis in {"y", "both"}:
-        ax.yaxis.set_major_locator(MultipleLocator(1.0))
+        ax.yaxis.set_major_locator(MaxNLocator(nbins="auto", integer=True, min_n_ticks=2))
         ax.yaxis.set_major_formatter(ScalarFormatter())
 
 
@@ -210,7 +211,10 @@ def projector_deleted_block_covariance(
     selected = np.sort(np.asarray(indices, dtype=np.int64).reshape(-1))
     if selected.size == 0:
         raise ValueError("indices must not be empty")
-    ops = tuple(np.asarray(operator, dtype=np.complex128) for operator in operators)
+    ops = tuple(
+        operator if sp.issparse(operator) else np.asarray(operator, dtype=np.complex128)
+        for operator in operators
+    )
     if not ops:
         raise ValueError("operators must not be empty")
     if any(operator.shape != (vectors.shape[0], vectors.shape[0]) for operator in ops):

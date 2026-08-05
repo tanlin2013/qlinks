@@ -19,14 +19,58 @@ def main() -> None:
         "--sizes",
         dest="microcanonical_sizes",
         default=None,
-        help="Comma-separated dense-ED sizes. Known profile: 8,10,12; "
-        "add 14 only on a large-memory host.",
+        help="Comma-separated full-spectrum dense-ED sizes. Keep L=14 in "
+        "--large-size-sizes so it uses the partial-spectrum path.",
     )
     parser.add_argument(
         "--deformation-sizes",
         default=None,
         help="Comma-separated sizes used for preserving-neighborhood scans; "
         "may be smaller than ED sizes.",
+    )
+    parser.add_argument(
+        "--large-size-sizes",
+        default=None,
+        help=(
+            "Comma-separated partial-spectrum sizes. Production defaults to 14; "
+            "these sizes are not added to the full deformation grid."
+        ),
+    )
+    parser.add_argument(
+        "--large-size-eigenpairs",
+        type=int,
+        default=None,
+        help="Number of shift-invert eigenpairs requested near E=0 for each large size.",
+    )
+    parser.add_argument(
+        "--large-size-shift",
+        type=float,
+        default=None,
+        help="Nonzero ARPACK shift used to avoid singular factorization at the exact tower energy.",
+    )
+    parser.add_argument(
+        "--large-size-concentration",
+        action="store_true",
+        help=(
+            "Also compute the 19-operator concentration diagnostic at "
+            "the large-size reference point."
+        ),
+    )
+    parser.add_argument(
+        "--window-exponents",
+        default=None,
+        help="Comma-separated microcanonical width exponents, e.g. 0.5,0.25,0.",
+    )
+    parser.add_argument(
+        "--window-prefactors",
+        default=None,
+        help="Comma-separated window prefactors shared by every width exponent.",
+    )
+    parser.add_argument(
+        "--fit-bootstrap-repeats",
+        type=int,
+        default=None,
+        help="Number of window-systematic bootstrap replicates for revised matching fits.",
     )
     parser.add_argument(
         "--counting-max-length",
@@ -104,6 +148,9 @@ def main() -> None:
 
     micro_sizes = parse_int_tuple(args.microcanonical_sizes)
     deformation_sizes = parse_int_tuple(args.deformation_sizes)
+    large_sizes = parse_int_tuple(args.large_size_sizes)
+    window_exponents = parse_float_tuple(args.window_exponents)
+    window_prefactors = parse_float_tuple(args.window_prefactors)
     j3_values = parse_float_tuple(args.j3_values)
     kappa_values = parse_float_tuple(args.kappa_values)
     type1_kappa_values = parse_float_tuple(args.deformed_type1_kappa_values)
@@ -113,6 +160,7 @@ def main() -> None:
         "RUN_COMPLEX_HERMITIAN_PATH": not args.skip_complex_hermitian_path,
         "RUN_JOINT_CONTINUATION_CROSSCHECK": not args.skip_joint_continuation,
         "RUN_DEFORMED_TYPE1_INVENTORY": not args.skip_deformed_type1_inventory,
+        "RUN_LARGE_SIZE_CONCENTRATION": bool(args.large_size_concentration),
         "EXCEPTIONAL_PROJECTOR_MODE": args.exceptional_projector_mode,
     }
     if micro_sizes is not None:
@@ -120,6 +168,28 @@ def main() -> None:
         overrides["SIZES"] = micro_sizes
     if deformation_sizes is not None:
         overrides["DEFORMATION_SIZES"] = deformation_sizes
+    if large_sizes is not None:
+        overrides["LARGE_SIZE_SIZES"] = large_sizes
+    if args.large_size_eigenpairs is not None:
+        if args.large_size_eigenpairs < 2:
+            raise ValueError("--large-size-eigenpairs must be at least 2")
+        overrides["LARGE_SIZE_EIGENPAIRS"] = int(args.large_size_eigenpairs)
+    if args.large_size_shift is not None:
+        if args.large_size_shift == 0.0:
+            raise ValueError("--large-size-shift must be nonzero")
+        overrides["LARGE_SIZE_SHIFT"] = float(args.large_size_shift)
+    if window_exponents is not None:
+        if any(value < 0.0 or value >= 1.0 for value in window_exponents):
+            raise ValueError("--window-exponents must satisfy 0 <= alpha < 1")
+        overrides["WINDOW_SCALING_EXPONENTS"] = window_exponents
+    if window_prefactors is not None:
+        if any(value <= 0.0 for value in window_prefactors):
+            raise ValueError("--window-prefactors must be positive")
+        overrides["WINDOW_PREFACTORS"] = window_prefactors
+    if args.fit_bootstrap_repeats is not None:
+        if args.fit_bootstrap_repeats < 0:
+            raise ValueError("--fit-bootstrap-repeats must be nonnegative")
+        overrides["FIT_BOOTSTRAP_REPEATS"] = int(args.fit_bootstrap_repeats)
     if args.counting_max_length is not None:
         if args.counting_max_length < 4 or args.counting_max_length % 2:
             raise ValueError("--counting-max-length must be an even integer >= 4")
