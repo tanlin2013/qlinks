@@ -1023,6 +1023,66 @@
 
 
 
+<div class="viewcode-block" id="spin_one_xy_hxy_h3_imaginary_j2_model">
+<a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.spin_one_xy.spin_one_xy_hxy_h3_imaginary_j2_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spin_one_xy_hxy_h3_imaginary_j2_model</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">j</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">j3</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">kappa</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">total_sz</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">h_z</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">d_z</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpinOneXYChainModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``H_XY + H_3 + i kappa H_2^-`` on a periodic chain.</span>
+
+<span class="sd">    In manuscript ladder-operator conventions,</span>
+
+<span class="sd">    ``H_2^-(kappa) = i kappa sum_r (S_r^+ S_{r+2}^- - h.c.)``.</span>
+
+<span class="sd">    The corresponding qlinks pair coefficient is ``2 i kappa``.  For the</span>
+<span class="sd">    staggered ``Q=pi`` bimagnon tower, real odd-range exchanges and purely</span>
+<span class="sd">    imaginary even-range exchanges separately satisfy the exact bondwise</span>
+<span class="sd">    cancellation rule.  Thus this family continuously contains</span>
+<span class="sd">    :func:`spin_one_xy_hxy_h3_model` at ``kappa=0`` while preserving the same</span>
+<span class="sd">    tower and its zero energy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;length must be positive.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">kappa</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;kappa must be finite.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">kappa</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;a translation-invariant oriented second-neighbor phase is ambiguous at length=4&quot;</span>
+        <span class="p">)</span>
+    <span class="n">extra</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+        <span class="n">spin_one_xy_periodic_range_couplings</span><span class="p">(</span>
+            <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
+            <span class="n">distance</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">coefficient</span><span class="o">=</span><span class="mf">2.0</span> <span class="o">*</span> <span class="nb">complex</span><span class="p">(</span><span class="n">j3</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">kappa</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">extra</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">spin_one_xy_periodic_range_couplings</span><span class="p">(</span>
+                <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
+                <span class="n">distance</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">coefficient</span><span class="o">=</span><span class="mf">2.0</span><span class="n">j</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">kappa</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">SpinOneXYChainModel</span><span class="p">(</span>
+        <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
+        <span class="n">boundary_condition</span><span class="o">=</span><span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">,</span>
+        <span class="n">j_xy</span><span class="o">=</span><span class="mf">2.0</span> <span class="o">*</span> <span class="nb">complex</span><span class="p">(</span><span class="n">j</span><span class="p">),</span>
+        <span class="n">h_z</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">h_z</span><span class="p">),</span>
+        <span class="n">d_z</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">d_z</span><span class="p">),</span>
+        <span class="n">total_sz</span><span class="o">=</span><span class="n">total_sz</span><span class="p">,</span>
+        <span class="n">extra_xy_couplings</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">extra</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="spin_one_xy_fixed_magnetization_dimension">
 <a class="viewcode-back" href="../../../qlinks.models.html#qlinks.models.spin_one_xy.spin_one_xy_fixed_magnetization_dimension">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">spin_one_xy_fixed_magnetization_dimension</span><span class="p">(</span><span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">total_sz</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
