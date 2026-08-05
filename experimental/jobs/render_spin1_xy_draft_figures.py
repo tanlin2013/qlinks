@@ -26,6 +26,7 @@ from helpers import (  # noqa: E402
     add_panel_label,
     save_prx_figure,
     set_revtex_matplotlib_style,
+    use_integer_ticks,
     write_figure_manifest,
 )
 
@@ -40,6 +41,13 @@ def _read_optional(path: Path) -> pd.DataFrame:
     return pd.read_csv(path) if path.is_file() else pd.DataFrame()
 
 
+def _resolved_beta0_column(frame: pd.DataFrame, key: str) -> str:
+    for candidate in (f"tau_{key}_resolved_beta0", f"tau_{key}_beta0"):
+        if candidate in frame:
+            return candidate
+    raise KeyError(f"No resolved beta=0 column for witness {key}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-dir", type=Path, required=True)
@@ -50,14 +58,15 @@ def main() -> None:
     figures = data / "figures"
     figures.mkdir(parents=True, exist_ok=True)
     formats = tuple(x.strip() for x in args.figure_formats.split(",") if x.strip())
-    set_revtex_matplotlib_style(base_font_size=8, prefer_tex=args.use_tex)
+    set_revtex_matplotlib_style(base_font_size=9.0, prefer_tex=args.use_tex)
 
     sequence = pd.read_csv(data / "spin1_xy_cage_excised_sequence.csv")
     scatter = pd.read_csv(data / "spin1_xy_cage_excised_eth_scatter.csv")
-    concentration = pd.read_csv(data / "spin1_xy_cage_excised_concentration.csv")
     overlap = pd.read_csv(data / "spin1_xy_beta0_cage_excised_overlap.csv")
+    obstruction = pd.read_csv(data / "spin1_xy_complex_t2_obstruction_grid.csv")
+    deformation = pd.read_csv(data / "spin1_xy_kappa_matching_grid.csv")
+    concentration = _read_optional(data / "spin1_xy_kappa_concentration_grid.csv")
     exact = _read_optional(data / "exact_fixed_M_activities.csv")
-    deform = _read_optional(data / "spin1_xy_deformed_cage_excised_grid.csv")
 
     prefactors = np.sort(sequence["window_prefactor"].unique())
     primary_prefactor = float(prefactors[np.argmin(np.abs(prefactors - 1.0))])
@@ -66,12 +75,20 @@ def main() -> None:
     scatter_largest = scatter[scatter["L"] == largest]
     row = central[central["L"] == largest].iloc[0]
 
-    fig = plt.figure(figsize=PRX_FOUR_PANEL_FIGSIZE)
+    fig = plt.figure(figsize=(PRX_FOUR_PANEL_FIGSIZE[0], 6.15))
     gs = fig.add_gridspec(
-        2, 2, left=0.085, right=0.985, bottom=0.09, top=0.90, wspace=0.30, hspace=0.34
+        2,
+        2,
+        left=0.085,
+        right=0.985,
+        bottom=0.09,
+        top=0.91,
+        wspace=0.38,
+        hspace=0.38,
     )
     axes = [fig.add_subplot(gs[i, j]) for i in range(2) for j in range(2)]
 
+    # (a) Reference-point ETH scatter.
     ax = axes[0]
     half = float(row["window_energy_density_half_width"])
     ax.axvspan(-half, half, color="0.5", alpha=0.10, zorder=0)
@@ -79,14 +96,19 @@ def main() -> None:
     retained = scatter_largest[~scatter_largest["is_exceptional"].astype(bool)]
     removed = scatter_largest[scatter_largest["is_exceptional"].astype(bool)]
     for key, label, marker in WITNESS_SPECS:
-        col = f"Q_{key}"
+        column = f"Q_{key}"
         ax.scatter(
-            retained["energy_density"], retained[col], s=9, alpha=0.50, marker=marker, label=label
+            retained["energy_density"],
+            retained[column],
+            s=10,
+            alpha=0.50,
+            marker=marker,
+            label=label,
         )
         if not removed.empty:
             ax.scatter(
                 removed["energy_density"],
-                removed[col],
+                removed[column],
                 s=20,
                 marker=marker,
                 facecolors="none",
@@ -97,7 +119,7 @@ def main() -> None:
         [0.0],
         [0.0],
         marker="*",
-        s=70,
+        s=75,
         edgecolors="black",
         linewidths=0.4,
         label="selected tower",
@@ -108,106 +130,162 @@ def main() -> None:
     ax.grid(alpha=0.22)
     add_panel_label(ax, "(a)")
 
+    # (b) Reference-point microcanonical and resolved beta=0 values.
     ax = axes[1]
     grouped = sequence.groupby("L")
     for key, label, marker in WITNESS_SPECS:
-        col = f"tau_{key}"
-        values = central[col].to_numpy()
-        low = grouped[col].min().reindex(central["L"]).to_numpy()
-        high = grouped[col].max().reindex(central["L"]).to_numpy()
-        ax.errorbar(
-            central["L"],
-            values,
-            yerr=np.vstack([values - low, high - values]),
+        mc_column = f"tau_{key}_mc_th"
+        beta_column = _resolved_beta0_column(overlap, key)
+        line = ax.plot(
+            overlap["L"],
+            overlap[mc_column],
             marker=marker,
-            capsize=2.5,
             label=label,
+        )[0]
+        ax.plot(
+            overlap["L"],
+            overlap[beta_column],
+            linestyle="--",
+            color=line.get_color(),
         )
+        sequence_column = f"tau_{key}"
+        if sequence_column in sequence:
+            values = central[sequence_column].to_numpy()
+            low = grouped[sequence_column].min().reindex(central["L"]).to_numpy()
+            high = grouped[sequence_column].max().reindex(central["L"]).to_numpy()
+            ax.errorbar(
+                central["L"],
+                values,
+                yerr=np.vstack([values - low, high - values]),
+                fmt="none",
+                ecolor=line.get_color(),
+                capsize=2.5,
+                linewidth=0.8,
+            )
     ax.set_xlabel(r"System size $L$")
-    ax.set_ylabel(r"$\tau_Q^{\mathrm{mc,th}}$")
+    ax.set_ylabel("Local activity")
+    use_integer_ticks(ax, axis="x")
     ax.grid(alpha=0.22)
+    ax.legend(loc="lower right", fontsize=8)
     add_panel_label(ax, "(b)")
-    inset = ax.inset_axes([0.56, 0.55, 0.40, 0.38])
-    inset.plot(central["L"], central["removed_fraction"], marker="o", lw=0.8)
-    inset.set_xlabel(r"$L$", fontsize=6)
-    inset.set_ylabel(r"$f_{\rm cage}$", fontsize=6)
-    inset.tick_params(labelsize=6)
+    inset = ax.inset_axes([0.56, 0.55, 0.40, 0.36])
+    if "delta_max" in overlap:
+        inset.plot(overlap["L"], overlap["delta_max"], marker="o")
+    else:
+        delta_columns = [column for column in overlap if column.startswith("delta_")]
+        inset.plot(overlap["L"], overlap[delta_columns].max(axis=1), marker="o")
+    inset.set_xlabel(r"$L$", fontsize=8)
+    inset.set_ylabel(r"$\delta_L(0)$", fontsize=8)
+    inset.tick_params(labelsize=8)
+    use_integer_ticks(inset, axis="x")
 
+    # (c) Ambient complex-t2 residual plane, matching along compatible line in inset.
     ax = axes[2]
-    for key, _label, marker in WITNESS_SPECS:
-        ax.plot(overlap["L"], overlap[f"delta_{key}"], marker=marker, label=rf"$\delta_{key}$")
-    ax.plot(
-        overlap["L"],
-        overlap["energy_density_mismatch"],
-        marker="v",
-        ls="--",
-        label=r"$|e_\psi-e_{\beta=0}|$",
+    pivot = obstruction.pivot(
+        index="imag_t2_over_J",
+        columns="real_t2_over_J",
+        values="normalized_tower_residual",
     )
-    ax.set_xlabel(r"System size $L$")
-    ax.set_ylabel("Matching difference")
-    ax.grid(alpha=0.22)
-    ax.legend(loc="upper right", fontsize=6)
+    mesh = ax.pcolormesh(
+        pivot.columns.to_numpy(),
+        pivot.index.to_numpy(),
+        pivot.to_numpy(),
+        shading="auto",
+    )
+    ax.axvline(0.0, linestyle="--", linewidth=1.0, color="white")
+    ax.set_xlabel(r"$\operatorname{Re}t_2/J$")
+    ax.set_ylabel(r"$\operatorname{Im}t_2/J$")
+    colorbar = fig.colorbar(mesh, ax=ax, pad=0.02)
+    colorbar.set_label("Normalized tower residual", fontsize=8)
+    colorbar.ax.tick_params(labelsize=8)
     add_panel_label(ax, "(c)")
-
-    ax = axes[3]
-    c0 = concentration[np.isclose(concentration["window_prefactor"], primary_prefactor)]
-    env = (
-        c0.groupby("L")
-        .agg(
-            median=("basis_independent_std", "median"),
-            maximum=("basis_independent_std", "max"),
+    inset = ax.inset_axes([0.49, 0.55, 0.46, 0.38])
+    for length, frame in deformation.groupby("L"):
+        frame = frame.sort_values("kappa_over_J")
+        inset.plot(
+            frame["kappa_over_J"],
+            frame["delta_max"],
+            marker="o",
+            label=rf"$L={int(length)}$",
         )
-        .reset_index()
-    )
-    ax.plot(env["L"], env["median"], marker="o", label="median")
-    ax.plot(env["L"], env["maximum"], marker="s", ls="--", label="maximum")
-    ax.set_xlabel(r"System size $L$")
-    ax.set_ylabel("Retained local spread")
-    ax.grid(alpha=0.22)
-    ax.legend(loc="upper right")
+    inset.set_xlabel(r"$\kappa/J$", fontsize=8)
+    inset.set_ylabel(r"$\delta_L(\kappa)$", fontsize=8)
+    inset.tick_params(labelsize=8)
+    inset.legend(fontsize=7, loc="upper right")
+
+    # (d) Complete local-algebra concentration.
+    ax = axes[3]
+    if not concentration.empty:
+        cpivot = concentration.pivot(
+            index="L",
+            columns="kappa_over_J",
+            values="largest_covariance_width",
+        )
+        cmesh = ax.pcolormesh(
+            cpivot.columns.to_numpy(),
+            cpivot.index.to_numpy(),
+            cpivot.to_numpy(),
+            shading="nearest",
+        )
+        colorbar = fig.colorbar(cmesh, ax=ax, pad=0.02)
+        colorbar.set_label(r"$\sqrt{\lambda_{\max}(\Gamma)}$", fontsize=8)
+        colorbar.ax.tick_params(labelsize=8)
+    else:
+        ax.text(0.5, 0.5, "concentration data not computed", ha="center", va="center")
+    ax.set_xlabel(r"$\kappa/J$")
+    ax.set_ylabel(r"System size $L$")
+    use_integer_ticks(ax, axis="y")
     add_panel_label(ax, "(d)")
 
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.985), ncol=4)
-    for ax in axes[:2]:
-        legend = ax.get_legend()
-        if legend:
-            legend.remove()
-    save_prx_figure(fig, "spin1_xy_undeformed_evidence_main", directory=figures, formats=formats)
+    fig.legend(
+        handles,
+        labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 0.992),
+        ncol=4,
+        frameon=False,
+    )
+    save_prx_figure(
+        fig,
+        "spin1_xy_figure6_combined",
+        directory=figures,
+        formats=formats,
+    )
 
+    # Supporting two-panel output for exact fixed-M targets and deformation matching.
     if not exact.empty:
         fig2, (ax0, ax1) = plt.subplots(1, 2, figsize=PRX_TWO_PANEL_FIGSIZE)
         ax0.plot(exact["length"], exact["A2_direct_normalized"], marker="o", label=r"$Q_R^A$")
         ax0.plot(exact["length"], exact["Z2_direct_normalized"], marker="s", label=r"$Q_R^Z$")
         ax0.plot(exact["length"], exact["y2_activity"], marker="^", label=r"$Q_R^Y$")
         ax0.set_xlabel(r"System size $L$")
-        ax0.set_ylabel(r"$\mathrm{Tr}(\rho_{\beta=0}Q_R)$")
+        ax0.set_ylabel(r"$\mathrm{Tr}(\rho_{\beta=0,M}Q_R)$")
+        use_integer_ticks(ax0, axis="x")
         ax0.grid(alpha=0.22)
         ax0.legend(loc="upper right")
         add_panel_label(ax0, "(a)")
-        if not deform.empty:
-            max_l = int(deform["L"].max())
-            frame = deform[deform["L"] == max_l]
-            for key, label, marker in WITNESS_SPECS:
-                column = {"A": "tau_A_normalized", "Z": "tau_Z_normalized", "Y": "tau_Y"}[key]
-                ax1.plot(frame["J3_over_J"], frame[column], marker=marker, label=label)
-            ax1.legend(loc="upper right")
-            if "cage_excision_applied" in frame and not bool(frame["cage_excision_applied"].all()):
-                ax1.text(
-                    0.03,
-                    0.04,
-                    "ordinary window; cage excision pending",
-                    transform=ax1.transAxes,
-                    ha="left",
-                    va="bottom",
-                    fontsize=6.5,
-                )
-        ax1.set_xlabel(r"Preserving exchange $J_3/J$")
-        ax1.set_ylabel("Deformed local activity")
+
+        for length, frame in deformation.groupby("L"):
+            frame = frame.sort_values("kappa_over_J")
+            ax1.plot(
+                frame["kappa_over_J"],
+                frame["delta_max"],
+                marker="o",
+                label=rf"$L={int(length)}$",
+            )
+        ax1.set_xlabel(r"Compatible deformation $\kappa/J$")
+        ax1.set_ylabel(r"$\delta_L(\kappa)$")
         ax1.grid(alpha=0.22)
+        ax1.legend(loc="upper right")
         add_panel_label(ax1, "(b)")
         fig2.subplots_adjust(left=0.09, right=0.985, bottom=0.18, top=0.96, wspace=0.30)
-        save_prx_figure(fig2, "spin1_xy_beta0_and_deformation", directory=figures, formats=formats)
+        save_prx_figure(
+            fig2,
+            "spin1_xy_beta0_and_deformation",
+            directory=figures,
+            formats=formats,
+        )
 
     write_figure_manifest(data / "figure_manifest.json")
 

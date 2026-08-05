@@ -113,6 +113,186 @@ def set_revtex_matplotlib_style(
     )
 
 
+def use_integer_ticks(ax, *, axis: str = "both") -> None:
+    """Restrict visibly discrete axes to integer major ticks."""
+    from matplotlib.ticker import MultipleLocator, ScalarFormatter
+
+    if axis not in {"x", "y", "both"}:
+        raise ValueError("axis must be 'x', 'y', or 'both'")
+    if axis in {"x", "both"}:
+        ax.xaxis.set_major_locator(MultipleLocator(1.0))
+        ax.xaxis.set_major_formatter(ScalarFormatter())
+    if axis in {"y", "both"}:
+        ax.yaxis.set_major_locator(MultipleLocator(1.0))
+        ax.yaxis.set_major_formatter(ScalarFormatter())
+
+
+def charge_conserving_two_site_hermitian_basis():
+    """Return an HS-orthonormal basis of the two-spin charge algebra.
+
+    The fixed-total-``S^z`` blocks have dimensions ``(1, 2, 3, 2, 1)``,
+    hence the Hermitian algebra has dimension 19.  The normalized identity is
+    returned first.  Remaining candidates are orthonormalized with respect to
+    the local Hilbert--Schmidt inner product.
+    """
+
+    patterns = tuple((a, b) for a in (-1, 0, 1) for b in (-1, 0, 1))
+    groups: dict[int, list[int]] = {}
+    for index, pattern in enumerate(patterns):
+        groups.setdefault(sum(pattern), []).append(index)
+
+    candidates: list[tuple[str, np.ndarray]] = [
+        ("identity", np.eye(len(patterns), dtype=np.complex128))
+    ]
+    for index, pattern in enumerate(patterns):
+        matrix = np.zeros((len(patterns), len(patterns)), dtype=np.complex128)
+        matrix[index, index] = 1.0
+        candidates.append((f"diag_{pattern[0]}_{pattern[1]}", matrix))
+    for charge, indices in sorted(groups.items()):
+        for offset, i in enumerate(indices):
+            for j in indices[offset + 1 :]:
+                sym = np.zeros((len(patterns), len(patterns)), dtype=np.complex128)
+                sym[i, j] = sym[j, i] = 1.0
+                asym = np.zeros((len(patterns), len(patterns)), dtype=np.complex128)
+                asym[i, j] = -1.0j
+                asym[j, i] = 1.0j
+                candidates.append((f"q{charge}_sym_{i}_{j}", sym))
+                candidates.append((f"q{charge}_asym_{i}_{j}", asym))
+
+    names: list[str] = []
+    basis: list[np.ndarray] = []
+    for name, candidate in candidates:
+        vector = np.asarray(candidate, dtype=np.complex128).copy()
+        for prior in basis:
+            vector -= np.trace(prior.conj().T @ vector) * prior
+        norm = float(np.sqrt(max(np.trace(vector.conj().T @ vector).real, 0.0)))
+        if norm <= 1.0e-12:
+            continue
+        names.append(name)
+        basis.append(vector / norm)
+
+    if len(basis) != 19:
+        raise RuntimeError(f"expected a 19-dimensional local algebra, got {len(basis)}")
+    gram = np.asarray(
+        [[np.trace(left.conj().T @ right) for right in basis] for left in basis],
+        dtype=np.complex128,
+    )
+    np.testing.assert_allclose(gram, np.eye(19), atol=1.0e-10)
+    return patterns, tuple(names), tuple(basis)
+
+
+def projector_deleted_block_covariance(
+    energies,
+    eigenvectors,
+    exceptional_vectors,
+    operators,
+    indices,
+    *,
+    energy_tolerance: float = 1.0e-10,
+    vector_tolerance: float = 1.0e-10,
+):
+    """Compute a block-invariant covariance over a retained energy window.
+
+    Exact energy degeneracies are treated as projectors.  The exceptional
+    subspace is removed independently in every energy block.  For Hermitian
+    operators ``O_a`` the returned matrix is
+
+    ``Gamma_ab = D^-1 sum_E Re Tr[B_E(O_a-mu_a)B_E(O_b-mu_b)]``,
+
+    where ``B_E`` denotes compression to the retained part of the energy
+    block.  Its largest eigenvalue is therefore the variance of the worst
+    Hilbert--Schmidt-normalized local observable in the supplied operator
+    span, without choosing an arbitrary eigenbasis inside degenerate blocks.
+    """
+
+    spectrum = np.asarray(energies, dtype=np.float64).reshape(-1)
+    vectors = np.asarray(eigenvectors, dtype=np.complex128)
+    selected = np.sort(np.asarray(indices, dtype=np.int64).reshape(-1))
+    if selected.size == 0:
+        raise ValueError("indices must not be empty")
+    ops = tuple(np.asarray(operator, dtype=np.complex128) for operator in operators)
+    if not ops:
+        raise ValueError("operators must not be empty")
+    if any(operator.shape != (vectors.shape[0], vectors.shape[0]) for operator in ops):
+        raise ValueError("every operator must act on the eigenvector Hilbert space")
+
+    exceptional = np.asarray(exceptional_vectors, dtype=np.complex128)
+    if exceptional.ndim == 1:
+        exceptional = exceptional[:, None]
+    if exceptional.size == 0:
+        exceptional = np.zeros((vectors.shape[0], 0), dtype=np.complex128)
+
+    groups: list[list[int]] = []
+    current = [int(selected[0])]
+    for raw_index in selected[1:]:
+        index = int(raw_index)
+        if abs(spectrum[index] - spectrum[current[-1]]) <= energy_tolerance:
+            current.append(index)
+        else:
+            groups.append(current)
+            current = [index]
+    groups.append(current)
+
+    retained_blocks: list[np.ndarray] = []
+    removed_rank = 0
+    for group in groups:
+        block = vectors[:, group]
+        block_exceptional = orthonormalize_columns(
+            block @ (block.conj().T @ exceptional), tolerance=vector_tolerance
+        )
+        split = projector_deleted_basis(block, block_exceptional, tolerance=vector_tolerance)
+        removed_rank += int(split["exceptional_rank"])
+        retained = split["retained_basis"]
+        if retained.shape[1]:
+            retained_blocks.append(retained)
+
+    retained_rank = int(sum(block.shape[1] for block in retained_blocks))
+    if retained_rank <= 0:
+        raise ValueError("projector deletion removed the complete energy window")
+
+    compressed: list[list[np.ndarray]] = []
+    traces = np.zeros(len(ops), dtype=np.float64)
+    for retained in retained_blocks:
+        block_ops = []
+        for index, operator in enumerate(ops):
+            matrix = retained.conj().T @ (operator @ retained)
+            matrix = 0.5 * (matrix + matrix.conj().T)
+            block_ops.append(matrix)
+            traces[index] += float(np.trace(matrix).real)
+        compressed.append(block_ops)
+    means = traces / retained_rank
+
+    covariance = np.zeros((len(ops), len(ops)), dtype=np.float64)
+    for block_ops in compressed:
+        identity = np.eye(block_ops[0].shape[0], dtype=np.complex128)
+        centered = [matrix - means[index] * identity for index, matrix in enumerate(block_ops)]
+        for a, left in enumerate(centered):
+            for b in range(a, len(centered)):
+                value = float(np.trace(left @ centered[b]).real) / retained_rank
+                covariance[a, b] += value
+                if b != a:
+                    covariance[b, a] += value
+    covariance = 0.5 * (covariance + covariance.T)
+    eigenvalues, eigenvectors_cov = np.linalg.eigh(covariance)
+    eigenvalues = np.maximum(eigenvalues, 0.0)
+    largest_index = int(np.argmax(eigenvalues))
+    nonidentity = eigenvalues[1:] if eigenvalues.size > 1 else eigenvalues
+    return {
+        "covariance": covariance,
+        "means": means,
+        "eigenvalues": eigenvalues,
+        "worst_coefficients": eigenvectors_cov[:, largest_index],
+        "largest_eigenvalue": float(eigenvalues[largest_index]),
+        "largest_width": float(np.sqrt(eigenvalues[largest_index])),
+        "median_nonidentity_width": float(np.median(np.sqrt(nonidentity))),
+        "window_rank": int(selected.size),
+        "exceptional_rank": int(removed_rank),
+        "retained_rank": retained_rank,
+        "energy_block_count": int(len(groups)),
+        "removed_fraction": float(removed_rank / selected.size),
+    }
+
+
 def classify_cage_search_result(
     search_result,
     *,

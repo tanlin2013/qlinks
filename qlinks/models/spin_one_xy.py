@@ -644,6 +644,63 @@ def spin_one_xy_hxy_h3_model(
     )
 
 
+def spin_one_xy_hxy_h3_imaginary_j2_model(
+    *,
+    length: int,
+    j: complex = 1.0,
+    j3: complex = 0.1,
+    kappa: float = 0.0,
+    total_sz: int | None = None,
+    h_z: complex = 0.0,
+    d_z: complex = 0.0,
+) -> SpinOneXYChainModel:
+    """Return ``H_XY + H_3 + i kappa H_2^-`` on a periodic chain.
+
+    In manuscript ladder-operator conventions,
+
+    ``H_2^-(kappa) = i kappa sum_r (S_r^+ S_{r+2}^- - h.c.)``.
+
+    The corresponding qlinks pair coefficient is ``2 i kappa``.  For the
+    staggered ``Q=pi`` bimagnon tower, real odd-range exchanges and purely
+    imaginary even-range exchanges separately satisfy the exact bondwise
+    cancellation rule.  Thus this family continuously contains
+    :func:`spin_one_xy_hxy_h3_model` at ``kappa=0`` while preserving the same
+    tower and its zero energy.
+    """
+    if length <= 0:
+        raise ValueError("length must be positive.")
+    if not np.isfinite(float(kappa)):
+        raise ValueError("kappa must be finite.")
+    if int(length) == 4 and abs(float(kappa)) > 0.0:
+        raise ValueError(
+            "a translation-invariant oriented second-neighbor phase is ambiguous at length=4"
+        )
+    extra = list(
+        spin_one_xy_periodic_range_couplings(
+            length=int(length),
+            distance=3,
+            coefficient=2.0 * complex(j3),
+        )
+    )
+    if abs(float(kappa)) > 0.0:
+        extra.extend(
+            spin_one_xy_periodic_range_couplings(
+                length=int(length),
+                distance=2,
+                coefficient=2.0j * float(kappa),
+            )
+        )
+    return SpinOneXYChainModel(
+        length=int(length),
+        boundary_condition=BoundaryCondition.PERIODIC,
+        j_xy=2.0 * complex(j),
+        h_z=complex(h_z),
+        d_z=complex(d_z),
+        total_sz=total_sz,
+        extra_xy_couplings=tuple(extra),
+    )
+
+
 def spin_one_xy_fixed_magnetization_dimension(length: int, total_sz: int) -> int:
     """Return ``[z^M](z^-1 + 1 + z)^L`` by exact dynamic programming."""
     if length < 0:

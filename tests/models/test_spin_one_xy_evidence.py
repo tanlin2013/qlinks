@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import numpy as np
 
+from qlinks.basis.configs import basis_configs_from_build_result
 from qlinks.models import (
     spin_one_xy_fixed_magnetization_dimension,
+    spin_one_xy_hxy_h3_imaginary_j2_model,
     spin_one_xy_hxy_h3_model,
     spin_one_xy_periodic_range_couplings,
     spin_one_xy_phase_compatibility,
+    spin_one_xy_scar_tower_states,
     spin_one_xy_tower_thermal_activities,
 )
 
@@ -67,3 +70,41 @@ def test_hxy_h3_model_uses_manuscript_coupling_convention() -> None:
         phases=phases,
     )
     assert report.is_compatible
+
+
+def test_hxy_h3_imaginary_j2_family_preserves_pi_tower() -> None:
+    length = 8
+    model = spin_one_xy_hxy_h3_imaginary_j2_model(
+        length=length,
+        j=1.0,
+        j3=0.1,
+        kappa=0.07,
+        total_sz=-2,
+    )
+    assert np.isclose(model.j_xy, 2.0)
+    assert len(model.extra_xy_couplings) == 2 * length
+
+    phases = (-1.0) ** np.arange(length)
+    report = spin_one_xy_phase_compatibility(
+        model.extra_xy_couplings,
+        phases=phases,
+    )
+    assert report.is_compatible
+    assert report.max_residual < 1.0e-12
+
+    j2 = model.extra_xy_couplings[length:]
+    assert all(np.isclose(coupling[2], 0.14j) for coupling in j2)
+
+    build = model.build(builder="optimized", basis_solver="dfs", sort_basis=True)
+    configs = basis_configs_from_build_result(build)
+    tower, labels = spin_one_xy_scar_tower_states(
+        basis_configs=configs, length=length, normalize=True
+    )
+    assert labels
+    assert tower.shape[1] == 1
+    assert np.linalg.norm(build.hamiltonian @ tower[:, 0]) < 1.0e-11
+
+    reference = spin_one_xy_hxy_h3_imaginary_j2_model(
+        length=length, j=1.0, j3=0.1, kappa=0.0, total_sz=-2
+    )
+    assert len(reference.extra_xy_couplings) == length
