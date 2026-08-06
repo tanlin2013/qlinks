@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-"""Run or render the square-QDM Sec. 7 evidence workflow."""
+"""Run or render the square-QDM Sec. VII checkerboard evidence workflow."""
 
 from __future__ import annotations
 
 from evidence_job_utils import (
     build_parser,
+    parse_float_tuple,
     parse_int_tuple,
     run_evidence_notebook,
     run_evidence_renderer,
@@ -12,80 +13,45 @@ from evidence_job_utils import (
 
 
 def main() -> None:
-    parser = build_parser(description=__doc__ or "Run square-QDM evidence job.")
+    parser = build_parser(description=__doc__ or "Run square-QDM checkerboard evidence job.")
+    parser.add_argument(
+        "--transport-repeats", default=None, help="Local checkerboard-family repeats, e.g. 1,2,3."
+    )
     parser.add_argument(
         "--microcanonical-repeats",
         "--ed-repeats",
-        dest="microcanonical_repeats",
+        dest="ed_repeats",
         default=None,
         help=(
-            "Dense energy-resolved repeat counts. Production-safe default: "
-            "1,2. Repeat 3 requires --allow-large-dense-ed and a memory-scalable algorithm "
-            "or an effectively exclusive very-large-memory host."
+            "Full energy-resolved repeats. Production-safe default: 1,2. "
+            "Repeat 3 is disabled unless explicitly acknowledged."
         ),
     )
+    parser.add_argument("--transfer-max-length", type=int, default=None)
     parser.add_argument(
-        "--sequence-repeats",
-        default=None,
-        help="Repeat counts for exact compact-family and revised-Y transport certificates.",
+        "--phase-values", default=None, help="Checkerboard pilot grid including endpoint control."
     )
     parser.add_argument(
-        "--transfer-max-length",
-        type=int,
-        default=None,
-        help="Largest multiple of four used by the beta-zero strip transfer calculation.",
+        "--positive-phase-values", default=None, help="Principal positive phase grid."
     )
-    parser.add_argument("--product-max-support-size", type=int, default=None)
+    parser.add_argument("--representative-phase", type=float, default=None)
+    parser.add_argument(
+        "--thermal-protocol", choices=("auto", "beta0", "finite-beta"), default="auto"
+    )
+    parser.add_argument("--energy-match-tolerance", type=float, default=None)
+    parser.add_argument("--window-prefactors", default=None)
+    parser.add_argument("--primary-window-prefactor", type=float, default=None)
+    parser.add_argument("--energy-block-tolerance", type=float, default=None)
+    parser.add_argument("--large-strip-repeats", default=None)
+    parser.add_argument("--run-large-strip", action="store_true")
+    parser.add_argument("--skip-checkerboard-thermal-scan", action="store_true")
+    parser.add_argument("--skip-checkerboard-concentration", action="store_true")
     parser.add_argument(
         "--allow-large-dense-ed",
         action="store_true",
-        help=(
-            "Acknowledge the O(d^2) memory risk and allow dense microcanonical repeat >=3. "
-            "Without this flag the job fails before notebook execution."
-        ),
+        help="Acknowledge the repeat>=3 dense-ED memory risk.",
     )
-    parser.add_argument(
-        "--exceptional-projector-mode",
-        choices=("identified-compact", "target-only"),
-        default="identified-compact",
-        help="Exceptional projector used by the undeformed fixed-width Protocol M calculation.",
-    )
-    parser.add_argument(
-        "--deformation-reference",
-        "--generic-reference",
-        dest="deformation_reference",
-        choices=("peierls", "nonuniform-potential"),
-        default="nonuniform-potential",
-        help=(
-            "Path used for the provisional T3 stable export. The primary T1 "
-            "ensemble is always the undeformed cage-excised Hamiltonian. "
-            "--generic-reference is retained as a backward-compatible alias."
-        ),
-    )
-    parser.add_argument(
-        "--deformation-reference-parameter",
-        "--generic-reference-parameter",
-        dest="deformation_reference_parameter",
-        type=float,
-        default=None,
-    )
-    parser.add_argument(
-        "--skip-protocol-m",
-        action="store_true",
-        help="Deprecated: the primary evidence workflow requires undeformed cage excision.",
-    )
-    parser.add_argument("--skip-background-concentration", action="store_true")
-    parser.add_argument("--skip-nonuniform-potential-path", action="store_true")
-    parser.add_argument("--skip-non-gauge-kinetic-path", action="store_true")
-    parser.add_argument("--skip-collective-cluster-scan", action="store_true")
     args = parser.parse_args()
-    if args.skip_protocol_m:
-        raise ValueError(
-            "--skip-protocol-m is no longer supported by the manuscript evidence job: "
-            "T1 requires the undeformed cage-excised ensemble. Use "
-            "--exceptional-projector-mode target-only only for an explicitly diagnostic run."
-        )
-
     if args.stage == "render":
         run_evidence_renderer(
             job_name="square_qdm_draft_evidence",
@@ -94,46 +60,55 @@ def main() -> None:
         )
         return
 
-    micro_repeats = parse_int_tuple(args.microcanonical_repeats)
-    if micro_repeats is not None and max(micro_repeats) >= 3 and not args.allow_large_dense_ed:
-        raise ValueError(
-            "dense QDM microcanonical repeat >=3 is disabled by default because the complete "
-            "eigenvector matrix and LAPACK work arrays can exceed hundreds of GiB. Re-run with "
-            "--microcanonical-repeats 1,2, or explicitly add --allow-large-dense-ed after "
-            "confirming a suitable algorithm and memory budget."
+    if args.run_large_strip:
+        raise NotImplementedError(
+            "The third energy-resolved 12x4 strip requires a controlled partial-spectrum or "
+            "typicality implementation; "
+            "the current dense path is intentionally disabled."
         )
-    sequence_repeats = parse_int_tuple(args.sequence_repeats)
+    ed = parse_int_tuple(args.ed_repeats)
+    if ed is not None and max(ed) >= 3 and not args.allow_large_dense_ed:
+        raise ValueError(
+            "QDM full ED repeat >=3 is disabled: the current algorithm can exceed 400 GiB. "
+            "Use repeats 1,2, or implement a controlled partial-spectrum/typicality method."
+        )
+    transport = parse_int_tuple(args.transport_repeats)
+    phases = parse_float_tuple(args.phase_values)
+    positive = parse_float_tuple(args.positive_phase_values)
+    prefactors = parse_float_tuple(args.window_prefactors)
+    large = parse_int_tuple(args.large_strip_repeats)
     overrides = {
         "SAVE_FIGURES": bool(args.figure_formats.strip()) and args.stage != "compute",
-        "SAVE_PDF": "pdf" in {part.strip().lower() for part in args.figure_formats.split(",")},
-        "RUN_BACKGROUND_CONCENTRATION": not args.skip_background_concentration,
-        "RUN_NONUNIFORM_POTENTIAL_PATH": not args.skip_nonuniform_potential_path,
-        "RUN_NON_GAUGE_KINETIC_PATH": not args.skip_non_gauge_kinetic_path,
-        "RUN_COLLECTIVE_CLUSTER_SCAN": not args.skip_collective_cluster_scan,
-        "RUN_REVISED_Y_VALIDATION": True,
+        "SAVE_PDF": "pdf" in {p.strip().lower() for p in args.figure_formats.split(",")},
+        "RUN_CHECKERBOARD_THERMAL_SCAN": not args.skip_checkerboard_thermal_scan,
+        "RUN_CHECKERBOARD_CONCENTRATION": not args.skip_checkerboard_concentration,
+        "CHECKERBOARD_THERMAL_PROTOCOL": args.thermal_protocol,
         "STRICT_CLAIMS": bool(args.strict_claims),
-        "EXCEPTIONAL_PROJECTOR_MODE": args.exceptional_projector_mode,
-        "DEFORMATION_REFERENCE": args.deformation_reference,
     }
-    if micro_repeats is not None:
-        overrides["MICROCANONICAL_REPEAT_COUNTS"] = micro_repeats
-    if sequence_repeats is not None:
-        overrides["PRODUCT_SCALING_REPEAT_COUNTS"] = sequence_repeats
-    if args.product_max_support_size is not None:
-        if args.product_max_support_size <= 0:
-            raise ValueError("--product-max-support-size must be positive")
-        overrides["PRODUCT_SCALING_MAX_SUPPORT_SIZE"] = int(args.product_max_support_size)
+    if ed is not None:
+        overrides["CHECKERBOARD_ED_REPEATS"] = ed
+    if transport is not None:
+        overrides["CHECKERBOARD_TRANSPORT_REPEATS"] = transport
+    if phases is not None:
+        overrides["CHECKERBOARD_PHASE_VALUES"] = phases
+    if positive is not None:
+        overrides["CHECKERBOARD_POSITIVE_PHASE_VALUES"] = positive
+    if prefactors is not None:
+        overrides["MICROCANONICAL_PREFACTORS"] = prefactors
+    if large is not None:
+        overrides["LARGE_STRIP_REPEATS"] = large
     if args.transfer_max_length is not None:
         if args.transfer_max_length < 4 or args.transfer_max_length % 4:
-            raise ValueError("--transfer-max-length must be a multiple of four >= 4")
-        overrides["strip_lengths"] = tuple(range(4, args.transfer_max_length + 1, 4))
-    if args.deformation_reference_parameter is not None:
-        if args.deformation_reference == "peierls":
-            overrides["PEIERLS_REFERENCE_PHASE"] = float(args.deformation_reference_parameter)
-        else:
-            value = float(args.deformation_reference_parameter)
-            overrides["NONUNIFORM_POTENTIAL_REFERENCE"] = value
-
+            raise ValueError("--transfer-max-length must be a multiple of four >=4")
+        overrides["CHECKERBOARD_TRANSFER_MAX_LENGTH"] = int(args.transfer_max_length)
+    if args.representative_phase is not None:
+        overrides["CHECKERBOARD_REPRESENTATIVE_PHASE"] = float(args.representative_phase)
+    if args.energy_match_tolerance is not None:
+        overrides["CHECKERBOARD_ENERGY_MATCH_TOL"] = float(args.energy_match_tolerance)
+    if args.primary_window_prefactor is not None:
+        overrides["PRIMARY_WINDOW_PREFACTOR"] = float(args.primary_window_prefactor)
+    if args.energy_block_tolerance is not None:
+        overrides["ENERGY_BLOCK_TOL"] = float(args.energy_block_tolerance)
     run_evidence_notebook(
         job_name="square_qdm_draft_evidence",
         notebook_filename="square_qdm_draft_evidence.ipynb",

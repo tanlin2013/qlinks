@@ -12,7 +12,13 @@ Usage: scripts/docker_run_evidence_job.sh spin1|qdm [job-script-args...]
 
 Examples:
   scripts/docker_run_evidence_job.sh spin1 --profile known
-  scripts/docker_run_evidence_job.sh qdm --profile production --stage compute
+  QLINKS_NUM_THREADS=16 QLINKS_DOCKER_MEMORY_LIMIT=400g \
+    scripts/docker_run_evidence_job.sh qdm --profile production --stage compute \
+      --transport-repeats 1,2,3 --ed-repeats 1,2 \
+      --phase-values 0,0.025,0.05,0.075,0.10 \
+      --positive-phase-values 0.025,0.05,0.075,0.10 \
+      --representative-phase 0.05 --thermal-protocol auto \
+      --transfer-max-length 256 --timeout -1
   QLINKS_NUM_THREADS=16 QLINKS_DOCKER_MEMORY_LIMIT=400g \
     scripts/docker_run_evidence_job.sh spin1 --profile production --stage compute \
       --large-size-sizes 14 --large-size-eigenpairs 8192 \

@@ -221,6 +221,47 @@ complete 19-operator covariance diagnostic by default; use
 `--no-large-size-concentration` for a cheaper preflight run, then rerun with the
 diagnostic once the partial-spectrum window is known to be covered.
 
+
+Square-QDM checkerboard production pass (Gates 1--3 plus the ED-accessible
+family pilot):
+
+```bash
+QLINKS_EVIDENCE_RUN_ID=qdm_checkerboard_production \
+QLINKS_NUM_THREADS=16 \
+QLINKS_DOCKER_MEMORY_LIMIT=400g \
+scripts/docker_run_evidence_job.sh qdm \
+  --stage compute \
+  --profile production \
+  --transport-repeats 1,2,3 \
+  --ed-repeats 1,2 \
+  --phase-values 0,0.025,0.05,0.075,0.10 \
+  --positive-phase-values 0.025,0.05,0.075,0.10 \
+  --representative-phase 0.05 \
+  --thermal-protocol auto \
+  --transfer-max-length 256 \
+  --window-prefactors 0.50,0.75,1.00 \
+  --timeout -1
+```
+
+The `auto` protocol first evaluates the fixed-width energy-density gate.  For
+the current `lambda_star=1` candidate, the beta-zero mismatch extrapolates to a
+nonzero value, so the notebook records the failed beta-zero gate and switches
+the ED-accessible pilot to an energy-matched finite-beta comparator.  The
+`12x4` checkerboard transport certificate is local and inexpensive; full
+energy-resolved repeat 3 remains disabled because the current dense algorithm
+can exceed 400 GiB.
+
+Render the completed timestamped folder with:
+
+```bash
+scripts/docker_run_evidence_job.sh qdm \
+  --stage render \
+  --source-data-dir experimental/data/evidence_jobs/qdm_checkerboard_production_YYYYMMDDTHHMMSSZ \
+  --use-tex \
+  --figure-formats pdf,svg \
+  --export-dir output/qdm_checkerboard_production
+```
+
 TeX-backed render pass using a repository-relative host path:
 
 ```bash

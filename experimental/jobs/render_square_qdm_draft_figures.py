@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Render final-size REVTeX figures from completed square-QDM evidence tables."""
+"""Render final-size REVTeX figures from square-QDM checkerboard evidence tables."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.lines import Line2D
 
 for candidate in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
     if (candidate / "qlinks").is_dir():
@@ -17,12 +18,10 @@ for candidate in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         break
 else:
     raise RuntimeError("Could not locate qlinks repository")
-NOTEBOOK_DIR = ROOT / "experimental" / "notebooks"
-sys.path.insert(0, str(NOTEBOOK_DIR))
-sys.path.insert(0, str(ROOT))
+sys.path[:0] = [str(ROOT / "experimental" / "notebooks"), str(ROOT)]
+
 from helpers import (  # noqa: E402
     PRX_FOUR_PANEL_FIGSIZE,
-    PRX_TWO_PANEL_FIGSIZE,
     add_panel_label,
     save_prx_figure,
     set_revtex_matplotlib_style,
@@ -31,188 +30,164 @@ from helpers import (  # noqa: E402
 )
 
 
-def _read_optional(path: Path) -> pd.DataFrame:
+def read(path):
     return pd.read_csv(path) if path.is_file() else pd.DataFrame()
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data-dir", type=Path, required=True)
-    parser.add_argument("--figure-formats", default="pdf,svg")
-    parser.add_argument("--use-tex", action="store_true")
-    args = parser.parse_args()
-    data = args.data_dir.resolve()
-    figures = data / "figures"
-    figures.mkdir(parents=True, exist_ok=True)
-    formats = tuple(x.strip() for x in args.figure_formats.split(",") if x.strip())
-    set_revtex_matplotlib_style(base_font_size=9.0, prefer_tex=args.use_tex)
+def edges(values, default_half):
+    values = np.asarray(values, float)
+    if len(values) == 1:
+        return np.array([values[0] - default_half, values[0] + default_half])
+    return np.r_[
+        values[0] - (values[1] - values[0]) / 2,
+        (values[:-1] + values[1:]) / 2,
+        values[-1] + (values[-1] - values[-2]) / 2,
+    ]
 
-    sequence = pd.read_csv(data / "qdm_cage_excised_fixed_width.csv")
-    primary = pd.read_csv(data / "qdm_fixed_width_microcanonical_primary.csv")
-    scatter = pd.read_csv(data / "qdm_cage_excised_eth_scatter.csv")
-    concentration = pd.read_csv(data / "qdm_cage_excised_concentration.csv")
-    overlap = pd.read_csv(data / "qdm_beta0_cage_excised_overlap.csv")
-    transfer = pd.read_csv(data / "qdm_three_witness_beta_zero_strip.csv")
-    yvalid = pd.read_csv(data / "qdm_revised_Y_size_validation.csv")
-    deform = _read_optional(data / "qdm_deformed_cage_excised_grid.csv")
-    y_enabled = bool(yvalid.get("resolved_shell_valid", pd.Series(False, index=yvalid.index)).all())
-    witness_specs = [("A", r"$Q_R^A$", "o"), ("Z", r"$Q_R^Z$", "s")]
-    if y_enabled:
-        witness_specs.append(("Y", r"$Q_R^Y$", "^"))
 
-    primary = primary.sort_values("Lx")
-    largest = int(primary["Lx"].max())
-    scatter_largest = scatter[scatter["Lx"] == largest]
-    row = primary[primary["Lx"] == largest].iloc[0]
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("--data-dir", type=Path, required=True)
+    p.add_argument("--figure-formats", default="pdf,svg")
+    p.add_argument("--use-tex", action="store_true")
+    a = p.parse_args()
+    data = a.data_dir.resolve()
+    figs = data / "figures"
+    figs.mkdir(parents=True, exist_ok=True)
+    formats = tuple(x.strip() for x in a.figure_formats.split(",") if x.strip())
+    set_revtex_matplotlib_style(base_font_size=9.0, prefer_tex=a.use_tex)
+    thermal_path = data / "qdm_checkerboard_thermal_overlap.csv"
+    thermal = read(
+        thermal_path if thermal_path.exists() else data / "qdm_checkerboard_beta0_overlap.csv"
+    )
+    scatter = read(data / "qdm_checkerboard_eth_scatter.csv")
+    concentration = read(data / "qdm_checkerboard_concentration_grid.csv")
+    rep = read(data / "qdm_checkerboard_representative_phase.csv")
+    # gates = read(data / "qdm_checkerboard_scientific_gates.csv")
+    if thermal.empty or scatter.empty:
+        raise RuntimeError("Checkerboard thermal products are unavailable; run compute first.")
+    primary_pref = float(
+        thermal.window_prefactor.iloc[(thermal.window_prefactor - 0.75).abs().argmin()]
+    )
+    primary = thermal[np.isclose(thermal.window_prefactor, primary_pref)].copy()
+    phi = (
+        float(rep.phi_star.iloc[0])
+        if not rep.empty
+        else float(sorted(primary.phase.unique())[len(primary.phase.unique()) // 2])
+    )
+    protocol = str(primary.thermal_protocol.iloc[0])
+    reference_label = r"clean $\beta=0$" if protocol == "beta0" else r"clean matched $\beta$"
 
     fig = plt.figure(figsize=PRX_FOUR_PANEL_FIGSIZE)
-    gs = fig.add_gridspec(
-        2, 2, left=0.085, right=0.985, bottom=0.09, top=0.90, wspace=0.30, hspace=0.34
+    outer = fig.add_gridspec(
+        2, 2, left=0.085, right=0.975, bottom=0.10, top=0.91, wspace=0.32, hspace=0.36
     )
-    axes = [fig.add_subplot(gs[i, j]) for i in range(2) for j in range(2)]
-
-    ax = axes[0]
-    center = float(row["cage_energy_density"])
-    half = float(row["window_energy_density_half_width"])
-    ax.axvspan(center - half, center + half, color="0.5", alpha=0.10, zorder=0)
-    ax.axvline(center, color="0.45", ls="--", lw=0.8)
-    retained = scatter_largest[~scatter_largest["is_exceptional"].astype(bool)]
-    # removed = scatter_largest[scatter_largest["is_exceptional"].astype(bool)]
-    for key, label, marker in witness_specs:
-        col = f"Q_{key}"
-        ax.scatter(
-            retained["energy_density"], retained[col], s=9, alpha=0.50, marker=marker, label=label
+    axa = fig.add_subplot(outer[0, 0])
+    # Background file contains only joint-dark-cleaned states. The cage is drawn once as a star.
+    for col, label, marker in [("Q_A", r"$Q_R^A$", "o"), ("Q_Z", r"$Q_R^Z$", "s")]:
+        axa.scatter(
+            scatter.energy_density, scatter[col], s=10, alpha=0.52, marker=marker, label=label
         )
-    ax.scatter(
-        [center],
-        [0.0],
+    largest = int(scatter.Lx.max())
+    row = primary[(primary.Lx == largest) & np.isclose(primary.phase, phi)].iloc[0]
+    axa.axvspan(
+        row.cage_energy_density - row.window_energy_density_half_width,
+        row.cage_energy_density + row.window_energy_density_half_width,
+        color="0.5",
+        alpha=0.10,
+        zorder=0,
+    )
+    axa.scatter(
+        [row.cage_energy_density],
+        [0],
         marker="*",
-        s=70,
+        s=76,
         edgecolors="black",
-        linewidths=0.4,
-        label="selected cage",
-        zorder=5,
+        linewidths=0.45,
+        zorder=7,
+        label="compact cage",
     )
-    ax.set_xlabel(r"Energy density $e=E/(L_xL_y)$")
-    ax.set_ylabel("Local witness activity")
-    ax.grid(alpha=0.22)
-    add_panel_label(ax, "(a)")
+    axa.set_xlabel(r"Energy density $e=E/(4L_x)$")
+    axa.set_ylabel("Witness activity")
+    axa.grid(alpha=0.22)
+    add_panel_label(axa, "(a)")
 
-    ax = axes[1]
-    grouped = sequence.groupby("Lx")
-    for key, label, marker in witness_specs:
-        column = f"thermal_{key}_activity"
-        values = primary[column].to_numpy()
-        low = grouped[column].min().reindex(primary["Lx"]).to_numpy()
-        high = grouped[column].max().reindex(primary["Lx"]).to_numpy()
-        ax.errorbar(
-            primary["Lx"],
-            values,
-            yerr=np.vstack([values - low, high - values]),
-            marker=marker,
-            capsize=2.5,
-            label=label,
+    gsb = outer[0, 1].subgridspec(2, 1, height_ratios=(3.0, 1.35), hspace=0.08)
+    axb = fig.add_subplot(gsb[0])
+    axb2 = fig.add_subplot(gsb[1], sharex=axb)
+    r = primary[np.isclose(primary.phase, phi)].sort_values("Lx")
+    for key, label, marker in [("A", r"$Q_R^A$", "o"), ("Z", r"$Q_R^Z$", "s")]:
+        axb.plot(r.Lx, r[f"tau_{key}_mc"], marker=marker, label=label)
+        axb.plot(r.Lx, r[f"tau_{key}_reference"], marker=marker, fillstyle="none", ls="--")
+        axb2.plot(r.Lx, r[f"delta_{key}"], marker=marker, label=rf"$\delta_{key}$")
+    axb.set_ylabel(r"Local activity $\tau$")
+    axb.grid(alpha=0.22)
+    axb.tick_params(labelbottom=False)
+    add_panel_label(axb, "(b)")
+    axb2.set_xlabel(r"Strip length $L_x$")
+    axb2.set_ylabel(r"$\delta$")
+    axb2.grid(alpha=0.22)
+    use_integer_ticks(axb2, axis="x")
+    axb2.set_xticks(r.Lx.astype(int))
+    if r.Lx.nunique() == 1:
+        axb2.set_xlim(float(r.Lx.iloc[0]) - 0.5, float(r.Lx.iloc[0]) + 0.5)
+    style_handles = [
+        Line2D([0], [0], marker="o", color="0.25", lw=1, label="microcanonical"),
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            markerfacecolor="none",
+            color="0.25",
+            ls="--",
+            lw=1,
+            label=reference_label.replace("clean ", ""),
+        ),
+    ]
+    axb.legend(handles=style_handles, fontsize=8.2, loc="best")
+
+    gsc = outer[1, 0].subgridspec(2, 1, height_ratios=(3.0, 1.35), hspace=0.08)
+    axc = fig.add_subplot(gsc[0])
+    axc2 = fig.add_subplot(gsc[1], sharex=axc)
+    fam = primary[primary.phase > 0].sort_values(["Lx", "phase"])
+    for lx, g in fam.groupby("Lx"):
+        axc.plot(g.phase, g.Delta, marker="o", label=rf"$L_x={int(lx)}$")
+        axc2.plot(g.phase, int(lx) * g.Delta, marker="o")
+    axc.axvline(phi, color=".45", ls="--", lw=0.8)
+    axc.set_ylabel(r"$\Delta_{L_x}(\varphi)$")
+    axc.grid(alpha=0.22)
+    axc.tick_params(labelbottom=False)
+    add_panel_label(axc, "(c)")
+    axc.legend(fontsize=8.5)
+    axc2.set_xlabel(r"Checkerboard phase $\varphi$")
+    axc2.set_ylabel(r"$L_x\Delta_{L_x}$")
+    axc2.grid(alpha=0.22)
+
+    axd = fig.add_subplot(outer[1, 1])
+    c = concentration[concentration.phase > 0].copy()
+    if c.empty:
+        axd.text(
+            0.5, 0.5, "concentration unavailable", ha="center", va="center", transform=axd.transAxes
         )
-    ax.set_xlabel(r"Strip length $L_x$")
-    ax.set_ylabel(r"$\tau_Q^{\mathrm{mc,th}}$")
-    use_integer_ticks(ax, axis="x")
-    ax.set_xticks(primary["Lx"].to_numpy(dtype=int))
-    ax.grid(alpha=0.22)
-    add_panel_label(ax, "(b)")
-    inset = ax.inset_axes([0.56, 0.55, 0.40, 0.38])
-    inset.plot(primary["Lx"], primary["removed_fraction"], marker="o", lw=0.8)
-    inset.set_xlabel(r"$L_x$", fontsize=8.5)
-    inset.set_ylabel(r"$f_{\rm cage}$", fontsize=8.5)
-    inset.tick_params(labelsize=8.5)
-    use_integer_ticks(inset, axis="x")
-
-    ax = axes[2]
-    for key, _label, marker in witness_specs:
-        ax.plot(overlap["Lx"], overlap[f"delta_{key}"], marker=marker, label=rf"$\delta_{key}$")
-    ax.plot(
-        overlap["Lx"],
-        overlap["energy_density_mismatch"],
-        marker="v",
-        ls="--",
-        label=r"$|e_\psi-e_{\beta=0}|$",
-    )
-    ax.set_xlabel(r"Strip length $L_x$")
-    ax.set_ylabel("Matching difference")
-    use_integer_ticks(ax, axis="x")
-    ax.set_xticks(overlap["Lx"].to_numpy(dtype=int))
-    ax.grid(alpha=0.22)
-    ax.legend(loc="upper right", fontsize=8.5)
-    add_panel_label(ax, "(c)")
-
-    ax = axes[3]
-    prefactors = np.sort(concentration["window_prefactor"].unique())
-    primary_prefactor = float(prefactors[np.argmin(np.abs(prefactors - 0.75))])
-    c0 = concentration[np.isclose(concentration["window_prefactor"], primary_prefactor)]
-    env = (
-        c0.groupby("Lx")
-        .agg(median=("basis_independent_std", "median"), maximum=("basis_independent_std", "max"))
-        .reset_index()
-    )
-    ax.plot(env["Lx"], env["median"], marker="o", label="median")
-    ax.plot(env["Lx"], env["maximum"], marker="s", ls="--", label="maximum")
-    ax.set_xlabel(r"Strip length $L_x$")
-    ax.set_ylabel("Retained local spread")
-    use_integer_ticks(ax, axis="x")
-    ax.set_xticks(env["Lx"].to_numpy(dtype=int))
-    ax.grid(alpha=0.22)
-    ax.legend(loc="upper right")
-    add_panel_label(ax, "(d)")
-
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.985), ncol=4)
-    for ax in axes[:2]:
-        legend = ax.get_legend()
-        if legend:
-            legend.remove()
-    save_prx_figure(fig, "qdm_undeformed_evidence_main", directory=figures, formats=formats)
-
-    fig2, (ax0, ax1) = plt.subplots(1, 2, figsize=PRX_TWO_PANEL_FIGSIZE)
-    for key, label, marker in witness_specs:
-        frame = transfer[transfer["witness"] == key]
-        ax0.plot(frame["length"], frame["thermal_activity"], marker=marker, label=label)
-    ax0.set_xlabel(r"Strip length $L_x$")
-    ax0.set_ylabel(r"$\mathrm{Tr}(\rho_{\beta=0}Q_R)$")
-    use_integer_ticks(ax0, axis="x")
-    ax0.grid(alpha=0.22)
-    ax0.legend(loc="upper right")
-    add_panel_label(ax0, "(a)")
-    if not deform.empty and "g" in deform:
-        for key, label, marker in witness_specs:
-            column = f"thermal_{key}_activity"
-            if column in deform:
-                ax1.plot(deform["g"], deform[column], marker=marker, label=label)
-        ax1.legend(loc="upper right")
-        if "cage_excision_applied" in deform and not bool(deform["cage_excision_applied"].all()):
-            ax1.text(
-                0.03,
-                0.04,
-                "ordinary window; cage excision pending",
-                transform=ax1.transAxes,
-                ha="left",
-                va="bottom",
-                fontsize=6.5,
-            )
     else:
-        ax1.text(
-            0.5,
-            0.5,
-            "deformation data unavailable",
-            ha="center",
-            va="center",
-            transform=ax1.transAxes,
-        )
-    ax1.set_xlabel(r"Deformation parameter $g$")
-    ax1.set_ylabel("Deformed local activity")
-    ax1.grid(alpha=0.22)
-    add_panel_label(ax1, "(b)")
-    fig2.subplots_adjust(left=0.09, right=0.985, bottom=0.18, top=0.96, wspace=0.30)
-    save_prx_figure(fig2, "qdm_beta0_and_deformation", directory=figures, formats=formats)
-
+        piv = c.pivot(index="Lx", columns="phase", values="w").sort_index()
+        x = np.asarray(piv.columns, float)
+        y = np.asarray(piv.index, int)
+        mesh = axd.pcolormesh(edges(x, 0.0125), edges(y, 1.0), piv.to_numpy(), shading="flat")
+        cb = fig.colorbar(mesh, ax=axd, pad=0.03)
+        cb.set_label(r"$w_{L_x}(\varphi)$")
+        cb.ax.tick_params(labelsize=8.5)
+        use_integer_ticks(axd, axis="y")
+        axd.set_yticks(y)
+        if len(y) == 1:
+            axd.set_ylim(y[0] - 1, y[0] + 1)
+    axd.axvline(phi, color="w", ls="--", lw=0.9, alpha=0.8)
+    axd.set_xlabel(r"Checkerboard phase $\varphi$")
+    axd.set_ylabel(r"Strip length $L_x$")
+    add_panel_label(axd, "(d)")
+    h, l = axa.get_legend_handles_labels()  # noqa: E741
+    fig.legend(h, l, loc="upper center", bbox_to_anchor=(0.5, 0.985), ncol=3, fontsize=8.8)
+    save_prx_figure(fig, "qdm_checkerboard_figure7_combined", directory=figs, formats=formats)
     write_figure_manifest(data / "figure_manifest.json")
 
 
