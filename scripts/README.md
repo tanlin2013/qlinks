@@ -200,6 +200,10 @@ scripts/docker_run_evidence_job.sh spin1 \
   --deformation-sizes 6,8,10,12 \
   --large-size-sizes 14 \
   --large-size-eigenpairs 8192 \
+  --representative-kappa 0.1 \
+  --principal-kappa-values 0.05,0.10,0.15,0.20 \
+  --kappa-values 0,0.05,0.10,0.15,0.20 \
+  --large-size-concentration \
   --window-exponents 0.5,0.25,0 \
   --window-prefactors 0.75,1.0,1.25 \
   --fit-bootstrap-repeats 1000 \
@@ -209,11 +213,13 @@ scripts/docker_run_evidence_job.sh spin1 \
 
 The `L=14` point uses a sparse shift-invert partial spectrum and sparse projected
 observables; it is deliberately not added to the complete deformation grid.
-Inspect `spin1_xy_large_size_memory_feasibility.csv` and the
-`window_coverage_complete` columns before accepting it.  If the primary window
-is not covered, increase `--large-size-eigenpairs`.  Add
-`--large-size-concentration` only after the matching run succeeds, because the
-19-operator covariance pass is substantially more expensive.
+The primary large-size job is run at the interior representative point
+`kappa/J=0.1`. Inspect `spin1_xy_large_size_memory_feasibility.csv` and the
+`window_coverage_complete` columns before accepting it. If the primary window
+is not covered, increase `--large-size-eigenpairs`. Production enables the
+complete 19-operator covariance diagnostic by default; use
+`--no-large-size-concentration` for a cheaper preflight run, then rerun with the
+diagnostic once the partial-spectrum window is known to be covered.
 
 TeX-backed render pass using a repository-relative host path:
 

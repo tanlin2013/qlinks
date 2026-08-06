@@ -15,7 +15,10 @@ Examples:
   scripts/docker_run_evidence_job.sh qdm --profile production --stage compute
   QLINKS_NUM_THREADS=16 QLINKS_DOCKER_MEMORY_LIMIT=400g \
     scripts/docker_run_evidence_job.sh spin1 --profile production --stage compute \
-      --large-size-sizes 14 --large-size-eigenpairs 8192 --timeout -1
+      --large-size-sizes 14 --large-size-eigenpairs 8192 \
+      --representative-kappa 0.1 \
+      --principal-kappa-values 0.05,0.10,0.15,0.20 \
+      --large-size-concentration --timeout -1
   scripts/docker_run_evidence_job.sh spin1 \
       --stage render \
       --source-data-dir experimental/data/evidence_jobs/spin1_production \

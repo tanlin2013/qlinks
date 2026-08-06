@@ -26,6 +26,7 @@ from helpers import (  # noqa: E402
     add_panel_label,
     save_prx_figure,
     set_revtex_matplotlib_style,
+    use_integer_ticks,
     write_figure_manifest,
 )
 
@@ -44,7 +45,7 @@ def main() -> None:
     figures = data / "figures"
     figures.mkdir(parents=True, exist_ok=True)
     formats = tuple(x.strip() for x in args.figure_formats.split(",") if x.strip())
-    set_revtex_matplotlib_style(base_font_size=8, prefer_tex=args.use_tex)
+    set_revtex_matplotlib_style(base_font_size=9.0, prefer_tex=args.use_tex)
 
     sequence = pd.read_csv(data / "qdm_cage_excised_fixed_width.csv")
     primary = pd.read_csv(data / "qdm_fixed_width_microcanonical_primary.csv")
@@ -76,22 +77,12 @@ def main() -> None:
     ax.axvspan(center - half, center + half, color="0.5", alpha=0.10, zorder=0)
     ax.axvline(center, color="0.45", ls="--", lw=0.8)
     retained = scatter_largest[~scatter_largest["is_exceptional"].astype(bool)]
-    removed = scatter_largest[scatter_largest["is_exceptional"].astype(bool)]
+    # removed = scatter_largest[scatter_largest["is_exceptional"].astype(bool)]
     for key, label, marker in witness_specs:
         col = f"Q_{key}"
         ax.scatter(
             retained["energy_density"], retained[col], s=9, alpha=0.50, marker=marker, label=label
         )
-        if not removed.empty:
-            ax.scatter(
-                removed["energy_density"],
-                removed[col],
-                s=20,
-                marker=marker,
-                facecolors="none",
-                edgecolors="0.25",
-                linewidths=0.6,
-            )
     ax.scatter(
         [center],
         [0.0],
@@ -124,13 +115,16 @@ def main() -> None:
         )
     ax.set_xlabel(r"Strip length $L_x$")
     ax.set_ylabel(r"$\tau_Q^{\mathrm{mc,th}}$")
+    use_integer_ticks(ax, axis="x")
+    ax.set_xticks(primary["Lx"].to_numpy(dtype=int))
     ax.grid(alpha=0.22)
     add_panel_label(ax, "(b)")
     inset = ax.inset_axes([0.56, 0.55, 0.40, 0.38])
     inset.plot(primary["Lx"], primary["removed_fraction"], marker="o", lw=0.8)
-    inset.set_xlabel(r"$L_x$", fontsize=6)
-    inset.set_ylabel(r"$f_{\rm cage}$", fontsize=6)
-    inset.tick_params(labelsize=6)
+    inset.set_xlabel(r"$L_x$", fontsize=8.5)
+    inset.set_ylabel(r"$f_{\rm cage}$", fontsize=8.5)
+    inset.tick_params(labelsize=8.5)
+    use_integer_ticks(inset, axis="x")
 
     ax = axes[2]
     for key, _label, marker in witness_specs:
@@ -144,8 +138,10 @@ def main() -> None:
     )
     ax.set_xlabel(r"Strip length $L_x$")
     ax.set_ylabel("Matching difference")
+    use_integer_ticks(ax, axis="x")
+    ax.set_xticks(overlap["Lx"].to_numpy(dtype=int))
     ax.grid(alpha=0.22)
-    ax.legend(loc="upper right", fontsize=6)
+    ax.legend(loc="upper right", fontsize=8.5)
     add_panel_label(ax, "(c)")
 
     ax = axes[3]
@@ -161,6 +157,8 @@ def main() -> None:
     ax.plot(env["Lx"], env["maximum"], marker="s", ls="--", label="maximum")
     ax.set_xlabel(r"Strip length $L_x$")
     ax.set_ylabel("Retained local spread")
+    use_integer_ticks(ax, axis="x")
+    ax.set_xticks(env["Lx"].to_numpy(dtype=int))
     ax.grid(alpha=0.22)
     ax.legend(loc="upper right")
     add_panel_label(ax, "(d)")
@@ -179,6 +177,7 @@ def main() -> None:
         ax0.plot(frame["length"], frame["thermal_activity"], marker=marker, label=label)
     ax0.set_xlabel(r"Strip length $L_x$")
     ax0.set_ylabel(r"$\mathrm{Tr}(\rho_{\beta=0}Q_R)$")
+    use_integer_ticks(ax0, axis="x")
     ax0.grid(alpha=0.22)
     ax0.legend(loc="upper right")
     add_panel_label(ax0, "(a)")

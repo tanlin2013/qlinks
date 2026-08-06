@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import argparse
+
 from evidence_job_utils import (
     build_parser,
     parse_float_tuple,
@@ -50,10 +52,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--large-size-concentration",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=None,
         help=(
-            "Also compute the 19-operator concentration diagnostic at "
-            "the large-size reference point."
+            "Compute the complete 19-operator covariance diagnostic at the "
+            "large-size representative point. Production defaults to enabled; "
+            "use --no-large-size-concentration only for a preflight run."
         ),
     )
     parser.add_argument(
@@ -92,6 +96,23 @@ def main() -> None:
         help=(
             "Comma-separated imaginary second-neighbor kappa/J values along "
             "the compatible family anchored at J3/J=0.1."
+        ),
+    )
+    parser.add_argument(
+        "--representative-kappa",
+        type=float,
+        default=None,
+        help=(
+            "Interior representative coupling kappa_star/J used for the detailed "
+            "ETH scatter, finite-size matching, and L=14 point."
+        ),
+    )
+    parser.add_argument(
+        "--principal-kappa-values",
+        default=None,
+        help=(
+            "Comma-separated positive compatible couplings defining the main "
+            "family-wide matching and concentration interval."
         ),
     )
     parser.add_argument(
@@ -134,7 +155,7 @@ def main() -> None:
     if args.skip_protocol_m:
         raise ValueError(
             "--skip-protocol-m is no longer supported by the manuscript evidence job: "
-            "T1 requires the undeformed cage-excised ensemble. Use "
+            "T1 requires the representative-point joint-dark-cleaned ensemble. Use "
             "--exceptional-projector-mode target-only only for an explicitly diagnostic run."
         )
 
@@ -153,6 +174,7 @@ def main() -> None:
     window_prefactors = parse_float_tuple(args.window_prefactors)
     j3_values = parse_float_tuple(args.j3_values)
     kappa_values = parse_float_tuple(args.kappa_values)
+    principal_kappa_values = parse_float_tuple(args.principal_kappa_values)
     type1_kappa_values = parse_float_tuple(args.deformed_type1_kappa_values)
     overrides = {
         "RUN_BACKGROUND_CONCENTRATION": not args.skip_background_concentration,
@@ -160,9 +182,10 @@ def main() -> None:
         "RUN_COMPLEX_HERMITIAN_PATH": not args.skip_complex_hermitian_path,
         "RUN_JOINT_CONTINUATION_CROSSCHECK": not args.skip_joint_continuation,
         "RUN_DEFORMED_TYPE1_INVENTORY": not args.skip_deformed_type1_inventory,
-        "RUN_LARGE_SIZE_CONCENTRATION": bool(args.large_size_concentration),
         "EXCEPTIONAL_PROJECTOR_MODE": args.exceptional_projector_mode,
     }
+    if args.large_size_concentration is not None:
+        overrides["RUN_LARGE_SIZE_CONCENTRATION"] = bool(args.large_size_concentration)
     if micro_sizes is not None:
         overrides["MICROCANONICAL_SIZES"] = micro_sizes
         overrides["SIZES"] = micro_sizes
@@ -200,6 +223,14 @@ def main() -> None:
         overrides["PRESERVING_J3_PATH"] = j3_values
     if kappa_values is not None:
         overrides["KAPPA_OVER_J_PATH"] = kappa_values
+    if args.representative_kappa is not None:
+        if not __import__("math").isfinite(args.representative_kappa):
+            raise ValueError("--representative-kappa must be finite")
+        overrides["REPRESENTATIVE_KAPPA_OVER_J"] = float(args.representative_kappa)
+    if principal_kappa_values is not None:
+        if any(value <= 0.0 for value in principal_kappa_values):
+            raise ValueError("--principal-kappa-values must be strictly positive")
+        overrides["PRINCIPAL_KAPPA_OVER_J_PATH"] = principal_kappa_values
     if type1_kappa_values is not None:
         overrides["DEFORMED_TYPE1_KAPPA_VALUES"] = type1_kappa_values
     if args.obstruction_grid_points is not None:
