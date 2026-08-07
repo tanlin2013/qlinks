@@ -44,6 +44,17 @@ def main() -> None:
     parser.add_argument("--energy-block-tolerance", type=float, default=None)
     parser.add_argument("--large-strip-repeats", default=None)
     parser.add_argument("--run-large-strip", action="store_true")
+    parser.add_argument("--large-strip-eigenpairs", type=int, default=None)
+    parser.add_argument("--large-strip-sigma-offset", type=float, default=None)
+    parser.add_argument("--large-strip-eig-tolerance", type=float, default=None)
+    parser.add_argument("--large-strip-maxiter", type=int, default=None)
+    parser.add_argument("--finite-beta-samples", type=int, default=None)
+    parser.add_argument("--finite-beta-beta-max", type=float, default=None)
+    parser.add_argument("--finite-beta-beta-points", type=int, default=None)
+    parser.add_argument("--finite-beta-random-seed", type=int, default=None)
+    parser.add_argument("--dark-classification-repeats", default=None)
+    parser.add_argument("--skip-dark-manifold-classification", action="store_true")
+    parser.add_argument("--large-strip-phase-check-values", default=None)
     parser.add_argument("--skip-checkerboard-thermal-scan", action="store_true")
     parser.add_argument("--skip-checkerboard-concentration", action="store_true")
     parser.add_argument(
@@ -60,12 +71,6 @@ def main() -> None:
         )
         return
 
-    if args.run_large_strip:
-        raise NotImplementedError(
-            "The third energy-resolved 12x4 strip requires a controlled partial-spectrum or "
-            "typicality implementation; "
-            "the current dense path is intentionally disabled."
-        )
     ed = parse_int_tuple(args.ed_repeats)
     if ed is not None and max(ed) >= 3 and not args.allow_large_dense_ed:
         raise ValueError(
@@ -77,11 +82,15 @@ def main() -> None:
     positive = parse_float_tuple(args.positive_phase_values)
     prefactors = parse_float_tuple(args.window_prefactors)
     large = parse_int_tuple(args.large_strip_repeats)
+    dark_classification = parse_int_tuple(args.dark_classification_repeats)
+    large_phase_check = parse_float_tuple(args.large_strip_phase_check_values)
     overrides = {
         "SAVE_FIGURES": bool(args.figure_formats.strip()) and args.stage != "compute",
         "SAVE_PDF": "pdf" in {p.strip().lower() for p in args.figure_formats.split(",")},
         "RUN_CHECKERBOARD_THERMAL_SCAN": not args.skip_checkerboard_thermal_scan,
         "RUN_CHECKERBOARD_CONCENTRATION": not args.skip_checkerboard_concentration,
+        "RUN_LARGE_STRIP": bool(args.run_large_strip),
+        "RUN_DARK_MANIFOLD_CLASSIFICATION": not args.skip_dark_manifold_classification,
         "CHECKERBOARD_THERMAL_PROTOCOL": args.thermal_protocol,
         "STRICT_CLAIMS": bool(args.strict_claims),
     }
@@ -97,6 +106,34 @@ def main() -> None:
         overrides["MICROCANONICAL_PREFACTORS"] = prefactors
     if large is not None:
         overrides["LARGE_STRIP_REPEATS"] = large
+    if dark_classification is not None:
+        overrides["DARK_CLASSIFICATION_REPEATS"] = dark_classification
+    if large_phase_check is not None:
+        overrides["LARGE_STRIP_PHASE_CHECK_VALUES"] = large_phase_check
+    if args.large_strip_eigenpairs is not None:
+        if args.large_strip_eigenpairs < 4:
+            raise ValueError("--large-strip-eigenpairs must be at least four")
+        overrides["LARGE_STRIP_EIGENPAIRS"] = int(args.large_strip_eigenpairs)
+    if args.large_strip_sigma_offset is not None:
+        overrides["LARGE_STRIP_SIGMA_OFFSET"] = float(args.large_strip_sigma_offset)
+    if args.large_strip_eig_tolerance is not None:
+        overrides["LARGE_STRIP_EIG_TOL"] = float(args.large_strip_eig_tolerance)
+    if args.large_strip_maxiter is not None:
+        overrides["LARGE_STRIP_MAXITER"] = int(args.large_strip_maxiter)
+    if args.finite_beta_samples is not None:
+        if args.finite_beta_samples < 2:
+            raise ValueError("--finite-beta-samples must be at least two")
+        overrides["FINITE_BETA_TYPICALITY_SAMPLES"] = int(args.finite_beta_samples)
+    if args.finite_beta_beta_max is not None:
+        if args.finite_beta_beta_max <= 0:
+            raise ValueError("--finite-beta-beta-max must be positive")
+        overrides["FINITE_BETA_BETA_MAX"] = float(args.finite_beta_beta_max)
+    if args.finite_beta_beta_points is not None:
+        if args.finite_beta_beta_points < 3:
+            raise ValueError("--finite-beta-beta-points must be at least three")
+        overrides["FINITE_BETA_BETA_POINTS"] = int(args.finite_beta_beta_points)
+    if args.finite_beta_random_seed is not None:
+        overrides["FINITE_BETA_RANDOM_SEED"] = int(args.finite_beta_random_seed)
     if args.transfer_max_length is not None:
         if args.transfer_max_length < 4 or args.transfer_max_length % 4:
             raise ValueError("--transfer-max-length must be a multiple of four >=4")

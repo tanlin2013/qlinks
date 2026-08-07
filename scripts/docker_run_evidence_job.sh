@@ -17,8 +17,11 @@ Examples:
       --transport-repeats 1,2,3 --ed-repeats 1,2 \
       --phase-values 0,0.025,0.05,0.075,0.10 \
       --positive-phase-values 0.025,0.05,0.075,0.10 \
-      --representative-phase 0.05 --thermal-protocol auto \
-      --transfer-max-length 256 --timeout -1
+      --representative-phase 0.05 --thermal-protocol finite-beta \
+      --dark-classification-repeats 1,2 \
+      --run-large-strip --large-strip-repeats 3 --large-strip-eigenpairs 1024 \
+      --finite-beta-samples 8 --finite-beta-beta-max 0.25 \
+      --finite-beta-beta-points 41 --transfer-max-length 256 --timeout -1
   QLINKS_NUM_THREADS=16 QLINKS_DOCKER_MEMORY_LIMIT=400g \
     scripts/docker_run_evidence_job.sh spin1 --profile production --stage compute \
       --large-size-sizes 14 --large-size-eigenpairs 8192 \

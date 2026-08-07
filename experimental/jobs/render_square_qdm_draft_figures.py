@@ -76,7 +76,8 @@ def main():
         else float(sorted(primary.phase.unique())[len(primary.phase.unique()) // 2])
     )
     protocol = str(primary.thermal_protocol.iloc[0])
-    reference_label = r"clean $\beta=0$" if protocol == "beta0" else r"clean matched $\beta$"
+    reference_label = r"$\beta=0$ trace" if protocol == "beta0" else r"matched canonical"
+    use_physical_target = "Delta_physical_target" in primary.columns
 
     fig = plt.figure(figsize=PRX_FOUR_PANEL_FIGSIZE)
     outer = fig.add_gridspec(
@@ -117,9 +118,13 @@ def main():
     axb2 = fig.add_subplot(gsb[1], sharex=axb)
     r = primary[np.isclose(primary.phase, phi)].sort_values("Lx")
     for key, label, marker in [("A", r"$Q_R^A$", "o"), ("Z", r"$Q_R^Z$", "s")]:
+        reference_column = (
+            f"tau_{key}_reference_physical" if use_physical_target else f"tau_{key}_reference"
+        )
+        delta_column = f"delta_{key}_physical_target" if use_physical_target else f"delta_{key}"
         axb.plot(r.Lx, r[f"tau_{key}_mc"], marker=marker, label=label)
-        axb.plot(r.Lx, r[f"tau_{key}_reference"], marker=marker, fillstyle="none", ls="--")
-        axb2.plot(r.Lx, r[f"delta_{key}"], marker=marker, label=rf"$\delta_{key}$")
+        axb.plot(r.Lx, r[reference_column], marker=marker, fillstyle="none", ls="--")
+        axb2.plot(r.Lx, r[delta_column], marker=marker, label=rf"$\delta_{key}$")
     axb.set_ylabel(r"Local activity $\tau$")
     axb.grid(alpha=0.22)
     axb.tick_params(labelbottom=False)
@@ -141,7 +146,7 @@ def main():
             color="0.25",
             ls="--",
             lw=1,
-            label=reference_label.replace("clean ", ""),
+            label=reference_label,
         ),
     ]
     axb.legend(handles=style_handles, fontsize=8.2, loc="best")
@@ -150,9 +155,13 @@ def main():
     axc = fig.add_subplot(gsc[0])
     axc2 = fig.add_subplot(gsc[1], sharex=axc)
     fam = primary[primary.phase > 0].sort_values(["Lx", "phase"])
+    matching_column = "Delta_physical_target" if use_physical_target else "Delta"
     for lx, g in fam.groupby("Lx"):
-        axc.plot(g.phase, g.Delta, marker="o", label=rf"$L_x={int(lx)}$")
-        axc2.plot(g.phase, int(lx) * g.Delta, marker="o")
+        g = g.dropna(subset=[matching_column])
+        if g.empty:
+            continue
+        axc.plot(g.phase, g[matching_column], marker="o", label=rf"$L_x={int(lx)}$")
+        axc2.plot(g.phase, int(lx) * g[matching_column], marker="o")
     axc.axvline(phi, color=".45", ls="--", lw=0.8)
     axc.set_ylabel(r"$\Delta_{L_x}(\varphi)$")
     axc.grid(alpha=0.22)

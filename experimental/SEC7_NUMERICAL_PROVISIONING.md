@@ -1,107 +1,252 @@
 # Section VII numerical provisioning cache
 
+**Updated:** 2026-08-07
+**Authoritative checkerboard production job:** `data/evidence_jobs/qdm_checkerboard_production_20260807T025626Z/`
+
 ## Purpose
 
 This file is the short-term qlinks handoff for the square-QDM fixed-width
-storyline.  It is intentionally separate from `data/EVIDENCE_SUMMARY.md`:
-the evidence summary records established results, whereas this file specifies
-active scientific validations, acceptance criteria, failed alternatives, and
-the reserved main-figure panels.
+storyline. It records completed scientific gates, failed alternatives, active
+acceptance criteria, and the calculations still required before Sec. VII can
+make a fixed-width deformation-stable ICQMBS claim.
 
-The manuscript now follows the same cumulative order as Sec. VI:
+The manuscript follows the same cumulative order as Sec. VI:
 
 1. recover the compact cage and bounded symmetry-resolved kinetic witnesses
    `A_R,Z_R`;
-2. promote the `4 x 4` non-gauge phase pilot to a size-independent
-   circumference-four family and continue the same bounded local construction;
-3. perform one fixed-width thermal test for the whole candidate family.
+2. continue the same local construction along a size-independent non-gauge
+   checkerboard phase family;
+3. thermally classify that family in the circumference-four fixed-width limit.
 
-The first step is established.  The second and third are provisioning targets.
-Do not describe the checkerboard Hamiltonian as an established fixed-width
-family until the larger-strip compatibility, gauge-quotient, and common-sector
-checks below pass.
+The first two layers now have direct checkerboard evidence on the tested strip
+sequence. The primary remaining work is thermodynamic: the `beta=0` route has
+failed its energy-density gate, so the fixed-width thermal protocol must use an
+energy-matched finite-`beta` ensemble.
 
-The corrected shifted-shell `Y_R` is not part of the primary
-symmetry-resolved family.  It belongs to the localized, translation-breaking
-potential route retained in Appendix E.
+The corrected shifted-shell `Y_R` is not part of the primary symmetry-resolved
+family. It remains a localized, translation-breaking potential-route witness
+in Appendix E.
 
-## Scientific gates before the expensive phase scan
+---
 
-### Gate 1: fixed-width energy-density matching
+## Evidence status from `qdm_checkerboard_production_20260807T025626Z`
 
-The primary candidate retains a nonzero uniform flippability potential,
-`lambda_star = 1`, to avoid the purely kinetic spectral-reflection structure.
-The compact-cage and `beta=0` trace energies are independent of phase, but they
-are not equal at finite length.  Before launching the full energy-resolved
-checkerboard scan, determine whether
+### Gate 1 — `beta=0` energy-density matching: **FAILED; switch to finite beta**
+
+For `lambda_star=1`, the compact cage has
 
 \[
-e_{\psi,L_x}-e_{\beta=0,L_x}\to0
+ e_{\psi}=\frac14,
 \]
 
-on the `L_x x 4` sequence.
+whereas exact fixed-width transfer counting gives a `beta=0` trace energy
+density approaching a distinct value. The large-`L_x` fit of
 
-Use transfer counting, a transfer matrix, or another exact fixed-width method
-to extend both flippability densities to the largest inexpensive `L_x`.
-Export the finite-size sequence and compare constant, `1/L_x`, and `1/L_x^2`
-limits.  If the difference approaches a nonzero constant, stop the `beta=0`
-checkerboard plan and switch to an energy-matched finite-`beta` protocol or a
-different cage-preserving potential.
+\[
+\Delta e_{L_x}=e_{\beta=0,L_x}-e_{\psi,L_x}
+\]
 
-Required output:
+gives
 
-- `qdm_checkerboard_energy_density_match.csv`;
-- `qdm_checkerboard_energy_density_fit.csv`.
+\[
+\Delta e_\infty\simeq 5.98\times10^{-3}
+\]
 
-### Gate 2: larger-strip transport of the checkerboard rule
+for the preferred `Delta_inf+c/Lx` fit, well above the acceptance tolerance
+`1e-3`. The `beta=0` continuation is therefore not the primary thermal protocol
+for the checkerboard family.
 
-For `L_x in {4,8,12}` initially, verify that the size-independent local pattern
+Completed outputs:
+
+- `qdm_checkerboard_energy_density_match.csv` through `L_x=256`;
+- `qdm_checkerboard_energy_density_fit.csv`;
+- `qdm_checkerboard_gate_status.csv`.
+
+**Manuscript consequence:** replace the planned “common `beta=0` target” with
+an energy-matched finite-`beta` target. The exact `beta=0` transfer values
+remain useful baselines/controls, not the defining thermal target.
+
+### Gate 2 — checkerboard local transport and non-gauge character: **PASSED on `4x4`, `8x4`, `12x4`**
+
+The size-independent checkerboard pattern
 
 \[
 \chi_{x,y}=(-1)^{x+y}
 \]
 
-preserves the repeated compact cage and the fixed `A_R,Z_R` operators.  The old
-`4 x 4` implementation used the Euclidean-unit-normalized vector `chi/4`; do
-not tile that normalized vector, because its local entries would shrink with
-system size.
+was tested at
 
-For each strip:
+`varphi in {0,0.025,0.05,0.075,0.10}`
 
-1. construct the repeated compact cage analytically;
-2. check every active boundary row and export the paired equal-phase
-   constraints;
-3. verify cage residual and energy;
-4. verify fixed `A,Z` darkness with size-independent normalization;
-5. compute the physical link-gauge image and the checkerboard distance from it;
-6. identify a symmetry sector common to every sampled nonzero phase.
+for `L_x in {4,8,12}`. On every tested strip and phase:
 
-Required output:
+- the repeated compact cage has residual of order `1e-15`;
+- its energy is `E_psi=L_x`, hence `e_psi=1/4`;
+- the fixed localized `A_R,Z_R` certificates vanish exactly;
+- every active paired boundary row satisfies the equal-phase rule;
+- the checkerboard vector lies completely outside the tested physical
+  link-gauge image (`relative_distance=1`).
+
+Completed outputs:
 
 - `qdm_checkerboard_fixed_width_family.csv`;
 - `qdm_checkerboard_compatibility_constraints.csv`;
 - `qdm_checkerboard_gauge_quotient.csv`;
-- `qdm_checkerboard_common_symmetry_sector.csv`.
+- `qdm_checkerboard_AZ_certificates.csv`.
 
-The family-level equations in Sec. VII become established only after this gate
-passes.
+The common reduced-symmetry sector generated by `T_x^2,T_y^2` is verified by
+ED at `4x4` and `8x4`. The `12x4` sector projection remains pending even though
+the local cage/operator transport itself is already verified there.
 
-### Gate 3: resolved-sector versus transfer target
+### Type-I inventory under the checkerboard phase: **selective cleanup established at `4x4`**
 
-The exact transfer targets are fixed-winding/fixed-width values.  The thermal
-calculation will use a reduced-symmetry sector common to the checkerboard
-family.  Keep these two traces distinct at finite size and verify that their
-local `A,Z` values approach the same fixed-width limit.
+At `varphi=0`, the `(0,4)` Type-I sector contains nine records and the `(0,6)`
+sector contains one. For every tested nonzero checkerboard phase:
 
-Required output:
+- eight compact/local `(0,4)` records remain exact;
+- the ninth, collective `(0,4)` record is lifted;
+- the `(0,6)` record is lifted.
 
-- `qdm_checkerboard_resolved_beta0_trace.csv`;
-- `qdm_checkerboard_transfer_sector_overlap.csv`.
+This is the desired qualitative action of the deformation: it preserves the
+locally generated compact cages while removing the collective/secondary
+finite-size cages.
 
-## Primary candidate Hamiltonian family
+Completed output:
 
-Label plaquettes on the `L_x x 4` strip by `p=(x,y)` with
-`x in Z_{L_x}` and `y in Z_4`.  The candidate family is
+- `qdm_checkerboard_type1_continuation.csv`.
+
+### Gate 3 — reduced-sector/thermal-target bridge: **finite-size only**
+
+The common reduced sector is available at `L_x=4,8`. The resolved `beta=0`
+trace approaches the exact fixed-winding transfer values strongly between
+these two sizes, but the `beta=0` route is no longer the primary thermal
+protocol because Gate 1 failed.
+
+The analogous finite-`beta` fixed-width target is therefore the new required
+bridge: determine the thermodynamic inverse temperature `beta_*` satisfying
+
+\[
+ e_{\rm can}(\beta_*)=\frac14,
+\]
+
+and the corresponding positive fixed-width values
+
+\[
+\tau_A^{\rm can}(\beta_*),\qquad
+\tau_Z^{\rm can}(\beta_*).
+\]
+
+The current energy-resolved data give
+
+\[
+\beta_{L_x=4}\simeq0.143892,
+\qquad
+\beta_{L_x=8}\simeq0.074956,
+\]
+
+independent of checkerboard phase within numerical precision. Two sizes are
+not sufficient to infer `beta_*`.
+
+### Finite-`beta` thermal overlap: **strong two-size evidence**
+
+At the current default window prefactor `0.75`, the phase-wide matching
+envelope is approximately
+
+\[
+\Delta_{4}^{\max}\simeq9.50\times10^{-3},
+\qquad
+\Delta_{8}^{\max}\simeq4.14\times10^{-3},
+\]
+
+where
+
+\[
+\Delta_{L_x}(\varphi)
+=\max_{\alpha\in\{A,Z\}}
+\left|\tau_{\alpha,L_x}^{\rm mc}(\varphi)
+-\tau_{\alpha,L_x}^{\rm can}(\varphi)\right|.
+\]
+
+The result is nearly phase independent across the sampled checkerboard grid.
+Window-prefactor dependence is visible but controlled in the available data;
+all extrapolation claims remain pending until a third length is available.
+
+Completed outputs:
+
+- `qdm_checkerboard_thermal_overlap.csv`;
+- `qdm_checkerboard_window_systematics.csv`;
+- `qdm_checkerboard_cleaning_audit.csv`.
+
+### Complete stripe-local concentration: **strong two-size evidence**
+
+The projected complete Hermitian operator algebra on the declared two-column
+witness stripe has dimension `50` after quotienting null combinations. The
+block-invariant worst-operator concentration width decreases strongly on the
+positive checkerboard grid:
+
+\[
+ w_{4}^{\max}\simeq 6.54\times10^{-2},
+\qquad
+ w_{8}^{\max}\simeq 1.93\times10^{-2}.
+\]
+
+This tests the worst normalized observable on the complete constrained witness
+stripe, not all bounded longitudinal regions. With only `L_x=4,8`, no
+thermodynamic concentration fit is yet justified.
+
+Completed outputs:
+
+- `qdm_checkerboard_concentration_grid.csv`;
+- `qdm_checkerboard_worst_eigenoperator.csv`;
+- `qdm_checkerboard_uniform_concentration_fit.csv` (`insufficient_lengths`).
+
+### Joint-dark inventory: **non-target dark directions remain; classification required**
+
+For the translated `A,Z` witness family, the full joint-dark rank is four at
+both `L_x=4` and `L_x=8` over the sampled phases. Relative to one selected
+projected compact cage, this leaves additional dark directions:
+
+- `L_x=4`: target energy block has dark rank `4`, leaving rank `3` after
+  subtracting one selected target vector;
+- `L_x=8`: dark rank `2` appears at `E=4` and rank `2` at the selected
+  `E=8` block; one selected target vector leaves one additional direction in
+  the latter block.
+
+The checkerboard Type-I continuation strongly suggests that these directions
+are combinations of the surviving locally generated compact cages, but this
+identification is not yet exported basis-independently in the common reduced
+sector. Do **not** interpret the residual rank as an unexplained failure before
+performing the classification task below.
+
+Completed output:
+
+- `qdm_checkerboard_joint_dark_kernel.csv`.
+
+### Provisional representative phase
+
+The current production figure uses
+
+\[
+\varphi_\star=0.05.
+\]
+
+This is a reasonable interior point: cage/operator residuals are exact,
+finite-`beta` matching is regular, and stripe-local concentration is typical of
+the positive grid. It remains **provisional** only because the surviving
+joint-dark manifold has not yet been identified with the known compact-cage
+manifold in the reduced sector.
+
+Completed outputs:
+
+- `qdm_checkerboard_representative_phase.csv`;
+- `qdm_checkerboard_eth_scatter.csv`;
+- `figures/qdm_checkerboard_figure7_combined.{pdf,svg}`.
+
+---
+
+## Primary checkerboard Hamiltonian family
+
+On an `L_x x 4` strip, with plaquette `p=(x,y)`, use
 
 \[
 H_{\varphi}
@@ -110,167 +255,195 @@ H_{\varphi}
  +e^{-i\varphi\chi_{x,y}}U_p^\dagger
 \right]
 +\lambda_\star\sum_p F_p,
-\qquad \lambda_\star=1.
+\qquad
+\chi_{x,y}=(-1)^{x+y},
+\qquad
+\lambda_\star=1.
 \]
 
-The paired cancellation plaquettes differ by two sites around the
-circumference and therefore have equal `chi`.  This is a fixed-state
-compatibility candidate, not by itself a proof of strip-wide continuation.
+The local deformation amplitude `varphi` is size independent. Never use a
+globally unit-normalized checkerboard vector whose entries shrink with `L_x`.
 
-## Common symmetry resolution
-
-The checkerboard phase breaks one-step translations but preserves period-two
-translations.  Use only exact symmetries common to the full sampled nonzero
-phase family:
-
-- winding numbers `(W_x,W_y)`;
-- `T_x^2` and `T_y^2` reduced momenta where useful;
-- any additional symmetry only after explicitly verifying commutation with
-  every `H_varphi` in the sampled family.
-
-Do not use the full parent-model momentum labels at `varphi != 0`.  Construct
-and retain separately:
-
-- the localized compact cage;
-- the cage projected into the chosen common reduced-symmetry sector.
-
-Treat `varphi=0` as a symmetry-enhanced endpoint control, not automatically as
-the representative thermal point.
-
-## Choosing the representative phase and sampled grid
-
-After Gates 1--3 and a small pilot scan, choose one nonzero interior
-`varphi_star` where:
-
-- the exact cage and `A,Z` residuals pass;
-- the common reduced-symmetry window is well populated;
-- no accidental extra jointly dark states appear;
-- the stripe-local concentration diagnostic is smallest or otherwise regular;
-- no additional symmetry is restored.
-
-Initially scan positive phases, for example
-
-`varphi in {0.025, 0.05, 0.075, 0.10}`.
-
-Retain `varphi=0` as an endpoint control.  Retain negative phases only as
-translation/complex-conjugation implementation checks when the corresponding
-relation is verified.  Do not call a discrete grid an open interval.
-
-## Primary bounded witnesses
-
-The symmetry-resolved route uses only
+The resolved primary witnesses are only
 
 \[
 A_{R_x},\qquad Z_{R_x}=A_{R_x}+A_{R_x}^\dagger.
 \]
 
-`R_x` is one plaquette column but spans the adjacent physical vertex/link
-columns `x,x+1` and wraps the circumference-four direction.  Verify exact
-darkness on both the localized and reduced-symmetry cages at every transported
-length and phase.
+The localized shell `Y_R` remains an Appendix-E complementary route.
 
-The localized shell
+---
 
-\[
-Y_{R_x}^{\rm shell}
-=\frac12\left(F_{(x,0)}+F_{(x,2)}-2\mathbf1\right)
-\]
+## Revised P0 tasks
 
-is dark on the localized cage but not after symmetry projection.  Exclude it
-from the primary resolved-sector joint-dark inventory and thermal panels.
+### P0.1 — finite-`beta` fixed-width transfer target
 
-## Translated-witness inventory and implementation machinery
+This replaces the failed `beta=0` gate as the highest-priority thermodynamic
+calculation.
 
-For the resolved kinetic route define
+Use a fixed-width transfer-matrix/canonical method to determine, at large
+`L_x`, the inverse temperature `beta_*` satisfying
 
 \[
-Q_{\rm all}^{AZ}=\sum_x\left(Q_{R_x}^A+Q_{R_x}^Z\right).
+e_{\rm can}(\beta_*)=e_\psi=\frac14.
 \]
 
-Inside each exact energy block, diagonalize
-`P_E Q_all^{AZ} P_E` and retain its numerical kernel.  Treat exact
-degeneracies as projectors.  Subtract the target compact-cage projector only
-when reporting the residual non-target dark rank.  The cleaned microcanonical
-ensemble removes the full declared joint-dark kernel.
+Then compute the corresponding thermodynamic local targets
 
-Export raw and cleaned values, exact-energy tolerances, removed ranks and
-fractions, and clean--clean comparisons.  These are Appendix A/E implementation
-details; the Sec. VII main text should report only the physical inventory
-result.
+\[
+\tau_A^{\rm can}(\beta_*),\qquad
+\tau_Z^{\rm can}(\beta_*).
+\]
 
-Required output:
+Because the checkerboard phase enters only the kinetic amplitudes while the
+cage energy is phase independent, test whether the fixed-width canonical
+energy and local targets are phase independent (or differ only by a verified
+unitary/transfer equivalence) across the sampled positive phase grid. If not,
+export them phase by phase.
 
-- `qdm_checkerboard_joint_dark_kernel.csv`;
-- `qdm_checkerboard_type1_continuation.csv`;
-- `qdm_checkerboard_cleaning_audit.csv`.
+Required new outputs:
 
-The kernel is complete only relative to the translated `A,Z` witness family;
-do not call it a projector onto all possible caged eigenstates.
+- `qdm_checkerboard_finite_beta_transfer_target.csv`;
+- `qdm_checkerboard_finite_beta_energy_match.csv`;
+- `qdm_checkerboard_finite_beta_transfer_phase_check.csv`.
 
-## Energy-resolved matching sequence
+Acceptance:
 
-After the scientific gates pass, for every available `L_x,varphi` use a
-microcanonical window of the same Hamiltonian and common reduced-symmetry
-sector.  Export:
+- stable large-`L_x` `beta_*`;
+- positive nonzero `A,Z` targets;
+- controlled numerical/transfer convergence.
 
-- cage and `beta=0` trace energy densities;
-- energy-density mismatch;
-- raw and cleaned window counts;
-- window half-width and alternative scaling/prefactor choices;
-- raw and cleaned `tau_A,tau_Z`;
-- reduced-sector `beta=0` traces;
-- exact fixed-winding transfer targets;
-- individual matching distances `delta_A,delta_Z`.
+### P0.2 — classify the surviving joint-dark manifold
 
-At least one third energy-resolved strip is required.  If full ED is
-prohibitive, use filtered diagonalization or a controlled typicality method.
-Two lengths must not be presented as a thermodynamic extrapolation.
+Project the eight checkerboard-preserved local `(0,4)` Type-I records into the
+common `T_x^2,T_y^2` sector and compare their span with the translated `A,Z`
+joint-dark kernel.
 
-Required output:
+Do this explicitly at `L_x=4,8`, then repeat/continue the construction at
+`L_x=12` where feasible.
 
-- `qdm_checkerboard_beta0_overlap.csv`;
-- `qdm_checkerboard_fixed_width_shared_fit.csv`;
-- `qdm_checkerboard_matching_distance_fit.csv`;
+Required new outputs:
+
+- `qdm_checkerboard_compact_dark_manifold.csv`;
+- `qdm_checkerboard_joint_dark_vs_type1.csv`.
+
+Acceptance:
+
+- every residual dark direction is identified with the declared compact-cage
+  manifold, or otherwise classified explicitly;
+- report the total exceptional rank and its sector/window fraction versus
+  `L_x`;
+- do not require a single-target dark rank of one if the physical construction
+  naturally carries a finite compact-cage multiplet.
+
+### P0.3 — complete the `12x4` common-sector projection
+
+The local cage and `A,Z` transport already pass on `12x4`; complete the
+reduced-symmetry projection needed by the thermal protocol.
+
+Required update:
+
+- extend `qdm_checkerboard_common_symmetry_sector.csv` to `L_x=12` with cage
+  projection norm and projected `Q_A,Q_Z` residuals.
+
+### P0.4 — obtain a third energy-resolved strip
+
+At the provisional representative phase `varphi_star=0.05`, obtain the
+energy-resolved finite-`beta` comparison and complete stripe-local
+concentration at a third length, preferably `L_x=12`.
+
+If full ED is prohibitive, use filtered diagonalization, shift-invert, a
+controlled typicality/Krylov method, or another method that can provide:
+
+- the same-Hamiltonian microcanonical `A,Z` values near `E_psi`;
+- the energy-matched canonical reference;
+- the declared joint-dark cleaning/inventory;
+- the complete stripe-local covariance width.
+
+Required updates:
+
+- `qdm_checkerboard_thermal_overlap.csv`;
+- `qdm_checkerboard_concentration_grid.csv`;
 - `qdm_checkerboard_window_systematics.csv`.
 
-## Complete stripe-local concentration
+### P0.5 — controlled finite-width extrapolation
 
-The witness stripe is constrained and has boundary-flux superselection
-sectors.  Construct either:
+Only after P0.4 supplies a third controlled length, fit the representative and
+phase-wide sequences.
 
-1. a Hilbert--Schmidt-orthonormal basis of the complete projected operator
-   algebra on the two-column stripe after quotienting null combinations; or
-2. an equivalent block-resolved reduced-density-matrix distance.
+Required outputs:
 
-Record the operator-space dimension and all boundary-flux block dimensions.
-Do not reuse the current nine-operator basis as if it were complete.
-
-After declared joint-dark removal, define the degenerate-block-invariant
-covariance matrix and
-
-\[
-w_{L_x}(\varphi)=\sqrt{\lambda_{\max}\Gamma_{L_x}(\varphi)}.
-\]
-
-This directly tests the worst normalized observable on the witness stripe, not
-all bounded longitudinal regions.  Export the median nonidentity width, worst
-eigenoperator coefficients, exact-degeneracy tolerance audit, and reduced-
-density-matrix cross-check where feasible.
-
-Required output:
-
-- `qdm_checkerboard_concentration_grid.csv`;
-- `qdm_checkerboard_worst_eigenoperator.csv`;
+- `qdm_checkerboard_fixed_width_shared_fit.csv`;
+- `qdm_checkerboard_matching_distance_fit.csv`;
 - `qdm_checkerboard_uniform_concentration_fit.csv`.
 
-## Family-wide acceptance criteria
+Compare at minimum constant-plus-`1/L_x` and constant-plus-`1/L_x^2` forms,
+plus zero-constrained forms when scientifically motivated. Report window and
+method systematics; do not infer a thermodynamic limit from two lengths.
+
+### P0.6 — finalize the representative phase and figure
+
+After P0.2–P0.5:
+
+- retain `varphi_star=0.05` if its dark-manifold classification and third-size
+  thermal behavior remain regular;
+- otherwise choose another nonzero interior phase using a declared criterion.
+
+Regenerate the combined main figure with:
+
+- panel (a): ETH scatter at the final representative phase;
+- panel (b): finite-`beta` microcanonical/canonical matching versus `L_x` and
+  the finite-width canonical target;
+- panel (c): phase-wide finite-`beta` matching distance;
+- panel (d): complete stripe-local concentration.
+
+The exact `beta=0` transfer values may appear only as an auxiliary reference
+if they remain useful; they should not be labeled the matched thermal target.
+
+---
+
+## P1 tasks
+
+### P1.1 — phase-grid refinement / continuity
+
+After a third length is available, refine the positive phase grid around the
+selected interval. An open-phase-interval claim additionally requires grid
+refinement or a continuity/error bound.
+
+### P1.2 — larger longitudinal local region
+
+The current complete concentration test is on the declared two-column witness
+stripe. Add a larger bounded longitudinal region or a reduced-density-matrix
+cross-check only if the manuscript seeks a broader background-ETH statement
+than stripe-local ICQMBS evidence.
+
+### P1.3 — complementary nonuniform-potential path
+
+Retain the translation-breaking potential family and adapted localized
+`Y_R(g)` as a complementary three-witness route. It is not required for the
+primary checkerboard claim unless the finite-`beta` kinetic route fails.
+
+Required output if pursued:
+
+- `qdm_nonuniform_potential_fixed_width.csv`.
+
+### P1.4 — true two-dimensional sequence
+
+Defer until the fixed-width family is complete. A true 2D claim requires both
+dimensions to grow while operator support/norm remain uniformly bounded.
+
+---
+
+## Current family-wide diagnostics and acceptance criteria
 
 For a sampled positive grid `P_varphi`, define
 
 \[
 \Delta_{L_x}^{\max}
 =\max_{\varphi\in\mathcal P_\varphi}
-\max_{\alpha\in\{A,Z\}}\delta_{\alpha,L_x}(\varphi),
+\max_{\alpha\in\{A,Z\}}
+\left|\tau_{\alpha,L_x}^{\rm mc}(\varphi)
+-\tau_{\alpha,L_x}^{\rm can}(\varphi)\right|,
 \]
 
 \[
@@ -278,86 +451,49 @@ w_{L_x}^{\max}
 =\max_{\varphi\in\mathcal P_\varphi}w_{L_x}(\varphi).
 \]
 
-The primary numerical support required for strong sampled-family fixed-width
-ICQMBS evidence on the witness stripe is
+The finite-width checkerboard ICQMBS claim requires:
 
-\[
-\Delta_{L_x}^{\max}\to0,\qquad
-w_{L_x}^{\max}\to0,
-\]
+1. exact size-compatible cage and bounded `A,Z` continuation;
+2. a controlled finite-`beta` thermodynamic target at `e_psi=1/4`;
+3. positive limiting `A,Z` thermal values;
+4. `Delta_{L_x}^{max} -> 0`;
+5. `w_{L_x}^{max} -> 0` on the declared witness stripe;
+6. the surviving joint-dark manifold to be identified and thermodynamically
+   negligible relative to the surrounding sector/window.
 
-with positive transfer targets and vanishing or thermodynamically negligible
-residual non-target dark rank.  An open-phase-interval claim additionally
-requires grid refinement or a continuity/error bound.  A broader statement
-about all bounded local regions should be supported by at least one larger
-longitudinal region or an explicit argument reducing those regions to the
-witness-stripe algebra.
+An open-phase-interval statement additionally requires grid refinement or a
+continuity bound. None of these fixed-width results imply a true 2D ICQMBS.
 
-Until these criteria pass, use:
+---
 
-> candidate checkerboard family; sampled fixed-width compatibility and thermal
-> test remain provisioned.
+## Current main-figure status
 
-## Reserved main figure
+The production job provides
 
-### Panel (a): representative-point ETH scatter
+`figures/qdm_checkerboard_figure7_combined.{pdf,svg}`
 
-At `varphi_star`, plot normalized `Q_A,Q_Z` against energy density in the
-largest reliable common reduced-symmetry sector.  Use the analytically
-constructed cage for the star and shade the matched window.
+at `varphi_star=0.05`. It is useful as a **provisional evidence figure**:
 
-### Panel (b): fixed-width matching
+- panel (a) already shows a clear `A,Z` cage/thermal separation at `L_x=8`;
+- panels (b,c) show encouraging finite-`beta` matching over only two lengths;
+- panel (d) shows strong two-size stripe-local concentration narrowing.
 
-Plot microcanonical `tau_A,tau_Z` versus integer `L_x`, the exact transfer
-targets, and the controlled finite-size extrapolation.  Inset: individual
-matching distances and window systematics.
+Do not freeze the figure for the manuscript until the third energy-resolved
+length, finite-`beta` transfer target, and dark-manifold classification are
+available.
 
-### Panel (c): family-wide ensemble matching
-
-Plot
-
-\[
-\Delta_{L_x}(\varphi)
-=\max_{\alpha\in\{A,Z\}}\delta_{\alpha,L_x}(\varphi)
-\]
-
-across the sampled compatible phase grid.  Show the proposed finite-size
-scaling without calling it established until a third length is available.
-The obstruction plane belongs in Appendix E rather than the primary thermal
-figure.
-
-### Panel (d): stripe-local concentration
-
-Plot `w_{L_x}(varphi)` with phase on the horizontal axis and integer `L_x` on
-the vertical axis.
-
-## Complementary localized potential route
-
-For a translation-breaking potential pattern `v_p(g)`, retain the localized
-cage and the adapted shell
-
-\[
-Y_R(g)=v_{p_1}(g)F_{p_1}+v_{p_2}(g)F_{p_2}
--[v_{p_1}(g)+v_{p_2}(g)]\mathbf1.
-\]
-
-Transport the current `4 x 4` path only as a complementary three-witness route.
-Its larger-strip validation and thermal data do not define the primary
-symmetry-resolved checkerboard claim.
-
-Required output if pursued:
-
-- `qdm_nonuniform_potential_fixed_width.csv`.
+---
 
 ## Secondary controls
 
+- `beta=0` transfer counting: exact baseline/control; not the matched thermal
+  protocol at `lambda_star=1`.
 - Uniform Peierls phase: gauge/background-cleaning control only.
-- Manual excision: protocol check only; all estimator details stay in the
-  appendices.
-- Collective quotient: the current negative result is relative to the tested
-  plaquette-linear kinetic class; do not claim a general no-go theorem.
-- True two-dimensional sequence: deferred until the fixed-width construction
-  is complete.
+- Manual excision: estimator/protocol check only; implementation details remain
+  in Appendices A/E.
+- Collective quotient: the negative locality result is relative to the tested
+  plaquette-linear kinetic class, not a general no-go theorem.
+- Localized `Y_R`: use only for the localized cage or adapted potential route.
 
 ## Plotting contract
 
@@ -366,35 +502,3 @@ Required output if pursued:
 - Use integer-only major ticks for `L_x`.
 - Use the same `A,Z` order and normalization in every panel.
 - Export PDF and SVG plus figure-dimension/font audits.
-
-## Implementation status (2026-08-06)
-
-The qlinks workflow now implements the three gates as explicit, machine-readable
-products and prevents the reserved thermal figure from being interpreted as a
-thermodynamic result when fewer than three energy-resolved lengths are present.
-
-- Gate 1 uses the exact circumference-four transfer calculation.  A direct
-  preflight through `L_x=256` gives a preferred `Delta_inf+c/L_x` mismatch
-  `Delta_inf ~= 5.98e-3`, above the locked `1e-3` tolerance.  Therefore the
-  `auto` protocol switches the thermal pilot to an energy-matched finite-beta
-  comparison.  The beta-zero comparison remains a separately labelled failed-
-  gate diagnostic rather than being reused as the primary thermal reference.
-- Gate 2 now exports the size-independent checkerboard transport certificates,
-  paired phase constraints, gauge quotient, and common reduced-symmetry sector
-  for `4x4`, `8x4`, and `12x4`.  Full sector projection is performed only at
-  energy-resolved sizes; the `12x4` projection remains pending.
-- Gate 3 and the reserved Fig. 7 pipeline run for the available full-ED lengths.
-  The representative phase is explicitly labelled provisional until the
-  production joint-dark and regularity filters pass.
-- The primary inventory uses translated `A,Z` only.  The complete projected
-  stripe algebra is constructed from its boundary-flux blocks and null
-  combinations are removed before the covariance calculation.
-- Dense repeat-3 (`12x4`) ED remains disabled because it can exceed the 400 GiB
-  container limit.  The command-line `--run-large-strip` flag fails explicitly
-  until a controlled partial-spectrum or typicality implementation is supplied;
-  it never silently falls back to dense ED.
-
-The current smoke validation is not claim-level evidence.  In particular, its
-`4x4` pilot has residual non-target translated-`A,Z` dark rank, so the requested
-phase is not yet a locked manuscript representative point.  Production at
-`4x4` and `8x4`, followed by a controlled third-length method, is still required.

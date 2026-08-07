@@ -105,6 +105,7 @@ def patch_notebook_parameters(
         header_cell = {
             "cell_type": "code",
             "execution_count": None,
+            "id": "injected_evidence_job_header",
             "metadata": {"tags": ["injected-evidence-job-header"]},
             "outputs": [],
             "source": extra_header.splitlines(keepends=True),

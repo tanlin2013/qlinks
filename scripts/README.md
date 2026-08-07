@@ -222,11 +222,10 @@ complete 19-operator covariance diagnostic by default; use
 diagnostic once the partial-spectrum window is known to be covered.
 
 
-Square-QDM checkerboard production pass (Gates 1--3 plus the ED-accessible
-family pilot):
+Square-QDM checkerboard finite-temperature production pass:
 
 ```bash
-QLINKS_EVIDENCE_RUN_ID=qdm_checkerboard_production \
+QLINKS_EVIDENCE_RUN_ID=qdm_checkerboard_finite_beta \
 QLINKS_NUM_THREADS=16 \
 QLINKS_DOCKER_MEMORY_LIMIT=400g \
 scripts/docker_run_evidence_job.sh qdm \
@@ -237,19 +236,34 @@ scripts/docker_run_evidence_job.sh qdm \
   --phase-values 0,0.025,0.05,0.075,0.10 \
   --positive-phase-values 0.025,0.05,0.075,0.10 \
   --representative-phase 0.05 \
-  --thermal-protocol auto \
+  --thermal-protocol finite-beta \
+  --dark-classification-repeats 1,2 \
+  --run-large-strip \
+  --large-strip-repeats 3 \
+  --large-strip-eigenpairs 1024 \
+  --finite-beta-samples 8 \
+  --finite-beta-beta-max 0.25 \
+  --finite-beta-beta-points 41 \
   --transfer-max-length 256 \
   --window-prefactors 0.50,0.75,1.00 \
   --timeout -1
 ```
 
-The `auto` protocol first evaluates the fixed-width energy-density gate.  For
-the current `lambda_star=1` candidate, the beta-zero mismatch extrapolates to a
-nonzero value, so the notebook records the failed beta-zero gate and switches
-the ED-accessible pilot to an energy-matched finite-beta comparator.  The
-`12x4` checkerboard transport certificate is local and inexpensive; full
-energy-resolved repeat 3 remains disabled because the current dense algorithm
-can exceed 400 GiB.
+The beta-zero energy-density gate has already failed for `lambda_star=1`, so
+the primary protocol is now explicitly finite temperature.  Full spectra remain
+restricted to `4x4` and `8x4`.  The `12x4` lane constructs the common
+`T_x^2,T_y^2` sector sparsely, estimates the energy-matched canonical target by
+random-phase canonical typicality, and obtains a partial spectrum near the cage
+energy by shift-invert.  A partial-spectrum row is accepted only when its
+reported `window_coverage_complete` flag is true.  The complete stripe-local
+covariance calculation is then evaluated on the same covered window.  The
+1024-eigenpair setting is a production starting point, not an assumed sufficient
+window size; increase it only if the coverage export requires it.
+
+The job also classifies the translated `A,Z` joint-dark subspace against the
+directly projected Type-I compact-cage span at the exact-ED sizes.  The physical
+finite-beta canonical target is kept distinct from joint-dark cleaning, which is
+reported as a finite-size diagnostic.
 
 Render the completed timestamped folder with:
 
