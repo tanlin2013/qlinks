@@ -185,19 +185,39 @@ graph_visualizer.plot(
 
 ## Testing
 
-Run the test suite:
+The default developer lane contains tiny deterministic tests only:
 
 ```bash
-pytest
+scripts/test.sh fast
 ```
 
-Run manual visual tests:
+Run small cross-module workflows separately:
 
 ```bash
-QLINKS_SHOW_PLOTS=1 pytest
+scripts/test.sh integration
 ```
 
-Run pre-commit checks:
+Expensive finite-size, optimization, and scientific-regression checks are intentionally
+separated from pull-request unit tests:
+
+```bash
+scripts/test.sh scientific
+```
+
+Run all automatic CPU tests, including scientific tests, with:
+
+```bash
+scripts/test.sh all
+```
+
+Manual visual tests still require explicit activation, for example:
+
+```bash
+QLINKS_SHOW_PLOTS=1 scripts/test.sh manual
+```
+
+See `AGENTS.md` and `docs/contributing/5.-testing.md` for the classification policy. Run
+pre-commit checks with:
 
 ```bash
 pre-commit run --all-files

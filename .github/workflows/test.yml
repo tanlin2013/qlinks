@@ -1,6 +1,13 @@
 name: Test
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   versions:
@@ -8,7 +15,7 @@ jobs:
     outputs:
       default-python: ${{ steps.versions.outputs.default-python }}
       poetry-version: ${{ steps.versions.outputs.poetry-version }}
-      python-matrix: ${{ steps.versions.outputs.python-matrix }}
+      compatibility-python-matrix: ${{ steps.versions.outputs.compatibility-python-matrix }}
     steps:
       - uses: actions/checkout@v4
 
@@ -19,15 +26,10 @@ jobs:
         id: versions
         run: python scripts/ci_versions.py
 
-  in-os:
+  fast:
+    name: Fast tests with coverage
     needs: versions
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ${{ fromJson(needs.versions.outputs.python-matrix) }}
-        os: [ubuntu-latest]
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -39,25 +41,100 @@ jobs:
         env:
           POETRY_INSTALLER_NO_BINARY: pynauty
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ needs.versions.outputs.default-python }}
           poetry-version: ${{ needs.versions.outputs.poetry-version }}
-          cache-prefix: test
+          cache-prefix: test-fast
           compile-paths: qlinks tests
           system-packages: >-
             build-essential gfortran libblas-dev liblapack-dev pkg-config
             libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
           install-command: poetry install -vvv --with dev --extras "distributed storage drawing" --sync
 
-      - name: Test
-        shell: bash
-        run: |
-          poetry run pytest tests/ -s --trace-config -m "not manual and not gpu" \
-            --cov=${{ github.event.repository.name }}/ \
-            --cov-report=term-missing ${@-}
-          poetry run coverage xml
+      - name: Run fast test lane
+        env:
+          QLINKS_COVERAGE_XML: "1"
+        run: scripts/test.sh fast
 
-      - name: Report Coverage
-        if: github.ref_name == 'main' && matrix.os == 'ubuntu-latest' && matrix.python-version == needs.versions.outputs.default-python
+      - name: Report coverage
+        if: github.ref_name == 'main'
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  compatibility:
+    name: Fast compatibility (Python ${{ matrix.python-version }})
+    needs: versions
+    if: needs.versions.outputs.compatibility-python-matrix != '[]'
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJson(needs.versions.outputs.compatibility-python-matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python and Poetry
+        uses: ./.github/actions/setup-python-poetry
+        with:
+          python-version: ${{ matrix.python-version }}
+          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          cache-prefix: test-compatibility
+          compile-paths: qlinks tests
+          system-packages: build-essential gfortran libblas-dev liblapack-dev pkg-config
+          install-command: poetry install -vvv --with dev --sync
+
+      - name: Run fast test lane without coverage
+        env:
+          QLINKS_TEST_COVERAGE: "0"
+        run: scripts/test.sh fast
+
+  integration:
+    name: Integration tests
+    needs: versions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python and Poetry
+        uses: ./.github/actions/setup-python-poetry
+        env:
+          POETRY_INSTALLER_NO_BINARY: pynauty
+        with:
+          python-version: ${{ needs.versions.outputs.default-python }}
+          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          cache-prefix: test-integration
+          compile-paths: qlinks tests
+          system-packages: >-
+            build-essential gfortran libblas-dev liblapack-dev pkg-config
+            libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
+          install-command: poetry install -vvv --with dev --extras "distributed storage drawing" --sync
+
+      - name: Run integration test lane
+        run: scripts/test.sh integration
+
+  tensor-network:
+    name: Tensor-network backend (Python 3.13)
+    needs: versions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python and Poetry
+        uses: ./.github/actions/setup-python-poetry
+        with:
+          python-version: "3.13"
+          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          cache-prefix: test-tn
+          compile-paths: qlinks tests
+          system-packages: build-essential gfortran libblas-dev liblapack-dev pkg-config
+          install-command: poetry install -vvv --with dev --extras "tn" --sync
+
+      - name: Verify tensor-network environment
+        run: poetry run python scripts/verify_tn_environment.py
+
+      - name: Run tensor-network integration tests
+        run: scripts/test.sh integration tests/caging/test_tensor_network.py

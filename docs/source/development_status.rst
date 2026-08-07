@@ -79,6 +79,9 @@ Backward-compatibility expectations
 
 The core model-build API should remain relatively stable.  Experimental caging
 and open-system configuration options can change more often, especially when a
-new diagnostic makes an older option redundant.  When in doubt, prefer APIs that
-are exported from package-level ``__init__.py`` files and documented in this
-user guide.
+new diagnostic makes an older option redundant.  Package-level exports are not
+a blanket stability guarantee: new exports require an explicit API-maturity
+decision, and active-research objects should normally be imported from their
+defining submodules.  Prefer interfaces documented as supported in this guide,
+and consult ``AGENTS.md`` for the supported, experimental, internal, and
+deprecated maturity levels.

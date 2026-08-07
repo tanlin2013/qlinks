@@ -13,6 +13,8 @@ from qlinks.caging import (
 )
 from qlinks.models import SquareQDMModel
 
+pytestmark = pytest.mark.integration
+
 
 def _host_model() -> SquareQDMModel:
     return SquareQDMModel(
@@ -795,7 +797,13 @@ def test_type1_seam_sensitivity_builds_targeted_period_two_enlargement() -> None
     )
 
 
+@pytest.mark.scientific
 def test_type1_adaptive_x_split_can_be_shared_across_longitudinal_clusters() -> None:
+    """Protect cross-size sharing of one adaptive PEPS parameterization.
+
+    The 12x2 cluster is retained because this regression checks longitudinal
+    extensibility rather than only one finite-cluster construction.
+    """
     from qlinks.caging import (
         SquareQDMType1AdaptiveParameterization,
         build_square_qdm_type1_adaptive_joint_cluster_problem,
@@ -846,7 +854,13 @@ def test_type1_adaptive_x_split_can_be_shared_across_longitudinal_clusters() -> 
         )
 
 
+@pytest.mark.scientific
 def test_type1_adaptive_exact_gradient_and_short_optimization_reduce_joint_loss() -> None:
+    """Protect the exact joint gradient and its optimization descent claim.
+
+    This combines two finite clusters because the shared-parameter objective is
+    the scientific contract; a one-cluster unit case would not exercise it.
+    """
     from qlinks.caging import (
         SquareQDMType1AdaptiveParameterization,
         build_square_qdm_type1_adaptive_joint_cluster_problem,

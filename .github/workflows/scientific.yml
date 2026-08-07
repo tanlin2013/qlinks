@@ -1,0 +1,42 @@
+name: Scientific validation
+
+on:
+  schedule:
+    - cron: "15 2 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: scientific-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  scientific:
+    name: Scientific regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install CI helper dependency
+        run: python -m pip install packaging
+
+      - name: Read versions
+        id: versions
+        run: python scripts/ci_versions.py
+
+      - name: Set up Python and Poetry
+        uses: ./.github/actions/setup-python-poetry
+        with:
+          python-version: "3.13"
+          poetry-version: ${{ steps.versions.outputs.poetry-version }}
+          cache-prefix: test-scientific
+          compile-paths: qlinks tests
+          system-packages: build-essential gfortran libblas-dev liblapack-dev pkg-config
+          install-command: poetry install -vvv --with dev --extras "tn" --sync
+
+      - name: Verify tensor-network environment
+        run: poetry run python scripts/verify_tn_environment.py
+
+      - name: Run scientific test lane
+        run: scripts/test.sh scientific

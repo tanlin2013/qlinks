@@ -87,9 +87,17 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
+addopts = [
+    "--strict-markers",
+    "-m",
+    "not integration and not scientific and not manual and not gpu",
+]
+testpaths = ["tests"]
 markers = [
-    "manual: integration tests that are not run in normal CI",
-    "gpu: tests that require a real CUDA-capable GPU runtime",
+    "integration: small cross-module or optional-backend workflow tests",
+    "scientific: expensive validation of a research claim; scheduled or explicitly dispatched",
+    "manual: tests requiring explicit local activation or human inspection",
+    "gpu: tests requiring a real CUDA-capable GPU runtime",
 ]
 
 [tool.black]

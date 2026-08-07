@@ -81,6 +81,9 @@ def main() -> None:
     default_python = tool_versions["python"]
     poetry_version = tool_versions["poetry"]
     python_matrix = matrix_from_requires_python(requires_python)
+    compatibility_python_matrix = [
+        version for version in python_matrix if Version(version) != Version(default_python)
+    ]
 
     if Version(default_python) not in SpecifierSet(requires_python):
         raise SystemExit(
@@ -94,6 +97,7 @@ def main() -> None:
             "default-python": default_python,
             "poetry-version": poetry_version,
             "python-matrix": json.dumps(python_matrix),
+            "compatibility-python-matrix": json.dumps(compatibility_python_matrix),
         }
     )
 
