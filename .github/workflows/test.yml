@@ -83,7 +83,7 @@ jobs:
           cache-prefix: test-compatibility
           compile-paths: qlinks tests
           system-packages: build-essential gfortran libblas-dev liblapack-dev pkg-config
-          install-command: poetry install -vvv --with dev --sync
+          install-command: poetry install -vvv --with dev --extras "storage" --sync
 
       - name: Run fast test lane without coverage
         env:

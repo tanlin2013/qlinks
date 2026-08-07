@@ -33,7 +33,7 @@ jobs:
           cache-prefix: test-scientific
           compile-paths: qlinks tests
           system-packages: build-essential gfortran libblas-dev liblapack-dev pkg-config
-          install-command: poetry install -vvv --with dev --extras "tn" --sync
+          install-command: poetry install -vvv --with dev --extras "tn storage" --sync
 
       - name: Verify tensor-network environment
         run: poetry run python scripts/verify_tn_environment.py
