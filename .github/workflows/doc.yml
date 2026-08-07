@@ -9,7 +9,7 @@ jobs:
       default-python: ${{ steps.versions.outputs.default-python }}
       poetry-version: ${{ steps.versions.outputs.poetry-version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install CI helper dependency
         run: python -m pip install packaging
@@ -26,7 +26,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
