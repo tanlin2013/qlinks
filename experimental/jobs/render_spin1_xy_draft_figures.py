@@ -115,11 +115,14 @@ def _panel_c_curves(ax_top, ax_bottom, deformation: pd.DataFrame) -> None:
     lengths = sorted(principal["L"].unique())
     for length in lengths:
         frame = principal[principal["L"] == length].sort_values("kappa_over_J")
+        sparse_safe = "grid_role" in frame and frame["grid_role"].notna().any()
+        label = rf"$L={int(length)}$" + (r" ($\Delta E=1$)" if sparse_safe else "")
         line = ax_top.plot(
             frame["kappa_over_J"],
             frame["delta_max"],
             marker="o",
-            label=rf"$L={int(length)}$",
+            linestyle="--" if sparse_safe else "-",
+            label=label,
         )[0]
         ax_bottom.plot(
             frame["kappa_over_J"],
@@ -162,8 +165,56 @@ def main() -> None:
     overlap = _read_first(
         data, "spin1_xy_kappa0p1_beta0_overlap.csv", "spin1_xy_beta0_cage_excised_overlap.csv"
     )
+    panel_b_sequence = _read_optional(data / "spin1_xy_kappa0p1_panel_b_sequence.csv")
+    if not panel_b_sequence.empty:
+        overlap = panel_b_sequence
     deformation = pd.read_csv(data / "spin1_xy_kappa_matching_grid.csv")
+    large_family_matching = _read_optional(
+        data / "spin1_xy_kappa_matching_large_size_safe_window.csv"
+    )
+    if not large_family_matching.empty:
+        large_family_matching = large_family_matching[
+            large_family_matching.get(
+                "window_coverage_complete", pd.Series(True, index=large_family_matching.index)
+            )
+            .fillna(False)
+            .astype(bool)
+        ].copy()
+        if "sparse_convergence_passed" in large_family_matching:
+            large_family_matching = large_family_matching[
+                large_family_matching["sparse_convergence_passed"].fillna(False).astype(bool)
+            ].copy()
+        if (
+            "delta_max" not in large_family_matching
+            and "delta_max_raw_raw" in large_family_matching
+        ):
+            large_family_matching["delta_max"] = large_family_matching["delta_max_raw_raw"]
+        deformation = pd.concat([deformation, large_family_matching], ignore_index=True, sort=False)
     concentration = _read_optional(data / "spin1_xy_kappa_concentration_grid.csv")
+    large_rep_concentration = _read_optional(data / "spin1_xy_kappa0p1_concentration_L14.csv")
+    large_family_concentration = _read_optional(
+        data / "spin1_xy_large_size_family_concentration.csv"
+    )
+    extra_concentration = []
+    if not large_rep_concentration.empty:
+        rep_raw = large_rep_concentration[
+            large_rep_concentration.get("variant", "raw") == "raw"
+        ].copy()
+        if not rep_raw.empty:
+            if "sparse_convergence_passed" in rep_raw:
+                rep_raw = rep_raw[rep_raw["sparse_convergence_passed"].fillna(False).astype(bool)]
+            extra_concentration.append(rep_raw)
+    if not large_family_concentration.empty:
+        if "sparse_convergence_passed" in large_family_concentration:
+            large_family_concentration = large_family_concentration[
+                large_family_concentration["sparse_convergence_passed"].fillna(False).astype(bool)
+            ].copy()
+        if not large_family_concentration.empty:
+            extra_concentration.append(large_family_concentration)
+    if extra_concentration:
+        concentration = pd.concat(
+            [concentration, *extra_concentration], ignore_index=True, sort=False
+        )
     exact = _read_optional(data / "exact_fixed_M_activities.csv")
     obstruction = _read_optional(data / "spin1_xy_complex_t2_obstruction_grid.csv")
 
@@ -242,9 +293,15 @@ def main() -> None:
     ax_b_delta = fig.add_subplot(gs_b[1], sharex=ax_b)
     for key, label, marker in WITNESS_SPECS:
         mc_column = (
-            f"tau_{key}_mc_clean" if f"tau_{key}_mc_clean" in overlap else f"tau_{key}_mc_th"
+            f"tau_{key}_mc_raw"
+            if f"tau_{key}_mc_raw" in overlap
+            else (f"tau_{key}_mc_clean" if f"tau_{key}_mc_clean" in overlap else f"tau_{key}_mc_th")
         )
-        beta_column = _resolved_beta0_column(overlap, key)
+        beta_column = (
+            f"tau_{key}_resolved_beta0_raw"
+            if f"tau_{key}_resolved_beta0_raw" in overlap
+            else _resolved_beta0_column(overlap, key)
+        )
         line = ax_b.plot(overlap["L"], overlap[mc_column], marker=marker, label=rf"{label}: MC")[0]
         ax_b.plot(
             overlap["L"],
@@ -256,7 +313,13 @@ def main() -> None:
             label=rf"{label}: $\beta=0$",
         )
         delta_column = (
-            f"delta_{key}_clean_clean" if f"delta_{key}_clean_clean" in overlap else f"delta_{key}"
+            f"delta_{key}_raw_raw"
+            if f"delta_{key}_raw_raw" in overlap
+            else (
+                f"delta_{key}_clean_clean"
+                if f"delta_{key}_clean_clean" in overlap
+                else f"delta_{key}"
+            )
         )
         regular = overlap[overlap["L"] >= 8]
         pre = overlap[overlap["L"] < 8]
@@ -264,6 +327,16 @@ def main() -> None:
         if not pre.empty:
             ax_b_delta.scatter(pre["L"], pre[delta_column], marker=marker, color="0.58", zorder=4)
     ax_b.set_ylabel("Local activity")
+    if "window_role" in overlap and (overlap["window_role"] == "sparse_safe_fixed_width").any():
+        ax_b.text(
+            0.98,
+            0.03,
+            r"$L=14$: sparse, $\Delta E=1$",
+            transform=ax_b.transAxes,
+            ha="right",
+            va="bottom",
+            fontsize=8.2,
+        )
     ax_b.grid(alpha=0.20)
     ax_b.legend(loc="best", fontsize=7.8, ncol=2)
     ax_b.tick_params(labelbottom=False)
@@ -292,6 +365,16 @@ def main() -> None:
         display_concentration = principal_concentration[principal_concentration["L"] >= 8].copy()
         if display_concentration.empty:
             display_concentration = principal_concentration.copy()
+        if (
+            "largest_covariance_width" not in display_concentration
+            and "largest_covariance_width_raw" in display_concentration
+        ):
+            display_concentration["largest_covariance_width"] = display_concentration[
+                "largest_covariance_width_raw"
+            ]
+        display_concentration = display_concentration.sort_values(
+            ["L", "kappa_over_J"]
+        ).drop_duplicates(["L", "kappa_over_J"], keep="last")
         cpivot = display_concentration.pivot(
             index="L", columns="kappa_over_J", values="largest_covariance_width"
         )
@@ -323,7 +406,13 @@ def main() -> None:
     fig_delta, (ax0, ax1) = plt.subplots(1, 2, figsize=PRX_TWO_PANEL_FIGSIZE)
     for key, label, marker in WITNESS_SPECS:
         column = (
-            f"delta_{key}_clean_clean" if f"delta_{key}_clean_clean" in overlap else f"delta_{key}"
+            f"delta_{key}_raw_raw"
+            if f"delta_{key}_raw_raw" in overlap
+            else (
+                f"delta_{key}_clean_clean"
+                if f"delta_{key}_clean_clean" in overlap
+                else f"delta_{key}"
+            )
         )
         regular = overlap[overlap["L"] >= 8]
         pre = overlap[overlap["L"] < 8]

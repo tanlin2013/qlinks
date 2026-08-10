@@ -45,6 +45,29 @@ def edges(values, default_half):
     ]
 
 
+def prefer_partial_rows(frame: pd.DataFrame, *, keys: list[str]) -> pd.DataFrame:
+    """Deduplicate mixed exact/partial smoke products, preferring partial rows.
+
+    Production normally has distinct sizes for the two methods, but smoke tests
+    may intentionally reuse a small size to exercise the large-strip lane.
+    """
+    if frame.empty:
+        return frame
+    result = frame.copy()
+    if "spectrum_method" in result.columns:
+        result["_method_priority"] = (
+            result["spectrum_method"].eq("shift_invert_partial").astype(int)
+        )
+    else:
+        result["_method_priority"] = 0
+    result = (
+        result.sort_values([*keys, "_method_priority"])
+        .drop_duplicates(keys, keep="last")
+        .drop(columns="_method_priority")
+    )
+    return result
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--data-dir", type=Path, required=True)
@@ -70,6 +93,7 @@ def main():
         thermal.window_prefactor.iloc[(thermal.window_prefactor - 0.75).abs().argmin()]
     )
     primary = thermal[np.isclose(thermal.window_prefactor, primary_pref)].copy()
+    primary = prefer_partial_rows(primary, keys=["Lx", "phase", "window_prefactor"])
     phi = (
         float(rep.phi_star.iloc[0])
         if not rep.empty
@@ -174,6 +198,7 @@ def main():
 
     axd = fig.add_subplot(outer[1, 1])
     c = concentration[concentration.phase > 0].copy()
+    c = prefer_partial_rows(c, keys=["Lx", "phase"])
     if c.empty:
         axd.text(
             0.5, 0.5, "concentration unavailable", ha="center", va="center", transform=axd.transAxes

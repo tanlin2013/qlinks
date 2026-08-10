@@ -19,15 +19,19 @@ Examples:
       --positive-phase-values 0.025,0.05,0.075,0.10 \
       --representative-phase 0.05 --thermal-protocol finite-beta \
       --dark-classification-repeats 1,2 \
-      --run-large-strip --large-strip-repeats 3 --large-strip-eigenpairs 1024 \
+      --run-large-strip --large-strip-repeats 3 \
+      --large-strip-eigenpair-budgets 1024,2048,4096,8192 \
       --finite-beta-samples 8 --finite-beta-beta-max 0.25 \
       --finite-beta-beta-points 41 --transfer-max-length 256 --timeout -1
   QLINKS_NUM_THREADS=16 QLINKS_DOCKER_MEMORY_LIMIT=400g \
     scripts/docker_run_evidence_job.sh spin1 --profile production --stage compute \
-      --large-size-sizes 14 --large-size-eigenpairs 8192 \
+      --large-size-sizes 14 --large-size-eigenpair-budgets 10000 \
+      --large-size-baseline-data-dir experimental/data/evidence_jobs/spin1_production_20260806T074051Z \
+      --large-size-safe-fixed-widths 0.75,1.0 --large-size-quarter-window \
+      --large-size-concentration --large-size-concentration-half-width 1.0 \
+      --large-size-family-kappa-values 0.20 --large-size-family-eigenpairs 8192 \
       --representative-kappa 0.1 \
-      --principal-kappa-values 0.05,0.10,0.15,0.20 \
-      --large-size-concentration --timeout -1
+      --principal-kappa-values 0.05,0.10,0.15,0.20 --timeout -1
   scripts/docker_run_evidence_job.sh spin1 \
       --stage render \
       --source-data-dir experimental/data/evidence_jobs/spin1_production \
@@ -188,7 +192,11 @@ EXPORT_HOST=""
 EXPORT_CONTAINER=""
 FORWARDED_ARGS=()
 QDM_MICRO_REPEATS=""
+QDM_LARGE_STRIP_REPEATS=""
 ALLOW_LARGE_DENSE_ED=0
+ALLOW_EXTREME_LARGE_STRIP=0
+SPIN_LARGE_SIZE_SIZES=""
+ALLOW_EXTREME_LARGE_SIZE=0
 
 while (($#)); do
     case "$1" in
@@ -266,6 +274,38 @@ while (($#)); do
             FORWARDED_ARGS+=("$1")
             shift
             ;;
+        --large-strip-repeats)
+            [[ $# -ge 2 ]] || { echo "--large-strip-repeats requires a value" >&2; exit 2; }
+            QDM_LARGE_STRIP_REPEATS="$2"
+            FORWARDED_ARGS+=("$1" "$2")
+            shift 2
+            ;;
+        --large-strip-repeats=*)
+            QDM_LARGE_STRIP_REPEATS="${1#*=}"
+            FORWARDED_ARGS+=("$1")
+            shift
+            ;;
+        --allow-extreme-large-strip)
+            ALLOW_EXTREME_LARGE_STRIP=1
+            FORWARDED_ARGS+=("$1")
+            shift
+            ;;
+        --large-size-sizes)
+            [[ $# -ge 2 ]] || { echo "--large-size-sizes requires a value" >&2; exit 2; }
+            SPIN_LARGE_SIZE_SIZES="$2"
+            FORWARDED_ARGS+=("$1" "$2")
+            shift 2
+            ;;
+        --large-size-sizes=*)
+            SPIN_LARGE_SIZE_SIZES="${1#*=}"
+            FORWARDED_ARGS+=("$1")
+            shift
+            ;;
+        --allow-extreme-large-size)
+            ALLOW_EXTREME_LARGE_SIZE=1
+            FORWARDED_ARGS+=("$1")
+            shift
+            ;;
         *)
             FORWARDED_ARGS+=("$1")
             shift
@@ -300,6 +340,32 @@ killed a 400 GiB container. Use --microcanonical-repeats 1,2 for production.
 Only add --allow-large-dense-ed after switching to a memory-scalable method or
 confirming an effectively exclusive host with a verified memory estimate.
 EOF_DENSE_GUARD
+                exit 2
+            fi
+        done
+    fi
+fi
+
+if [[ "${JOB_NAME}" == "qdm" || "${JOB_NAME}" == "square_qdm" ]]; then
+    if [[ -n "${QDM_LARGE_STRIP_REPEATS}" && "${ALLOW_EXTREME_LARGE_STRIP}" != "1" ]]; then
+        IFS=',' read -r -a _qdm_large_repeats <<< "${QDM_LARGE_STRIP_REPEATS}"
+        for _repeat in "${_qdm_large_repeats[@]}"; do
+            _repeat="${_repeat//[[:space:]]/}"
+            if [[ "${_repeat}" =~ ^[0-9]+$ ]] && (( _repeat >= 4 )); then
+                echo "QDM large-strip production is capped at 12x4 (repeat=3). Use --allow-extreme-large-strip only for an explicit feasibility experiment." >&2
+                exit 2
+            fi
+        done
+    fi
+fi
+
+if [[ "${JOB_NAME}" == "spin1" || "${JOB_NAME}" == "spin1_xy" ]]; then
+    if [[ -n "${SPIN_LARGE_SIZE_SIZES}" && "${ALLOW_EXTREME_LARGE_SIZE}" != "1" ]]; then
+        IFS=',' read -r -a _spin_large_sizes <<< "${SPIN_LARGE_SIZE_SIZES}"
+        for _size in "${_spin_large_sizes[@]}"; do
+            _size="${_size//[[:space:]]/}"
+            if [[ "${_size}" =~ ^[0-9]+$ ]] && (( _size > 14 )); then
+                echo "Spin-1 partial-spectrum production is capped at L=14. Use --allow-extreme-large-size only for an explicit feasibility experiment." >&2
                 exit 2
             fi
         done

@@ -42,7 +42,67 @@ def main() -> None:
         "--large-size-eigenpairs",
         type=int,
         default=None,
-        help="Number of shift-invert eigenpairs requested near E=0 for each large size.",
+        help="Legacy single shift-invert eigenpair budget near E=0.",
+    )
+    parser.add_argument(
+        "--large-size-eigenpair-budgets",
+        default=None,
+        help=(
+            "Comma-separated independent shift-invert budgets for the L=14 "
+            "solver-convergence study, e.g. 10000,12000. Each budget is run "
+            "from scratch and checkpointed before the next budget."
+        ),
+    )
+    parser.add_argument(
+        "--large-size-safe-fixed-widths",
+        default=None,
+        help=(
+            "Comma-separated deliberately safe fixed half-widths used for the "
+            "large-size convergence table, e.g. 0.75,1.0."
+        ),
+    )
+    parser.add_argument(
+        "--large-size-quarter-window",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Include the prefactor-1 L^(1/4) safe window in the L=14 convergence audit.",
+    )
+    parser.add_argument(
+        "--large-size-concentration-half-width",
+        type=float,
+        default=None,
+        help="Fully covered fixed half-width used for the L=14 19-operator covariance (default 1).",
+    )
+    parser.add_argument(
+        "--large-size-baseline-data-dir",
+        default=None,
+        help=(
+            "Optional repository-relative evidence directory containing the authoritative "
+            "lower-budget L=14 run. When present, its fully covered safe-window rows are "
+            "prepended to the sparse convergence table."
+        ),
+    )
+    parser.add_argument(
+        "--large-size-family-kappa-values",
+        default=None,
+        help=(
+            "Additional L=14 compatible-family couplings for the larger-size envelope, "
+            "normally 0.2 after the representative convergence run."
+        ),
+    )
+    parser.add_argument(
+        "--large-size-family-eigenpairs",
+        type=int,
+        default=None,
+        help="Shift-invert eigenpair budget for each additional L=14 family point.",
+    )
+    parser.add_argument(
+        "--allow-extreme-large-size",
+        action="store_true",
+        help=(
+            "Allow partial-spectrum sizes above L=14. This is experimental: L=16 has "
+            "about 2.7e5 states in the target momentum sector and is not a production default."
+        ),
     )
     parser.add_argument(
         "--large-size-shift",
@@ -170,6 +230,9 @@ def main() -> None:
     micro_sizes = parse_int_tuple(args.microcanonical_sizes)
     deformation_sizes = parse_int_tuple(args.deformation_sizes)
     large_sizes = parse_int_tuple(args.large_size_sizes)
+    large_budgets = parse_int_tuple(args.large_size_eigenpair_budgets)
+    large_safe_widths = parse_float_tuple(args.large_size_safe_fixed_widths)
+    large_family_kappas = parse_float_tuple(args.large_size_family_kappa_values)
     window_exponents = parse_float_tuple(args.window_exponents)
     window_prefactors = parse_float_tuple(args.window_prefactors)
     j3_values = parse_float_tuple(args.j3_values)
@@ -192,7 +255,38 @@ def main() -> None:
     if deformation_sizes is not None:
         overrides["DEFORMATION_SIZES"] = deformation_sizes
     if large_sizes is not None:
+        if max(large_sizes) > 14 and not args.allow_extreme_large_size:
+            raise ValueError(
+                "Spin-1 partial-spectrum production is capped at L=14. "
+                "Use --allow-extreme-large-size only for an explicitly experimental L>=16 run."
+            )
         overrides["LARGE_SIZE_SIZES"] = large_sizes
+    if large_budgets is not None:
+        if any(value < 2 for value in large_budgets):
+            raise ValueError("--large-size-eigenpair-budgets entries must be at least 2")
+        overrides["LARGE_SIZE_EIGENPAIR_BUDGETS"] = tuple(sorted(set(large_budgets)))
+    if large_safe_widths is not None:
+        if any(value <= 0.0 for value in large_safe_widths):
+            raise ValueError("--large-size-safe-fixed-widths entries must be positive")
+        overrides["LARGE_SIZE_SAFE_FIXED_HALF_WIDTHS"] = large_safe_widths
+    if args.large_size_quarter_window is not None:
+        overrides["LARGE_SIZE_INCLUDE_QUARTER_WINDOW"] = bool(args.large_size_quarter_window)
+    if args.large_size_concentration_half_width is not None:
+        if args.large_size_concentration_half_width <= 0.0:
+            raise ValueError("--large-size-concentration-half-width must be positive")
+        overrides["LARGE_SIZE_CONCENTRATION_HALF_WIDTH"] = float(
+            args.large_size_concentration_half_width
+        )
+    if args.large_size_baseline_data_dir is not None:
+        overrides["LARGE_SIZE_BASELINE_DATA_DIR"] = args.large_size_baseline_data_dir
+    if large_family_kappas is not None:
+        if any(value <= 0.0 for value in large_family_kappas):
+            raise ValueError("--large-size-family-kappa-values must be positive")
+        overrides["LARGE_SIZE_FAMILY_KAPPA_VALUES"] = large_family_kappas
+    if args.large_size_family_eigenpairs is not None:
+        if args.large_size_family_eigenpairs < 2:
+            raise ValueError("--large-size-family-eigenpairs must be at least 2")
+        overrides["LARGE_SIZE_FAMILY_EIGENPAIRS"] = int(args.large_size_family_eigenpairs)
     if args.large_size_eigenpairs is not None:
         if args.large_size_eigenpairs < 2:
             raise ValueError("--large-size-eigenpairs must be at least 2")

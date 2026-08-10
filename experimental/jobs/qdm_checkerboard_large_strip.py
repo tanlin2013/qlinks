@@ -27,6 +27,7 @@ import scipy.sparse.linalg as spla
 
 from qlinks.basis import Basis
 from qlinks.caging.spectral import SymmetrySectorBasis
+from qlinks.encoded import BinaryEncodedBasis, encode_binary_config
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,7 +94,7 @@ def project_sparse_operator_to_sector(
 
 def materialize_periodic_product_state_from_basis(
     instance: Any,
-    basis: Basis,
+    basis: Basis | BinaryEncodedBasis,
     *,
     normalize: bool = True,
     tolerance: float = 1.0e-12,
@@ -127,7 +128,10 @@ def materialize_periodic_product_state_from_basis(
             ]
             amplitude *= complex(block.amplitudes[support_index])
         try:
-            basis_index = basis.require_index(complete)
+            if isinstance(basis, BinaryEncodedBasis):
+                basis_index = basis.require_index(encode_binary_config(complete))
+            else:
+                basis_index = basis.require_index(complete)
         except KeyError as exc:
             raise ValueError(
                 "a periodic-product support configuration is absent from the supplied basis"
@@ -141,15 +145,53 @@ def materialize_periodic_product_state_from_basis(
     return state
 
 
-def packed_binary_basis_index(basis: Basis) -> dict[bytes, int]:
-    """Return a compact binary-key index for a dimer basis.
+def binary_basis_configs_uint8(
+    basis: Basis | BinaryEncodedBasis,
+    *,
+    chunk_size: int = 32768,
+) -> npt.NDArray[np.uint8]:
+    """Materialize binary configurations with one byte per variable.
 
-    ``Basis.index`` deliberately uses canonical int64 byte strings.  The
-    production 12x4 translation construction needs many repeated lookups, so a
-    temporary packed-binary index cuts both lookup-key size and transformed-row
-    traffic.  It remains an experimental workflow optimization rather than a
-    package-level basis API.
+    The local-witness embedding machinery still consumes an explicit
+    configuration table.  For the 12x4 production basis this helper keeps that
+    unavoidable table at ~1 byte/configuration-variable instead of the 8-byte
+    int64 representation returned by ``to_array_basis()``.
     """
+
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be positive")
+    if isinstance(basis, BinaryEncodedBasis):
+        result = np.empty((basis.n_states, basis.n_variables), dtype=np.uint8)
+        for start in range(0, basis.n_states, int(chunk_size)):
+            stop = min(start + int(chunk_size), basis.n_states)
+            packed = _encoded_codes_to_packed_bytes(
+                basis.codes[start:stop],
+                n_variables=basis.n_variables,
+            )
+            result[start:stop] = np.unpackbits(packed, axis=1, bitorder="little")[
+                :, : basis.n_variables
+            ]
+        return result
+
+    states = np.asarray(basis.states)
+    if not np.all((states == 0) | (states == 1)):
+        raise ValueError("binary_basis_configs_uint8 requires a binary basis")
+    return states.astype(np.uint8, copy=False)
+
+
+def packed_binary_basis_index(
+    basis: Basis | BinaryEncodedBasis,
+) -> Mapping[bytes | int, int]:
+    """Return the existing compact lookup for a binary dimer basis.
+
+    ``BinaryEncodedBasis`` already owns the most memory-efficient integer-code
+    index, so the large-strip path reuses it directly instead of materializing
+    millions of explicit 0/1 configurations.  Array bases retain the historical
+    packed-byte lookup used by small smoke/known runs.
+    """
+
+    if isinstance(basis, BinaryEncodedBasis):
+        return basis.index
 
     states = np.asarray(basis.states)
     if not np.all((states == 0) | (states == 1)):
@@ -158,16 +200,37 @@ def packed_binary_basis_index(basis: Basis) -> dict[bytes, int]:
     return {row.tobytes(): int(index) for index, row in enumerate(packed)}
 
 
+def _encoded_codes_to_packed_bytes(
+    codes: npt.ArrayLike,
+    *,
+    n_variables: int,
+) -> npt.NDArray[np.uint8]:
+    """Decode a bounded chunk of Python-int codes into packed little-endian bytes."""
+
+    code_values = np.asarray(codes, dtype=object).reshape(-1)
+    byte_width = (int(n_variables) + 7) // 8
+    blob = b"".join(int(code).to_bytes(byte_width, "little", signed=False) for code in code_values)
+    if not blob:
+        return np.zeros((0, byte_width), dtype=np.uint8)
+    return np.frombuffer(blob, dtype=np.uint8).reshape(code_values.size, byte_width)
+
+
 def translation_permutation_from_binary_basis(
     model: Any,
-    basis: Basis,
+    basis: Basis | BinaryEncodedBasis,
     *,
-    packed_index: Mapping[bytes, int],
+    packed_index: Mapping[bytes | int, int],
     dx: int = 0,
     dy: int = 0,
     chunk_size: int = 32768,
 ) -> npt.NDArray[np.int64]:
-    """Build a dimer-basis translation permutation in bounded temporary memory."""
+    """Build a dimer-basis translation permutation in bounded temporary memory.
+
+    The production 12x4 bitmask build returns :class:`BinaryEncodedBasis`.
+    That path is handled chunk-wise without ever constructing the
+    ``n_states x n_variables`` configuration matrix, which would otherwise
+    dominate memory before the symmetry projection begins.
+    """
 
     if chunk_size <= 0:
         raise ValueError("chunk_size must be positive")
@@ -189,6 +252,32 @@ def translation_permutation_from_binary_basis(
     source_for_target = np.empty_like(target_for_source)
     source_for_target[target_for_source] = np.arange(target_for_source.size, dtype=np.int64)
     result = np.empty(basis.n_states, dtype=np.int64)
+
+    if isinstance(basis, BinaryEncodedBasis):
+        # Work with <=O(chunk_size * n_variables) bytes at a time.  The
+        # encoded basis' int->index dictionary is reused as the lookup.
+        byte_width = (basis.n_variables + 7) // 8
+        for start in range(0, basis.n_states, int(chunk_size)):
+            stop = min(start + int(chunk_size), basis.n_states)
+            packed = _encoded_codes_to_packed_bytes(
+                basis.codes[start:stop],
+                n_variables=basis.n_variables,
+            )
+            unpacked = np.unpackbits(packed, axis=1, bitorder="little")[:, : basis.n_variables]
+            transformed = unpacked[:, source_for_target]
+            transformed_packed = np.packbits(transformed, axis=1, bitorder="little")
+            if transformed_packed.shape[1] != byte_width:
+                raise RuntimeError("unexpected packed-width change during translation")
+            for offset, row in enumerate(transformed_packed):
+                code = int.from_bytes(row.tobytes(), "little", signed=False)
+                try:
+                    result[start + offset] = int(packed_index[code])
+                except KeyError as exc:
+                    raise ValueError(
+                        "translated configuration is absent from the encoded basis"
+                    ) from exc
+        return result
+
     states = np.asarray(basis.states)
     for start in range(0, basis.n_states, int(chunk_size)):
         stop = min(start + int(chunk_size), basis.n_states)

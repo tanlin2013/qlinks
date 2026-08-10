@@ -45,6 +45,31 @@ def main() -> None:
     parser.add_argument("--large-strip-repeats", default=None)
     parser.add_argument("--run-large-strip", action="store_true")
     parser.add_argument("--large-strip-eigenpairs", type=int, default=None)
+    parser.add_argument(
+        "--large-strip-eigenpair-budgets",
+        default=None,
+        help=(
+            "Comma-separated shift-invert budget ladder for the 12x4 strip. "
+            "The notebook checkpoints each attempt and stops after the first budget that "
+            "fully covers every requested window unless an extra convergence step is requested."
+        ),
+    )
+    parser.add_argument(
+        "--large-strip-extra-convergence-step",
+        action="store_true",
+        help=(
+            "After first full window coverage, run one additional budget from the ladder as "
+            "a solver cross-check."
+        ),
+    )
+    parser.add_argument(
+        "--allow-extreme-large-strip",
+        action="store_true",
+        help=(
+            "Allow repeats >=4 (16x4 and larger). This is not production-feasible by default: "
+            "the 16x4 zero-winding basis already contains about 4.59e8 states."
+        ),
+    )
     parser.add_argument("--large-strip-sigma-offset", type=float, default=None)
     parser.add_argument("--large-strip-eig-tolerance", type=float, default=None)
     parser.add_argument("--large-strip-maxiter", type=int, default=None)
@@ -82,6 +107,7 @@ def main() -> None:
     positive = parse_float_tuple(args.positive_phase_values)
     prefactors = parse_float_tuple(args.window_prefactors)
     large = parse_int_tuple(args.large_strip_repeats)
+    large_budgets = parse_int_tuple(args.large_strip_eigenpair_budgets)
     dark_classification = parse_int_tuple(args.dark_classification_repeats)
     large_phase_check = parse_float_tuple(args.large_strip_phase_check_values)
     overrides = {
@@ -105,7 +131,18 @@ def main() -> None:
     if prefactors is not None:
         overrides["MICROCANONICAL_PREFACTORS"] = prefactors
     if large is not None:
+        if max(large) >= 4 and not args.allow_extreme_large_strip:
+            raise ValueError(
+                "QDM large-strip production is capped at repeats=3 (12x4). "
+                "The 16x4 zero-winding space is about 4.59e8 states; use "
+                "--allow-extreme-large-strip only for an explicit feasibility experiment."
+            )
         overrides["LARGE_STRIP_REPEATS"] = large
+    if large_budgets is not None:
+        if any(value < 4 for value in large_budgets):
+            raise ValueError("--large-strip-eigenpair-budgets entries must be at least four")
+        overrides["LARGE_STRIP_EIGENPAIR_BUDGETS"] = tuple(sorted(set(large_budgets)))
+    overrides["LARGE_STRIP_EXTRA_CONVERGENCE_STEP"] = bool(args.large_strip_extra_convergence_step)
     if dark_classification is not None:
         overrides["DARK_CLASSIFICATION_REPEATS"] = dark_classification
     if large_phase_check is not None:
