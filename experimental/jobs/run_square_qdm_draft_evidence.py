@@ -42,6 +42,12 @@ def main() -> None:
     parser.add_argument("--window-prefactors", default=None)
     parser.add_argument("--primary-window-prefactor", type=float, default=None)
     parser.add_argument("--energy-block-tolerance", type=float, default=None)
+    parser.add_argument(
+        "--symmetry-chunk-size",
+        type=int,
+        default=None,
+        help="Chunk size for 12x4 checkerboard symmetry permutations.",
+    )
     parser.add_argument("--large-strip-repeats", default=None)
     parser.add_argument("--run-large-strip", action="store_true")
     parser.add_argument("--large-strip-eigenpairs", type=int, default=None)
@@ -183,6 +189,10 @@ def main() -> None:
         overrides["PRIMARY_WINDOW_PREFACTOR"] = float(args.primary_window_prefactor)
     if args.energy_block_tolerance is not None:
         overrides["ENERGY_BLOCK_TOL"] = float(args.energy_block_tolerance)
+    if args.symmetry_chunk_size is not None:
+        if args.symmetry_chunk_size <= 0:
+            raise ValueError("--symmetry-chunk-size must be positive")
+        overrides["CHECKERBOARD_SYMMETRY_CHUNK_SIZE"] = int(args.symmetry_chunk_size)
     run_evidence_notebook(
         job_name="square_qdm_draft_evidence",
         notebook_filename="square_qdm_draft_evidence.ipynb",

@@ -20,6 +20,7 @@ Examples:
       --representative-phase 0.05 --thermal-protocol finite-beta \
       --dark-classification-repeats 1,2 \
       --run-large-strip --large-strip-repeats 3 \
+      --symmetry-chunk-size 16384 \
       --large-strip-eigenpair-budgets 1024,2048,4096,8192 \
       --finite-beta-samples 8 --finite-beta-beta-max 0.25 \
       --finite-beta-beta-points 41 --transfer-max-length 256 --timeout -1

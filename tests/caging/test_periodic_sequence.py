@@ -305,3 +305,27 @@ def test_direct_biperiodic_search_reports_failure_mechanisms() -> None:
     assert not result.certified_records
     assert result.failure_counts
     assert all(record.failure_reason is not None for record in result.failed_records)
+
+
+def test_checkerboard_periodic_product_has_exact_all_repeat_certificate() -> None:
+    """Protect the exact 4N x 4 checkerboard periodic-product cancellation theorem."""
+    from qlinks.caging.checkerboard_exact import certify_checkerboard_periodic_product_exact
+
+    model, certified, context = _stripe_cage_fixture()
+    unit_cell = SquareQDMPeriodicProductUnitCell.from_padding(
+        model,
+        context.blocks,
+        certified.reports[REPEATABLE_X_REPORT_INDEX].padding,
+        repeat_axis="x",
+    )
+
+    certificate = certify_checkerboard_periodic_product_exact(unit_cell)
+
+    assert certificate.exact_for_all_positive_repeats
+    assert certificate.active_plaquette_columns == (0, 2)
+    assert certificate.inactive_plaquette_columns == (1, 3)
+    assert certificate.boundary_inactive_exact
+    assert certificate.checkerboard_phase_pairs_exact
+    assert certificate.kinetic_symbolic_residual_terms == 0
+    assert certificate.flippable_plaquettes_per_support_state == 4
+    assert certificate.unit_cell_energy_per_lambda == 4

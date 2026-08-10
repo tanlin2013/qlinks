@@ -108,7 +108,8 @@ def main():
         2, 2, left=0.085, right=0.975, bottom=0.10, top=0.91, wspace=0.32, hspace=0.36
     )
     axa = fig.add_subplot(outer[0, 0])
-    # Background file contains only joint-dark-cleaned states. The cage is drawn once as a star.
+    # Background file is the fully resolved raw spectrum with only the selected target cage
+    # removed; the cage is drawn once as a star.
     for col, label, marker in [("Q_A", r"$Q_R^A$", "o"), ("Q_Z", r"$Q_R^Z$", "s")]:
         axa.scatter(
             scatter.energy_density, scatter[col], s=10, alpha=0.52, marker=marker, label=label
@@ -204,7 +205,8 @@ def main():
             0.5, 0.5, "concentration unavailable", ha="center", va="center", transform=axd.transAxes
         )
     else:
-        piv = c.pivot(index="Lx", columns="phase", values="w").sort_index()
+        value_column = "w_raw" if "w_raw" in c.columns else "w"
+        piv = c.pivot(index="Lx", columns="phase", values=value_column).sort_index()
         x = np.asarray(piv.columns, float)
         y = np.asarray(piv.index, int)
         mesh = axd.pcolormesh(edges(x, 0.0125), edges(y, 1.0), piv.to_numpy(), shading="flat")

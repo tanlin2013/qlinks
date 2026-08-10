@@ -17,6 +17,7 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Add exact checkerboard 4N x 4 periodic-product cage certification and fully resolve the positive-phase checkerboard translation irrep before raw finite-beta and stripe-concentration evidence.
 - Add the gated square-QDM checkerboard fixed-width evidence workflow, including transfer-energy matching, size-independent compatibility and gauge tests, reduced-symmetry thermal pilots, translated A/Z joint-dark cleaning, and complete stripe-algebra concentration.
 - Add reduced Fredholm-candidate diagnostics for compact square-QDM cage sequences, showing a rectangular state complement and a constant zero-winding coupling symbol across fixed width.
 - Add Laurent/Fredholm domain-wall diagnostics and incidence-module interface tests separating genuine index-bound defects from critical or locally glued cage modes.
