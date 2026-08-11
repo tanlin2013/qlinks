@@ -16,6 +16,8 @@ metadata together with every estimate.
 from __future__ import annotations
 
 import itertools
+import resource
+import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -59,6 +61,10 @@ class PartialSpectrum:
     residuals: npt.NDArray[np.float64]
     sigma: float
     target_energy: float
+    method: str = "shift_invert_superlu"
+    requested_subspace_size: int | None = None
+    transformed_residuals: npt.NDArray[np.float64] | None = None
+    peak_rss_gib: float | None = None
 
     @property
     def min_energy(self) -> float:
@@ -78,6 +84,14 @@ class PartialSpectrum:
             self.min_energy <= self.target_energy - width
             and self.max_energy >= self.target_energy + width
         )
+
+
+def process_peak_rss_gib() -> float:
+    """Return this process' maximum resident-set size in GiB."""
+
+    value = float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    bytes_value = value if sys.platform == "darwin" else value * 1024.0
+    return bytes_value / float(1024**3)
 
 
 def project_sparse_operator_to_sector(
@@ -499,6 +513,151 @@ def energy_matched_canonical_estimate(
     )
 
 
+def folded_spectrum_partial_spectrum(
+    hamiltonian: sp.spmatrix | sp.sparray,
+    *,
+    target_energy: float,
+    subspace_size: int,
+    tolerance: float = 1.0e-8,
+    maxiter: int | None = None,
+    ncv_factor: float = 2.05,
+    random_seed: int = 20260811,
+    cluster_tolerance: float | None = None,
+) -> PartialSpectrum:
+    """Return interior eigenpairs without factorizing ``H-target_energy``.
+
+    Lanczos is applied to the positive semidefinite folded operator
+    ``(H-E_target I)^2``.  Every Krylov action uses two sparse Hamiltonian
+    products, so no SuperLU factors are constructed.  Degenerate folded
+    eigenspaces are resolved by diagonalizing ``H`` only inside each small
+    folded-eigenvalue cluster.
+
+    This is still a partial-spectrum method: callers must require explicit
+    window coverage, eigenpair residuals, and budget convergence.
+    """
+
+    h = sp.csr_array(hamiltonian, dtype=np.complex128)
+    n = int(h.shape[0])
+    if h.shape[1] != n:
+        raise ValueError("hamiltonian must be square")
+    if subspace_size <= 0:
+        raise ValueError("subspace_size must be positive")
+    if tolerance <= 0.0:
+        raise ValueError("tolerance must be positive")
+    if ncv_factor <= 1.0:
+        raise ValueError("ncv_factor must exceed one")
+
+    k = min(int(subspace_size), n - 2)
+    if k <= 0:
+        dense = h.toarray()
+        values, vectors = np.linalg.eigh(dense)
+        residuals = np.linalg.norm(h @ vectors - vectors * values[None, :], axis=0)
+        return PartialSpectrum(
+            energies=np.asarray(values, dtype=np.float64),
+            eigenvectors=np.asarray(vectors, dtype=np.complex128),
+            residuals=np.asarray(residuals, dtype=np.float64),
+            sigma=float(target_energy),
+            target_energy=float(target_energy),
+            method="dense_eigh_small_sector",
+            requested_subspace_size=int(subspace_size),
+            transformed_residuals=np.zeros_like(values, dtype=np.float64),
+            peak_rss_gib=process_peak_rss_gib(),
+        )
+
+    shifted = h - float(target_energy) * sp.eye(n, dtype=np.complex128, format="csr")
+
+    def folded_matvec(vector):
+        return shifted @ (shifted @ vector)
+
+    def folded_matmat(matrix):
+        return shifted @ (shifted @ matrix)
+
+    folded = spla.LinearOperator(
+        shape=(n, n), matvec=folded_matvec, matmat=folded_matmat, dtype=np.complex128
+    )
+    ncv = min(n, max(k + 2, int(np.ceil(float(ncv_factor) * k))))
+    rng = np.random.default_rng(int(random_seed))
+    v0 = rng.normal(size=n) + 1.0j * rng.normal(size=n)
+    v0 = np.asarray(v0 / np.linalg.norm(v0), dtype=np.complex128)
+    arpack_status = "converged"
+    try:
+        folded_values, vectors = spla.eigsh(
+            folded,
+            k=k,
+            which="SA",
+            tol=float(tolerance),
+            maxiter=maxiter,
+            ncv=ncv,
+            v0=v0,
+            return_eigenvectors=True,
+        )
+    except spla.ArpackNoConvergence as exc:
+        if exc.eigenvalues is None or exc.eigenvectors is None or len(exc.eigenvalues) < 4:
+            raise
+        folded_values, vectors = exc.eigenvalues, exc.eigenvectors
+        arpack_status = "partial_convergence"
+        k = int(len(folded_values))
+    folded_values = np.asarray(np.real(folded_values), dtype=np.float64)
+    vectors = np.asarray(vectors, dtype=np.complex128)
+    order = np.argsort(folded_values)
+    folded_values = folded_values[order]
+    vectors = vectors[:, order]
+
+    if cluster_tolerance is None:
+        cluster_tolerance = max(1.0e-11, 50.0 * float(tolerance))
+    energies_out = []
+    vectors_out = []
+    transformed_residuals_out = []
+    begin = 0
+    while begin < k:
+        end = begin + 1
+        reference = float(folded_values[begin])
+        scale = max(1.0, abs(reference))
+        while (
+            end < k
+            and abs(float(folded_values[end]) - reference) <= float(cluster_tolerance) * scale
+        ):
+            end += 1
+        block = vectors[:, begin:end]
+        h_block = h @ block
+        compressed = block.conj().T @ h_block
+        compressed = 0.5 * (compressed + compressed.conj().T)
+        local_energies, rotation = np.linalg.eigh(compressed)
+        rotated = block @ rotation
+        folded_residual = np.linalg.norm(
+            folded_matmat(block) - block * folded_values[None, begin:end], axis=0
+        )
+        energies_out.append(np.asarray(local_energies, dtype=np.float64))
+        vectors_out.append(np.asarray(rotated, dtype=np.complex128))
+        transformed_residuals_out.append(np.asarray(folded_residual, dtype=np.float64))
+        begin = end
+
+    energies = np.concatenate(energies_out)
+    eigenvectors = np.column_stack(vectors_out)
+    transformed_residuals = np.concatenate(transformed_residuals_out)
+    energy_order = np.argsort(energies)
+    energies = energies[energy_order]
+    eigenvectors = eigenvectors[:, energy_order]
+    transformed_residuals = transformed_residuals[energy_order]
+    residual_matrix = h @ eigenvectors - eigenvectors * energies[None, :]
+    residuals = np.linalg.norm(residual_matrix, axis=0)
+    return PartialSpectrum(
+        energies=np.asarray(energies, dtype=np.float64),
+        eigenvectors=np.asarray(eigenvectors, dtype=np.complex128),
+        residuals=np.asarray(residuals, dtype=np.float64),
+        sigma=float(target_energy),
+        target_energy=float(target_energy),
+        method=(
+            "folded_spectrum_lanczos"
+            if arpack_status == "converged"
+            else "folded_spectrum_lanczos_partial_arpack"
+        ),
+        requested_subspace_size=int(subspace_size),
+        transformed_residuals=np.asarray(transformed_residuals, dtype=np.float64),
+        peak_rss_gib=process_peak_rss_gib(),
+    )
+
+
 def shift_invert_partial_spectrum(
     hamiltonian: sp.spmatrix | sp.sparray,
     *,
@@ -550,4 +709,8 @@ def shift_invert_partial_spectrum(
         residuals=np.asarray(residuals, dtype=np.float64),
         sigma=float(target_energy) + float(sigma_offset),
         target_energy=float(target_energy),
+        method="shift_invert_superlu",
+        requested_subspace_size=int(eigenpairs),
+        transformed_residuals=None,
+        peak_rss_gib=process_peak_rss_gib(),
     )

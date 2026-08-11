@@ -240,7 +240,9 @@ scripts/docker_run_evidence_job.sh qdm \
   --dark-classification-repeats 1,2 \
   --run-large-strip \
   --large-strip-repeats 3 \
-  --large-strip-eigenpairs 1024 \
+  --large-strip-spectral-method folded \
+  --large-strip-subspace-budgets 512,1024,2048,4096,8192 \
+  --large-strip-extra-convergence-step \
   --finite-beta-samples 8 \
   --finite-beta-beta-max 0.25 \
   --finite-beta-beta-points 41 \
@@ -251,11 +253,14 @@ scripts/docker_run_evidence_job.sh qdm \
 
 The beta-zero energy-density gate has already failed for `lambda_star=1`, so
 the primary protocol is now explicitly finite temperature.  Full spectra remain
-restricted to `4x4` and `8x4`.  The `12x4` lane constructs the common
-`T_x^2,T_y^2` sector sparsely, estimates the energy-matched canonical target by
-random-phase canonical typicality, and obtains a partial spectrum near the cage
-energy by shift-invert.  A partial-spectrum row is accepted only when its
-reported `window_coverage_complete` flag is true.  The complete stripe-local
+restricted to `4x4` and `8x4`.  The `12x4` lane constructs the fully resolved
+checkerboard translation irrep sparsely and checkpoints the energy-matched
+canonical typicality result before attempting an interior spectrum.  The default
+interior solver is folded-spectrum Lanczos on `(H-E_psi)^2`; it uses sparse
+Hamiltonian products only and does not construct SuperLU factors.  Direct-LU
+shift-invert is retained only as an explicit diagnostic fallback.  A partial-
+spectrum row is accepted only when its reported `window_coverage_complete` flag
+is true and the staged budget comparison is available.  The complete stripe-local
 covariance calculation is then evaluated on the same covered window.  The
 1024-eigenpair setting is a production starting point, not an assumed sufficient
 window size; increase it only if the coverage export requires it.

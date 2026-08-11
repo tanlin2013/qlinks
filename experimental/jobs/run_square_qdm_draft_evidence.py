@@ -50,14 +50,46 @@ def main() -> None:
     )
     parser.add_argument("--large-strip-repeats", default=None)
     parser.add_argument("--run-large-strip", action="store_true")
+    parser.add_argument(
+        "--large-strip-spectral-method",
+        choices=("folded", "shift-invert"),
+        default=None,
+        help=(
+            "Interior-spectrum backend. Production default is folded-spectrum Lanczos, "
+            "which avoids direct sparse LU. shift-invert is diagnostic-only and requires "
+            "--allow-direct-lu-shift-invert."
+        ),
+    )
+    parser.add_argument(
+        "--large-strip-subspace-budgets",
+        default=None,
+        help=(
+            "Comma-separated folded-spectrum Lanczos subspace sizes. The workflow escalates "
+            "until all requested windows are covered and then performs one extra budget "
+            "when requested."
+        ),
+    )
+    parser.add_argument("--large-strip-folded-tolerance", type=float, default=None)
+    parser.add_argument("--large-strip-folded-ncv-factor", type=float, default=None)
+    parser.add_argument("--large-strip-folded-random-seed", type=int, default=None)
+    parser.add_argument("--large-strip-convergence-tolerance", type=float, default=None)
+    parser.add_argument(
+        "--allow-direct-lu-shift-invert",
+        action="store_true",
+        help="Explicitly allow the memory-heavy SuperLU shift-invert diagnostic backend.",
+    )
+    parser.add_argument(
+        "--large-strip-canonical-only",
+        action="store_true",
+        help="Checkpoint the large-strip canonical target and stop before any spectral solve.",
+    )
     parser.add_argument("--large-strip-eigenpairs", type=int, default=None)
     parser.add_argument(
         "--large-strip-eigenpair-budgets",
         default=None,
         help=(
-            "Comma-separated shift-invert budget ladder for the 12x4 strip. "
-            "The notebook checkpoints each attempt and stops after the first budget that "
-            "fully covers every requested window unless an extra convergence step is requested."
+            "Legacy comma-separated budget ladder. With the folded backend these values are "
+            "treated as subspace sizes; with shift-invert they remain requested eigenpair counts."
         ),
     )
     parser.add_argument(
@@ -114,6 +146,7 @@ def main() -> None:
     prefactors = parse_float_tuple(args.window_prefactors)
     large = parse_int_tuple(args.large_strip_repeats)
     large_budgets = parse_int_tuple(args.large_strip_eigenpair_budgets)
+    large_subspace_budgets = parse_int_tuple(args.large_strip_subspace_budgets)
     dark_classification = parse_int_tuple(args.dark_classification_repeats)
     large_phase_check = parse_float_tuple(args.large_strip_phase_check_values)
     overrides = {
@@ -122,6 +155,7 @@ def main() -> None:
         "RUN_CHECKERBOARD_THERMAL_SCAN": not args.skip_checkerboard_thermal_scan,
         "RUN_CHECKERBOARD_CONCENTRATION": not args.skip_checkerboard_concentration,
         "RUN_LARGE_STRIP": bool(args.run_large_strip),
+        "LARGE_STRIP_CANONICAL_ONLY": bool(args.large_strip_canonical_only),
         "RUN_DARK_MANIFOLD_CLASSIFICATION": not args.skip_dark_manifold_classification,
         "CHECKERBOARD_THERMAL_PROTOCOL": args.thermal_protocol,
         "STRICT_CLAIMS": bool(args.strict_claims),
@@ -147,7 +181,43 @@ def main() -> None:
     if large_budgets is not None:
         if any(value < 4 for value in large_budgets):
             raise ValueError("--large-strip-eigenpair-budgets entries must be at least four")
-        overrides["LARGE_STRIP_EIGENPAIR_BUDGETS"] = tuple(sorted(set(large_budgets)))
+        legacy_budgets = tuple(sorted(set(large_budgets)))
+        overrides["LARGE_STRIP_EIGENPAIR_BUDGETS"] = legacy_budgets
+        # Backward compatibility: older production commands used this flag.
+        # With the new default folded backend, interpret it as a subspace budget
+        # unless the dedicated subspace flag is also supplied.
+        if large_subspace_budgets is None:
+            overrides["LARGE_STRIP_SUBSPACE_BUDGETS"] = legacy_budgets
+    if large_subspace_budgets is not None:
+        if any(value < 4 for value in large_subspace_budgets):
+            raise ValueError("--large-strip-subspace-budgets entries must be at least four")
+        overrides["LARGE_STRIP_SUBSPACE_BUDGETS"] = tuple(sorted(set(large_subspace_budgets)))
+    if args.large_strip_spectral_method is not None:
+        if (
+            args.large_strip_spectral_method == "shift-invert"
+            and not args.allow_direct_lu_shift_invert
+        ):
+            raise ValueError(
+                "direct-LU shift-invert is disabled after the 12x4 SuperLU MemoryError; "
+                "use --allow-direct-lu-shift-invert only for an explicit diagnostic retry"
+            )
+        overrides["LARGE_STRIP_SPECTRAL_METHOD"] = str(args.large_strip_spectral_method)
+    if args.large_strip_folded_tolerance is not None:
+        if args.large_strip_folded_tolerance <= 0:
+            raise ValueError("--large-strip-folded-tolerance must be positive")
+        overrides["LARGE_STRIP_FOLDED_TOL"] = float(args.large_strip_folded_tolerance)
+    if args.large_strip_folded_ncv_factor is not None:
+        if args.large_strip_folded_ncv_factor <= 1.0:
+            raise ValueError("--large-strip-folded-ncv-factor must exceed one")
+        overrides["LARGE_STRIP_FOLDED_NCV_FACTOR"] = float(args.large_strip_folded_ncv_factor)
+    if args.large_strip_folded_random_seed is not None:
+        overrides["LARGE_STRIP_FOLDED_RANDOM_SEED"] = int(args.large_strip_folded_random_seed)
+    if args.large_strip_convergence_tolerance is not None:
+        if args.large_strip_convergence_tolerance <= 0:
+            raise ValueError("--large-strip-convergence-tolerance must be positive")
+        overrides["LARGE_STRIP_METHOD_CONVERGENCE_TOL"] = float(
+            args.large_strip_convergence_tolerance
+        )
     overrides["LARGE_STRIP_EXTRA_CONVERGENCE_STEP"] = bool(args.large_strip_extra_convergence_step)
     if dark_classification is not None:
         overrides["DARK_CLASSIFICATION_REPEATS"] = dark_classification
