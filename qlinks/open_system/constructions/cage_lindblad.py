@@ -38,26 +38,32 @@ from qlinks.open_system.local_recycling import (
     build_local_recycling_jumps_from_subspace_regions,
     local_subspace_support_report_from_recycling_build_result,
 )
-from qlinks.open_system.manifold_detectors import (
+from qlinks.open_system.manifold_dark import (
+    diagnose_dressed_manifold_dark_detectors,
+    diagnose_manifold_dark_operator_basis,
+)
+from qlinks.open_system.manifold_detector_types import (
     DarkDetectorMatrixReadout,
     DressedManifoldDarkDetectorReport,
     LocalOperatorMatrixReadout,
     ManifoldDarkOperatorBasisReport,
     RecycledManifoldCandidateFamilyKernelReport,
     RecycledManifoldDarkDetectorReport,
+)
+from qlinks.open_system.manifold_recycling import (
     RecycledManifoldJumpSelectionReport,
-    RecycledManifoldResidualKernelReport,
-    TargetedResidualKernelJumpSelectionReport,
-    TargetedResidualKernelLinearSearchReport,
-    diagnose_dressed_manifold_dark_detectors,
-    diagnose_manifold_dark_operator_basis,
     diagnose_recycled_manifold_candidate_family_kernel,
     diagnose_recycled_manifold_dark_detectors,
-    diagnose_recycled_manifold_residual_kernel,
-    diagnose_targeted_residual_kernel_linear_search,
     expand_local_regions_to_cluster_unions,
     expand_local_regions_to_pair_unions,
     select_recycled_manifold_dark_detector_jumps,
+)
+from qlinks.open_system.manifold_residual import (
+    RecycledManifoldResidualKernelReport,
+    TargetedResidualKernelJumpSelectionReport,
+    TargetedResidualKernelLinearSearchReport,
+    diagnose_recycled_manifold_residual_kernel,
+    diagnose_targeted_residual_kernel_linear_search,
     select_targeted_residual_kernel_jumps,
 )
 from qlinks.open_system.operators import lindblad_rhs_density_matrix

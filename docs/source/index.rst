@@ -27,6 +27,7 @@ understand compact and regional cage states.
    tensor_network
    examples
    development_status
+   refactor_status
 
 .. toctree::
    :maxdepth: 2

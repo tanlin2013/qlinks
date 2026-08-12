@@ -23,6 +23,13 @@ from qlinks.caging.classification import (
 )
 from qlinks.caging.support import CageRegionSupport, extract_cage_region_support
 from qlinks.encoded import BinaryEncodedBasis
+from qlinks.local_structure import (
+    LocalMatrixUnitTerm,
+    embed_local_pattern_operator,
+    local_operator_matrix_unit_expansion,
+    local_rank_one_matrix_unit_expansion,
+    local_reduced_density_matrix_from_state,
+)
 from qlinks.models.base import (
     HamiltonianBuilderName,
     ModelBuildResult,
@@ -37,14 +44,9 @@ from qlinks.open_system.diagnostics import (
     verify_lindblad_final_state,
 )
 from qlinks.open_system.local_recycling import (
-    LocalMatrixUnitTerm,
     LocalRecyclingBuildResult,
     RecyclingJumpSource,
     build_local_recycling_jumps_from_regions,
-    embed_local_pattern_operator,
-    local_operator_matrix_unit_expansion,
-    local_rank_one_matrix_unit_expansion,
-    local_reduced_density_matrix_from_state,
 )
 from qlinks.open_system.operators import lindblad_rhs_density_matrix
 from qlinks.open_system.solvers import LindbladProblem

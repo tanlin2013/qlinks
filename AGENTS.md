@@ -31,6 +31,10 @@ notebook or has one successful numerical run.
   second near-duplicate implementation.
 - Do not preserve deprecated private internals solely because tests import them directly.
   Preserve public behaviour through a small compatibility facade and black-box tests.
+- Compatibility facades are temporary migration scaffolding, not an architecture layer. New
+  package code must import the focused replacement modules directly, not the facade.
+- Every compatibility facade must name its replacement path and a removal gate. Do not add new
+  functionality to a facade merely to keep old imports convenient.
 - Do not add package-level re-exports without an explicit public-API decision.
 - Do not silently change tolerances, convergence criteria, basis conventions, winding
   conventions, or normalization rules. Document the mathematical or numerical reason.
@@ -76,11 +80,31 @@ Treat interfaces according to four maturity levels:
   notes.
 - **Internal**: implementation detail; import from its defining module only and do not build
   downstream workflows around it.
-- **Deprecated**: compatibility-only, with a replacement path and a planned removal point.
+- **Deprecated**: compatibility-only, with a replacement path and a planned removal point. Once
+  first-party callers have migrated and the replacement API is declared stable, remove the
+  bridge rather than carrying it indefinitely.
 
 Package-level `__init__.py` exports are reviewed interfaces, not a convenient index of every
 object in a subpackage. New research reports, intermediate data classes, and helper functions
 should normally stay in their defining modules.
+
+### Temporary compatibility lifecycle
+
+A refactor compatibility layer may exist only while callers are migrating. It is ready for
+removal when all of the following are true:
+
+1. the replacement module boundaries and names have survived the current review/refactor pass;
+2. first-party package code, tests, scripts, notebooks, and documentation use the replacement;
+3. public compatibility tests have been rewritten against the supported replacement API; and
+4. the removal is recorded in the changelog or the next release/refactor milestone.
+
+Compatibility modules must not become dependencies of active implementation code. Architecture
+tests should enforce this whenever a facade is introduced.
+- A lazy compatibility facade that implements module ``__getattr__`` must also be pyflakes-safe.
+  Do not put lazily resolved names directly in a literal ``__all__`` tuple/list, because
+  flake8/pyflakes reports F822 for names without eager module bindings. Use explicit bindings
+  or keep the export-name tuple in a private constant and assign ``__all__`` indirectly; test
+  both explicit legacy imports and ``from ... import *`` while the facade exists.
 
 ## Testing policy
 
@@ -167,11 +191,33 @@ normalization, tolerance, and failure interpretation.
 
 Before presenting a change:
 
-1. Run formatting/lint checks for touched Python files.
-2. Run the narrowest relevant test lane.
-3. Run `scripts/test.sh fast` for package changes unless the environment lacks a documented
+1. Run `flake8` on every touched Python file, or the repository-wide flake8 command when the
+   change is broad. A Python patch is not lint-validated until flake8 passes with no errors.
+2. Run Black and isort when feasible. For a heavy scientific/refactor task they may be deferred
+   to the maintainer, but the handoff must say explicitly that they were not run. Do not defer
+   flake8 for ordinary Python patches.
+3. Run the narrowest relevant test lane.
+4. Run `scripts/test.sh fast` for package changes unless the environment lacks a documented
    optional dependency.
-4. For scientific changes, report the exact command, seed, system size, tolerance, and
+5. For scientific changes, report the exact command, seed, system size, tolerance, and
    whether the result is a smoke test or production validation.
-5. Summarize public API changes, dependency-direction changes, and tests moved between lanes.
-6. Do not claim validation that was skipped or could not finish.
+6. Summarize public API changes, dependency-direction changes, and tests moved between lanes.
+7. Do not claim validation that was skipped or could not finish.
+
+### Patch handoff rules
+
+When delivering a git patch:
+
+- Generate it relative to the repository root with ordinary git paths (`a/...` and `b/...`).
+- The recipient must be able to apply it from the repository root without path rewriting,
+  `--directory`, or manual prefix stripping.
+- Before handoff, validate the exact artifact against a clean copy of the stated base with:
+
+  ```bash
+  git apply --check /path/to/change.patch
+  ```
+
+  Run that command from the repository root with no `-p`/prefix adjustment, then apply the
+  patch to the clean copy and run the required lint/tests there.
+- If the patch was generated from a reconstructed archive rather than the original git
+  checkout, say which archive was used as the base.

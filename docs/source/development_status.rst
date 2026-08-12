@@ -85,3 +85,10 @@ decision, and active-research objects should normally be imported from their
 defining submodules.  Prefer interfaces documented as supported in this guide,
 and consult ``AGENTS.md`` for the supported, experimental, internal, and
 deprecated maturity levels.
+
+Refactor compatibility paths are intentionally temporary.  During the current
+caging/open-system cleanup, historical module paths may re-export objects from
+focused implementation modules so downstream notebooks can migrate gradually.
+New package code must not depend on those facades.  Once the replacement API has
+stabilized and first-party callers have migrated, the compatibility modules and
+re-exports should be removed rather than promoted into permanent API surface.

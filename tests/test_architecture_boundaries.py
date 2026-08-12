@@ -63,3 +63,70 @@ def test_current_open_system_does_not_import_caging_implementation() -> None:
     assert (
         not violations
     ), "Current open-system code depends on caging implementation:\n" + "\n".join(violations)
+
+
+def test_active_code_does_not_depend_on_temporary_refactor_facades() -> None:
+    """Compatibility facades are migration scaffolding, never internal dependencies."""
+
+    forbidden_by_tree = {
+        _PACKAGE_ROOT / "caging": ("qlinks.caging.stability",),
+        _PACKAGE_ROOT / "open_system": ("qlinks.open_system.manifold_detectors",),
+    }
+    allowed_paths = {
+        _PACKAGE_ROOT / "caging" / "__init__.py",
+    }
+
+    violations: list[str] = []
+    for tree, forbidden_prefixes in forbidden_by_tree.items():
+        for path in sorted(tree.rglob("*.py")):
+            if path in allowed_paths:
+                continue
+            for imported_module in _python_imports(path):
+                if any(
+                    imported_module == prefix or imported_module.startswith(f"{prefix}.")
+                    for prefix in forbidden_prefixes
+                ):
+                    relative_path = path.relative_to(_REPOSITORY_ROOT)
+                    violations.append(f"{relative_path}: {imported_module}")
+
+    assert not violations, (
+        "Active code imports a temporary refactor compatibility facade; "
+        "import the focused implementation module instead:\n" + "\n".join(violations)
+    )
+
+
+def test_lazy_compatibility_facades_use_pyflakes_safe_all() -> None:
+    """Lazy legacy exports must not trigger flake8/pyflakes F822."""
+
+    facade_paths = (
+        _PACKAGE_ROOT / "caging" / "stability.py",
+        _PACKAGE_ROOT / "open_system" / "manifold_detectors.py",
+    )
+    violations: list[str] = []
+
+    for path in facade_paths:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        has_lazy_getattr = any(
+            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "__getattr__"
+            for node in tree.body
+        )
+        if not has_lazy_getattr:
+            continue
+
+        for node in tree.body:
+            if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+                continue
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            is_all_assignment = any(
+                isinstance(target, ast.Name) and target.id == "__all__" for target in targets
+            )
+            if not is_all_assignment:
+                continue
+            if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
+                relative_path = path.relative_to(_REPOSITORY_ROOT)
+                violations.append(str(relative_path))
+
+    assert not violations, (
+        "Lazy compatibility facades use a literal __all__, which pyflakes interprets as eager "
+        "bindings and reports as F822:\n" + "\n".join(violations)
+    )

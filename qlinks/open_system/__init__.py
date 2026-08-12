@@ -78,7 +78,11 @@ from qlinks.open_system.local_recycling import (
     score_recycling_jump_for_subspace,
     select_local_recycling_candidates,
 )
-from qlinks.open_system.manifold_detectors import (
+from qlinks.open_system.manifold_dark import (
+    diagnose_dressed_manifold_dark_detectors,
+    diagnose_manifold_dark_operator_basis,
+)
+from qlinks.open_system.manifold_detector_types import (
     DarkDetectorMatrixReadout,
     DarkOperatorTerm,
     DressedManifoldDarkDetectorCandidate,
@@ -90,26 +94,28 @@ from qlinks.open_system.manifold_detectors import (
     RecycledManifoldCollectiveRecyclerGroup,
     RecycledManifoldDarkDetectorCandidate,
     RecycledManifoldDarkDetectorReport,
-    RecycledManifoldJumpSelectionReport,
     RecycledManifoldJumpSelectionStep,
-    RecycledManifoldResidualKernelReport,
     ResidualKernelLocalSupportEntry,
     ResidualKernelOperatorActionEntry,
     ResidualKernelOperatorActionReport,
-    TargetedResidualKernelJumpSelectionReport,
     TargetedResidualKernelJumpSelectionStep,
     TargetedResidualKernelLinearCandidate,
-    TargetedResidualKernelLinearSearchReport,
     TargetedResidualKernelLinearTerm,
-    diagnose_dressed_manifold_dark_detectors,
-    diagnose_manifold_dark_operator_basis,
+)
+from qlinks.open_system.manifold_recycling import (
+    RecycledManifoldJumpSelectionReport,
     diagnose_recycled_manifold_candidate_family_kernel,
     diagnose_recycled_manifold_dark_detectors,
-    diagnose_recycled_manifold_residual_kernel,
-    diagnose_targeted_residual_kernel_linear_search,
     expand_local_regions_to_cluster_unions,
     expand_local_regions_to_pair_unions,
     select_recycled_manifold_dark_detector_jumps,
+)
+from qlinks.open_system.manifold_residual import (
+    RecycledManifoldResidualKernelReport,
+    TargetedResidualKernelJumpSelectionReport,
+    TargetedResidualKernelLinearSearchReport,
+    diagnose_recycled_manifold_residual_kernel,
+    diagnose_targeted_residual_kernel_linear_search,
     select_targeted_residual_kernel_jumps,
 )
 from qlinks.open_system.operators import (

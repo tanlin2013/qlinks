@@ -73,9 +73,7 @@ from qlinks.caging.diagnostics import (
     LocalAnnihilatorDiagnostic,
     LocalClassicalPatternSector,
     LocalCoherentPatternPair,
-    LocalMatrixUnitTerm,
     LocalPlaquetteActivityReport,
-    LocalReducedDensityMatrix,
     LocalReducedDensityMatrixReadout,
     LocalStructureReadoutReport,
     OperatorStateActionDiagnostic,
@@ -85,9 +83,6 @@ from qlinks.caging.diagnostics import (
     fock_space_automorphism_diagnostic,
     fock_space_automorphism_diagnostic_for_cage_state,
     local_annihilator_diagnostic_from_operators,
-    local_operator_matrix_unit_expansion,
-    local_rank_one_matrix_unit_expansion,
-    local_reduced_density_matrix_from_state,
     local_reduced_density_matrix_readout_from_state,
     local_structure_report_from_classification_report,
     local_structure_report_from_readouts,
@@ -539,6 +534,13 @@ from qlinks.caging.thermodynamic import (
 from qlinks.caging.types import (
     CageSolverConfig,
     DegenerateBasisStrategy,
+)
+from qlinks.local_structure import (
+    LocalMatrixUnitTerm,
+    LocalReducedDensityMatrix,
+    local_operator_matrix_unit_expansion,
+    local_rank_one_matrix_unit_expansion,
+    local_reduced_density_matrix_from_state,
 )
 
 __all__ = [

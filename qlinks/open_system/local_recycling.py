@@ -11,9 +11,12 @@ from qlinks.local_structure.embedding import (
     _embed_local_pattern_operator_from_context,
     _embedding_context_from_basis_context,
     _LocalPatternEmbeddingContext,
+    embed_local_pattern_operator,
 )
 from qlinks.local_structure.matrix_units import (
     LocalMatrixUnitTerm,
+    local_operator_matrix_unit_expansion,
+    local_rank_one_matrix_unit_expansion,
 )
 from qlinks.local_structure.reduced_density import (
     LocalReducedDensityMatrix,
@@ -21,6 +24,18 @@ from qlinks.local_structure.reduced_density import (
     _local_reduced_density_matrix_from_basis_context,
     _local_reduced_density_matrix_from_basis_context_and_states,
     _normalize_state_matrix_columns,
+    local_reduced_density_matrix_from_state,
+)
+
+# Temporary compatibility re-exports. New code should import these neutral primitives
+# from ``qlinks.local_structure``. Referencing them here is intentional: it preserves the
+# historical module attributes without narrowing this module's existing ``import *`` surface.
+# Remove this bridge once the refactored API is stable and downstream callers have migrated.
+_TEMPORARY_LOCAL_STRUCTURE_EXPORTS = (
+    embed_local_pattern_operator,
+    local_operator_matrix_unit_expansion,
+    local_rank_one_matrix_unit_expansion,
+    local_reduced_density_matrix_from_state,
 )
 
 RecyclingJumpSource = Literal[

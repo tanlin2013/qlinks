@@ -17,6 +17,7 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Decompose cage-stability and dark-manifold detector god modules into responsibility-specific implementation modules, split local-search contracts/geometry, and mark historical module paths as temporary migration facades.
 - Add exact checkerboard 4N x 4 periodic-product cage certification and fully resolve the positive-phase checkerboard translation irrep before raw finite-beta and stripe-concentration evidence.
 - Add the gated square-QDM checkerboard fixed-width evidence workflow, including transfer-energy matching, size-independent compatibility and gauge tests, reduced-symmetry thermal pilots, translated A/Z joint-dark cleaning, and complete stripe-algebra concentration.
 - Add reduced Fredholm-candidate diagnostics for compact square-QDM cage sequences, showing a rectangular state complement and a constant zero-winding coupling symbol across fixed width.
