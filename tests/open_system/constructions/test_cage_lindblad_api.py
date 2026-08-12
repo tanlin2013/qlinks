@@ -69,6 +69,26 @@ def test_unified_problem_accepts_single_cage_state():
     assert workflow.jumps
 
 
+def test_unified_problem_accepts_structural_cage_record_without_caging_import():
+    build_result = _two_bit_build_result()
+    record = SimpleNamespace(
+        support=np.asarray([0], dtype=np.int64),
+        local_state=np.asarray([1.0], dtype=np.complex128),
+        full_state=None,
+        signature=(0, 4),
+    )
+
+    problem = build_cage_lindblad_problem(
+        build_result=build_result,
+        records=(record,),
+        local_regions=((0, 1),),
+    )
+
+    assert problem.manifold_dimension == 1
+    assert problem.record_signature == (0, 4)
+    np.testing.assert_allclose(problem.manifold_basis[:, 0], [1.0, 0.0, 0.0, 0.0])
+
+
 def test_unified_problem_accepts_degenerate_cage_manifold():
     build_result = _two_bit_build_result()
     target_states = np.asarray(

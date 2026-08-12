@@ -1,3 +1,12 @@
+from qlinks.local_structure import (
+    LocalMatrixUnitTerm,
+    LocalReducedDensityMatrix,
+    embed_local_pattern_operator,
+    local_operator_matrix_unit_expansion,
+    local_rank_one_matrix_unit_expansion,
+    local_reduced_density_matrix_from_state,
+    local_reduced_density_matrix_from_state_matrix,
+)
 from qlinks.open_system.backend import (
     OpenSystemBackend,
     OpenSystemBackendName,
@@ -50,12 +59,10 @@ from qlinks.open_system.diagnostics import (
     verify_lindblad_final_state,
 )
 from qlinks.open_system.local_recycling import (
-    LocalMatrixUnitTerm,
     LocalRecyclingBuildResult,
     LocalRecyclingCandidate,
     LocalRecyclingScanResult,
     LocalRecyclingSelection,
-    LocalReducedDensityMatrix,
     LocalSubspaceSupportReport,
     LocalSubspaceSupportReportEntry,
     RecyclingJumpSource,
@@ -63,11 +70,6 @@ from qlinks.open_system.local_recycling import (
     build_local_recycling_jumps_from_regions,
     build_local_recycling_jumps_from_subspace_regions,
     detect_two_pattern_recycling_structure,
-    embed_local_pattern_operator,
-    local_operator_matrix_unit_expansion,
-    local_rank_one_matrix_unit_expansion,
-    local_reduced_density_matrix_from_state,
-    local_reduced_density_matrix_from_state_matrix,
     local_subspace_support_report_for_subspace,
     local_subspace_support_report_from_recycling_build_result,
     scan_local_recycling_candidates,

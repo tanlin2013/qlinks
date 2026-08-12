@@ -7,11 +7,10 @@ import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
 
-from qlinks.open_system.local_recycling import (  # noqa: F401
+from qlinks.local_structure import (
     LocalMatrixUnitTerm,
     LocalReducedDensityMatrix,
     local_operator_matrix_unit_expansion,
-    local_rank_one_matrix_unit_expansion,
     local_reduced_density_matrix_from_state,
 )
 

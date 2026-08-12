@@ -20,6 +20,7 @@ Subpackages
    qlinks.exceptions
    qlinks.io
    qlinks.lattice
+   qlinks.local_structure
    qlinks.models
    qlinks.open_system
    qlinks.operators

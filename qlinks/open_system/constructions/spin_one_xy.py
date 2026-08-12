@@ -8,9 +8,9 @@ import numpy.typing as npt
 import scipy.sparse as sp
 
 from qlinks.basis import basis_configs_from_build_result
+from qlinks.local_structure import embed_local_pattern_operator
 from qlinks.models import ModelBuildResult, SpinOneXYChainModel
 from qlinks.models.spin_one_xy import spin_one_xy_scar_tower_states
-from qlinks.open_system.local_recycling import embed_local_pattern_operator
 from qlinks.open_system.operators import build_liouvillian
 
 SpinOneXYLeftMultiplier = Literal["identity", "sx", "sz", "sz2"]

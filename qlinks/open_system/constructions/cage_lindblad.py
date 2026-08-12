@@ -13,7 +13,6 @@ import scipy.sparse as sp
 from numpy.typing import NDArray
 
 from qlinks.basis import basis_configs_from_build_result
-from qlinks.caging.search import CageRecord
 from qlinks.models.base import ModelBuildResult
 from qlinks.models.local_terms import LocalTermDescriptor, LocalTermKind
 from qlinks.open_system.backend import OpenSystemBackendName
@@ -62,6 +61,7 @@ from qlinks.open_system.manifold_detectors import (
     select_targeted_residual_kernel_jumps,
 )
 from qlinks.open_system.operators import lindblad_rhs_density_matrix
+from qlinks.open_system.protocols import CageStateRecordLike
 from qlinks.open_system.solvers import LindbladProblem
 
 LocalRegionSource = Literal["kinetic", "potential", "all"]
@@ -137,12 +137,12 @@ def _orthonormalize_state_matrix(
 
 
 def _state_matrix_from_records(
-    records: Sequence[CageRecord],
+    records: Sequence[CageStateRecordLike],
     *,
     hilbert_size: int,
 ) -> NDArray[np.complex128]:
     if len(records) == 0:
-        raise ValueError("records must contain at least one CageRecord.")
+        raise ValueError("records must contain at least one cage-state record.")
 
     matrix = np.zeros((hilbert_size, len(records)), dtype=np.complex128)
     for column_index, record in enumerate(records):
@@ -167,7 +167,7 @@ def _state_matrix_from_records(
 
 
 def _validate_record_signatures(
-    records: Sequence[CageRecord],
+    records: Sequence[CageStateRecordLike],
 ) -> tuple[int, int] | None:
     if len(records) == 0:
         return None
@@ -2285,7 +2285,7 @@ class DegenerateCageLindbladConstruction:
 def build_degenerate_cage_lindblad_construction(
     *,
     build_result: ModelBuildResult,
-    records: Sequence[CageRecord] | None = None,
+    records: Sequence[CageStateRecordLike] | None = None,
     states: NDArray[np.complex128] | None = None,
     model: Any | None = None,
     local_regions: Sequence[Sequence[int]] | None = None,
@@ -3203,7 +3203,7 @@ def build_cage_lindblad_problem(
     target_state: NDArray[np.complex128] | None = None,
     target_states: NDArray[np.complex128] | None = None,
     states: NDArray[np.complex128] | None = None,
-    records: Sequence[CageRecord] | None = None,
+    records: Sequence[CageStateRecordLike] | None = None,
     model: Any | None = None,
     local_regions: Sequence[Sequence[int]] | None = None,
     regional_units: Sequence[Sequence[int]] | None = None,

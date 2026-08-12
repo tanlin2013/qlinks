@@ -2761,7 +2761,7 @@ def _local_operator_from_recycler_candidate(
     elif recycler_source == "rdm_support_matrix_units":
         if states is None:
             raise ValueError("states are required to read rdm_support_matrix_units recyclers.")
-        from qlinks.open_system.local_recycling import (
+        from qlinks.local_structure.reduced_density import (
             _local_pattern_basis_context_from_basis,
             _local_reduced_density_matrix_from_basis_context_and_states,
         )
@@ -2982,9 +2982,11 @@ def diagnose_recycled_manifold_dark_detectors(
         necessary, not sufficient, condition for attractive dark-manifold
         dynamics.
     """
-    from qlinks.open_system.local_recycling import (
+    from qlinks.local_structure.embedding import (
         _embed_local_pattern_operator_from_context,
         _embedding_context_from_basis_context,
+    )
+    from qlinks.local_structure.reduced_density import (
         _local_pattern_basis_context_from_basis,
         _local_reduced_density_matrix_from_basis_context_and_states,
     )
@@ -3321,7 +3323,7 @@ def _recycled_jump_for_candidate_from_cache(
     zero_tolerance: float,
 ) -> sp.csr_array:
     """Rebuild a candidate jump using cached local contexts and detectors."""
-    from qlinks.open_system.local_recycling import _embed_local_pattern_operator_from_context
+    from qlinks.local_structure.embedding import _embed_local_pattern_operator_from_context
 
     detector_diagonal = detector_diagonals.get(candidate.detector_index)
     embedding_context = embedding_contexts[candidate.region_index]
@@ -3471,7 +3473,7 @@ def _bundle_recycled_jumps_by_region_detector(
     selected microscopic recyclers, and the same dark detector remains on the
     right.
     """
-    from qlinks.open_system.local_recycling import _embed_local_pattern_operator_from_context
+    from qlinks.local_structure.embedding import _embed_local_pattern_operator_from_context
 
     grouped: dict[tuple[int, int], list[RecycledManifoldDarkDetectorCandidate]] = {}
     group_order: list[tuple[int, int]] = []
@@ -3581,9 +3583,11 @@ def _recycled_jump_for_candidate(
     rdm_tolerance: float = 1.0e-10,
 ) -> sp.csr_array:
     """Rebuild the sparse jump operator for a reported recycled candidate."""
-    from qlinks.open_system.local_recycling import (
+    from qlinks.local_structure.embedding import (
         _embed_local_pattern_operator_from_context,
         _embedding_context_from_basis_context,
+    )
+    from qlinks.local_structure.reduced_density import (
         _local_pattern_basis_context_from_basis,
         _local_reduced_density_matrix_from_basis_context_and_states,
     )
@@ -3722,9 +3726,11 @@ def _stream_recycled_family_kernel_diagnostics(
     liouvillian_zero_tolerance: float,
     max_detectors: int | None,
 ) -> tuple[RecycledFamilyKernelDiagnostics, int, int, int]:
-    from qlinks.open_system.local_recycling import (
+    from qlinks.local_structure.embedding import (
         _embed_local_pattern_operator_from_context,
         _embedding_context_from_basis_context,
+    )
+    from qlinks.local_structure.reduced_density import (
         _local_pattern_basis_context_from_basis,
         _local_reduced_density_matrix_from_basis_context_and_states,
     )
@@ -5088,9 +5094,11 @@ def _bad_kernel_basis_from_recycled_family(
     max_detectors: int | None = None,
 ) -> npt.NDArray[np.complex128]:
     """Return the bad complement common kernel for a recycled family."""
-    from qlinks.open_system.local_recycling import (
+    from qlinks.local_structure.embedding import (
         _embed_local_pattern_operator_from_context,
         _embedding_context_from_basis_context,
+    )
+    from qlinks.local_structure.reduced_density import (
         _local_pattern_basis_context_from_basis,
         _local_reduced_density_matrix_from_basis_context_and_states,
     )
@@ -5258,7 +5266,7 @@ def _residual_local_support_entries(
     local_regions: tuple[tuple[int, ...], ...],
     tolerance: float,
 ) -> tuple[ResidualKernelLocalSupportEntry, ...]:
-    from qlinks.open_system.local_recycling import (
+    from qlinks.local_structure.reduced_density import (
         _local_pattern_basis_context_from_basis,
         _local_reduced_density_matrix_from_basis_context_and_states,
     )
@@ -5579,9 +5587,11 @@ def diagnose_targeted_residual_kernel_linear_search(
     where ``B`` is the residual complement common kernel left by a recycled
     detector family.
     """
-    from qlinks.open_system.local_recycling import (
+    from qlinks.local_structure.embedding import (
         _embed_local_pattern_operator_from_context,
         _embedding_context_from_basis_context,
+    )
+    from qlinks.local_structure.reduced_density import (
         _local_pattern_basis_context_from_basis,
         _local_reduced_density_matrix_from_basis_context_and_states,
     )
@@ -6334,8 +6344,8 @@ def select_recycled_manifold_dark_detector_jumps(
         n_operators=len(detector_matrices),
     )
 
-    from qlinks.open_system.local_recycling import (
-        _embedding_context_from_basis_context,
+    from qlinks.local_structure.embedding import _embedding_context_from_basis_context
+    from qlinks.local_structure.reduced_density import (
         _local_pattern_basis_context_from_basis,
         _local_reduced_density_matrix_from_basis_context_and_states,
     )

@@ -62,8 +62,9 @@ Repository-level rules:
   of numerical kernels.
 - New cross-layer imports require an architecture note in the pull request.
 
-The current repository does not fully satisfy these boundaries. New work must move toward
-this direction and must not deepen the existing cycle.
+The active caging and open-system paths satisfy this boundary. The explicitly deprecated
+open-system cage constructors retain compatibility imports from caging; do not expand that
+exception or use it as precedent for new code.
 
 ## API maturity
 

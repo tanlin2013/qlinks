@@ -13,7 +13,7 @@ from qlinks.caging.support import (
     ReducedIZPatternSupport,
     distinct_reduced_iz_pattern_supports,
 )
-from qlinks.open_system.local_recycling import embed_local_pattern_operator
+from qlinks.local_structure import embed_local_pattern_operator
 
 ReducedIZPatternKey = tuple[tuple[tuple[int, ...], tuple[int, ...], tuple[float, float]], ...]
 WitnessNormalization = Literal["none", "operator_norm", "frobenius_norm"]

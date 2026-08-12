@@ -15,9 +15,9 @@ from qlinks.caging import (
     sga_operator_diagnostic,
 )
 from qlinks.encoded import BinaryEncodedBasis
+from qlinks.local_structure import embed_local_pattern_operator
 from qlinks.models import LocalTermDescriptor, SpinOneXYChainModel
 from qlinks.models.spin_one_xy import spin_one_xy_scar_tower_states
-from qlinks.open_system.local_recycling import embed_local_pattern_operator
 from qlinks.variables import LocalSpace, VariableLayout
 
 
