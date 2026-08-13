@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, Protocol
+from typing import Literal, Protocol
 
 import numpy as np
 import numpy.typing as npt
@@ -24,10 +24,6 @@ from qlinks.caging.search import CageRecord, CageSearchConfig, CageSearchResult
 from qlinks.caging.types import DegenerateBasisStrategy
 from qlinks.constraints import ConstraintPropagation, ConstraintResult
 from qlinks.variables import VariableLayout
-
-if TYPE_CHECKING:
-    from qlinks.caging.local_search_core import LocalQDMCageSearchResult
-    from qlinks.caging.local_search_proposals import LocalRegionProposalSearchResult
 
 LocalBoundaryMode = Literal["relaxed", "closed"]
 SnakeStripeKindPattern = Literal["any", "constant", "alternating", "constant_or_alternating"]
@@ -462,6 +458,46 @@ class LocalQDMCageRecord:
     @property
     def local_state(self) -> npt.NDArray[np.complex128]:
         return self.cage_state.local_state
+
+
+@dataclass
+class LocalQDMCageSearchResult:
+    """Passive result contract for a local QDM cage search."""
+
+    records: list[LocalQDMCageRecord]
+    region: LocalQDMRegion
+    local_basis: Basis
+    kinetic_matrix: scipy_sparse.csr_array
+    self_loop_values: npt.NDArray[np.complex128]
+    config: LocalQDMCageSearchConfig
+    model: object | None = None
+    adapter: LocalCageModelAdapter | None = None
+    type1_candidates: list[CandidateSubgraph] = field(default_factory=list)
+
+    def __len__(self) -> int:
+        return len(self.records)
+
+    def __iter__(self):
+        return iter(self.records)
+
+    @property
+    def local_hilbert_size(self) -> int:
+        return int(self.local_basis.n_states)
+
+    @property
+    def counts_by_signature(self) -> dict[tuple[int, int], int]:
+        counts: dict[tuple[int, int], int] = {}
+        for record in self.records:
+            counts[record.signature] = counts.get(record.signature, 0) + 1
+        return counts
+
+    @property
+    def signatures(self) -> list[tuple[int, int]]:
+        return sorted(self.counts_by_signature)
+
+    def records_by_signature(self, signature: tuple[int, int]) -> list[LocalQDMCageRecord]:
+        normalized = (int(signature[0]), int(signature[1]))
+        return [record for record in self.records if record.signature == normalized]
 
 
 @dataclass(frozen=True, slots=True)
@@ -1399,6 +1435,41 @@ class LocalRegionProposalSearchRecord:
     @property
     def counts_by_signature(self) -> dict[tuple[int, int], int]:
         return self.result.counts_by_signature
+
+
+@dataclass(frozen=True, slots=True)
+class LocalRegionProposalSearchResult:
+    """Passive result container for proposal-driven local cage scans."""
+
+    records: list[LocalRegionProposalSearchRecord]
+
+    def __len__(self) -> int:
+        return len(self.records)
+
+    def __iter__(self):
+        return iter(self.records)
+
+    def __getitem__(self, index):
+        return self.records[index]
+
+    @property
+    def local_results(self) -> list[LocalQDMCageSearchResult]:
+        return [record.result for record in self.records]
+
+    @property
+    def cage_records(self) -> list[LocalQDMCageRecord]:
+        return [cage_record for record in self.records for cage_record in record.result.records]
+
+    @property
+    def counts_by_signature(self) -> dict[tuple[int, int], int]:
+        counts: dict[tuple[int, int], int] = {}
+        for cage_record in self.cage_records:
+            counts[cage_record.signature] = counts.get(cage_record.signature, 0) + 1
+        return counts
+
+    @property
+    def nonempty_records(self) -> list[LocalRegionProposalSearchRecord]:
+        return [record for record in self.records if len(record.result) > 0]
 
 
 @dataclass(frozen=True, slots=True)

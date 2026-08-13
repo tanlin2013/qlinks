@@ -100,38 +100,65 @@ def test_active_code_does_not_depend_on_temporary_refactor_facades() -> None:
 
 
 def test_local_search_modules_follow_one_way_dependency_order() -> None:
-    """Focused local-search modules must not recreate the former dependency knot."""
+    """Focused local-search modules must follow the reviewed dependency DAG."""
 
-    forbidden_by_module = {
-        "local_search_core.py": (
+    allowed_dependencies = {
+        "local_search_types.py": set(),
+        "local_search_geometry.py": {"qlinks.caging.local_search_types"},
+        "local_search_core.py": {"qlinks.caging.local_search_types"},
+        "local_search_qdm.py": {
+            "qlinks.caging.local_search_core",
+            "qlinks.caging.local_search_geometry",
+            "qlinks.caging.local_search_types",
+        },
+        "local_search_global.py": {
             "qlinks.caging.local_search_qdm",
+            "qlinks.caging.local_search_types",
+        },
+        "local_search_padding.py": {
+            "qlinks.caging.local_search_geometry",
+            "qlinks.caging.local_search_global",
+            "qlinks.caging.local_search_types",
+        },
+        "local_search_factorized.py": {
+            "qlinks.caging.local_search_global",
+            "qlinks.caging.local_search_padding",
+            "qlinks.caging.local_search_qdm",
+            "qlinks.caging.local_search_types",
+        },
+        "local_search_certification.py": {
+            "qlinks.caging.local_search_global",
+            "qlinks.caging.local_search_padding",
+            "qlinks.caging.local_search_qdm",
+            "qlinks.caging.local_search_types",
+        },
+        "local_search_proposals.py": {
+            "qlinks.caging.local_search_core",
+            "qlinks.caging.local_search_geometry",
+            "qlinks.caging.local_search_types",
+        },
+        "local_search_scan.py": {
+            "qlinks.caging.local_search_core",
+            "qlinks.caging.local_search_padding",
+            "qlinks.caging.local_search_types",
+        },
+        "local_search_workflows.py": {
             "qlinks.caging.local_search_certification",
             "qlinks.caging.local_search_proposals",
-            "qlinks.caging.local_search_workflows",
-        ),
-        "local_search_qdm.py": (
-            "qlinks.caging.local_search_certification",
-            "qlinks.caging.local_search_proposals",
-            "qlinks.caging.local_search_workflows",
-        ),
-        "local_search_certification.py": (
-            "qlinks.caging.local_search_proposals",
-            "qlinks.caging.local_search_workflows",
-        ),
-        "local_search_proposals.py": ("qlinks.caging.local_search_workflows",),
+            "qlinks.caging.local_search_scan",
+            "qlinks.caging.local_search_types",
+        },
     }
 
     violations: list[str] = []
-    for filename, forbidden_prefixes in forbidden_by_module.items():
+    local_prefix = "qlinks.caging.local_search_"
+    for filename, allowed in allowed_dependencies.items():
         path = _PACKAGE_ROOT / "caging" / filename
         for imported_module in _python_imports(path):
-            if any(
-                imported_module == prefix or imported_module.startswith(f"{prefix}.")
-                for prefix in forbidden_prefixes
-            ):
+            if imported_module.startswith(local_prefix) and imported_module not in allowed:
                 violations.append(f"{filename}: {imported_module}")
 
-    assert not violations, "Local-search dependency cycle risk:\n" + "\n".join(violations)
+    assert not violations, "Local-search dependency DAG violation:\n" + "\n".join(violations)
 
 
 def test_lazy_compatibility_facades_use_pyflakes_safe_all() -> None:

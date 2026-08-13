@@ -29,6 +29,10 @@ def test_architecture_report_analyzes_current_repository() -> None:
     assert analysis["summary"]["implementation_import_time_module_cycle_components"] == 0
     assert analysis["summary"]["boundary_violations"] == 0
     assert any(record["package"] == "qlinks.caging" for record in analysis["packages"])
+    assert not any(
+        any(module.startswith("qlinks.caging.local_search_") for module in component)
+        for component in analysis["static_module_cycles"]
+    )
 
 
 def test_architecture_report_writes_self_contained_html_and_json(tmp_path: Path) -> None:

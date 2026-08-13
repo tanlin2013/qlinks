@@ -35,16 +35,24 @@ The former ``qlinks.caging.local_search`` implementation is now split into:
 * ``local_search_core`` for generic local type-1 search algebra and adapter registration;
 * ``local_search_qdm`` for QDM local-region construction, basis enumeration, and local kinetic
   algebra;
-* ``local_search_certification`` for QDM padding, global certification, and factorized-product
+* ``local_search_global`` for explicit global-QDM plaquette actions and limited global operators;
+* ``local_search_padding`` for single/multi-block exterior-padding search and structural
   validation;
-* ``local_search_proposals`` for stripe/snake/adaptive proposal generation and proposal scans;
-  and
+* ``local_search_factorized`` for exact factorized-product residual certification;
+* ``local_search_certification`` for local/multi-block residual certification and result assembly;
+* ``local_search_proposals`` for stripe/snake/adaptive proposal generation;
+* ``local_search_scan`` for proposal execution and block collection; and
 * ``local_search_workflows`` for robust multi-stage local-search orchestration.
 
 ``qlinks.caging.local_search`` is now a temporary compatibility facade. Active first-party code
 uses the focused modules directly. Because qlinks is primarily group-internal software, this
 facade is intentionally minimal and should be removed during the later API-cleanup pass once the
 refactored interface has stabilized.
+
+The focused local-search graph is required to remain free of both eager import cycles and
+TYPE_CHECKING/function-local static cycles. Passive result containers therefore live in
+``local_search_types`` rather than importing their implementation modules back into the contract
+layer.
 
 Dark-manifold detectors
 ~~~~~~~~~~~~~~~~~~~~~~~

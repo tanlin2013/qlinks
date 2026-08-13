@@ -9,8 +9,8 @@ from qlinks.caging.local_search_certification import (
     qdm_multi_padding_config_schedule,
     robust_certify_qdm_multi_block_result,
 )
-from qlinks.caging.local_search_proposals import (
-    _robust_qdm_region_proposals,
+from qlinks.caging.local_search_proposals import _robust_qdm_region_proposals
+from qlinks.caging.local_search_scan import (
     collect_qdm_cage_blocks_from_region_proposals,
     collect_qdm_cage_blocks_with_scan_from_region_proposals,
 )

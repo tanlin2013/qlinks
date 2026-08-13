@@ -118,36 +118,70 @@ BROAD_BOUNDARY_RULES: tuple[BoundaryRule, ...] = (
     ),
 )
 
-LOCAL_SEARCH_ORDER: tuple[tuple[str, tuple[str, ...]], ...] = (
-    (
-        "qlinks.caging.local_search_core",
-        (
+LOCAL_SEARCH_ALLOWED_DEPENDENCIES: dict[str, frozenset[str]] = {
+    "qlinks.caging.local_search_types": frozenset(),
+    "qlinks.caging.local_search_geometry": frozenset({"qlinks.caging.local_search_types"}),
+    "qlinks.caging.local_search_core": frozenset({"qlinks.caging.local_search_types"}),
+    "qlinks.caging.local_search_qdm": frozenset(
+        {
+            "qlinks.caging.local_search_core",
+            "qlinks.caging.local_search_geometry",
+            "qlinks.caging.local_search_types",
+        }
+    ),
+    "qlinks.caging.local_search_global": frozenset(
+        {
             "qlinks.caging.local_search_qdm",
+            "qlinks.caging.local_search_types",
+        }
+    ),
+    "qlinks.caging.local_search_padding": frozenset(
+        {
+            "qlinks.caging.local_search_geometry",
+            "qlinks.caging.local_search_global",
+            "qlinks.caging.local_search_types",
+        }
+    ),
+    "qlinks.caging.local_search_factorized": frozenset(
+        {
+            "qlinks.caging.local_search_global",
+            "qlinks.caging.local_search_padding",
+            "qlinks.caging.local_search_qdm",
+            "qlinks.caging.local_search_types",
+        }
+    ),
+    "qlinks.caging.local_search_certification": frozenset(
+        {
+            "qlinks.caging.local_search_global",
+            "qlinks.caging.local_search_padding",
+            "qlinks.caging.local_search_qdm",
+            "qlinks.caging.local_search_types",
+        }
+    ),
+    "qlinks.caging.local_search_proposals": frozenset(
+        {
+            "qlinks.caging.local_search_core",
+            "qlinks.caging.local_search_geometry",
+            "qlinks.caging.local_search_types",
+        }
+    ),
+    "qlinks.caging.local_search_scan": frozenset(
+        {
+            "qlinks.caging.local_search_core",
+            "qlinks.caging.local_search_padding",
+            "qlinks.caging.local_search_types",
+        }
+    ),
+    "qlinks.caging.local_search_workflows": frozenset(
+        {
             "qlinks.caging.local_search_certification",
             "qlinks.caging.local_search_proposals",
-            "qlinks.caging.local_search_workflows",
-        ),
+            "qlinks.caging.local_search_scan",
+            "qlinks.caging.local_search_types",
+        }
     ),
-    (
-        "qlinks.caging.local_search_qdm",
-        (
-            "qlinks.caging.local_search_certification",
-            "qlinks.caging.local_search_proposals",
-            "qlinks.caging.local_search_workflows",
-        ),
-    ),
-    (
-        "qlinks.caging.local_search_certification",
-        (
-            "qlinks.caging.local_search_proposals",
-            "qlinks.caging.local_search_workflows",
-        ),
-    ),
-    (
-        "qlinks.caging.local_search_proposals",
-        ("qlinks.caging.local_search_workflows",),
-    ),
-)
+}
+
 
 SURFACE_FACADE_MODULES = {
     "qlinks.caging.local_search",
@@ -408,22 +442,21 @@ def _architecture_violations(
                     )
                 )
 
-        for source_module, forbidden_modules in LOCAL_SEARCH_ORDER:
-            if occurrence.source != source_module:
-                continue
-            if any(
-                occurrence.target == prefix or occurrence.target.startswith(f"{prefix}.")
-                for prefix in forbidden_modules
-            ):
-                violations.append(
-                    BoundaryViolation(
-                        rule="local-search focused modules must follow one-way dependency order",
-                        source=occurrence.source,
-                        target=occurrence.target,
-                        path=occurrence.path,
-                        line=occurrence.line,
-                    )
+        allowed_local_search_dependencies = LOCAL_SEARCH_ALLOWED_DEPENDENCIES.get(occurrence.source)
+        if (
+            allowed_local_search_dependencies is not None
+            and occurrence.target.startswith("qlinks.caging.local_search_")
+            and occurrence.target not in allowed_local_search_dependencies
+        ):
+            violations.append(
+                BoundaryViolation(
+                    rule="local-search focused modules must follow the reviewed dependency DAG",
+                    source=occurrence.source,
+                    target=occurrence.target,
+                    path=occurrence.path,
+                    line=occurrence.line,
                 )
+            )
 
     return tuple(
         sorted(

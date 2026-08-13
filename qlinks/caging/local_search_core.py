@@ -17,51 +17,12 @@ from qlinks.caging.local_search_types import (
     LocalCageModelAdapter,
     LocalQDMCageRecord,
     LocalQDMCageSearchConfig,
+    LocalQDMCageSearchResult,
     LocalQDMRegion,
 )
 from qlinks.caging.partition import type1_candidates_from_bipartite_self_loops
 from qlinks.caging.search import bipartition_labels, signature_from_energy_and_self_loop
 from qlinks.caging.solver import CageSolverConfig, solve_candidate_for_kinetic_targets
-
-
-@dataclass
-class LocalQDMCageSearchResult:
-    """Result of a local QDM cage search."""
-
-    records: list[LocalQDMCageRecord]
-    region: LocalQDMRegion
-    local_basis: Basis
-    kinetic_matrix: scipy_sparse.csr_array
-    self_loop_values: npt.NDArray[np.complex128]
-    config: LocalQDMCageSearchConfig
-    model: object | None = None
-    adapter: LocalCageModelAdapter | None = None
-    type1_candidates: list[CandidateSubgraph] = field(default_factory=list)
-
-    def __len__(self) -> int:
-        return len(self.records)
-
-    def __iter__(self):
-        return iter(self.records)
-
-    @property
-    def local_hilbert_size(self) -> int:
-        return int(self.local_basis.n_states)
-
-    @property
-    def counts_by_signature(self) -> dict[tuple[int, int], int]:
-        counts: dict[tuple[int, int], int] = {}
-        for record in self.records:
-            counts[record.signature] = counts.get(record.signature, 0) + 1
-        return counts
-
-    @property
-    def signatures(self) -> list[tuple[int, int]]:
-        return sorted(self.counts_by_signature)
-
-    def records_by_signature(self, signature: tuple[int, int]) -> list[LocalQDMCageRecord]:
-        normalized = (int(signature[0]), int(signature[1]))
-        return [record for record in self.records if record.signature == normalized]
 
 
 def register_local_cage_adapter_factory(

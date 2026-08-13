@@ -7,24 +7,13 @@ until the post-refactor API cleanup and must not receive new implementation logi
 from __future__ import annotations
 
 from qlinks.caging.local_search_certification import (
-    build_qdm_global_limited_kinetic_matrix,
     certified_qdm_result_from_multi_block_reports,
-    certify_qdm_factorized_product_state,
     certify_qdm_local_record,
     certify_qdm_local_result,
     certify_qdm_multi_block_padding,
     certify_qdm_multi_block_paddings,
     certify_qdm_multi_block_result,
     diagnose_qdm_multi_block_paddings,
-    factorized_qdm_padding_from_multi_padding,
-    find_factorized_qdm_block_paddings,
-    find_multi_qdm_block_paddings,
-    find_qdm_multi_block_paddings,
-    find_shared_qdm_exterior_paddings,
-    iter_factorized_qdm_block_paddings,
-    iter_multi_qdm_block_paddings,
-    make_qdm_cage_block,
-    qdm_global_self_loop_values,
     qdm_multi_padding_config_schedule,
     robust_certify_qdm_multi_block_result,
 )
@@ -37,24 +26,31 @@ from qlinks.caging.local_search_core import (
     LocalCageSearcher,
     LocalCageSearchResult,
     LocalQDMCageSearcher,
-    LocalQDMCageSearchResult,
     local_cage_adapter_for_model,
     register_local_cage_adapter_factory,
+)
+from qlinks.caging.local_search_factorized import certify_qdm_factorized_product_state
+from qlinks.caging.local_search_global import (
+    build_qdm_global_limited_kinetic_matrix,
+    qdm_global_self_loop_values,
+)
+from qlinks.caging.local_search_padding import (
+    factorized_qdm_padding_from_multi_padding,
+    find_factorized_qdm_block_paddings,
+    find_multi_qdm_block_paddings,
+    find_qdm_multi_block_paddings,
+    find_shared_qdm_exterior_paddings,
+    iter_factorized_qdm_block_paddings,
+    iter_multi_qdm_block_paddings,
+    make_qdm_cage_block,
 )
 from qlinks.caging.local_search_proposals import (
     AdaptiveRegionProposal,
     ConnectedRegionProposal,
-    LocalRegionProposalSearchResult,
     SnakeStripeRegionProposal,
     StripeMotifComponentRegionProposal,
     StripeMotifRegionProposal,
     StripeRegionProposal,
-    collect_qdm_cage_blocks_from_proposals,
-    collect_qdm_cage_blocks_from_region_proposals,
-    collect_qdm_cage_blocks_with_scan_from_proposals,
-    collect_qdm_cage_blocks_with_scan_from_region_proposals,
-    run_local_region_proposal,
-    run_local_region_proposals,
 )
 from qlinks.caging.local_search_qdm import (
     QDMLocalCageAdapter,
@@ -63,6 +59,14 @@ from qlinks.caging.local_search_qdm import (
     build_qdm_local_region_from_plaquettes,
     enumerate_qdm_local_basis,
     qdm_local_self_loop_values,
+)
+from qlinks.caging.local_search_scan import (
+    collect_qdm_cage_blocks_from_proposals,
+    collect_qdm_cage_blocks_from_region_proposals,
+    collect_qdm_cage_blocks_with_scan_from_proposals,
+    collect_qdm_cage_blocks_with_scan_from_region_proposals,
+    run_local_region_proposal,
+    run_local_region_proposals,
 )
 from qlinks.caging.local_search_types import (
     AdaptiveRegionProposalRecord,
@@ -74,6 +78,7 @@ from qlinks.caging.local_search_types import (
     LocalQDMCageBlock,
     LocalQDMCageRecord,
     LocalQDMCageSearchConfig,
+    LocalQDMCageSearchResult,
     LocalQDMCertificationReport,
     LocalQDMMultiPaddingConfig,
     LocalQDMPadding,
@@ -81,6 +86,7 @@ from qlinks.caging.local_search_types import (
     LocalQDMRegion,
     LocalRegionProposal,
     LocalRegionProposalSearchRecord,
+    LocalRegionProposalSearchResult,
     MultiLocalQDMCertificationReport,
     MultiLocalQDMPadding,
     QDMFactorizedProductCertificationReport,
