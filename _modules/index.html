@@ -170,6 +170,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development_status.html">Current development status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../refactor_status.html">Repository refactor status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture_diagnostics.html">Architecture diagnostics</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="nav bd-sidenav">
@@ -187,6 +189,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.exceptions.html">qlinks.exceptions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qlinks.local_structure.html">qlinks.local_structure package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.models.html">qlinks.models package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../qlinks.operators.html">qlinks.operators package</a></li>
@@ -347,7 +350,16 @@
 <li><a href="qlinks/caging/diagnostics.html">qlinks.caging.diagnostics</a></li>
 <li><a href="qlinks/caging/evidence.html">qlinks.caging.evidence</a></li>
 <li><a href="qlinks/caging/invariant_subspace.html">qlinks.caging.invariant_subspace</a></li>
-<li><a href="qlinks/caging/local_search.html">qlinks.caging.local_search</a></li>
+<li><a href="qlinks/caging/local_search_certification.html">qlinks.caging.local_search_certification</a></li>
+<li><a href="qlinks/caging/local_search_core.html">qlinks.caging.local_search_core</a></li>
+<li><a href="qlinks/caging/local_search_factorized.html">qlinks.caging.local_search_factorized</a></li>
+<li><a href="qlinks/caging/local_search_global.html">qlinks.caging.local_search_global</a></li>
+<li><a href="qlinks/caging/local_search_padding.html">qlinks.caging.local_search_padding</a></li>
+<li><a href="qlinks/caging/local_search_proposals.html">qlinks.caging.local_search_proposals</a></li>
+<li><a href="qlinks/caging/local_search_qdm.html">qlinks.caging.local_search_qdm</a></li>
+<li><a href="qlinks/caging/local_search_scan.html">qlinks.caging.local_search_scan</a></li>
+<li><a href="qlinks/caging/local_search_types.html">qlinks.caging.local_search_types</a></li>
+<li><a href="qlinks/caging/local_search_workflows.html">qlinks.caging.local_search_workflows</a></li>
 <li><a href="qlinks/caging/localization.html">qlinks.caging.localization</a></li>
 <li><a href="qlinks/caging/nullspace.html">qlinks.caging.nullspace</a></li>
 <li><a href="qlinks/caging/partition.html">qlinks.caging.partition</a></li>
@@ -359,7 +371,12 @@
 <li><a href="qlinks/caging/singlet_product.html">qlinks.caging.singlet_product</a></li>
 <li><a href="qlinks/caging/solver.html">qlinks.caging.solver</a></li>
 <li><a href="qlinks/caging/spectral.html">qlinks.caging.spectral</a></li>
-<li><a href="qlinks/caging/stability.html">qlinks.caging.stability</a></li>
+<li><a href="qlinks/caging/stability_boundary.html">qlinks.caging.stability_boundary</a></li>
+<li><a href="qlinks/caging/stability_core.html">qlinks.caging.stability_core</a></li>
+<li><a href="qlinks/caging/stability_laurent.html">qlinks.caging.stability_laurent</a></li>
+<li><a href="qlinks/caging/stability_qdm.html">qlinks.caging.stability_qdm</a></li>
+<li><a href="qlinks/caging/stability_topology.html">qlinks.caging.stability_topology</a></li>
+<li><a href="qlinks/caging/stability_types.html">qlinks.caging.stability_types</a></li>
 <li><a href="qlinks/caging/strip_transfer.html">qlinks.caging.strip_transfer</a></li>
 <li><a href="qlinks/caging/support.html">qlinks.caging.support</a></li>
 <li><a href="qlinks/caging/tensor_network.html">qlinks.caging.tensor_network</a></li>
@@ -391,6 +408,9 @@
 <li><a href="qlinks/lattice/square.html">qlinks.lattice.square</a></li>
 <li><a href="qlinks/lattice/triangular.html">qlinks.lattice.triangular</a></li>
 <li><a href="qlinks/lattice/types.html">qlinks.lattice.types</a></li>
+<li><a href="qlinks/local_structure/embedding.html">qlinks.local_structure.embedding</a></li>
+<li><a href="qlinks/local_structure/matrix_units.html">qlinks.local_structure.matrix_units</a></li>
+<li><a href="qlinks/local_structure/reduced_density.html">qlinks.local_structure.reduced_density</a></li>
 <li><a href="qlinks/models/base.html">qlinks.models.base</a></li>
 <li><a href="qlinks/models/couplings.html">qlinks.models.couplings</a></li>
 <li><a href="qlinks/models/local_terms.html">qlinks.models.local_terms</a></li>
@@ -404,8 +424,12 @@
 <li><a href="qlinks/open_system/constructions/cage_lindblad.html">qlinks.open_system.constructions.cage_lindblad</a></li>
 <li><a href="qlinks/open_system/diagnostics.html">qlinks.open_system.diagnostics</a></li>
 <li><a href="qlinks/open_system/local_recycling.html">qlinks.open_system.local_recycling</a></li>
-<li><a href="qlinks/open_system/manifold_detectors.html">qlinks.open_system.manifold_detectors</a></li>
+<li><a href="qlinks/open_system/manifold_dark.html">qlinks.open_system.manifold_dark</a></li>
+<li><a href="qlinks/open_system/manifold_detector_types.html">qlinks.open_system.manifold_detector_types</a></li>
+<li><a href="qlinks/open_system/manifold_recycling.html">qlinks.open_system.manifold_recycling</a></li>
+<li><a href="qlinks/open_system/manifold_residual.html">qlinks.open_system.manifold_residual</a></li>
 <li><a href="qlinks/open_system/operators.html">qlinks.open_system.operators</a></li>
+<li><a href="qlinks/open_system/protocols.html">qlinks.open_system.protocols</a></li>
 <li><a href="qlinks/open_system/solvers.html">qlinks.open_system.solvers</a></li>
 <li><a href="qlinks/open_system/states.html">qlinks.open_system.states</a></li>
 <li><a href="qlinks/open_system/stochastic_schrodinger.html">qlinks.open_system.stochastic_schrodinger</a></li>

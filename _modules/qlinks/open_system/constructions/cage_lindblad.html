@@ -170,6 +170,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../development_status.html">Current development status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refactor_status.html">Repository refactor status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture_diagnostics.html">Architecture diagnostics</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="nav bd-sidenav">
@@ -187,6 +189,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.local_structure.html">qlinks.local_structure package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.models.html">qlinks.models package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.operators.html">qlinks.operators package</a></li>
@@ -344,7 +347,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.basis</span><span class="w"> </span><span class="kn">import</span> <span class="n">basis_configs_from_build_result</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.search</span><span class="w"> </span><span class="kn">import</span> <span class="n">CageRecord</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelBuildResult</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.local_terms</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="n">LocalTermKind</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenSystemBackendName</span>
@@ -370,29 +372,36 @@
     <span class="n">build_local_recycling_jumps_from_subspace_regions</span><span class="p">,</span>
     <span class="n">local_subspace_support_report_from_recycling_build_result</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.manifold_detectors</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.manifold_dark</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">diagnose_dressed_manifold_dark_detectors</span><span class="p">,</span>
+    <span class="n">diagnose_manifold_dark_operator_basis</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.manifold_detector_types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DarkDetectorMatrixReadout</span><span class="p">,</span>
     <span class="n">DressedManifoldDarkDetectorReport</span><span class="p">,</span>
     <span class="n">LocalOperatorMatrixReadout</span><span class="p">,</span>
     <span class="n">ManifoldDarkOperatorBasisReport</span><span class="p">,</span>
     <span class="n">RecycledManifoldCandidateFamilyKernelReport</span><span class="p">,</span>
     <span class="n">RecycledManifoldDarkDetectorReport</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.manifold_recycling</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">RecycledManifoldJumpSelectionReport</span><span class="p">,</span>
-    <span class="n">RecycledManifoldResidualKernelReport</span><span class="p">,</span>
-    <span class="n">TargetedResidualKernelJumpSelectionReport</span><span class="p">,</span>
-    <span class="n">TargetedResidualKernelLinearSearchReport</span><span class="p">,</span>
-    <span class="n">diagnose_dressed_manifold_dark_detectors</span><span class="p">,</span>
-    <span class="n">diagnose_manifold_dark_operator_basis</span><span class="p">,</span>
     <span class="n">diagnose_recycled_manifold_candidate_family_kernel</span><span class="p">,</span>
     <span class="n">diagnose_recycled_manifold_dark_detectors</span><span class="p">,</span>
-    <span class="n">diagnose_recycled_manifold_residual_kernel</span><span class="p">,</span>
-    <span class="n">diagnose_targeted_residual_kernel_linear_search</span><span class="p">,</span>
     <span class="n">expand_local_regions_to_cluster_unions</span><span class="p">,</span>
     <span class="n">expand_local_regions_to_pair_unions</span><span class="p">,</span>
     <span class="n">select_recycled_manifold_dark_detector_jumps</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.manifold_residual</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">RecycledManifoldResidualKernelReport</span><span class="p">,</span>
+    <span class="n">TargetedResidualKernelJumpSelectionReport</span><span class="p">,</span>
+    <span class="n">TargetedResidualKernelLinearSearchReport</span><span class="p">,</span>
+    <span class="n">diagnose_recycled_manifold_residual_kernel</span><span class="p">,</span>
+    <span class="n">diagnose_targeted_residual_kernel_linear_search</span><span class="p">,</span>
     <span class="n">select_targeted_residual_kernel_jumps</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.operators</span><span class="w"> </span><span class="kn">import</span> <span class="n">lindblad_rhs_density_matrix</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="n">CageStateRecordLike</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.solvers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LindbladProblem</span>
 
 <span class="n">LocalRegionSource</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;kinetic&quot;</span><span class="p">,</span> <span class="s2">&quot;potential&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">]</span>
@@ -468,12 +477,12 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_state_matrix_from_records</span><span class="p">(</span>
-    <span class="n">records</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">],</span>
+    <span class="n">records</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">CageStateRecordLike</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">hilbert_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">records</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;records must contain at least one CageRecord.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;records must contain at least one cage-state record.&quot;</span><span class="p">)</span>
 
     <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">hilbert_size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">records</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">column_index</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">records</span><span class="p">):</span>
@@ -498,7 +507,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_validate_record_signatures</span><span class="p">(</span>
-    <span class="n">records</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">],</span>
+    <span class="n">records</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">CageStateRecordLike</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">records</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -2622,7 +2631,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">build_degenerate_cage_lindblad_construction</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">build_result</span><span class="p">:</span> <span class="n">ModelBuildResult</span><span class="p">,</span>
-    <span class="n">records</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">records</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">CageStateRecordLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">states</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">local_regions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -3626,7 +3635,7 @@
     <span class="n">target_state</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">target_states</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">states</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">records</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">CageRecord</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">records</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">CageStateRecordLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">local_regions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">regional_units</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>

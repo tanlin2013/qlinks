@@ -2,8 +2,9 @@ qlinks.caging package
 =====================
 
 The caging package contains high-level cage search, classification, diagnostics,
-local-cage search, and open-system construction helpers.  Prefer the package API
-shown under ``Module contents`` for notebooks and user-facing scripts.
+local-cage search, and thermodynamic witness helpers.  Shared local algebra lives
+in :mod:`qlinks.local_structure`; open-system construction lives separately in
+:mod:`qlinks.open_system`.
 
 Submodules
 ----------
@@ -33,13 +34,6 @@ qlinks.caging.local_search module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: qlinks.caging.local_search
-   :members:
-   :show-inheritance:
-
-qlinks.caging.open_system module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: qlinks.caging.open_system
    :members:
    :show-inheritance:
 

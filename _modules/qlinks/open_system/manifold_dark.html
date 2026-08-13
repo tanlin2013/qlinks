@@ -1,0 +1,1385 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.open_system.manifold_dark &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=eeb54e98"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qlinks/open_system/manifold_dark';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.3" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../refactor_status.html">Repository refactor status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture_diagnostics.html">Architecture diagnostics</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.local_structure.html">qlinks.local_structure package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/open_system/manifold_dark.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qlinks.open_system.manifold_dark</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Dark-operator basis, dressing, and shared detector linear algebra.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.manifold_detector_types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DarkOperatorTerm</span><span class="p">,</span>
+    <span class="n">DressedManifoldDarkDetectorCandidate</span><span class="p">,</span>
+    <span class="n">DressedManifoldDarkDetectorReport</span><span class="p">,</span>
+    <span class="n">ManifoldDarkOperatorBasisReport</span><span class="p">,</span>
+    <span class="n">ManifoldDarkOperatorCandidate</span><span class="p">,</span>
+    <span class="n">RecycledManifoldDarkDetectorCandidate</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_csr</span><span class="p">(</span><span class="n">operator</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="s2">&quot;tocsr&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_state_columns</span><span class="p">(</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;states must be one- or two-dimensional.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="c1"># This is only a convenience heuristic.  Most callers pass columns, but</span>
+        <span class="c1"># small test/state lists often come as rows.</span>
+        <span class="n">row_norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">column_norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">row_norms</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">column_norms</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">):</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;states must contain at least one vector.&quot;</span><span class="p">)</span>
+
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="n">diagonal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">diagonal</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;states have numerical rank zero.&quot;</span><span class="p">)</span>
+
+    <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="p">[:,</span> <span class="p">:</span><span class="n">rank</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">gram_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">q</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">rank</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">gram_residual</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_combined_operator_frobenius_norm</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">operators</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">operators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">coefficient</span><span class="p">,</span> <span class="n">operator</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">operators</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">combined</span> <span class="o">=</span> <span class="n">combined</span> <span class="o">+</span> <span class="n">coefficient</span> <span class="o">*</span> <span class="n">operator</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">combined</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_coefficient_ipr</span><span class="p">(</span><span class="n">coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">norm_squared</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">norm_squared</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">**</span> <span class="mi">4</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">norm_squared</span> <span class="o">*</span> <span class="n">norm_squared</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_effective_coefficient_count</span><span class="p">(</span><span class="n">coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">ipr</span> <span class="o">=</span> <span class="n">_coefficient_ipr</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ipr</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">ipr</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_phase_fixed_normalized_vector</span><span class="p">(</span>
+    <span class="n">vector</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">vector</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">norm</span> <span class="o">&lt;=</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">normalized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vector</span> <span class="o">/</span> <span class="n">norm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">pivot</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">normalized</span><span class="p">)))</span>
+    <span class="n">pivot_value</span> <span class="o">=</span> <span class="n">normalized</span><span class="p">[</span><span class="n">pivot</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pivot_value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="n">normalized</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">pivot_value</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">normalized</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_deduplicate_coefficient_vectors</span><span class="p">(</span>
+    <span class="n">vectors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">overlap_tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]:</span>
+    <span class="n">unique</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">vectors</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">existing</span><span class="p">,</span> <span class="n">vector</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">overlap_tolerance</span> <span class="k">for</span> <span class="n">existing</span> <span class="ow">in</span> <span class="n">unique</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">unique</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">unique</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sparse_ipr_dark_detector_columns</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">nullspace</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">max_candidates</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">overlap_tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return nullspace vectors biased toward small operator support.</span>
+
+<span class="sd">    The ordinary SVD basis is arbitrary inside a degenerate dark-detector</span>
+<span class="sd">    nullspace.  To get more interpretable detector readouts, project each</span>
+<span class="sd">    coordinate unit vector onto the dark nullspace and rank the resulting</span>
+<span class="sd">    vectors by coefficient IPR.  This is a cheap deterministic proxy for a</span>
+<span class="sd">    sparse/IPR-optimized basis: a high score means the detector is concentrated</span>
+<span class="sd">    on fewer supplied local operators.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nullspace</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nullspace must be two-dimensional.&quot;</span><span class="p">)</span>
+    <span class="n">n_operators</span><span class="p">,</span> <span class="n">nullity</span> <span class="o">=</span> <span class="n">nullspace</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">n_operators</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">nullity</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_operators</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="n">projected</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">operator_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_operators</span><span class="p">):</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nullspace</span><span class="p">[</span><span class="n">operator_index</span><span class="p">,</span> <span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="c1"># Projection of the coordinate vector e_i onto span(nullspace).</span>
+        <span class="n">vector</span> <span class="o">=</span> <span class="n">nullspace</span> <span class="o">@</span> <span class="n">row</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="n">_phase_fixed_normalized_vector</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">normalized</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">projected</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span>
+
+    <span class="n">projected</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">vector</span><span class="p">:</span> <span class="p">(</span>
+            <span class="o">-</span><span class="n">_coefficient_ipr</span><span class="p">(</span><span class="n">vector</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">)),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vector</span><span class="p">))),</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">unique</span> <span class="o">=</span> <span class="n">_deduplicate_coefficient_vectors</span><span class="p">(</span>
+        <span class="n">projected</span><span class="p">,</span>
+        <span class="n">overlap_tolerance</span><span class="o">=</span><span class="n">overlap_tolerance</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># If coordinate projections produced fewer vectors than requested, append</span>
+    <span class="c1"># the orthonormal SVD basis as a robust fallback.</span>
+    <span class="k">for</span> <span class="n">column_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nullity</span><span class="p">):</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="n">_phase_fixed_normalized_vector</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nullspace</span><span class="p">[:,</span> <span class="n">column_index</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">normalized</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">unique</span> <span class="o">=</span> <span class="n">_deduplicate_coefficient_vectors</span><span class="p">(</span>
+                <span class="n">unique</span> <span class="o">+</span> <span class="p">[</span><span class="n">normalized</span><span class="p">],</span>
+                <span class="n">overlap_tolerance</span><span class="o">=</span><span class="n">overlap_tolerance</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">max_candidates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">unique</span> <span class="o">=</span> <span class="n">unique</span><span class="p">[:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_candidates</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_operators</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">unique</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_right_nullspace_from_constraint_matrix</span><span class="p">(</span>
+    <span class="n">constraint_matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return singular values, cutoff, rank, and right nullspace.</span>
+
+<span class="sd">    The detector constraint matrix is usually tall in production cage runs:</span>
+<span class="sd">    ``(hilbert_dimension * manifold_dimension) x n_operators``.  Computing a</span>
+<span class="sd">    full/economy SVD of this tall matrix can dominate the dark-detector stage,</span>
+<span class="sd">    even though we only need the right nullspace in operator-coefficient space.</span>
+<span class="sd">    The Hermitian Gram matrix ``C^† C`` has size ``n_operators x n_operators``</span>
+<span class="sd">    and its eigenvectors are the right singular vectors of ``C``.  This path is</span>
+<span class="sd">    therefore substantially cheaper for ``coordinate_ipr`` and regional-unit</span>
+<span class="sd">    workflows with many basis states but modest local-operator families.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;constraint_matrix must be two-dimensional.&quot;</span><span class="p">)</span>
+    <span class="n">n_operators</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">n_operators</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">gram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">constraint_matrix</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># Symmetrize away tiny BLAS roundoff so eigh sees an exactly Hermitian input.</span>
+    <span class="n">gram</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">gram</span> <span class="o">+</span> <span class="n">gram</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">gram</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="n">full_matrices</span> <span class="o">=</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
+            <span class="n">constraint_matrix</span><span class="p">,</span>
+            <span class="n">full_matrices</span><span class="o">=</span><span class="n">full_matrices</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">singular_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span>
+            <span class="n">rank</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mf">1.0</span><span class="p">))</span>
+            <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">singular_values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="n">cutoff</span><span class="p">,</span>
+            <span class="n">rank</span><span class="p">,</span>
+            <span class="n">vh</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">rank</span><span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">singular_values_ascending</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span>
+    <span class="n">singular_values</span> <span class="o">=</span> <span class="n">singular_values_ascending</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">singular_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mf">1.0</span><span class="p">))</span>
+    <span class="n">dark_mask</span> <span class="o">=</span> <span class="n">singular_values_ascending</span> <span class="o">&lt;=</span> <span class="n">cutoff</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_operators</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">dark_mask</span><span class="p">))</span>
+    <span class="n">nullspace</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">dark_mask</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">nullspace</span>
+
+
+<div class="viewcode-block" id="diagnose_manifold_dark_operator_basis">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnose_manifold_dark_operator_basis">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagnose_manifold_dark_operator_basis</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">operators</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">operator_names</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+    <span class="n">coefficient_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-8</span><span class="p">,</span>
+    <span class="n">max_candidates</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+    <span class="n">candidate_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;svd_basis&quot;</span><span class="p">,</span> <span class="s2">&quot;coordinate_ipr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;svd_basis&quot;</span><span class="p">,</span>
+    <span class="n">candidate_overlap_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-7</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ManifoldDarkOperatorBasisReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find linear combinations of supplied operators annihilating a manifold.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        states: Target manifold basis with shape ``(dim, n_states)`` or rows as</span>
+<span class="sd">            states.  The columns are orthonormalized before the nullspace solve.</span>
+<span class="sd">        operators: Operator basis matrices with the same Hilbert dimension.</span>
+<span class="sd">        operator_names: Optional names for the operators.</span>
+<span class="sd">        tolerance: Absolute/relative SVD tolerance used for the dark-detector</span>
+<span class="sd">            nullspace.</span>
+<span class="sd">        coefficient_tolerance: Coefficient magnitude threshold for term readout.</span>
+<span class="sd">        max_candidates: Maximum number of nullspace candidates to store.  Use</span>
+<span class="sd">            ``None`` to keep all candidates.</span>
+<span class="sd">        candidate_strategy: ``&quot;svd_basis&quot;`` keeps the numerical nullspace basis.</span>
+<span class="sd">            ``&quot;coordinate_ipr&quot;`` projects individual supplied operators onto the</span>
+<span class="sd">            dark nullspace and ranks the results by coefficient IPR, producing</span>
+<span class="sd">            more localized/interpretable detector combinations when the dark</span>
+<span class="sd">            solution space is degenerate.</span>
+<span class="sd">        candidate_overlap_tolerance: Deduplication tolerance for</span>
+<span class="sd">            ``candidate_strategy=&quot;coordinate_ipr&quot;``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A report whose candidate coefficient columns define</span>
+<span class="sd">        ``D=sum_a c_a O_a`` with ``D P_M ~= 0``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">operator_matrices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_as_csr</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span> <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">operators</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">operator_matrices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;operators must contain at least one matrix.&quot;</span><span class="p">)</span>
+
+    <span class="n">state_basis</span><span class="p">,</span> <span class="n">gram_residual</span> <span class="o">=</span> <span class="n">_normalize_state_columns</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">state_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">manifold_dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">state_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">operator_matrices</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">operator</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;operator has incompatible shape: &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">operator</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="n">dim</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">operator_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;O_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">operator_matrices</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">operator_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">operator_matrices</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;operator_names length must match operators length.&quot;</span><span class="p">)</span>
+
+    <span class="n">action_columns</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">operator</span> <span class="o">@</span> <span class="n">state_basis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">operator_matrices</span>
+    <span class="p">]</span>
+    <span class="n">constraint_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">action_columns</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">singular_values</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">nullspace</span> <span class="o">=</span> <span class="n">_right_nullspace_from_constraint_matrix</span><span class="p">(</span>
+        <span class="n">constraint_matrix</span><span class="p">,</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">detector_nullity</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nullspace</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">candidate_strategy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;svd_basis&quot;</span><span class="p">,</span> <span class="s2">&quot;coordinate_ipr&quot;</span><span class="p">}:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;candidate_strategy must be &quot;svd_basis&quot; or &quot;coordinate_ipr&quot;.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">candidate_strategy</span> <span class="o">==</span> <span class="s2">&quot;svd_basis&quot;</span><span class="p">:</span>
+        <span class="n">candidate_columns</span> <span class="o">=</span> <span class="n">nullspace</span>
+        <span class="k">if</span> <span class="n">max_candidates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">candidate_columns</span> <span class="o">=</span> <span class="n">candidate_columns</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_candidates</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">candidate_columns</span> <span class="o">=</span> <span class="n">_sparse_ipr_dark_detector_columns</span><span class="p">(</span>
+            <span class="n">nullspace</span><span class="o">=</span><span class="n">nullspace</span><span class="p">,</span>
+            <span class="n">max_candidates</span><span class="o">=</span><span class="n">max_candidates</span><span class="p">,</span>
+            <span class="n">tolerance</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">coefficient_tolerance</span><span class="p">)),</span>
+            <span class="n">overlap_tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">candidate_overlap_tolerance</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ManifoldDarkOperatorCandidate</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">candidate_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">candidate_columns</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">candidate_columns</span><span class="p">[:,</span> <span class="n">candidate_index</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">coefficient_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">coefficients</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">coefficient_norm</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">coefficients</span> <span class="o">=</span> <span class="n">coefficients</span> <span class="o">/</span> <span class="n">coefficient_norm</span>
+        <span class="n">residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">constraint_matrix</span> <span class="o">@</span> <span class="n">coefficients</span><span class="p">))</span>
+        <span class="n">operator_norm</span> <span class="o">=</span> <span class="n">_combined_operator_frobenius_norm</span><span class="p">(</span>
+            <span class="n">operators</span><span class="o">=</span><span class="n">operator_matrices</span><span class="p">,</span>
+            <span class="n">coefficients</span><span class="o">=</span><span class="n">coefficients</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">relative_residual</span> <span class="o">=</span> <span class="n">residual</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">operator_norm</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">coefficient_ipr</span> <span class="o">=</span> <span class="n">_coefficient_ipr</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
+        <span class="n">effective_operator_count</span> <span class="o">=</span> <span class="n">_effective_coefficient_count</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
+
+        <span class="n">terms</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">DarkOperatorTerm</span><span class="p">(</span>
+                <span class="n">operator_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">),</span>
+                <span class="n">operator_name</span><span class="o">=</span><span class="n">names</span><span class="p">[</span><span class="n">index</span><span class="p">],</span>
+                <span class="n">coefficient</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">coefficient</span><span class="p">),</span>
+                <span class="n">weight</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)),</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">coefficient</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="nb">enumerate</span><span class="p">(</span><span class="n">coefficients</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">coefficient_tolerance</span>
+        <span class="p">)</span>
+
+        <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">ManifoldDarkOperatorCandidate</span><span class="p">(</span>
+                <span class="n">candidate_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">candidate_index</span><span class="p">),</span>
+                <span class="n">coefficients</span><span class="o">=</span><span class="n">coefficients</span><span class="p">,</span>
+                <span class="n">action_residual</span><span class="o">=</span><span class="n">residual</span><span class="p">,</span>
+                <span class="n">relative_action_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">relative_residual</span><span class="p">),</span>
+                <span class="n">operator_frobenius_norm</span><span class="o">=</span><span class="n">operator_norm</span><span class="p">,</span>
+                <span class="n">coefficient_ipr</span><span class="o">=</span><span class="n">coefficient_ipr</span><span class="p">,</span>
+                <span class="n">effective_operator_count</span><span class="o">=</span><span class="n">effective_operator_count</span><span class="p">,</span>
+                <span class="n">terms</span><span class="o">=</span><span class="n">terms</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ManifoldDarkOperatorBasisReport</span><span class="p">(</span>
+        <span class="n">operator_names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
+        <span class="n">manifold_dimension</span><span class="o">=</span><span class="n">manifold_dimension</span><span class="p">,</span>
+        <span class="n">hilbert_dimension</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span>
+        <span class="n">gram_residual</span><span class="o">=</span><span class="n">gram_residual</span><span class="p">,</span>
+        <span class="n">constraint_matrix_shape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+        <span class="n">constraint_rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+        <span class="n">detector_nullity</span><span class="o">=</span><span class="n">detector_nullity</span><span class="p">,</span>
+        <span class="n">singular_values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">singular_values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="n">cutoff</span><span class="o">=</span><span class="n">cutoff</span><span class="p">,</span>
+        <span class="n">candidates</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">candidates</span><span class="p">),</span>
+        <span class="n">tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span>
+        <span class="n">candidate_strategy</span><span class="o">=</span><span class="n">candidate_strategy</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_combined_operator</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">operators</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;operators must contain at least one matrix.&quot;</span><span class="p">)</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">operators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">coefficient</span><span class="p">,</span> <span class="n">operator</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">operators</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">combined</span> <span class="o">=</span> <span class="n">combined</span> <span class="o">+</span> <span class="n">coefficient</span> <span class="o">*</span> <span class="n">operator</span>
+    <span class="k">return</span> <span class="n">combined</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_projected_inflow_norm</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">jump</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span>
+    <span class="n">state_basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``||P J (I-P)||_F`` and ``||P J P||_F`` for ``P=QQ^dag``.&quot;&quot;&quot;</span>
+    <span class="n">adjoint_action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">jump</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state_basis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">left_projected_norm_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">adjoint_action</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">target_block</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">state_basis</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="n">jump</span> <span class="o">@</span> <span class="n">state_basis</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">target_block_norm_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">target_block</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">inflow_sq</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">left_projected_norm_sq</span> <span class="o">-</span> <span class="n">target_block_norm_sq</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">inflow_sq</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">target_block_norm_sq</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_multi_jump_projected_inflow_norm</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">jumps</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">],</span>
+    <span class="n">state_basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the incoherent total inflow norm for a jump family.</span>
+
+<span class="sd">    This is the cheap part of :func:`diagnose_dark_manifold`: it avoids common</span>
+<span class="sd">    kernel and Liouvillian checks, but still measures the actual final jump</span>
+<span class="sd">    matrices rather than the pre-bundled candidate scores.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">jump</span> <span class="ow">in</span> <span class="n">jumps</span><span class="p">:</span>
+        <span class="n">inflow_norm</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_projected_inflow_norm</span><span class="p">(</span><span class="n">jump</span><span class="o">=</span><span class="n">jump</span><span class="p">,</span> <span class="n">state_basis</span><span class="o">=</span><span class="n">state_basis</span><span class="p">)</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">inflow_norm</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">total</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_diagonal_vector_if_diagonal</span><span class="p">(</span>
+    <span class="n">operator</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the diagonal when a sparse operator has no off-diagonal support.&quot;&quot;&quot;</span>
+    <span class="n">coo</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">tocoo</span><span class="p">()</span>
+    <span class="n">off_diagonal_mask</span> <span class="o">=</span> <span class="n">coo</span><span class="o">.</span><span class="n">row</span> <span class="o">!=</span> <span class="n">coo</span><span class="o">.</span><span class="n">col</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">coo</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">off_diagonal_mask</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_embedded_matrix_unit_metrics_with_diagonal_right_factor</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">embedding_context</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">target_local_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">source_local_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">right_diagonal</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">state_basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">zero_tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fast score ``J = |target&gt;&lt;source|_R D`` for diagonal ``D``.&quot;&quot;&quot;</span>
+    <span class="n">transition_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">embedding_context</span><span class="o">.</span><span class="n">target_local_indices</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">target_local_index</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span>
+        <span class="n">embedding_context</span><span class="o">.</span><span class="n">source_local_indices</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">source_local_index</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">transition_mask</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">source_indices</span> <span class="o">=</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">source_full_indices</span><span class="p">[</span><span class="n">transition_mask</span><span class="p">]</span>
+    <span class="n">target_indices</span> <span class="o">=</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">target_full_indices</span><span class="p">[</span><span class="n">transition_mask</span><span class="p">]</span>
+    <span class="n">jump_values</span> <span class="o">=</span> <span class="n">right_diagonal</span><span class="p">[</span><span class="n">source_indices</span><span class="p">]</span>
+    <span class="n">jump_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">jump_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">zero_tolerance</span>
+    <span class="n">jump_nnz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">jump_mask</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">jump_nnz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">source_indices</span> <span class="o">=</span> <span class="n">source_indices</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">]</span>
+    <span class="n">target_indices</span> <span class="o">=</span> <span class="n">target_indices</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">]</span>
+    <span class="n">jump_values</span> <span class="o">=</span> <span class="n">jump_values</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">]</span>
+
+    <span class="c1"># Matrix units have unit entries on each constrained-basis transition.</span>
+    <span class="n">recycler_nnz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">transition_mask</span><span class="p">))</span>
+    <span class="n">recycler_frobenius_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">recycler_nnz</span><span class="p">))</span>
+
+    <span class="n">adjoint_action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">state_basis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">conjugated_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">jump_values</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">state_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">state_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">at</span><span class="p">(</span>
+            <span class="n">adjoint_action</span><span class="p">[:,</span> <span class="n">state_index</span><span class="p">],</span>
+            <span class="n">source_indices</span><span class="p">,</span>
+            <span class="n">conjugated_values</span> <span class="o">*</span> <span class="n">state_basis</span><span class="p">[</span><span class="n">target_indices</span><span class="p">,</span> <span class="n">state_index</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="n">target_block</span> <span class="o">=</span> <span class="n">adjoint_action</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state_basis</span>
+    <span class="n">target_block_norm_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">target_block</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">adjoint_norm_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">adjoint_action</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">inflow_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">adjoint_norm_sq</span> <span class="o">-</span> <span class="n">target_block_norm_sq</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
+    <span class="n">jump_frobenius_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">jump_values</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">inflow_norm</span><span class="p">,</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">target_block_norm_sq</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))),</span>
+        <span class="n">jump_frobenius_norm</span><span class="p">,</span>
+        <span class="n">jump_nnz</span><span class="p">,</span>
+        <span class="n">recycler_frobenius_norm</span><span class="p">,</span>
+        <span class="n">recycler_nnz</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_embedded_local_operator_metrics_with_diagonal_right_factor</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">embedding_context</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">local_operator</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">right_diagonal</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">state_basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">zero_tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Score ``J = R D`` without materializing sparse matrices when ``D`` is diagonal.</span>
+
+<span class="sd">    The generic recycled-detector scan used to build every embedded local</span>
+<span class="sd">    recycler ``R``, multiply it by the detector ``D``, and then multiply the</span>
+<span class="sd">    resulting sparse matrix by the target-manifold basis.  In QDM production</span>
+<span class="sd">    runs the detector basis is normally diagonal plaquette-projector data.  For</span>
+<span class="sd">    that common case, the nonzero entries of ``J`` are just the embedded local</span>
+<span class="sd">    entries of ``R`` scaled by the source-basis diagonal of ``D``.  Computing the</span>
+<span class="sd">    projected inflow directly from these arrays avoids hundreds of thousands of</span>
+<span class="sd">    tiny CSR constructions and sparse products.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">local_operator</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">embedding_context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">,</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;local_operator has incompatible shape: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">local_operator</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> != &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="n">embedding_context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">,</span><span class="w"> </span><span class="n">embedding_context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">source_full_indices</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">local_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">local_operator</span><span class="p">[</span>
+            <span class="n">embedding_context</span><span class="o">.</span><span class="n">target_local_indices</span><span class="p">,</span>
+            <span class="n">embedding_context</span><span class="o">.</span><span class="n">source_local_indices</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">recycler_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">local_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">zero_tolerance</span>
+    <span class="n">recycler_nnz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">recycler_mask</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">recycler_nnz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">source_indices</span> <span class="o">=</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">source_full_indices</span>
+    <span class="n">target_indices</span> <span class="o">=</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">target_full_indices</span>
+    <span class="n">jump_values</span> <span class="o">=</span> <span class="n">local_values</span> <span class="o">*</span> <span class="n">right_diagonal</span><span class="p">[</span><span class="n">source_indices</span><span class="p">]</span>
+    <span class="n">jump_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">jump_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">zero_tolerance</span>
+    <span class="n">jump_nnz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">jump_mask</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">jump_nnz</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">jump_values</span> <span class="o">=</span> <span class="n">jump_values</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">]</span>
+    <span class="n">source_indices</span> <span class="o">=</span> <span class="n">source_indices</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">]</span>
+    <span class="n">target_indices</span> <span class="o">=</span> <span class="n">target_indices</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">]</span>
+
+    <span class="n">adjoint_action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">state_basis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">conjugated_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">jump_values</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">state_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">state_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">at</span><span class="p">(</span>
+            <span class="n">adjoint_action</span><span class="p">[:,</span> <span class="n">state_index</span><span class="p">],</span>
+            <span class="n">source_indices</span><span class="p">,</span>
+            <span class="n">conjugated_values</span> <span class="o">*</span> <span class="n">state_basis</span><span class="p">[</span><span class="n">target_indices</span><span class="p">,</span> <span class="n">state_index</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="n">target_block</span> <span class="o">=</span> <span class="n">adjoint_action</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state_basis</span>
+    <span class="n">target_block_norm_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">target_block</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">adjoint_norm_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">adjoint_action</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">inflow_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">adjoint_norm_sq</span> <span class="o">-</span> <span class="n">target_block_norm_sq</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
+
+    <span class="n">jump_frobenius_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">jump_values</span><span class="p">))</span>
+    <span class="n">recycler_frobenius_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">local_values</span><span class="p">[</span><span class="n">recycler_mask</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">inflow_norm</span><span class="p">,</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">target_block_norm_sq</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))),</span>
+        <span class="n">jump_frobenius_norm</span><span class="p">,</span>
+        <span class="n">jump_nnz</span><span class="p">,</span>
+        <span class="n">recycler_frobenius_norm</span><span class="p">,</span>
+        <span class="n">recycler_nnz</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_embedded_matrix_unit_times_diagonal_as_csr</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">embedding_context</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">target_local_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">source_local_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">right_diagonal</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">zero_tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build ``|target&gt;&lt;source|_R D`` directly for diagonal ``D``.&quot;&quot;&quot;</span>
+    <span class="n">transition_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">embedding_context</span><span class="o">.</span><span class="n">target_local_indices</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">target_local_index</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span>
+        <span class="n">embedding_context</span><span class="o">.</span><span class="n">source_local_indices</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">source_local_index</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">transition_mask</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="n">source_indices</span> <span class="o">=</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">source_full_indices</span><span class="p">[</span><span class="n">transition_mask</span><span class="p">]</span>
+    <span class="n">target_indices</span> <span class="o">=</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">target_full_indices</span><span class="p">[</span><span class="n">transition_mask</span><span class="p">]</span>
+    <span class="n">jump_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">right_diagonal</span><span class="p">[</span><span class="n">source_indices</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">jump_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">jump_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">zero_tolerance</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">jump_mask</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="n">jump_values</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">],</span>
+            <span class="p">(</span><span class="n">target_indices</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">],</span> <span class="n">source_indices</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">]),</span>
+        <span class="p">),</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_embedded_local_operator_times_diagonal_as_csr</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">embedding_context</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">local_operator</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">right_diagonal</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">zero_tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build embedded ``R D`` directly when ``D`` is diagonal.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">local_operator</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">embedding_context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">,</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;local_operator has incompatible shape: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">local_operator</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> != &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="n">embedding_context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">,</span><span class="w"> </span><span class="n">embedding_context</span><span class="o">.</span><span class="n">local_dim</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">source_full_indices</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="n">local_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">local_operator</span><span class="p">[</span>
+            <span class="n">embedding_context</span><span class="o">.</span><span class="n">target_local_indices</span><span class="p">,</span>
+            <span class="n">embedding_context</span><span class="o">.</span><span class="n">source_local_indices</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">recycler_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">local_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">zero_tolerance</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">recycler_mask</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="n">source_indices</span> <span class="o">=</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">source_full_indices</span>
+    <span class="n">target_indices</span> <span class="o">=</span> <span class="n">embedding_context</span><span class="o">.</span><span class="n">target_full_indices</span>
+    <span class="n">jump_values</span> <span class="o">=</span> <span class="n">local_values</span> <span class="o">*</span> <span class="n">right_diagonal</span><span class="p">[</span><span class="n">source_indices</span><span class="p">]</span>
+    <span class="n">jump_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">jump_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">zero_tolerance</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">jump_mask</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="n">jump_values</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">],</span>
+            <span class="p">(</span><span class="n">target_indices</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">],</span> <span class="n">source_indices</span><span class="p">[</span><span class="n">jump_mask</span><span class="p">]),</span>
+        <span class="p">),</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_recycled_candidate_sort_key</span><span class="p">(</span>
+    <span class="n">candidate</span><span class="p">:</span> <span class="n">RecycledManifoldDarkDetectorCandidate</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">dark_tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">candidate</span><span class="o">.</span><span class="n">relative_dark_residual</span> <span class="o">&gt;</span> <span class="n">dark_tolerance</span><span class="p">,</span>
+        <span class="o">-</span><span class="n">candidate</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">,</span>
+        <span class="n">candidate</span><span class="o">.</span><span class="n">relative_dark_residual</span><span class="p">,</span>
+        <span class="n">candidate</span><span class="o">.</span><span class="n">jump_nnz</span><span class="p">,</span>
+        <span class="n">candidate</span><span class="o">.</span><span class="n">detector_index</span><span class="p">,</span>
+        <span class="n">candidate</span><span class="o">.</span><span class="n">region_index</span><span class="p">,</span>
+        <span class="n">candidate</span><span class="o">.</span><span class="n">recycler_index</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_append_ranked_recycled_candidate</span><span class="p">(</span>
+    <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">RecycledManifoldDarkDetectorCandidate</span><span class="p">],</span>
+    <span class="n">candidate</span><span class="p">:</span> <span class="n">RecycledManifoldDarkDetectorCandidate</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">max_report_candidates</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">dark_tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_report_candidates</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">limit</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_report_candidates</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">limit</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">candidates</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">candidates</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">_recycled_candidate_sort_key</span><span class="p">(</span>
+            <span class="n">item</span><span class="p">,</span>
+            <span class="n">dark_tolerance</span><span class="o">=</span><span class="n">dark_tolerance</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">del</span> <span class="n">candidates</span><span class="p">[</span><span class="n">limit</span><span class="p">:]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_detector_coefficients</span><span class="p">(</span>
+    <span class="n">detector_coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">n_operators</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+    <span class="n">coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">detector_coefficients</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">n_operators</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;detector_coefficients has incompatible length: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="n">n_operators</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">coefficients</span> <span class="o">=</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_operators</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">n_operators</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">n_operators</span><span class="p">:</span>
+            <span class="n">coefficients</span> <span class="o">=</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;detector_coefficients must have shape &quot;</span>
+                <span class="s2">&quot;(n_operators, n_detectors) or (n_detectors, n_operators).&quot;</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;detector_coefficients must be one- or two-dimensional.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;detector_coefficients must contain at least one detector.&quot;</span><span class="p">)</span>
+
+    <span class="n">normalized</span> <span class="o">=</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">column_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">normalized</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">normalized</span><span class="p">[:,</span> <span class="n">column_index</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;detector_coefficients contains a zero detector column.&quot;</span><span class="p">)</span>
+        <span class="n">normalized</span><span class="p">[:,</span> <span class="n">column_index</span><span class="p">]</span> <span class="o">/=</span> <span class="n">norm</span>
+    <span class="k">return</span> <span class="n">normalized</span>
+
+
+<div class="viewcode-block" id="diagnose_dressed_manifold_dark_detectors">
+<a class="viewcode-back" href="../../../qlinks.open_system.html#qlinks.open_system.diagnose_dressed_manifold_dark_detectors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagnose_dressed_manifold_dark_detectors</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">detector_operators</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">left_multipliers</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">detector_coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">dark_operator_report</span><span class="p">:</span> <span class="n">ManifoldDarkOperatorBasisReport</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">detector_operator_names</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">left_multiplier_names</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">detector_names</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+    <span class="n">dark_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-10</span><span class="p">,</span>
+    <span class="n">inflow_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0e-12</span><span class="p">,</span>
+    <span class="n">max_detectors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sort_by_inflow</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DressedManifoldDarkDetectorReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test paper-style dressed jumps ``J = V D`` for a dark manifold.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        states: Target manifold basis.  Columns are orthonormalized.</span>
+<span class="sd">        detector_operators: Operator basis ``O_a`` used to assemble</span>
+<span class="sd">            ``D=sum_a c_a O_a``.</span>
+<span class="sd">        left_multipliers: Candidate left multipliers ``V_beta``.</span>
+<span class="sd">        detector_coefficients: Optional coefficient matrix for the detectors.</span>
+<span class="sd">            If omitted, coefficients are taken from ``dark_operator_report``.</span>
+<span class="sd">        dark_operator_report: Optional report from</span>
+<span class="sd">            :func:`diagnose_manifold_dark_operator_basis`.</span>
+<span class="sd">        detector_operator_names: Names for ``detector_operators``.  Only used</span>
+<span class="sd">            to build default detector names.</span>
+<span class="sd">        left_multiplier_names: Names for the left multipliers.</span>
+<span class="sd">        detector_names: Optional explicit detector names.</span>
+<span class="sd">        tolerance: Orthonormalization and shape-check tolerance.</span>
+<span class="sd">        dark_tolerance: Relative dark residual threshold.</span>
+<span class="sd">        inflow_tolerance: Direct-inflow threshold.</span>
+<span class="sd">        max_detectors: Optional maximum number of detectors to test.</span>
+<span class="sd">        sort_by_inflow: If true, store candidates with largest inflow first.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A report of dressed candidates.  A candidate with small dark residual</span>
+<span class="sd">        and positive inflow satisfies the necessary direct-inflow condition for</span>
+<span class="sd">        manifold attraction, but does not by itself rule out invariant sectors</span>
+<span class="sd">        in the complement.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">detector_matrices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_as_csr</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span> <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">detector_operators</span><span class="p">)</span>
+    <span class="n">multiplier_matrices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_as_csr</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span> <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">left_multipliers</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">detector_matrices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;detector_operators must contain at least one matrix.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">multiplier_matrices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;left_multipliers must contain at least one matrix.&quot;</span><span class="p">)</span>
+
+    <span class="n">state_basis</span><span class="p">,</span> <span class="n">gram_residual</span> <span class="o">=</span> <span class="n">_normalize_state_columns</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">state_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">manifold_dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">state_basis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="n">detector_matrices</span> <span class="o">+</span> <span class="n">multiplier_matrices</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">operator</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;operator has incompatible shape: &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">operator</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="n">dim</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">detector_coefficients</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dark_operator_report</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Pass detector_coefficients or dark_operator_report to define detectors.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">detector_coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">candidate</span><span class="o">.</span><span class="n">coefficients</span> <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">dark_operator_report</span><span class="o">.</span><span class="n">candidates</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="n">coefficients</span> <span class="o">=</span> <span class="n">_normalize_detector_coefficients</span><span class="p">(</span>
+        <span class="n">detector_coefficients</span><span class="p">,</span>
+        <span class="n">n_operators</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">detector_matrices</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_detectors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">coefficients</span> <span class="o">=</span> <span class="n">coefficients</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_detectors</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="n">detector_operator_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">operator_names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;O_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">detector_matrices</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">operator_names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">detector_operator_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">operator_names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">detector_matrices</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;detector_operator_names length must match detector_operators.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">detector_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">_default_detector_name</span><span class="p">(</span>
+                <span class="n">coefficients</span><span class="o">=</span><span class="n">coefficients</span><span class="p">[:,</span> <span class="n">detector_index</span><span class="p">],</span>
+                <span class="n">operator_names</span><span class="o">=</span><span class="n">operator_names</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">detector_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">detector_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;detector_names length must match detector count.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">left_multiplier_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">multiplier_names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;V_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">multiplier_matrices</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">multiplier_names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">left_multiplier_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">multiplier_names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">multiplier_matrices</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;left_multiplier_names length must match left_multipliers.&quot;</span><span class="p">)</span>
+
+    <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DressedManifoldDarkDetectorCandidate</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">detector_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">coefficients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">detector</span> <span class="o">=</span> <span class="n">_combined_operator</span><span class="p">(</span>
+            <span class="n">operators</span><span class="o">=</span><span class="n">detector_matrices</span><span class="p">,</span>
+            <span class="n">coefficients</span><span class="o">=</span><span class="n">coefficients</span><span class="p">[:,</span> <span class="n">detector_index</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">detector_action_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">detector</span> <span class="o">@</span> <span class="n">state_basis</span><span class="p">))</span>
+        <span class="n">detector_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">detector</span><span class="p">))</span>
+        <span class="n">detector_relative_residual</span> <span class="o">=</span> <span class="n">detector_action_residual</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">detector_norm</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">multiplier_index</span><span class="p">,</span> <span class="n">multiplier</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">multiplier_matrices</span><span class="p">):</span>
+            <span class="n">jump</span> <span class="o">=</span> <span class="p">(</span><span class="n">multiplier</span> <span class="o">@</span> <span class="n">detector</span><span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+            <span class="n">dark_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">jump</span> <span class="o">@</span> <span class="n">state_basis</span><span class="p">))</span>
+            <span class="n">jump_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">jump</span><span class="p">))</span>
+            <span class="n">relative_dark_residual</span> <span class="o">=</span> <span class="n">dark_residual</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">jump_norm</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">inflow_norm</span><span class="p">,</span> <span class="n">target_block_norm</span> <span class="o">=</span> <span class="n">_projected_inflow_norm</span><span class="p">(</span>
+                <span class="n">jump</span><span class="o">=</span><span class="n">jump</span><span class="p">,</span>
+                <span class="n">state_basis</span><span class="o">=</span><span class="n">state_basis</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">DressedManifoldDarkDetectorCandidate</span><span class="p">(</span>
+                    <span class="n">candidate_index</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">candidates</span><span class="p">),</span>
+                    <span class="n">detector_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">detector_index</span><span class="p">),</span>
+                    <span class="n">detector_name</span><span class="o">=</span><span class="n">names</span><span class="p">[</span><span class="n">detector_index</span><span class="p">],</span>
+                    <span class="n">left_multiplier_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">multiplier_index</span><span class="p">),</span>
+                    <span class="n">left_multiplier_name</span><span class="o">=</span><span class="n">multiplier_names</span><span class="p">[</span><span class="n">multiplier_index</span><span class="p">],</span>
+                    <span class="n">dark_residual</span><span class="o">=</span><span class="n">dark_residual</span><span class="p">,</span>
+                    <span class="n">relative_dark_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">relative_dark_residual</span><span class="p">),</span>
+                    <span class="n">inflow_norm</span><span class="o">=</span><span class="n">inflow_norm</span><span class="p">,</span>
+                    <span class="n">jump_frobenius_norm</span><span class="o">=</span><span class="n">jump_norm</span><span class="p">,</span>
+                    <span class="n">target_block_norm</span><span class="o">=</span><span class="n">target_block_norm</span><span class="p">,</span>
+                    <span class="n">detector_action_residual</span><span class="o">=</span><span class="n">detector_action_residual</span><span class="p">,</span>
+                    <span class="n">detector_relative_action_residual</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">detector_relative_residual</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sort_by_inflow</span><span class="p">:</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">candidates</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">candidate</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">candidate</span><span class="o">.</span><span class="n">relative_dark_residual</span> <span class="o">&gt;</span> <span class="n">dark_tolerance</span><span class="p">,</span>
+                <span class="o">-</span><span class="n">candidate</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">,</span>
+                <span class="n">candidate</span><span class="o">.</span><span class="n">relative_dark_residual</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">DressedManifoldDarkDetectorCandidate</span><span class="p">(</span>
+                <span class="n">candidate_index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+                <span class="n">detector_index</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">detector_index</span><span class="p">,</span>
+                <span class="n">detector_name</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">detector_name</span><span class="p">,</span>
+                <span class="n">left_multiplier_index</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">left_multiplier_index</span><span class="p">,</span>
+                <span class="n">left_multiplier_name</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">left_multiplier_name</span><span class="p">,</span>
+                <span class="n">dark_residual</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">dark_residual</span><span class="p">,</span>
+                <span class="n">relative_dark_residual</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">relative_dark_residual</span><span class="p">,</span>
+                <span class="n">inflow_norm</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">,</span>
+                <span class="n">jump_frobenius_norm</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">jump_frobenius_norm</span><span class="p">,</span>
+                <span class="n">target_block_norm</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">target_block_norm</span><span class="p">,</span>
+                <span class="n">detector_action_residual</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">detector_action_residual</span><span class="p">,</span>
+                <span class="n">detector_relative_action_residual</span><span class="o">=</span><span class="n">candidate</span><span class="o">.</span><span class="n">detector_relative_action_residual</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">DressedManifoldDarkDetectorReport</span><span class="p">(</span>
+        <span class="n">manifold_dimension</span><span class="o">=</span><span class="n">manifold_dimension</span><span class="p">,</span>
+        <span class="n">hilbert_dimension</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span>
+        <span class="n">gram_residual</span><span class="o">=</span><span class="n">gram_residual</span><span class="p">,</span>
+        <span class="n">detector_names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
+        <span class="n">left_multiplier_names</span><span class="o">=</span><span class="n">multiplier_names</span><span class="p">,</span>
+        <span class="n">dark_tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">dark_tolerance</span><span class="p">),</span>
+        <span class="n">inflow_tolerance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">inflow_tolerance</span><span class="p">),</span>
+        <span class="n">candidates</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">candidates</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_orthogonal_complement_basis</span><span class="p">(</span>
+    <span class="n">basis</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an orthonormal basis of the complement of ``span(basis)``.&quot;&quot;&quot;</span>
+    <span class="n">q</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_normalize_state_columns</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="n">tolerance</span><span class="p">)</span>
+    <span class="n">_u</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">singular_scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">singular_values</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">1.0</span>
+    <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span> <span class="o">*</span> <span class="n">singular_scale</span><span class="p">)</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">vh</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">rank</span><span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_right_kernel_basis</span><span class="p">(</span>
+    <span class="n">matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an orthonormal basis for the right kernel of ``matrix``.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;matrix must be two-dimensional.&quot;</span><span class="p">)</span>
+    <span class="n">n_columns</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">n_columns</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+    <span class="n">full_matrices</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">_u</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="n">full_matrices</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">singular_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tolerance</span><span class="p">))</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">rank</span> <span class="o">&gt;=</span> <span class="n">n_columns</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_columns</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">vh</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">rank</span><span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_default_detector_name</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">coefficients</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">],</span>
+    <span class="n">operator_names</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">max_terms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">coefficient</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="nb">enumerate</span><span class="p">(</span><span class="n">coefficients</span><span class="p">),</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="p">)[:</span><span class="n">max_terms</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.0e-8</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">coefficient</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">·</span><span class="si">{</span><span class="n">operator_names</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;0&quot;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.0e-8</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_terms</span><span class="p">:</span>
+        <span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;…&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot; + &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

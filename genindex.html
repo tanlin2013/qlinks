@@ -170,6 +170,8 @@
 <li class="toctree-l1"><a class="reference internal" href="tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refactor_status.html">Repository refactor status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_diagnostics.html">Architecture diagnostics</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="nav bd-sidenav">
@@ -187,6 +189,7 @@
 <li class="toctree-l2"><a class="reference internal" href="qlinks.exceptions.html">qlinks.exceptions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.local_structure.html">qlinks.local_structure package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.operators.html">qlinks.operators package</a></li>
@@ -1285,6 +1288,14 @@
 </li>
         <li><a href="qlinks.lattice.html#qlinks.lattice.types.Site.__init__">(qlinks.lattice.types.Site method)</a>
 </li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalMatrixUnitTerm.__init__">(qlinks.local_structure.LocalMatrixUnitTerm method)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalReducedDensityMatrix.__init__">(qlinks.local_structure.LocalReducedDensityMatrix method)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.matrix_units.LocalMatrixUnitTerm.__init__">(qlinks.local_structure.matrix_units.LocalMatrixUnitTerm method)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.LocalReducedDensityMatrix.__init__">(qlinks.local_structure.reduced_density.LocalReducedDensityMatrix method)</a>
+</li>
         <li><a href="qlinks.models.html#qlinks.models.base.BuiltHamiltonianTerm.__init__">(qlinks.models.base.BuiltHamiltonianTerm method)</a>
 </li>
         <li><a href="qlinks.models.html#qlinks.models.base.GenericModelBuilder.__init__">(qlinks.models.base.GenericModelBuilder method)</a>
@@ -1449,8 +1460,6 @@
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.LindbladProblem.__init__">(qlinks.open_system.LindbladProblem method)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalMatrixUnitTerm.__init__">(qlinks.open_system.local_recycling.LocalMatrixUnitTerm method)</a>
-</li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalRecyclingBuildResult.__init__">(qlinks.open_system.local_recycling.LocalRecyclingBuildResult method)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalRecyclingCandidate.__init__">(qlinks.open_system.local_recycling.LocalRecyclingCandidate method)</a>
@@ -1458,8 +1467,6 @@
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalRecyclingScanResult.__init__">(qlinks.open_system.local_recycling.LocalRecyclingScanResult method)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalRecyclingSelection.__init__">(qlinks.open_system.local_recycling.LocalRecyclingSelection method)</a>
-</li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalReducedDensityMatrix.__init__">(qlinks.open_system.local_recycling.LocalReducedDensityMatrix method)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalSubspaceSupportReport.__init__">(qlinks.open_system.local_recycling.LocalSubspaceSupportReport method)</a>
 </li>
@@ -1498,6 +1505,8 @@
         <li><a href="qlinks.open_system.html#qlinks.open_system.operators.DenseLindbladOperators.__init__">(qlinks.open_system.operators.DenseLindbladOperators method)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.operators.SparseLindbladOperators.__init__">(qlinks.open_system.operators.SparseLindbladOperators method)</a>
+</li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.protocols.CageStateRecordLike.__init__">(qlinks.open_system.protocols.CageStateRecordLike method)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.RecycledManifoldCandidateFamilyKernelReport.__init__">(qlinks.open_system.RecycledManifoldCandidateFamilyKernelReport method)</a>
 </li>
@@ -4108,6 +4117,8 @@
         <li><a href="qlinks.io.html#qlinks.io.cage_hdf5.CageStateHDF5Writer">(class in qlinks.io.cage_hdf5)</a>
 </li>
       </ul></li>
+      <li><a href="qlinks.open_system.html#qlinks.open_system.protocols.CageStateRecordLike">CageStateRecordLike (class in qlinks.open_system.protocols)</a>
+</li>
       <li><a href="qlinks.basis.html#qlinks.basis.DFSSearchObserver.can_continue">can_continue() (qlinks.basis.DFSSearchObserver method)</a>
 
       <ul>
@@ -4288,12 +4299,6 @@
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.certify_local_witness_on_square_qdm_periodic_sequence">certify_local_witness_on_square_qdm_periodic_sequence() (in module qlinks.caging)</a>
 </li>
-      <li><a href="qlinks.caging.html#qlinks.caging.local_search.LocalQDMCageSearchResult.certify_paddings">certify_paddings() (qlinks.caging.local_search.LocalQDMCageSearchResult method)</a>
-
-      <ul>
-        <li><a href="qlinks.caging.html#qlinks.caging.LocalQDMCageSearchResult.certify_paddings">(qlinks.caging.LocalQDMCageSearchResult method)</a>
-</li>
-      </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.certify_qdm_factorized_product_state">certify_qdm_factorized_product_state() (in module qlinks.caging)</a>
 
       <ul>
@@ -4328,16 +4333,6 @@
 
       <ul>
         <li><a href="qlinks.caging.html#qlinks.caging.local_search.certify_qdm_multi_block_result">(in module qlinks.caging.local_search)</a>
-</li>
-      </ul></li>
-      <li><a href="qlinks.caging.html#qlinks.caging.local_search.LocalCageModelAdapter.certify_result">certify_result() (qlinks.caging.local_search.LocalCageModelAdapter method)</a>
-
-      <ul>
-        <li><a href="qlinks.caging.html#qlinks.caging.local_search.QDMLocalCageAdapter.certify_result">(qlinks.caging.local_search.QDMLocalCageAdapter method)</a>
-</li>
-        <li><a href="qlinks.caging.html#qlinks.caging.LocalCageModelAdapter.certify_result">(qlinks.caging.LocalCageModelAdapter method)</a>
-</li>
-        <li><a href="qlinks.caging.html#qlinks.caging.QDMLocalCageAdapter.certify_result">(qlinks.caging.QDMLocalCageAdapter method)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.certify_square_qdm_biperiodic_product_instance">certify_square_qdm_biperiodic_product_instance() (in module qlinks.caging)</a>
@@ -4707,9 +4702,11 @@
 </li>
         <li><a href="qlinks.encoded.html#qlinks.encoded.BitmaskQLMFluxFlipOperator.coefficient">(qlinks.encoded.BitmaskQLMFluxFlipOperator attribute)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.DarkOperatorTerm.coefficient">(qlinks.open_system.DarkOperatorTerm attribute)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalMatrixUnitTerm.coefficient">(qlinks.local_structure.LocalMatrixUnitTerm attribute)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalMatrixUnitTerm.coefficient">(qlinks.open_system.local_recycling.LocalMatrixUnitTerm attribute)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.matrix_units.LocalMatrixUnitTerm.coefficient">(qlinks.local_structure.matrix_units.LocalMatrixUnitTerm attribute)</a>
+</li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.DarkOperatorTerm.coefficient">(qlinks.open_system.DarkOperatorTerm attribute)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.LocalMatrixUnitTerm.coefficient">(qlinks.open_system.LocalMatrixUnitTerm attribute)</a>
 </li>
@@ -4834,8 +4831,6 @@
         <li><a href="qlinks.open_system.html#qlinks.open_system.ManifoldDarkOperatorCandidate.coefficient_ipr">(qlinks.open_system.ManifoldDarkOperatorCandidate attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.caging.html#qlinks.caging.WindowedAnnihilatorPoint.coefficient_support_size">coefficient_support_size (qlinks.caging.WindowedAnnihilatorPoint attribute)</a>
 </li>
       <li><a href="qlinks.caging.html#qlinks.caging.classification.CollectiveCancellationReport.coefficients">coefficients (qlinks.caging.classification.CollectiveCancellationReport attribute)</a>
@@ -4868,6 +4863,8 @@
         <li><a href="qlinks.open_system.html#qlinks.open_system.TargetedResidualKernelLinearCandidate.coefficients">(qlinks.open_system.TargetedResidualKernelLinearCandidate attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.caging.html#qlinks.caging.SquareQDMType1InterferenceClassRecord.coherent_contribution">coherent_contribution (qlinks.caging.SquareQDMType1InterferenceClassRecord attribute)</a>
 
       <ul>
@@ -5985,11 +5982,13 @@
 </li>
         <li><a href="qlinks.caging.html#qlinks.caging.LocalReducedDensityMatrixReadout.density_matrix">(qlinks.caging.LocalReducedDensityMatrixReadout property)</a>
 </li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalReducedDensityMatrix.density_matrix">(qlinks.local_structure.LocalReducedDensityMatrix attribute)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.LocalReducedDensityMatrix.density_matrix">(qlinks.local_structure.reduced_density.LocalReducedDensityMatrix attribute)</a>
+</li>
         <li><a href="qlinks.open_system.html#id26">(qlinks.open_system.diagnostics.LindbladFinalStateVerification attribute)</a>, <a href="qlinks.open_system.html#qlinks.open_system.diagnostics.LindbladFinalStateVerification.density_matrix">[1]</a>
 </li>
         <li><a href="qlinks.open_system.html#id88">(qlinks.open_system.LindbladFinalStateVerification attribute)</a>, <a href="qlinks.open_system.html#qlinks.open_system.LindbladFinalStateVerification.density_matrix">[1]</a>
-</li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalReducedDensityMatrix.density_matrix">(qlinks.open_system.local_recycling.LocalReducedDensityMatrix attribute)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.LocalReducedDensityMatrix.density_matrix">(qlinks.open_system.LocalReducedDensityMatrix attribute)</a>
 </li>
@@ -6208,10 +6207,10 @@
 </li>
       <li><a href="qlinks.caging.html#qlinks.caging.diagnose_periodic_laurent_kernel">diagnose_periodic_laurent_kernel() (in module qlinks.caging)</a>
 </li>
-      <li><a href="qlinks.caging.html#qlinks.caging.diagnose_qdm_local_kinetic_compatibility">diagnose_qdm_local_kinetic_compatibility() (in module qlinks.caging)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="qlinks.caging.html#qlinks.caging.diagnose_qdm_local_kinetic_compatibility">diagnose_qdm_local_kinetic_compatibility() (in module qlinks.caging)</a>
+</li>
       <li><a href="qlinks.caging.html#qlinks.caging.diagnose_qdm_local_potential_compatibility">diagnose_qdm_local_potential_compatibility() (in module qlinks.caging)</a>
 </li>
       <li><a href="qlinks.caging.html#qlinks.caging.diagnose_qdm_multi_block_paddings">diagnose_qdm_multi_block_paddings() (in module qlinks.caging)</a>
@@ -6759,7 +6758,9 @@
 </li>
         <li><a href="qlinks.caging.html#qlinks.caging.SpectralMicrocanonicalEnsemble.eigenvalues">(qlinks.caging.SpectralMicrocanonicalEnsemble attribute)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalReducedDensityMatrix.eigenvalues">(qlinks.open_system.local_recycling.LocalReducedDensityMatrix attribute)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalReducedDensityMatrix.eigenvalues">(qlinks.local_structure.LocalReducedDensityMatrix attribute)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.LocalReducedDensityMatrix.eigenvalues">(qlinks.local_structure.reduced_density.LocalReducedDensityMatrix attribute)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.LocalReducedDensityMatrix.eigenvalues">(qlinks.open_system.LocalReducedDensityMatrix attribute)</a>
 </li>
@@ -6792,10 +6793,12 @@
         <li><a href="qlinks.caging.html#qlinks.caging.search.embed_cage_state">(in module qlinks.caging.search)</a>
 </li>
       </ul></li>
-      <li><a href="qlinks.open_system.html#qlinks.open_system.embed_local_pattern_operator">embed_local_pattern_operator() (in module qlinks.open_system)</a>
+      <li><a href="qlinks.local_structure.html#qlinks.local_structure.embed_local_pattern_operator">embed_local_pattern_operator() (in module qlinks.local_structure)</a>
 
       <ul>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.embed_local_pattern_operator">(in module qlinks.open_system.local_recycling)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.embedding.embed_local_pattern_operator">(in module qlinks.local_structure.embedding)</a>
+</li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.embed_local_pattern_operator">(in module qlinks.open_system)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.lattice.html#qlinks.lattice.graph.LatticeGraph.embedded_position">embedded_position() (qlinks.lattice.graph.LatticeGraph method)</a>
@@ -8090,6 +8093,8 @@
 
       <ul>
         <li><a href="qlinks.caging.html#id23">(qlinks.caging.search.CageRecord attribute)</a>, <a href="qlinks.caging.html#qlinks.caging.search.CageRecord.full_state">[1]</a>
+</li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.protocols.CageStateRecordLike.full_state">(qlinks.open_system.protocols.CageStateRecordLike property)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.CageSearchResult.full_state_matrix">full_state_matrix() (qlinks.caging.CageSearchResult method)</a>
@@ -10970,8 +10975,6 @@
         <li><a href="qlinks.variables.html#qlinks.variables.VariableLayout.link_variable_index">(qlinks.variables.VariableLayout method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.variables.html#qlinks.variables.layout.VariableLayout.link_variable_indices">link_variable_indices() (qlinks.variables.layout.VariableLayout method)</a>
 
       <ul>
@@ -10996,6 +10999,8 @@
         <li><a href="qlinks.lattice.html#qlinks.lattice.types.Plaquette.links">(qlinks.lattice.types.Plaquette attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/qlinks.visualizer.html#qlinks.visualizer.LinkVisualStyle">LinkVisualStyle (class in qlinks.visualizer)</a>, <a href="qlinks.visualizer.html#qlinks.visualizer.LinkVisualStyle">[1]</a>
 
       <ul>
@@ -11137,7 +11142,9 @@
 </li>
         <li><a href="qlinks.caging.html#qlinks.caging.thermodynamic.LocalWitnessTemplate.local_dim">(qlinks.caging.thermodynamic.LocalWitnessTemplate property)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalReducedDensityMatrix.local_dim">(qlinks.open_system.local_recycling.LocalReducedDensityMatrix property)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalReducedDensityMatrix.local_dim">(qlinks.local_structure.LocalReducedDensityMatrix property)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.LocalReducedDensityMatrix.local_dim">(qlinks.local_structure.reduced_density.LocalReducedDensityMatrix property)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalSubspaceSupportReportEntry.local_dim">(qlinks.open_system.local_recycling.LocalSubspaceSupportReportEntry attribute)</a>
 </li>
@@ -11223,9 +11230,11 @@
       <li><a href="qlinks.caging.html#qlinks.caging.local_operator_matrix_unit_expansion">local_operator_matrix_unit_expansion() (in module qlinks.caging)</a>
 
       <ul>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_operator_matrix_unit_expansion">(in module qlinks.open_system)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.local_operator_matrix_unit_expansion">(in module qlinks.local_structure)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.local_operator_matrix_unit_expansion">(in module qlinks.open_system.local_recycling)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.matrix_units.local_operator_matrix_unit_expansion">(in module qlinks.local_structure.matrix_units)</a>
+</li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.local_operator_matrix_unit_expansion">(in module qlinks.open_system)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.QDMCompactCageReducedWindingPoint.local_pair_offsets">local_pair_offsets (qlinks.caging.QDMCompactCageReducedWindingPoint attribute)</a>
@@ -11251,7 +11260,9 @@
 </li>
         <li><a href="qlinks.caging.html#qlinks.caging.thermodynamic.LocalWitnessTemplate.local_patterns">(qlinks.caging.thermodynamic.LocalWitnessTemplate attribute)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalReducedDensityMatrix.local_patterns">(qlinks.open_system.local_recycling.LocalReducedDensityMatrix attribute)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalReducedDensityMatrix.local_patterns">(qlinks.local_structure.LocalReducedDensityMatrix attribute)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.LocalReducedDensityMatrix.local_patterns">(qlinks.local_structure.reduced_density.LocalReducedDensityMatrix attribute)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.LocalOperatorMatrixReadout.local_patterns">(qlinks.open_system.LocalOperatorMatrixReadout attribute)</a>
 </li>
@@ -11267,9 +11278,11 @@
       <li><a href="qlinks.caging.html#qlinks.caging.local_rank_one_matrix_unit_expansion">local_rank_one_matrix_unit_expansion() (in module qlinks.caging)</a>
 
       <ul>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_rank_one_matrix_unit_expansion">(in module qlinks.open_system)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.local_rank_one_matrix_unit_expansion">(in module qlinks.local_structure)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.local_rank_one_matrix_unit_expansion">(in module qlinks.open_system.local_recycling)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.matrix_units.local_rank_one_matrix_unit_expansion">(in module qlinks.local_structure.matrix_units)</a>
+</li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.local_rank_one_matrix_unit_expansion">(in module qlinks.open_system)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.local_search.LocalQDMCertificationReport.local_record_index">local_record_index (qlinks.caging.local_search.LocalQDMCertificationReport attribute)</a>
@@ -11281,15 +11294,19 @@
       <li><a href="qlinks.caging.html#qlinks.caging.local_reduced_density_matrix_from_state">local_reduced_density_matrix_from_state() (in module qlinks.caging)</a>
 
       <ul>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.local_reduced_density_matrix_from_state">(in module qlinks.local_structure)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.local_reduced_density_matrix_from_state">(in module qlinks.local_structure.reduced_density)</a>
+</li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_reduced_density_matrix_from_state">(in module qlinks.open_system)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.local_reduced_density_matrix_from_state">(in module qlinks.open_system.local_recycling)</a>
-</li>
       </ul></li>
-      <li><a href="qlinks.open_system.html#qlinks.open_system.local_reduced_density_matrix_from_state_matrix">local_reduced_density_matrix_from_state_matrix() (in module qlinks.open_system)</a>
+      <li><a href="qlinks.local_structure.html#qlinks.local_structure.local_reduced_density_matrix_from_state_matrix">local_reduced_density_matrix_from_state_matrix() (in module qlinks.local_structure)</a>
 
       <ul>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.local_reduced_density_matrix_from_state_matrix">(in module qlinks.open_system.local_recycling)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.local_reduced_density_matrix_from_state_matrix">(in module qlinks.local_structure.reduced_density)</a>
+</li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.local_reduced_density_matrix_from_state_matrix">(in module qlinks.open_system)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.local_reduced_density_matrix_readout_from_state">local_reduced_density_matrix_readout_from_state() (in module qlinks.caging)</a>
@@ -11356,6 +11373,8 @@
         <li><a href="qlinks.caging.html#qlinks.caging.LocalQDMCageRecord.local_state">(qlinks.caging.LocalQDMCageRecord property)</a>
 </li>
         <li><a href="qlinks.caging.html#qlinks.caging.search.CageRecord.local_state">(qlinks.caging.search.CageRecord property)</a>
+</li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.protocols.CageStateRecordLike.local_state">(qlinks.open_system.protocols.CageStateRecordLike property)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.CageClassificationReport.local_structure_report">local_structure_report() (qlinks.caging.CageClassificationReport method)</a>
@@ -11527,9 +11546,11 @@
       <li><a href="qlinks.caging.html#qlinks.caging.LocalMatrixUnitTerm">LocalMatrixUnitTerm (class in qlinks.caging)</a>
 
       <ul>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.LocalMatrixUnitTerm">(class in qlinks.open_system)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalMatrixUnitTerm">(class in qlinks.local_structure)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalMatrixUnitTerm">(class in qlinks.open_system.local_recycling)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.matrix_units.LocalMatrixUnitTerm">(class in qlinks.local_structure.matrix_units)</a>
+</li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.LocalMatrixUnitTerm">(class in qlinks.open_system)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.operators.html#qlinks.operators.LocalOperator">LocalOperator (class in qlinks.operators)</a>
@@ -11633,9 +11654,11 @@
       <li><a href="qlinks.caging.html#qlinks.caging.LocalReducedDensityMatrix">LocalReducedDensityMatrix (class in qlinks.caging)</a>
 
       <ul>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.LocalReducedDensityMatrix">(class in qlinks.open_system)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalReducedDensityMatrix">(class in qlinks.local_structure)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalReducedDensityMatrix">(class in qlinks.open_system.local_recycling)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.LocalReducedDensityMatrix">(class in qlinks.local_structure.reduced_density)</a>
+</li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.LocalReducedDensityMatrix">(class in qlinks.open_system)</a>
 </li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.LocalReducedDensityMatrixReadout">LocalReducedDensityMatrixReadout (class in qlinks.caging)</a>
@@ -12736,8 +12759,6 @@
         <li><a href="qlinks.open_system.html#qlinks.open_system.stochastic_schrodinger.McwfOptions.max_substeps_per_interval">(qlinks.open_system.stochastic_schrodinger.McwfOptions attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.open_system.html#qlinks.open_system.ResidualKernelOperatorActionReport.max_target_component_norm">max_target_component_norm (qlinks.open_system.ResidualKernelOperatorActionReport property)</a>
 </li>
       <li><a href="qlinks.open_system.html#qlinks.open_system.DarkManifoldDiagnostics.max_target_jump_residual">max_target_jump_residual (qlinks.open_system.DarkManifoldDiagnostics attribute)</a>
@@ -12752,6 +12773,8 @@
         <li><a href="qlinks.open_system.html#qlinks.open_system.RecycledManifoldJumpSelectionStep.max_target_jump_residual">(qlinks.open_system.RecycledManifoldJumpSelectionStep attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.open_system.html#qlinks.open_system.diagnostics.MonitorKernelClosureDiagnostics.max_target_monitor_residual">max_target_monitor_residual (qlinks.open_system.diagnostics.MonitorKernelClosureDiagnostics attribute)</a>
 
       <ul>
@@ -13324,6 +13347,14 @@
 </li>
         <li><a href="qlinks.lattice.html#module-qlinks.lattice.types">qlinks.lattice.types</a>
 </li>
+        <li><a href="qlinks.local_structure.html#module-qlinks.local_structure">qlinks.local_structure</a>
+</li>
+        <li><a href="qlinks.local_structure.html#module-qlinks.local_structure.embedding">qlinks.local_structure.embedding</a>
+</li>
+        <li><a href="qlinks.local_structure.html#module-qlinks.local_structure.matrix_units">qlinks.local_structure.matrix_units</a>
+</li>
+        <li><a href="qlinks.local_structure.html#module-qlinks.local_structure.reduced_density">qlinks.local_structure.reduced_density</a>
+</li>
         <li><a href="qlinks.models.html#module-qlinks.models">qlinks.models</a>
 </li>
         <li><a href="qlinks.models.html#module-qlinks.models.base">qlinks.models.base</a>
@@ -13351,6 +13382,8 @@
         <li><a href="qlinks.open_system.html#module-qlinks.open_system.local_recycling">qlinks.open_system.local_recycling</a>
 </li>
         <li><a href="qlinks.open_system.html#module-qlinks.open_system.operators">qlinks.open_system.operators</a>
+</li>
+        <li><a href="qlinks.open_system.html#module-qlinks.open_system.protocols">qlinks.open_system.protocols</a>
 </li>
         <li><a href="qlinks.open_system.html#module-qlinks.open_system.solvers">qlinks.open_system.solvers</a>
 </li>
@@ -14319,14 +14352,14 @@
         <li><a href="qlinks.open_system.html#qlinks.open_system.RecycledManifoldJumpSelectionReport.n_tested_candidates">(qlinks.open_system.RecycledManifoldJumpSelectionReport property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.caging.html#qlinks.caging.SquareQDMBiperiodicProductInstance.n_tiles">n_tiles (qlinks.caging.SquareQDMBiperiodicProductInstance property)</a>
 
       <ul>
         <li><a href="qlinks.caging.html#qlinks.caging.SquareQDMPEPSFiniteClusterProblem.n_tiles">(qlinks.caging.SquareQDMPEPSFiniteClusterProblem property)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.caging.html#qlinks.caging.SquareQDMPEPSFiniteClusterProblem.n_tiles_x">n_tiles_x (qlinks.caging.SquareQDMPEPSFiniteClusterProblem property)</a>
 </li>
       <li><a href="qlinks.caging.html#qlinks.caging.SquareQDMPEPSFiniteClusterProblem.n_tiles_y">n_tiles_y (qlinks.caging.SquareQDMPEPSFiniteClusterProblem property)</a>
@@ -14996,7 +15029,9 @@
 </li>
         <li><a href="qlinks.caging.html#qlinks.caging.LocalReducedDensityMatrixReadout.null_basis">(qlinks.caging.LocalReducedDensityMatrixReadout property)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalReducedDensityMatrix.null_basis">(qlinks.open_system.local_recycling.LocalReducedDensityMatrix attribute)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalReducedDensityMatrix.null_basis">(qlinks.local_structure.LocalReducedDensityMatrix attribute)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.LocalReducedDensityMatrix.null_basis">(qlinks.local_structure.reduced_density.LocalReducedDensityMatrix attribute)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.LocalReducedDensityMatrix.null_basis">(qlinks.open_system.LocalReducedDensityMatrix attribute)</a>
 </li>
@@ -15018,7 +15053,9 @@
 </li>
         <li><a href="qlinks.caging.html#qlinks.caging.WindowedAnnihilatorPoint.nullity">(qlinks.caging.WindowedAnnihilatorPoint attribute)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalReducedDensityMatrix.nullity">(qlinks.open_system.local_recycling.LocalReducedDensityMatrix property)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalReducedDensityMatrix.nullity">(qlinks.local_structure.LocalReducedDensityMatrix property)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.LocalReducedDensityMatrix.nullity">(qlinks.local_structure.reduced_density.LocalReducedDensityMatrix property)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalSubspaceSupportReportEntry.nullity">(qlinks.open_system.local_recycling.LocalSubspaceSupportReportEntry attribute)</a>
 </li>
@@ -16805,12 +16842,6 @@
         <li><a href="qlinks.caging.html#qlinks.caging.InterferenceZeroReport.q_sector_weight">(qlinks.caging.InterferenceZeroReport attribute)</a>
 </li>
       </ul></li>
-      <li><a href="qlinks.caging.html#qlinks.caging.local_search.LocalRegionProposalSearchResult.qdm_cage_blocks">qdm_cage_blocks() (qlinks.caging.local_search.LocalRegionProposalSearchResult method)</a>
-
-      <ul>
-        <li><a href="qlinks.caging.html#qlinks.caging.LocalRegionProposalSearchResult.qdm_cage_blocks">(qlinks.caging.LocalRegionProposalSearchResult method)</a>
-</li>
-      </ul></li>
       <li><a href="qlinks.operators.html#qlinks.operators.plaquette.PlaquettePatternOperator.qdm_flip">qdm_flip() (qlinks.operators.plaquette.PlaquettePatternOperator class method)</a>
 
       <ul>
@@ -17199,8 +17230,6 @@
         <li><a href="qlinks.html#module-qlinks.distributed">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     qlinks.encoded
 
@@ -17222,6 +17251,8 @@
         <li><a href="qlinks.encoded.html#module-qlinks.encoded.bitmask_builder">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     qlinks.encoded.bitmask_operators
 
@@ -17311,6 +17342,34 @@
 
       <ul>
         <li><a href="qlinks.lattice.html#module-qlinks.lattice.types">module</a>
+</li>
+      </ul></li>
+      <li>
+    qlinks.local_structure
+
+      <ul>
+        <li><a href="qlinks.local_structure.html#module-qlinks.local_structure">module</a>
+</li>
+      </ul></li>
+      <li>
+    qlinks.local_structure.embedding
+
+      <ul>
+        <li><a href="qlinks.local_structure.html#module-qlinks.local_structure.embedding">module</a>
+</li>
+      </ul></li>
+      <li>
+    qlinks.local_structure.matrix_units
+
+      <ul>
+        <li><a href="qlinks.local_structure.html#module-qlinks.local_structure.matrix_units">module</a>
+</li>
+      </ul></li>
+      <li>
+    qlinks.local_structure.reduced_density
+
+      <ul>
+        <li><a href="qlinks.local_structure.html#module-qlinks.local_structure.reduced_density">module</a>
 </li>
       </ul></li>
       <li>
@@ -17409,6 +17468,13 @@
 
       <ul>
         <li><a href="qlinks.open_system.html#module-qlinks.open_system.operators">module</a>
+</li>
+      </ul></li>
+      <li>
+    qlinks.open_system.protocols
+
+      <ul>
+        <li><a href="qlinks.open_system.html#module-qlinks.open_system.protocols">module</a>
 </li>
       </ul></li>
       <li>
@@ -19405,6 +19471,8 @@
 </li>
         <li><a href="qlinks.caging.html#qlinks.caging.search.CageRecordView.signature">(qlinks.caging.search.CageRecordView attribute)</a>
 </li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.protocols.CageStateRecordLike.signature">(qlinks.open_system.protocols.CageStateRecordLike property)</a>
+</li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.signature_from_energy_and_self_loop">signature_from_energy_and_self_loop() (in module qlinks.caging)</a>
 
@@ -20074,8 +20142,6 @@
         <li><a href="qlinks.caging.html#id75">(qlinks.caging.LocalQDMCageSearchConfig attribute)</a>, <a href="qlinks.caging.html#qlinks.caging.LocalQDMCageSearchConfig.sort_basis">[1]</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.caging.html#qlinks.caging.local_search.LocalQDMMultiPaddingConfig.sort_limited_basis">sort_limited_basis (qlinks.caging.local_search.LocalQDMMultiPaddingConfig attribute)</a>
 
       <ul>
@@ -20090,6 +20156,8 @@
         <li><a href="qlinks.caging.html#qlinks.caging.RobustQDMLocalCageSearchConfig.sort_limited_basis">(qlinks.caging.RobustQDMLocalCageSearchConfig attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="qlinks.caging.html#qlinks.caging.local_search.StripeMotifComponentRegionProposalRecord.source">source (qlinks.caging.local_search.StripeMotifComponentRegionProposalRecord attribute)</a>
 
       <ul>
@@ -20143,7 +20211,9 @@
       <li><a href="qlinks.caging.html#qlinks.caging.LocalMatrixUnitTerm.source_pattern">source_pattern (qlinks.caging.LocalMatrixUnitTerm attribute)</a>
 
       <ul>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalMatrixUnitTerm.source_pattern">(qlinks.open_system.local_recycling.LocalMatrixUnitTerm attribute)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalMatrixUnitTerm.source_pattern">(qlinks.local_structure.LocalMatrixUnitTerm attribute)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.matrix_units.LocalMatrixUnitTerm.source_pattern">(qlinks.local_structure.matrix_units.LocalMatrixUnitTerm attribute)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.LocalMatrixUnitTerm.source_pattern">(qlinks.open_system.LocalMatrixUnitTerm attribute)</a>
 </li>
@@ -21019,6 +21089,8 @@
 </li>
         <li><a href="qlinks.caging.html#qlinks.caging.SupportEigenstateBranchReport.support">(qlinks.caging.SupportEigenstateBranchReport attribute)</a>
 </li>
+        <li><a href="qlinks.open_system.html#qlinks.open_system.protocols.CageStateRecordLike.support">(qlinks.open_system.protocols.CageStateRecordLike property)</a>
+</li>
       </ul></li>
       <li><a href="qlinks.caging.html#qlinks.caging.diagnostics.LocalReducedDensityMatrixReadout.support_basis">support_basis (qlinks.caging.diagnostics.LocalReducedDensityMatrixReadout property)</a>
 
@@ -21027,7 +21099,9 @@
 </li>
         <li><a href="qlinks.caging.html#qlinks.caging.LocalReducedDensityMatrixReadout.support_basis">(qlinks.caging.LocalReducedDensityMatrixReadout property)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalReducedDensityMatrix.support_basis">(qlinks.open_system.local_recycling.LocalReducedDensityMatrix attribute)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalReducedDensityMatrix.support_basis">(qlinks.local_structure.LocalReducedDensityMatrix attribute)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.LocalReducedDensityMatrix.support_basis">(qlinks.local_structure.reduced_density.LocalReducedDensityMatrix attribute)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.LocalReducedDensityMatrix.support_basis">(qlinks.open_system.LocalReducedDensityMatrix attribute)</a>
 </li>
@@ -21145,7 +21219,9 @@
 </li>
         <li><a href="qlinks.caging.html#qlinks.caging.LocalReducedDensityMatrixReadout.support_rank">(qlinks.caging.LocalReducedDensityMatrixReadout property)</a>
 </li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalReducedDensityMatrix.support_rank">(qlinks.open_system.local_recycling.LocalReducedDensityMatrix property)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalReducedDensityMatrix.support_rank">(qlinks.local_structure.LocalReducedDensityMatrix property)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.LocalReducedDensityMatrix.support_rank">(qlinks.local_structure.reduced_density.LocalReducedDensityMatrix property)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalSubspaceSupportReportEntry.support_rank">(qlinks.open_system.local_recycling.LocalSubspaceSupportReportEntry attribute)</a>
 </li>
@@ -21689,7 +21765,9 @@
       <li><a href="qlinks.caging.html#qlinks.caging.LocalMatrixUnitTerm.target_pattern">target_pattern (qlinks.caging.LocalMatrixUnitTerm attribute)</a>
 
       <ul>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalMatrixUnitTerm.target_pattern">(qlinks.open_system.local_recycling.LocalMatrixUnitTerm attribute)</a>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalMatrixUnitTerm.target_pattern">(qlinks.local_structure.LocalMatrixUnitTerm attribute)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.matrix_units.LocalMatrixUnitTerm.target_pattern">(qlinks.local_structure.matrix_units.LocalMatrixUnitTerm attribute)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.LocalMatrixUnitTerm.target_pattern">(qlinks.open_system.LocalMatrixUnitTerm attribute)</a>
 </li>
@@ -23539,11 +23617,13 @@
 </li>
         <li><a href="qlinks.encoded.html#qlinks.encoded.BitmaskQLMFluxFlipOperator.variable_indices">(qlinks.encoded.BitmaskQLMFluxFlipOperator property)</a>
 </li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.LocalReducedDensityMatrix.variable_indices">(qlinks.local_structure.LocalReducedDensityMatrix attribute)</a>
+</li>
+        <li><a href="qlinks.local_structure.html#qlinks.local_structure.reduced_density.LocalReducedDensityMatrix.variable_indices">(qlinks.local_structure.reduced_density.LocalReducedDensityMatrix attribute)</a>
+</li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalRecyclingBuildResult.variable_indices">(qlinks.open_system.local_recycling.LocalRecyclingBuildResult property)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalRecyclingCandidate.variable_indices">(qlinks.open_system.local_recycling.LocalRecyclingCandidate attribute)</a>
-</li>
-        <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalReducedDensityMatrix.variable_indices">(qlinks.open_system.local_recycling.LocalReducedDensityMatrix attribute)</a>
 </li>
         <li><a href="qlinks.open_system.html#qlinks.open_system.local_recycling.LocalSubspaceSupportReportEntry.variable_indices">(qlinks.open_system.local_recycling.LocalSubspaceSupportReportEntry attribute)</a>
 </li>

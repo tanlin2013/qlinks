@@ -170,6 +170,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../refactor_status.html">Repository refactor status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture_diagnostics.html">Architecture diagnostics</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="nav bd-sidenav">
@@ -187,6 +189,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.local_structure.html">qlinks.local_structure package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
@@ -344,7 +347,7 @@
     <span class="n">ReducedIZPatternSupport</span><span class="p">,</span>
     <span class="n">distinct_reduced_iz_pattern_supports</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.local_recycling</span><span class="w"> </span><span class="kn">import</span> <span class="n">embed_local_pattern_operator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.local_structure</span><span class="w"> </span><span class="kn">import</span> <span class="n">embed_local_pattern_operator</span>
 
 <span class="n">ReducedIZPatternKey</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="o">...</span><span class="p">]</span>
 <span class="n">WitnessNormalization</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;operator_norm&quot;</span><span class="p">,</span> <span class="s2">&quot;frobenius_norm&quot;</span><span class="p">]</span>

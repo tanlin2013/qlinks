@@ -170,6 +170,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../development_status.html">Current development status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../refactor_status.html">Repository refactor status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture_diagnostics.html">Architecture diagnostics</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="nav bd-sidenav">
@@ -187,6 +189,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlinks.local_structure.html">qlinks.local_structure package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.models.html">qlinks.models package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlinks.operators.html">qlinks.operators package</a></li>
@@ -339,14 +342,16 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search_global</span><span class="w"> </span><span class="kn">import</span> <span class="n">_qdm_global_plaquette_actions</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search_padding</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">factorized_qdm_padding_from_multi_padding</span><span class="p">,</span>
+    <span class="n">iter_multi_qdm_block_paddings</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search_types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">FactorizedLocalQDMPadding</span><span class="p">,</span>
     <span class="n">LocalQDMCageBlock</span><span class="p">,</span>
     <span class="n">LocalQDMMultiPaddingConfig</span><span class="p">,</span>
     <span class="n">MultiLocalQDMPadding</span><span class="p">,</span>
-    <span class="n">_qdm_global_plaquette_actions</span><span class="p">,</span>
-    <span class="n">factorized_qdm_padding_from_multi_padding</span><span class="p">,</span>
-    <span class="n">iter_multi_qdm_block_paddings</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.periodic_sequence</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">QDMIndependentBlockCertificate</span><span class="p">,</span>

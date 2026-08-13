@@ -3,7 +3,9 @@ qlinks.open_system package
 
 The open-system package provides Lindblad operators, Liouvillian solvers,
 Monte-Carlo wavefunction sampling, random state helpers, and dark-state
-diagnostics.
+diagnostics.  Shared local-RDM and local-operator algebra is owned by
+:mod:`qlinks.local_structure`; ``local_recycling`` contains the Lindblad-specific
+selection and recycling workflow built on those primitives.
 
 Submodules
 ----------
@@ -33,6 +35,13 @@ qlinks.open_system.operators module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: qlinks.open_system.operators
+   :members:
+   :show-inheritance:
+
+qlinks.open_system.protocols module
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: qlinks.open_system.protocols
    :members:
    :show-inheritance:
 

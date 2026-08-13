@@ -49,7 +49,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="qlinks.backends package" href="qlinks.backends.html" />
-    <link rel="prev" title="Current development status" href="development_status.html" />
+    <link rel="prev" title="Architecture diagnostics" href="architecture_diagnostics.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="1.0.3" />
@@ -171,6 +171,8 @@
 <li class="toctree-l1"><a class="reference internal" href="tensor_network.html">Tensor-network cage ansatzes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Minimal examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development_status.html">Current development status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refactor_status.html">Repository refactor status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_diagnostics.html">Architecture diagnostics</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
 <ul class="current nav bd-sidenav">
@@ -188,6 +190,7 @@
 <li class="toctree-l2"><a class="reference internal" href="qlinks.exceptions.html">qlinks.exceptions package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.io.html">qlinks.io package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.local_structure.html">qlinks.local_structure package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.open_system.html">qlinks.open_system package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.operators.html">qlinks.operators package</a></li>
@@ -470,6 +473,11 @@ APIs live in the subpackages listed below.</p>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.lattice.html#module-qlinks.lattice">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="qlinks.local_structure.html">qlinks.local_structure package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.local_structure.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlinks.local_structure.html#module-qlinks.local_structure">Module contents</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="qlinks.models.html">qlinks.models package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.models.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlinks.models.html#module-qlinks.models">Module contents</a></li>
@@ -670,12 +678,12 @@ order, not input order.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="development_status.html"
+       href="architecture_diagnostics.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Current development status</p>
+        <p class="prev-next-title">Architecture diagnostics</p>
       </div>
     </a>
     <a class="right-next"
