@@ -69,7 +69,11 @@ def test_active_code_does_not_depend_on_temporary_refactor_facades() -> None:
     """Compatibility facades are migration scaffolding, never internal dependencies."""
 
     forbidden_by_tree = {
-        _PACKAGE_ROOT / "caging": ("qlinks.caging.stability",),
+        _PACKAGE_ROOT
+        / "caging": (
+            "qlinks.caging.local_search",
+            "qlinks.caging.stability",
+        ),
         _PACKAGE_ROOT / "open_system": ("qlinks.open_system.manifold_detectors",),
     }
     allowed_paths = {
@@ -93,6 +97,41 @@ def test_active_code_does_not_depend_on_temporary_refactor_facades() -> None:
         "Active code imports a temporary refactor compatibility facade; "
         "import the focused implementation module instead:\n" + "\n".join(violations)
     )
+
+
+def test_local_search_modules_follow_one_way_dependency_order() -> None:
+    """Focused local-search modules must not recreate the former dependency knot."""
+
+    forbidden_by_module = {
+        "local_search_core.py": (
+            "qlinks.caging.local_search_qdm",
+            "qlinks.caging.local_search_certification",
+            "qlinks.caging.local_search_proposals",
+            "qlinks.caging.local_search_workflows",
+        ),
+        "local_search_qdm.py": (
+            "qlinks.caging.local_search_certification",
+            "qlinks.caging.local_search_proposals",
+            "qlinks.caging.local_search_workflows",
+        ),
+        "local_search_certification.py": (
+            "qlinks.caging.local_search_proposals",
+            "qlinks.caging.local_search_workflows",
+        ),
+        "local_search_proposals.py": ("qlinks.caging.local_search_workflows",),
+    }
+
+    violations: list[str] = []
+    for filename, forbidden_prefixes in forbidden_by_module.items():
+        path = _PACKAGE_ROOT / "caging" / filename
+        for imported_module in _python_imports(path):
+            if any(
+                imported_module == prefix or imported_module.startswith(f"{prefix}.")
+                for prefix in forbidden_prefixes
+            ):
+                violations.append(f"{filename}: {imported_module}")
+
+    assert not violations, "Local-search dependency cycle risk:\n" + "\n".join(violations)
 
 
 def test_lazy_compatibility_facades_use_pyflakes_safe_all() -> None:

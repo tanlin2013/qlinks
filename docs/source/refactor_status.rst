@@ -27,10 +27,24 @@ to work during migration.  Active package code must use the focused modules dire
 Local cage search
 ~~~~~~~~~~~~~~~~~
 
-``local_search_types`` now owns passive configuration/report contracts, while
-``local_search_geometry`` owns pure stripe, snake, plaquette/link-region, and local-index
-geometry helpers.  Search orchestration, QDM local enumeration, and padding/certification
-remain in ``local_search`` and are the next decomposition target.
+The former ``qlinks.caging.local_search`` implementation is now split into:
+
+* ``local_search_types`` for passive configuration/report contracts;
+* ``local_search_geometry`` for pure stripe, snake, plaquette/link-region, and local-index
+  geometry helpers;
+* ``local_search_core`` for generic local type-1 search algebra and adapter registration;
+* ``local_search_qdm`` for QDM local-region construction, basis enumeration, and local kinetic
+  algebra;
+* ``local_search_certification`` for QDM padding, global certification, and factorized-product
+  validation;
+* ``local_search_proposals`` for stripe/snake/adaptive proposal generation and proposal scans;
+  and
+* ``local_search_workflows`` for robust multi-stage local-search orchestration.
+
+``qlinks.caging.local_search`` is now a temporary compatibility facade. Active first-party code
+uses the focused modules directly. Because qlinks is primarily group-internal software, this
+facade is intentionally minimal and should be removed during the later API-cleanup pass once the
+refactored interface has stabilized.
 
 Dark-manifold detectors
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,4 +77,4 @@ A compatibility bridge should be deleted when:
 #. the removal is recorded in the changelog or release/refactor milestone.
 
 No new implementation may depend on a temporary compatibility facade.  The architecture tests
-enforce this for the current stability and manifold-detector facades.
+enforce this for the current local-search, stability, and manifold-detector facades.

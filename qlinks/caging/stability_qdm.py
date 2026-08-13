@@ -13,7 +13,7 @@ import scipy.linalg as scipy_linalg
 import scipy.sparse as scipy_sparse
 import scipy.sparse.linalg as scipy_sparse_linalg
 
-from qlinks.caging.local_search import (
+from qlinks.caging.local_search_certification import (
     _qdm_flip_transition_from_action,
     _qdm_global_plaquette_actions,
 )

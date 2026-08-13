@@ -8,14 +8,16 @@ from typing import Literal
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.caging.local_search import (
+from qlinks.caging.local_search_certification import (
+    _qdm_global_plaquette_actions,
+    factorized_qdm_padding_from_multi_padding,
+    make_qdm_cage_block,
+)
+from qlinks.caging.local_search_types import (
     FactorizedLocalQDMPadding,
     LocalQDMCageBlock,
     LocalQDMCageRecord,
     MultiLocalQDMPadding,
-    _qdm_global_plaquette_actions,
-    factorized_qdm_padding_from_multi_padding,
-    make_qdm_cage_block,
 )
 from qlinks.caging.thermodynamic import (
     EnergyDensityMatchReport,

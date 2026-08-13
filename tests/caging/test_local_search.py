@@ -37,6 +37,7 @@ from qlinks.caging import (
     StripeMotifRegionProposalRecord,
     StripeRegionProposal,
     certified_qdm_result_from_multi_block_reports,
+    certify_qdm_local_result,
     certify_qdm_multi_block_padding,
     certify_qdm_multi_block_result,
     classify_cage_state,
@@ -1407,7 +1408,9 @@ def test_local_qdm_full_square_4x4_certifies_to_cage_search_result_protocol() ->
         config=LocalQDMCageSearchConfig(tolerance=1.0e-10),
     ).run()
 
-    certified = local_result.certify_paddings(
+    certified = certify_qdm_local_result(
+        model,
+        local_result,
         config=LocalQDMPaddingConfig(tolerance=1.0e-9),
     )
 
@@ -1433,13 +1436,14 @@ def test_local_qdm_certified_result_can_feed_classification_on_limited_basis() -
         coup_pot=1.0,
     )
 
-    certified = (
-        LocalQDMCageSearcher.full_model_region(
-            model,
-            config=LocalQDMCageSearchConfig(tolerance=1.0e-10),
-        )
-        .run()
-        .certify_paddings(config=LocalQDMPaddingConfig(tolerance=1.0e-9))
+    local_result = LocalQDMCageSearcher.full_model_region(
+        model,
+        config=LocalQDMCageSearchConfig(tolerance=1.0e-10),
+    ).run()
+    certified = certify_qdm_local_result(
+        model,
+        local_result,
+        config=LocalQDMPaddingConfig(tolerance=1.0e-9),
     )
 
     record = certified.first((0, 4))

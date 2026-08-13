@@ -26,7 +26,8 @@ from qlinks.constraints import ConstraintPropagation, ConstraintResult
 from qlinks.variables import VariableLayout
 
 if TYPE_CHECKING:
-    from qlinks.caging.local_search import LocalQDMCageSearchResult, LocalRegionProposalSearchResult
+    from qlinks.caging.local_search_core import LocalQDMCageSearchResult
+    from qlinks.caging.local_search_proposals import LocalRegionProposalSearchResult
 
 LocalBoundaryMode = Literal["relaxed", "closed"]
 SnakeStripeKindPattern = Literal["any", "constant", "alternating", "constant_or_alternating"]
@@ -1374,15 +1375,6 @@ class LocalCageModelAdapter(Protocol):
         region: LocalQDMRegion,
     ) -> LocalQDMCageRecord:
         """Wrap one solved local cage state in a model-specific record."""
-        ...
-
-    def certify_result(
-        self,
-        local_result: LocalQDMCageSearchResult,
-        *,
-        config: LocalQDMPaddingConfig | None = None,
-    ) -> CertifiedLocalQDMCageSearchResult:
-        """Pad/certify local records for this model, when available."""
         ...
 
 
