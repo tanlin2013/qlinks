@@ -39,8 +39,18 @@ jobs:
           system-packages: build-essential pkg-config libxml2-dev libxslt1-dev zlib1g-dev pandoc
           install-command: poetry install -vvv --with docs --sync
 
-      - name: Build Sphinx doc
+      - name: Build Sphinx doc and architecture diagnosis
         run: poetry run make -C docs html
+
+      - name: Upload architecture diagnosis
+        uses: actions/upload-artifact@v4
+        with:
+          name: qlinks-architecture-${{ github.sha }}
+          path: |
+            docs/build/html/_static/architecture/qlinks-architecture.html
+            docs/build/html/_static/architecture/qlinks-architecture.json
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Deploy
         if: github.event_name == 'push' && github.ref_name == 'main'

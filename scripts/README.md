@@ -310,3 +310,25 @@ container:
 QLINKS_DOCKER_DRY_RUN=1 \
 scripts/docker_run_evidence_job.sh spin1 --stage compute --profile smoke
 ```
+
+---
+
+# Repository architecture diagnosis
+
+Generate the interactive import-architecture report without rebuilding the rest
+of the documentation:
+
+```bash
+poetry run make -C docs architecture
+```
+
+Open it directly from Python:
+
+```bash
+poetry run python tools/architecture_report.py --open
+```
+
+The report is written to
+`docs/build/html/_static/architecture/qlinks-architecture.html`, with a JSON
+companion next to it. A normal Sphinx HTML build refreshes the same report, so
+the documentation CI and GitHub Pages deployment carry the diagnosis too.

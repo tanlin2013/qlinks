@@ -28,6 +28,7 @@ understand compact and regional cage states.
    examples
    development_status
    refactor_status
+   architecture_diagnostics
 
 .. toctree::
    :maxdepth: 2

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>qlinks architecture diagnosis</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f7f8fa; --panel: #ffffff; --text: #20242a; --muted: #66707b;
+  --border: #dce1e7; --accent: #356f9f; --accent-soft: #e8f1f8;
+  --edge: #8793a0; --good: #247a4d; --good-soft: #e9f6ef; --warn: #a05a18;
+  --warn-soft: #fff1df; --danger: #a43c3c; --danger-soft: #fdecec;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15181c; --panel: #1d2228; --text: #e9edf2; --muted: #a7b0ba;
+    --border: #343b44; --accent: #77b7e8; --accent-soft: #203548;
+    --edge: #7d8996; --good: #72d19e; --good-soft: #173526; --warn: #f3b66f;
+    --warn-soft: #3b2b18; --danger: #f28c8c; --danger-soft: #3c2020;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+main { max-width: 1240px; margin: 0 auto; padding: 28px 22px 64px; }
+h1 { margin: 0 0 5px; font-size: 30px; font-weight: 650; }
+h2 { margin-top: 38px; font-size: 21px; }
+h3 { font-size: 16px; margin: 0 0 12px; }
+p { max-width: 920px; }
+small,.muted { color: var(--muted); }
+.summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr)); gap: 10px; margin: 20px 0; }
+.metric { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.metric b { display: block; font-size: 22px; font-weight: 650; }
+.status { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0 4px; }
+.badge { padding: 7px 10px; border-radius: 999px; border: 1px solid var(--border); }
+.badge.good { background: var(--good-soft); color: var(--good); }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-top: 14px; }
+.graph-wrap { overflow-x: auto; }
+.dependency-graph { width: 100%; min-width: 820px; height: auto; display: block; }
+.pkg-edge,.module-edge { fill: none; stroke: var(--edge); opacity: .58; }
+.arrow-head { fill: var(--edge); }
+.pkg-node rect,.module-node rect { fill: var(--panel); stroke: var(--border); stroke-width: 1.5; }
+.pkg-node text,.module-node text { fill: var(--text); font-size: 13px; font-weight: 600; pointer-events: none; }
+.pkg-node .node-subtitle,.module-node .node-subtitle { fill: var(--muted); font-size: 10px; font-weight: 400; }
+.pkg-node,.module-node { cursor: pointer; }
+.pkg-node:hover rect,.pkg-node.active rect,.module-node:hover rect,.module-node.active rect { stroke: var(--accent); stroke-width: 2.4; fill: var(--accent-soft); }
+.pkg-node.cyclic rect,.module-node.cyclic rect { stroke: var(--danger); }
+.pkg-edge.active,.module-edge.active { stroke: var(--accent); opacity: 1; }
+.pkg-edge.dim,.pkg-node.dim,.module-edge.dim,.module-node.dim { opacity: .12; }
+.controls { display: grid; grid-template-columns: minmax(190px,1fr) minmax(220px,1.6fr) minmax(140px,.8fr); gap: 10px; align-items: end; margin-bottom: 12px; }
+label { display: grid; gap: 5px; color: var(--muted); font-size: 13px; }
+select,input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font: inherit; }
+.check { display: flex; gap: 7px; align-items: center; min-height: 38px; }
+.check input { width: auto; }
+.grid2 { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th,td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+th { color: var(--muted); font-weight: 600; position: sticky; top: 0; background: var(--panel); }
+.table-scroll { overflow: auto; max-height: 470px; }
+.note { border-left: 3px solid var(--accent); padding: 8px 12px; background: var(--accent-soft); border-radius: 0 8px 8px 0; }
+code { font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size: .92em; }
+@media (max-width: 760px) { .grid2,.controls { grid-template-columns: 1fr; } main { padding: 20px 12px 48px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>qlinks architecture diagnosis</h1>
+  <div class="muted">Static import analysis · commit <code>%%ARCH_000%%</code></div>
+
+  <div class="summary">
+    <div class="metric"><span class="muted">Python modules</span><b>%%ARCH_001%%</b></div>
+    <div class="metric"><span class="muted">Top-level packages</span><b>%%ARCH_002%%</b></div>
+    <div class="metric"><span class="muted">Source lines</span><b>%%ARCH_003%%</b></div>
+    <div class="metric"><span class="muted">Module edges</span><b>%%ARCH_004%%</b></div>
+    <div class="metric"><span class="muted">Implementation SCCs</span><b>%%ARCH_005%%</b></div>
+    <div class="metric"><span class="muted">Surface/re-export SCCs</span><b>%%ARCH_006%%</b></div>
+    <div class="metric"><span class="muted">Boundary violations</span><b>%%ARCH_007%%</b></div>
+  </div>
+  <div class="status">
+    <span class="badge %%ARCH_008%%">%%ARCH_009%%</span>
+    <span class="badge %%ARCH_010%%">%%ARCH_011%%</span>
+    <span class="badge %%ARCH_012%%">%%ARCH_013%%</span>
+  </div>
+
+  <h2>Package dependency overview</h2>
+  <p>Arrows point from a package to the package it imports. Vertical placement follows dependency depth, so lower nodes tend to be architectural foundations. Edge thickness represents the number of resolved internal import references.</p>
+  <div class="panel graph-wrap">%%ARCH_014%%</div>
+  <p class="muted">Click a package to highlight its immediate dependencies and dependents. Click empty graph space to reset.</p>
+
+  <h2>Module explorer</h2>
+  <p>Use this view for targeted diagnosis inside one top-level package. This keeps the report readable even when the repository has hundreds of modules.</p>
+  <div class="panel">
+    <div class="controls">
+      <label>Package<select id="scope-select">%%ARCH_015%%</select></label>
+      <label>Module filter<input id="module-filter" type="search" placeholder="e.g. local_search or manifold"></label>
+      <label class="check"><input id="cycles-only" type="checkbox"> cycles only</label>
+    </div>
+    <div id="module-graph-wrap" class="graph-wrap" aria-live="polite"></div>
+    <div id="module-caption" class="muted"></div>
+    <div class="muted">Solid edges include eager module-scope imports; dashed edges are type-only or function-local dependency references.</div>
+  </div>
+
+  <h2>Package metrics</h2>
+  <div class="panel table-scroll">%%ARCH_016%%</div>
+
+  <h2>Coupling hotspots</h2>
+  <div class="grid2">
+    <div class="panel"><h3>Highest fan-out</h3><div class="table-scroll">%%ARCH_017%%</div></div>
+    <div class="panel"><h3>Highest fan-in</h3><div class="table-scroll">%%ARCH_018%%</div></div>
+  </div>
+
+  <h2>Cycle diagnostics</h2>
+  <p>Import-time SCCs use only eager module-scope imports and are split into API/re-export cycles (package initializers or known compatibility facades) versus implementation cycles. The secondary “type/lazy static” entries appear only when TYPE_CHECKING and function-local imports are included, so intentional typing or cycle-breaking imports are not mistaken for eager import cycles. Package-level import-time cycles are reported separately in the summary.</p>
+  <div class="panel table-scroll">%%ARCH_019%%</div>
+
+  <h2>Architecture guardrails</h2>
+  <p>The report mirrors the broad dependency rules in <code>AGENTS.md</code>: caging/open-system separation, neutral local structure, temporary-facade isolation, and the focused local-search ordering. The dedicated pytest architecture tests remain the blocking source of truth for CI.</p>
+  <div class="panel table-scroll">%%ARCH_020%%</div>
+
+  <h2>Interpretation</h2>
+  <div class="note">Treat fan-in/fan-out and line count as navigation aids, not quality scores. A large scientific module can be legitimate; the strongest warning signs are cross-layer violations, strongly connected components, and high coupling that crosses responsibility boundaries.</div>
+</main>
+<script id="architecture-data" type="application/json">%%ARCH_021%%</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById('architecture-data').textContent);
+  const packageSvg = document.getElementById('package-graph');
+
+  function clearPackageHighlight() {
+    packageSvg.querySelectorAll('.pkg-node,.pkg-edge').forEach(el => el.classList.remove('active','dim'));
+  }
+  packageSvg.addEventListener('click', (event) => {
+    const node = event.target.closest('.pkg-node');
+    if (!node) { clearPackageHighlight(); return; }
+    const name = node.dataset.node;
+    const connected = new Set([name]);
+    packageSvg.querySelectorAll('.pkg-edge').forEach(edge => {
+      if (edge.dataset.source === name || edge.dataset.target === name) {
+        connected.add(edge.dataset.source); connected.add(edge.dataset.target); edge.classList.add('active');
+      } else edge.classList.add('dim');
+    });
+    packageSvg.querySelectorAll('.pkg-node').forEach(item => {
+      item.classList.toggle('active', item.dataset.node === name);
+      item.classList.toggle('dim', !connected.has(item.dataset.node));
+    });
+  });
+
+  const select = document.getElementById('scope-select');
+  const filter = document.getElementById('module-filter');
+  const cyclesOnly = document.getElementById('cycles-only');
+  const graphWrap = document.getElementById('module-graph-wrap');
+  const caption = document.getElementById('module-caption');
+
+  const packageNames = [...new Set(data.modules.map(item => item.package))]
+    .filter(name => name !== data.package).sort();
+  if (!select.value && packageNames.length) select.value = packageNames[0];
+
+  function escapeXml(value) {
+    return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'})[c]);
+  }
+
+  function computeLevels(nodes, edges) {
+    const names = new Set(nodes.map(n => n.module));
+    const deps = new Map([...names].map(name => [name, []]));
+    edges.forEach(edge => { if (names.has(edge.source) && names.has(edge.target)) deps.get(edge.source).push(edge.target); });
+    const memo = new Map();
+    const visiting = new Set();
+    function level(name) {
+      if (memo.has(name)) return memo.get(name);
+      if (visiting.has(name)) return 0;
+      visiting.add(name);
+      const targets = deps.get(name) || [];
+      const value = targets.length ? 1 + Math.max(...targets.map(level)) : 0;
+      visiting.delete(name); memo.set(name, value); return value;
+    }
+    names.forEach(level); return memo;
+  }
+
+  function renderModules() {
+    const scope = select.value;
+    const query = filter.value.trim().toLowerCase();
+    let nodes = data.modules.filter(item => item.package === scope);
+    if (cyclesOnly.checked) nodes = nodes.filter(item => item.in_static_cycle);
+    if (query) {
+      const matched = new Set(nodes.filter(item => item.module.toLowerCase().includes(query)).map(item => item.module));
+      const neighborhood = new Set(matched);
+      data.module_edges.forEach(edge => {
+        if (matched.has(edge.source) || matched.has(edge.target)) { neighborhood.add(edge.source); neighborhood.add(edge.target); }
+      });
+      nodes = nodes.filter(item => neighborhood.has(item.module));
+    }
+    if (!nodes.length) { graphWrap.innerHTML = '<p class="muted">No modules match this filter.</p>'; caption.textContent = ''; return; }
+
+    const names = new Set(nodes.map(item => item.module));
+    const edges = data.module_edges.filter(edge => names.has(edge.source) && names.has(edge.target));
+    const layoutEdges = edges.filter(edge => edge.eager_weight > 0);
+    const levels = computeLevels(nodes, layoutEdges);
+    const grouped = new Map();
+    nodes.forEach(node => { const l = levels.get(node.module) || 0; if (!grouped.has(l)) grouped.set(l, []); grouped.get(l).push(node); });
+    const maxLevel = Math.max(...grouped.keys());
+    const width = 1180, rowHeight = 92, yPad = 55, xPad = 90;
+    const height = Math.max(300, yPad * 2 + (maxLevel + 1) * rowHeight);
+    const pos = new Map();
+    [...grouped.entries()].sort((a,b) => b[0]-a[0]).forEach(([level, items]) => {
+      items.sort((a,b) => a.module.localeCompare(b.module));
+      const usable = width - 2*xPad;
+      const step = items.length > 1 ? Math.min(usable/(items.length-1), 220) : 0;
+      const total = step*(items.length-1); const start = (width-total)/2;
+      const y = yPad + (maxLevel-level)*rowHeight;
+      items.forEach((item,index) => pos.set(item.module, [items.length===1 ? width/2 : start+index*step, y]));
+    });
+    const maxWeight = Math.max(1, ...edges.map(edge => edge.weight));
+    let svg = `<svg id="module-graph" class="dependency-graph" viewBox="0 0 ${width} ${height}" role="img" aria-label="Module dependency graph for ${escapeXml(scope)}"><defs><marker id="module-arrow" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto"><polygon points="0 0, 8 3.5, 0 7" class="arrow-head"></polygon></marker></defs>`;
+    edges.forEach(edge => {
+      const [sx,sy] = pos.get(edge.source), [tx,ty] = pos.get(edge.target);
+      const stroke = 1 + 2.8*Math.sqrt(edge.weight/maxWeight);
+      let edgeClass = 'module-edge';
+      if (edge.eager_weight === 0 && edge.type_checking_weight > 0 && edge.local_weight === 0) edgeClass += ' type-only';
+      else if (edge.eager_weight === 0 && edge.local_weight > 0) edgeClass += ' lazy-only';
+      svg += `<path class="${edgeClass}" data-source="${escapeXml(edge.source)}" data-target="${escapeXml(edge.target)}" d="M ${sx} ${sy+21} Q ${(sx+tx)/2} ${(sy+ty)/2} ${tx} ${ty-21}" style="stroke-width:${stroke.toFixed(2)}" marker-end="url(#module-arrow)"><title>refs ${edge.weight} · eager ${edge.eager_weight} · local ${edge.local_weight} · type-only ${edge.type_checking_weight}</title></path>`;
+    });
+    nodes.forEach(node => {
+      const [x,y] = pos.get(node.module); const short = node.module.replace(scope + '.', '') || scope.split('.').pop();
+      svg += `<g class="module-node${node.in_import_cycle ? ' cyclic' : ''}" data-node="${escapeXml(node.module)}" transform="translate(${x-82},${y-21})"><rect width="164" height="42" rx="8"></rect><text x="82" y="18" text-anchor="middle">${escapeXml(short.length > 25 ? short.slice(0,23)+'…' : short)}</text><text class="node-subtitle" x="82" y="33" text-anchor="middle">in ${node.fan_in} · out ${node.fan_out} · ${node.lines}L</text><title>${escapeXml(node.module + '\n' + node.path)}</title></g>`;
+    });
+    svg += '</svg>'; graphWrap.innerHTML = svg;
+    caption.textContent = `${nodes.length} modules · ${edges.length} internal edges in ${scope}`;
+
+    const moduleSvg = document.getElementById('module-graph');
+    moduleSvg.addEventListener('click', (event) => {
+      const node = event.target.closest('.module-node');
+      moduleSvg.querySelectorAll('.module-node,.module-edge').forEach(el => el.classList.remove('active','dim'));
+      if (!node) return;
+      const name = node.dataset.node; const connected = new Set([name]);
+      moduleSvg.querySelectorAll('.module-edge').forEach(edge => {
+        if (edge.dataset.source === name || edge.dataset.target === name) { connected.add(edge.dataset.source); connected.add(edge.dataset.target); edge.classList.add('active'); } else edge.classList.add('dim');
+      });
+      moduleSvg.querySelectorAll('.module-node').forEach(item => { item.classList.toggle('active', item.dataset.node === name); item.classList.toggle('dim', !connected.has(item.dataset.node)); });
+    });
+  }
+
+  select.addEventListener('change', renderModules);
+  filter.addEventListener('input', renderModules);
+  cyclesOnly.addEventListener('change', renderModules);
+  renderModules();
+})();
+</script>
+</body>
+</html>
