@@ -1,0 +1,127 @@
+{
+  "max_new_module_lines": 1500,
+  "oversized_module_line_limits": {
+    "qlinks.caging.analysis.environment": 2847,
+    "qlinks.caging.local_search.types": 1749,
+    "qlinks.caging.stability.core": 1586,
+    "qlinks.caging.stability.qdm": 1691,
+    "qlinks.caging.stability.types": 2231,
+    "qlinks.caging.strip_transfer": 2141,
+    "qlinks.caging.tensor_network": 3815,
+    "qlinks.open_system.constructions.cage_lindblad": 3328,
+    "qlinks.open_system.constructions.deprecated.cage": 4365,
+    "qlinks.open_system.diagnostics": 3825,
+    "qlinks.open_system.manifold_recycling": 2669,
+    "qlinks.open_system.manifold_residual": 1925,
+    "qlinks.open_system.stochastic_schrodinger": 2758,
+    "qlinks.visualizer.basis": 6500,
+    "qlinks.visualizer.hamiltonian_graph": 2371
+  },
+  "public_api_export_limits": {
+    "qlinks/__init__.py": 2,
+    "qlinks/backends/__init__.py": 5,
+    "qlinks/basis/__init__.py": 19,
+    "qlinks/basis/solvers/__init__.py": 12,
+    "qlinks/builders/__init__.py": 10,
+    "qlinks/caging/__init__.py": 180,
+    "qlinks/caging/analysis/__init__.py": 60,
+    "qlinks/caging/local_search/__init__.py": 82,
+    "qlinks/caging/stability/__init__.py": 118,
+    "qlinks/constraints/__init__.py": 40,
+    "qlinks/conventions/__init__.py": 4,
+    "qlinks/encoded/__init__.py": 33,
+    "qlinks/exceptions/__init__.py": 3,
+    "qlinks/io/__init__.py": 4,
+    "qlinks/lattice/__init__.py": 16,
+    "qlinks/local_structure/__init__.py": 7,
+    "qlinks/models/__init__.py": 52,
+    "qlinks/open_system/__init__.py": 141,
+    "qlinks/open_system/constructions/__init__.py": 14,
+    "qlinks/open_system/constructions/deprecated/__init__.py": 15,
+    "qlinks/operators/__init__.py": 48,
+    "qlinks/qec/__init__.py": 36,
+    "qlinks/variables/__init__.py": 8,
+    "qlinks/visualizer/__init__.py": 48
+  },
+  "allowed_top_level_dependencies": {
+    "qlinks": [],
+    "qlinks.backends": [],
+    "qlinks.basis": [
+      "qlinks.constraints",
+      "qlinks.variables"
+    ],
+    "qlinks.builders": [
+      "qlinks.backends",
+      "qlinks.basis",
+      "qlinks.operators"
+    ],
+    "qlinks.caging": [
+      "qlinks.basis",
+      "qlinks.constraints",
+      "qlinks.encoded",
+      "qlinks.lattice",
+      "qlinks.local_structure",
+      "qlinks.models",
+      "qlinks.operators",
+      "qlinks.variables"
+    ],
+    "qlinks.constraints": [
+      "qlinks.lattice",
+      "qlinks.variables"
+    ],
+    "qlinks.conventions": [
+      "qlinks.lattice"
+    ],
+    "qlinks.distributed": [],
+    "qlinks.encoded": [
+      "qlinks.backends",
+      "qlinks.basis",
+      "qlinks.builders",
+      "qlinks.lattice",
+      "qlinks.variables"
+    ],
+    "qlinks.exceptions": [],
+    "qlinks.io": [
+      "qlinks.caging"
+    ],
+    "qlinks.lattice": [],
+    "qlinks.local_structure": [],
+    "qlinks.models": [
+      "qlinks.backends",
+      "qlinks.basis",
+      "qlinks.builders",
+      "qlinks.constraints",
+      "qlinks.conventions",
+      "qlinks.encoded",
+      "qlinks.lattice",
+      "qlinks.operators",
+      "qlinks.variables"
+    ],
+    "qlinks.open_system": [
+      "qlinks.basis",
+      "qlinks.caging",
+      "qlinks.encoded",
+      "qlinks.local_structure",
+      "qlinks.models"
+    ],
+    "qlinks.operators": [
+      "qlinks.basis",
+      "qlinks.lattice",
+      "qlinks.variables"
+    ],
+    "qlinks.qec": [
+      "qlinks.basis",
+      "qlinks.caging",
+      "qlinks.encoded",
+      "qlinks.models",
+      "qlinks.operators",
+      "qlinks.variables"
+    ],
+    "qlinks.variables": [],
+    "qlinks.visualizer": [
+      "qlinks.caging",
+      "qlinks.lattice",
+      "qlinks.variables"
+    ]
+  }
+}

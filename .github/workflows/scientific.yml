@@ -9,6 +9,9 @@ concurrency:
   group: scientific-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   scientific:
     name: Scientific regression tests

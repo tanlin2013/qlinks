@@ -35,6 +35,8 @@ def test_architecture_report_analyzes_current_repository(architecture_analysis) 
     assert analysis["summary"]["packages"] > 0
     assert analysis["summary"]["import_time_package_cycle_components"] == 0
     assert analysis["summary"]["implementation_import_time_module_cycle_components"] == 0
+    assert analysis["summary"]["static_module_cycle_components"] == 0
+    assert analysis["summary"]["static_package_cycle_components"] == 0
     assert analysis["summary"]["boundary_violations"] == 0
     assert any(record["package"] == "qlinks.caging" for record in analysis["packages"])
     assert not any(

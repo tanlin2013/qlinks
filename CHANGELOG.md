@@ -17,6 +17,10 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Add blocking repository-health budgets for zero SCCs/boundary violations, reviewed package
+  dependencies, source-module size ceilings, curated public APIs, package-internal import direction,
+  workflow permissions, and high-confidence secret/private-key hygiene; wire them into pre-commit
+  and CI, and add pre-push test-health/fast-test gates.
 - Add the T3 test-health guardrail: prune/localize fixtures, eliminate known fast-lane warnings, enforce qlinks-originated warnings, and publish a budgeted test-health snapshot in CI.
 - Reorganize large caging/open-system tests by responsibility, isolate intentional MCWF/environment private-kernel contracts, deduplicate misplaced basis tests, and record T2 ownership metrics in the maintained test-health audit.
 - Reclassify the test suite by purpose, move manual visual checks out of the fast lane, shrink deprecated single-cage Lindblad coverage to black-box compatibility tests, cache architecture analysis, extend nested-caging API contracts, and add `tests/TEST_HEALTH_AUDIT.md` as the maintained test-health cache.

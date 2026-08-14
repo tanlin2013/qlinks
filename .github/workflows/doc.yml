@@ -2,6 +2,9 @@ name: Doc
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   versions:
     runs-on: ubuntu-latest
@@ -22,9 +25,6 @@ jobs:
     needs: versions
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,6 +42,14 @@ jobs:
       - name: Build Sphinx doc and architecture diagnosis
         run: poetry run make -C docs html
 
+      - name: Upload documentation site
+        uses: actions/upload-artifact@v4
+        with:
+          name: qlinks-docs-${{ github.sha }}
+          path: docs/build/html
+          if-no-files-found: error
+          retention-days: 3
+
       - name: Upload architecture diagnosis
         uses: actions/upload-artifact@v4
         with:
@@ -52,8 +60,22 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref_name == 'main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download documentation site
+        uses: actions/download-artifact@v4
+        with:
+          name: qlinks-docs-${{ github.sha }}
+          path: docs/build/html
+
       - name: Deploy
-        if: github.event_name == 'push' && github.ref_name == 'main'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

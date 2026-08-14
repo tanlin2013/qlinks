@@ -3,6 +3,11 @@ repos:
     rev: v6.0.0
     hooks:
     -   id: check-yaml
+    -   id: check-json
+    -   id: check-toml
+    -   id: check-merge-conflict
+    -   id: check-case-conflict
+    -   id: detect-private-key
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
     -   id: check-added-large-files
@@ -63,3 +68,24 @@ repos:
         language: python
         pass_filenames: false
         stages: [pre-push]
+
+#-   repo: local
+#    hooks:
+#    -   id: repository-health
+#        name: repository-health
+#        entry: poetry run python tools/repository_health.py --check --quiet
+#        language: system
+#        pass_filenames: false
+#    -   id: test-health
+#        name: test-health
+#        entry: poetry run python tools/test_health.py --check --quiet
+#        language: system
+#        pass_filenames: false
+#        stages: [pre-push]
+#    -   id: fast-tests
+#        name: fast-tests
+#        entry: scripts/test.sh fast
+#        language: system
+#        pass_filenames: false
+#        stages: [pre-push]
+#

@@ -202,6 +202,28 @@ STABILITY_ALLOWED_DEPENDENCIES: dict[str, frozenset[str]] = {
 }
 
 
+ANALYSIS_ALLOWED_DEPENDENCIES: dict[str, frozenset[str]] = {
+    "qlinks.caging.analysis.transitions": frozenset(),
+    "qlinks.caging.analysis.environment": frozenset({"qlinks.caging.analysis.transitions"}),
+    "qlinks.caging.analysis.local_structure": frozenset({"qlinks.caging.analysis.environment"}),
+    "qlinks.caging.analysis.support": frozenset(
+        {
+            "qlinks.caging.analysis.environment",
+            "qlinks.caging.analysis.transitions",
+        }
+    ),
+    "qlinks.caging.analysis.support_morphology": frozenset({"qlinks.caging.analysis.environment"}),
+    "qlinks.caging.analysis.spectral": frozenset(),
+    "qlinks.caging.analysis.thermodynamic": frozenset(
+        {
+            "qlinks.caging.analysis.environment",
+            "qlinks.caging.analysis.support",
+        }
+    ),
+    "qlinks.caging.analysis.evidence": frozenset({"qlinks.caging.analysis.spectral"}),
+}
+
+
 SURFACE_FACADE_MODULES: set[str] = set()
 
 
@@ -482,6 +504,22 @@ def _architecture_violations(
             violations.append(
                 BoundaryViolation(
                     rule="stability focused modules must follow the reviewed dependency DAG",
+                    source=occurrence.source,
+                    target=occurrence.target,
+                    path=occurrence.path,
+                    line=occurrence.line,
+                )
+            )
+
+        allowed_analysis_dependencies = ANALYSIS_ALLOWED_DEPENDENCIES.get(occurrence.source)
+        if (
+            allowed_analysis_dependencies is not None
+            and occurrence.target.startswith("qlinks.caging.analysis.")
+            and occurrence.target not in allowed_analysis_dependencies
+        ):
+            violations.append(
+                BoundaryViolation(
+                    rule="caging-analysis modules must follow the reviewed dependency DAG",
                     source=occurrence.source,
                     target=occurrence.target,
                     path=occurrence.path,

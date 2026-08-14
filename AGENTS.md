@@ -74,6 +74,29 @@ The active caging and open-system paths satisfy this boundary. The explicitly de
 open-system cage constructors retain compatibility imports from caging; do not expand that
 exception or use it as precedent for new code.
 
+## Repository-health guardrails
+
+Documentation alone is not sufficient for structural rules. The blocking repository-health check
+(`python tools/repository_health.py --check`) enforces the current reviewed architecture and must
+remain green in pre-commit/CI. In particular:
+
+- all static and import-time module/package SCC counts remain zero;
+- broad architecture boundaries and the reviewed caging sublayer DAGs remain satisfied;
+- new top-level package dependencies require an explicit architecture-budget update;
+- new source modules are limited to 1,500 lines by default; existing oversized modules are
+  grandfathered at their current ceilings and should ratchet downward when decomposed;
+- package-level `__all__` surfaces may not grow beyond their reviewed budgets without an explicit
+  API decision;
+- implementation modules must import defining child modules directly rather than importing back
+  through an ancestor package `__init__`; and
+- package code must never import from `experimental/`. Promotion flows from experimental code into
+  reviewed package code, never the reverse.
+
+The budgets in `tools/repository_health_budget.json` are review gates, not performance targets.
+Do not raise a ceiling merely to make a check pass. If a new dependency, public export, or temporary
+size increase is scientifically/architecturally justified, document the reason in the change and
+update the budget deliberately. When debt shrinks, lower the corresponding ceiling.
+
 ## API maturity
 
 Treat interfaces according to four maturity levels:
@@ -177,6 +200,26 @@ refactors can distinguish known debt from regressions. Run `python tools/test_he
 after broad test changes; `tests/test_health_budget.json` is a deliberate regression budget, not
 a target to game by hiding imports or markers.
 
+## Security and sensitive data
+
+- Never commit credentials, API tokens, private keys, `.env` files, service-account credentials,
+  or production secrets. Use GitHub Actions secrets/environment protection or local untracked
+  configuration instead.
+- Do not embed secrets in notebooks, evidence metadata, command examples, test fixtures, or rendered
+  documentation. If a secret is committed, treat it as compromised: rotate/revoke it first, then
+  remove it from repository history as appropriate.
+- Keep workflow token permissions least-privilege. Every workflow must declare a top-level
+  `permissions` baseline; jobs needing write access override it narrowly. Do not use `write-all`.
+- Do not introduce floating GitHub Action references such as `@main`, `@master`, or `@latest`.
+  Versioned release refs are acceptable; security-sensitive publication workflows should prefer
+  immutable pins when practical.
+- Generated evidence, local caches, account data, and other sensitive runtime artifacts stay out of
+  source control unless they are deliberately sanitized, minimal fixtures.
+- CodeQL and Bandit complement these repository checks; passing static scans does not justify
+  weakening architecture, input validation, or secret-handling rules.
+
+See `SECURITY.md` for reporting/credential-response guidance.
+
 ## Scientific review requirements
 
 For caging changes, preserve or explicitly re-evaluate as applicable:
@@ -210,13 +253,15 @@ Before presenting a change:
 2. Run Black and isort when feasible. For a heavy scientific/refactor task they may be deferred
    to the maintainer, but the handoff must say explicitly that they were not run. Do not defer
    flake8 for ordinary Python patches.
-3. Run the narrowest relevant test lane.
-4. Run `scripts/test.sh fast` for package changes unless the environment lacks a documented
+3. Run `python tools/repository_health.py --check` for package, workflow, or repository-structure changes.
+4. Run `python tools/test_health.py --check` for broad test changes.
+5. Run the narrowest relevant test lane.
+6. Run `scripts/test.sh fast` for package changes unless the environment lacks a documented
    optional dependency.
-5. For scientific changes, report the exact command, seed, system size, tolerance, and
+7. For scientific changes, report the exact command, seed, system size, tolerance, and
    whether the result is a smoke test or production validation.
-6. Summarize public API changes, dependency-direction changes, and tests moved between lanes.
-7. Do not claim validation that was skipped or could not finish.
+8. Summarize public API changes, dependency-direction changes, and tests moved between lanes.
+9. Do not claim validation that was skipped or could not finish.
 
 ### Patch handoff rules
 
