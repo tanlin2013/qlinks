@@ -1,5 +1,16 @@
 # qlinks test-suite health audit
 
+## MCWF optimization-debt follow-up (2026-08-14)
+
+The stochastic-Schrödinger simplification removed the private contracts that existed only to
+protect unsupported micro-optimizations. The structural sparse/vectorized MCWF tests now cover
+operator preservation, total-rate consistency, channel-rate correctness, serial chunking, and
+``total-rate-first`` equivalence. Direct private-symbol imports fall from **48** to **26**, and the
+regression budget is ratcheted to that new ceiling rather than retaining deleted debt.
+
+The current collection after this cleanup is **1,443** cases with **1,370** selected by the fast
+lane; integration/scientific/manual marker counts are unchanged.
+
 Baseline audit: `qlinks-current-d2e041e.zip` after the caging analysis/environment refactor.
 
 ## Repository-health guardrail follow-up (2026-08-14)

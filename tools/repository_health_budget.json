@@ -11,7 +11,6 @@
     "qlinks.open_system.constructions.deprecated.cage": 4365,
     "qlinks.open_system.manifold_recycling": 2669,
     "qlinks.open_system.manifold_residual": 1925,
-    "qlinks.open_system.stochastic_schrodinger": 2758,
     "qlinks.visualizer.hamiltonian_graph": 2371
   },
   "public_api_export_limits": {

@@ -802,15 +802,10 @@ def run_open_system_benchmark(
     mcwf_adaptive_time_step: bool,
     mcwf_max_jump_probability: float,
     mcwf_prefer_sparse_operators: bool,
-    mcwf_prefer_sparse_rate_evaluator: bool,
     mcwf_use_total_rate_first: bool,
-    mcwf_compress_collinear_jumps: bool,
-    mcwf_jump_compression_tolerance: float,
     mcwf_store_density_matrices: bool,
     mcwf_store_state_snapshots: bool,
     mcwf_trajectory_chunk_size: int | None,
-    mcwf_trajectory_chunk_workers: int | None,
-    mcwf_adaptive_trajectory_block_size: int | None,
 ) -> OpenSystemBenchmarkResult:
     liouvillian_shape: tuple[int, int] | None = None
     liouvillian_nnz: int | None = None
@@ -890,8 +885,6 @@ def run_open_system_benchmark(
                 adaptive_time_step=mcwf_adaptive_time_step,
                 max_jump_probability=mcwf_max_jump_probability,
                 prefer_sparse_operators=mcwf_prefer_sparse_operators,
-                prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
-                use_total_rate_first=mcwf_use_total_rate_first,
             )
         )
         n_trajectories_result = 1
@@ -900,8 +893,6 @@ def run_open_system_benchmark(
             "observed_jumps": int(trajectory.jump_indices.size),
             "adaptive": mcwf_adaptive_time_step,
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
-            "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
-            "use_total_rate_first": mcwf_use_total_rate_first,
         }
 
     elif operation == "mcwf":
@@ -915,15 +906,10 @@ def run_open_system_benchmark(
             adaptive_time_step=mcwf_adaptive_time_step,
             max_jump_probability=mcwf_max_jump_probability,
             prefer_sparse_operators=mcwf_prefer_sparse_operators,
-            prefer_sparse_rate_evaluator=mcwf_prefer_sparse_rate_evaluator,
             use_total_rate_first=mcwf_use_total_rate_first,
-            compress_collinear_jumps=mcwf_compress_collinear_jumps,
-            jump_compression_tolerance=mcwf_jump_compression_tolerance,
             store_density_matrices=mcwf_store_density_matrices,
             store_state_snapshots=mcwf_store_state_snapshots,
             trajectory_chunk_size=mcwf_trajectory_chunk_size,
-            trajectory_chunk_workers=mcwf_trajectory_chunk_workers,
-            adaptive_trajectory_block_size=mcwf_adaptive_trajectory_block_size,
             fidelity_targets=(
                 {"target": case.target_state} if case.target_state is not None else None
             ),
@@ -954,21 +940,10 @@ def run_open_system_benchmark(
             "store_density_matrices": mcwf_store_density_matrices,
             "store_state_snapshots": mcwf_store_state_snapshots,
             "trajectory_chunk_size": mcwf_trajectory_chunk_size,
-            "trajectory_chunk_workers": mcwf_trajectory_chunk_workers,
-            "adaptive_trajectory_block_size": mcwf_adaptive_trajectory_block_size,
             "adaptive": mcwf_adaptive_time_step,
             "prefer_sparse_operators": mcwf_prefer_sparse_operators,
-            "prefer_sparse_rate_evaluator": mcwf_prefer_sparse_rate_evaluator,
             "use_total_rate_first": mcwf_use_total_rate_first,
-            "compress_collinear_jumps": mcwf_compress_collinear_jumps,
-            "jump_compression_tolerance": mcwf_jump_compression_tolerance,
         }
-        if "mcwf.count.compressed_jumps" in stage_seconds:
-            details["prepared_n_jumps"] = int(stage_seconds["mcwf.count.compressed_jumps"])
-        if "mcwf.count.compressed_jump_reduction" in stage_seconds:
-            details["compressed_jump_reduction"] = int(
-                stage_seconds["mcwf.count.compressed_jump_reduction"]
-            )
         if final_target_fidelity is not None:
             details["final_target_fidelity"] = final_target_fidelity
 
@@ -1012,7 +987,6 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
         "rate_s",
         "prop_s",
         "chunk_s",
-        "parallel_s",
         "rho_s",
         "fid_s",
         "grid_steps",
@@ -1036,7 +1010,6 @@ def print_table(results: list[OpenSystemBenchmarkResult]) -> None:
             _format_seconds((result.stage_seconds or {}).get("mcwf.rate_evaluation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.no_jump_propagation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_merge")),
-            _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_parallel_wall")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.density_accumulation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.target_fidelity_accumulation")),
             _format_counter((result.stage_seconds or {}).get("mcwf.count.grid_substeps")),
@@ -1075,7 +1048,6 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
         "rate_s",
         "prop_s",
         "chunk_s",
-        "parallel_s",
         "rho_s",
         "fid_s",
         "grid_steps",
@@ -1099,7 +1071,6 @@ def format_markdown_report(results: list[OpenSystemBenchmarkResult]) -> str:
             _format_seconds((result.stage_seconds or {}).get("mcwf.rate_evaluation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.no_jump_propagation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_merge")),
-            _format_seconds((result.stage_seconds or {}).get("mcwf.chunk_parallel_wall")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.density_accumulation")),
             _format_seconds((result.stage_seconds or {}).get("mcwf.target_fidelity_accumulation")),
             _format_counter((result.stage_seconds or {}).get("mcwf.count.grid_substeps")),
@@ -1188,15 +1159,6 @@ def main() -> None:
         ),
     )
     parser.add_argument(
-        "--mcwf-disable-sparse-rate-evaluator",
-        action="store_true",
-        help=(
-            "Disable the sparse row-based MCWF jump-rate evaluator. "
-            "By default, very row-sparse scipy jumps avoid full dense J|psi> "
-            "rate buffers."
-        ),
-    )
-    parser.add_argument(
         "--mcwf-disable-total-rate-first",
         action="store_true",
         help=(
@@ -1204,21 +1166,6 @@ def main() -> None:
             "the total rate <psi|sum J†J|psi> every step and only evaluates "
             "per-channel rates for trajectories that actually jump."
         ),
-    )
-    parser.add_argument(
-        "--mcwf-compress-collinear-jumps",
-        action="store_true",
-        help=(
-            "Before MCWF sampling, merge zero and Hilbert-Schmidt-collinear "
-            "jump operators. This preserves the Lindblad generator while keeping "
-            "the sparse support of a representative jump."
-        ),
-    )
-    parser.add_argument(
-        "--mcwf-jump-compression-tolerance",
-        type=float,
-        default=1.0e-10,
-        help="Tolerance used by --mcwf-compress-collinear-jumps.",
     )
     parser.add_argument(
         "--mcwf-skip-density-matrices",
@@ -1240,27 +1187,6 @@ def main() -> None:
         help=(
             "Split vectorized MCWF into trajectory chunks of this size. "
             "This lowers memory use for large n_trajectories."
-        ),
-    )
-    parser.add_argument(
-        "--mcwf-trajectory-chunk-workers",
-        type=int,
-        default=None,
-        help=(
-            "Run vectorized MCWF trajectory chunks in this many worker "
-            "processes. Requires --mcwf-trajectory-chunk-size; values <=1 "
-            "use the serial chunk path."
-        ),
-    )
-    parser.add_argument(
-        "--mcwf-adaptive-trajectory-block-size",
-        type=int,
-        default=None,
-        help=(
-            "For adaptive Bernoulli MCWF, split each vectorized worker chunk "
-            "into adaptive-rate blocks of this many trajectories. This keeps "
-            "multiprocessing chunks large while preventing one high-rate "
-            "trajectory from throttling the whole chunk."
         ),
     )
     parser.add_argument(
@@ -1508,15 +1434,10 @@ def main() -> None:
                     mcwf_adaptive_time_step=args.mcwf_adaptive_time_step,
                     mcwf_max_jump_probability=args.mcwf_max_jump_probability,
                     mcwf_prefer_sparse_operators=not args.mcwf_dense_operators,
-                    mcwf_prefer_sparse_rate_evaluator=(not args.mcwf_disable_sparse_rate_evaluator),
                     mcwf_use_total_rate_first=(not args.mcwf_disable_total_rate_first),
-                    mcwf_compress_collinear_jumps=args.mcwf_compress_collinear_jumps,
-                    mcwf_jump_compression_tolerance=args.mcwf_jump_compression_tolerance,
                     mcwf_store_density_matrices=(not args.mcwf_skip_density_matrices),
                     mcwf_store_state_snapshots=args.mcwf_store_state_snapshots,
                     mcwf_trajectory_chunk_size=args.mcwf_trajectory_chunk_size,
-                    mcwf_trajectory_chunk_workers=args.mcwf_trajectory_chunk_workers,
-                    mcwf_adaptive_trajectory_block_size=args.mcwf_adaptive_trajectory_block_size,
                 )
             except NotImplementedError as exc:
                 print(f"  skipped: {exc}")

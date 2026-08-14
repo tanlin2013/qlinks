@@ -48,13 +48,13 @@ from documentation building so write permission exists only in the main-branch d
 ## Current baseline
 
 - Python modules: **192**
-- source lines: **101,083**
+- source lines: **99,846**
 - top-level package dependency edges: **48**
 - static module SCCs: **0**
 - static package SCCs: **0**
 - import-time module SCCs: **0**
 - architecture boundary violations: **0**
-- grandfathered source modules above 1,500 lines: **12**
+- grandfathered source modules above 1,500 lines: **11**
 - tracked package-level public APIs: **27**
 - sensitive filename findings: **0**
 - high-confidence secret-pattern findings: **0**
@@ -81,9 +81,16 @@ The corrected scientific boundary is now mechanically represented: transition si
 shared analysis leaf, reduced local-operator application is separated from mechanism annotation,
 and the user-facing report/orchestrator sit above those primitives without static cycles.
 
+The former 2,758-line ``qlinks.open_system.stochastic_schrodinger`` module was reduced to the
+normal module-size ceiling by deleting benchmark-unsupported micro-optimizations while retaining
+the structural sparse/vectorized/adaptive MCWF path. Its grandfathered oversized-module budget
+entry was removed rather than transferred. End-to-end performance benchmarking is intentionally
+deferred until the caging-derived jump-design workflow is repaired and timed together with MCWF
+preparation/propagation.
+
 ## Remaining known debt / non-blocking checks
 
-The repository still has 12 oversized legacy modules. Their current sizes are frozen rather than
+The repository still has 11 oversized legacy modules. Their current sizes are frozen rather than
 being treated as acceptable targets; future decomposition should ratchet those limits downward.
 
 Mypy and broad Bandit reporting remain advisory. Dependency-vulnerability scanning is not promoted

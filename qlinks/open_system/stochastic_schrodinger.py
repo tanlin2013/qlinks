@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import multiprocessing
 import time
-from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, replace
 from typing import Any, Callable, Iterable, Mapping, MutableMapping
 
@@ -25,107 +23,13 @@ StateSampler = Callable[[np.random.Generator], Any]
 
 
 @dataclass(frozen=True, slots=True)
-class _SparseJumpRateEvaluator:
-    """Sparse jump-rate evaluator that avoids full J|psi> work buffers."""
-
-    jumps: tuple[scipy_sparse.csr_array, ...]
-    active_rows: tuple[NDArray[np.int64], ...]
-    row_columns: tuple[tuple[NDArray[np.int64], ...], ...]
-    row_values: tuple[tuple[NDArray[np.complex128], ...], ...]
-    single_entry_columns: tuple[NDArray[np.int64] | None, ...]
-    single_entry_weights: tuple[NDArray[np.float64] | None, ...]
-    single_entry_rate_matrix: scipy_sparse.csr_array | None
-    expanded_rate_operator: scipy_sparse.csr_array | None
-    expanded_rate_jump_indices: NDArray[np.int64]
-    expanded_rate_row_splits: NDArray[np.int64]
-    generic_jump_indices: NDArray[np.int64]
-
-    @property
-    def n_jumps(self) -> int:
-        return len(self.jumps)
-
-
-@dataclass(frozen=True, slots=True)
-class _JumpCompressionSummary:
-    original_n_jumps: int
-    compressed_n_jumps: int
-    removed_zero_jumps: int
-    collinear_group_count: int
-    original_total_nnz: int | None
-    compressed_total_nnz: int | None
-    tolerance: float
-
-    @property
-    def reduced_jump_count(self) -> int:
-        return self.original_n_jumps - self.compressed_n_jumps
-
-    @property
-    def compression_ratio(self) -> float:
-        if self.original_n_jumps == 0:
-            return 0.0
-
-        return self.compressed_n_jumps / float(self.original_n_jumps)
-
-    def to_dict(self) -> dict[str, object]:
-        return {
-            "original_n_jumps": self.original_n_jumps,
-            "compressed_n_jumps": self.compressed_n_jumps,
-            "reduced_jump_count": self.reduced_jump_count,
-            "removed_zero_jumps": self.removed_zero_jumps,
-            "collinear_group_count": self.collinear_group_count,
-            "compression_ratio": self.compression_ratio,
-            "original_total_nnz": self.original_total_nnz,
-            "compressed_total_nnz": self.compressed_total_nnz,
-            "tolerance": self.tolerance,
-        }
-
-
-@dataclass(frozen=True, slots=True)
 class _McwfPreparedOperators:
     backend: OpenSystemBackend
     hamiltonian: Any
     jumps: tuple[Any, ...]
     effective_hamiltonian_matrix: Any
     total_jump_rate_operator: Any | None = None
-    sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None = None
     uses_sparse_operators: bool = False
-    uses_sparse_rate_evaluator: bool = False
-    jump_compression_summary: _JumpCompressionSummary | None = None
-
-    def __getstate__(self) -> tuple[Any, ...]:
-        return (
-            self.backend.name,
-            self.hamiltonian,
-            self.jumps,
-            self.effective_hamiltonian_matrix,
-            self.total_jump_rate_operator,
-            self.sparse_jump_rate_evaluator,
-            self.uses_sparse_operators,
-            self.uses_sparse_rate_evaluator,
-            self.jump_compression_summary,
-        )
-
-    def __setstate__(self, state: tuple[Any, ...]) -> None:
-        (
-            backend_name,
-            hamiltonian,
-            jumps,
-            effective_hamiltonian_matrix,
-            total_jump_rate_operator,
-            sparse_jump_rate_evaluator,
-            uses_sparse_operators,
-            uses_sparse_rate_evaluator,
-            jump_compression_summary,
-        ) = state
-        object.__setattr__(self, "backend", get_open_system_backend(backend_name))
-        object.__setattr__(self, "hamiltonian", hamiltonian)
-        object.__setattr__(self, "jumps", jumps)
-        object.__setattr__(self, "effective_hamiltonian_matrix", effective_hamiltonian_matrix)
-        object.__setattr__(self, "total_jump_rate_operator", total_jump_rate_operator)
-        object.__setattr__(self, "sparse_jump_rate_evaluator", sparse_jump_rate_evaluator)
-        object.__setattr__(self, "uses_sparse_operators", uses_sparse_operators)
-        object.__setattr__(self, "uses_sparse_rate_evaluator", uses_sparse_rate_evaluator)
-        object.__setattr__(self, "jump_compression_summary", jump_compression_summary)
 
 
 @dataclass(frozen=True, slots=True)
@@ -150,40 +54,8 @@ def _prepare_mcwf_operators(
     jumps: list[Any] | tuple[Any, ...],
     backend: OpenSystemBackendName | OpenSystemBackend = "scipy",
     prefer_sparse_operators: bool = True,
-    prefer_sparse_rate_evaluator: bool = True,
-    compress_collinear_jumps: bool = False,
-    jump_compression_tolerance: float = 1.0e-10,
-    timing_collector: MutableMapping[str, float] | None = None,
 ) -> _McwfPreparedOperators:
-    jump_input: tuple[Any, ...] = tuple(jumps)
-    jump_compression_summary: _JumpCompressionSummary | None = None
-    if compress_collinear_jumps:
-        compression_start = _perf_counter()
-        jump_input, jump_compression_summary = _compress_collinear_jump_operators(
-            jump_input,
-            tolerance=jump_compression_tolerance,
-        )
-        _add_timing(
-            timing_collector,
-            "mcwf.jump_compression",
-            _perf_counter() - compression_start,
-        )
-        _add_counter(
-            timing_collector,
-            "mcwf.count.original_jumps",
-            float(jump_compression_summary.original_n_jumps),
-        )
-        _add_counter(
-            timing_collector,
-            "mcwf.count.compressed_jumps",
-            float(jump_compression_summary.compressed_n_jumps),
-        )
-        _add_counter(
-            timing_collector,
-            "mcwf.count.compressed_jump_reduction",
-            float(jump_compression_summary.reduced_jump_count),
-        )
-
+    jump_input = tuple(jumps)
     backend_obj = get_open_system_backend(backend)
     use_sparse_operators = (
         backend_obj.name == "scipy"
@@ -225,31 +97,18 @@ def _prepare_mcwf_operators(
             for jump in jump_input
         )
 
-    total_jump_rate_operator = _total_jump_rate_operator(
-        jump_operators,
-        shape=tuple(int(axis) for axis in hamiltonian_backend.shape),
-    )
+    total_jump_rate_operator = _total_jump_rate_operator(jump_operators)
     effective_hamiltonian_matrix = _effective_hamiltonian_from_total_rate_operator(
         hamiltonian_backend,
         total_jump_rate_operator,
     )
-
-    sparse_jump_rate_evaluator = (
-        _build_sparse_jump_rate_evaluator(jump_operators)
-        if (backend_obj.name == "scipy" and use_sparse_operators and prefer_sparse_rate_evaluator)
-        else None
-    )
-
     return _McwfPreparedOperators(
         backend=backend_obj,
         hamiltonian=hamiltonian_backend,
         jumps=jump_operators,
         effective_hamiltonian_matrix=effective_hamiltonian_matrix,
         total_jump_rate_operator=total_jump_rate_operator,
-        sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
         uses_sparse_operators=use_sparse_operators,
-        uses_sparse_rate_evaluator=sparse_jump_rate_evaluator is not None,
-        jump_compression_summary=jump_compression_summary,
     )
 
 
@@ -274,345 +133,6 @@ def _as_numpy_or_scipy_sparse(operator: Any) -> Any:
     return np.asarray(operator, dtype=np.complex128)
 
 
-def _compress_collinear_jump_operators(
-    jumps: tuple[Any, ...],
-    *,
-    tolerance: float,
-) -> tuple[tuple[Any, ...], _JumpCompressionSummary]:
-    """Merge zero and Hilbert-Schmidt-collinear jump operators.
-
-    If several jumps satisfy ``J_j = c_j J_ref``, replacing them by
-    ``sqrt(sum_j |c_j|^2) J_ref`` preserves both the recycling term
-    ``sum_j J_j rho J_j†`` and the total rate operator ``sum_j J_j† J_j``.
-    Unlike a full SVD rotation of the jump span, this compression preserves the
-    sparse support of the representative jump and therefore cannot densify the
-    Cage-Lindblad jump list.
-    """
-    original_n_jumps = len(jumps)
-    if not jumps:
-        return (), _JumpCompressionSummary(
-            original_n_jumps=0,
-            compressed_n_jumps=0,
-            removed_zero_jumps=0,
-            collinear_group_count=0,
-            original_total_nnz=0,
-            compressed_total_nnz=0,
-            tolerance=float(tolerance),
-        )
-
-    if tolerance <= 0.0:
-        raise ValueError("jump_compression_tolerance must be positive.")
-
-    jump_tuple = tuple(_as_numpy_or_scipy_sparse(jump) for jump in jumps)
-    shapes = {tuple(int(axis) for axis in jump.shape) for jump in jump_tuple}
-    if len(shapes) != 1:
-        raise ValueError("All jump operators must have the same shape for compression.")
-
-    gram_matrix = _hilbert_schmidt_gram_matrix(jump_tuple)
-    norm_squares = np.maximum(np.real(np.diag(gram_matrix)), 0.0)
-    largest_norm_square = float(np.max(norm_squares)) if norm_squares.size else 0.0
-    zero_threshold = float(tolerance) * max(largest_norm_square, 1.0)
-    assigned = np.zeros(original_n_jumps, dtype=bool)
-    compressed_jumps: list[Any] = []
-    removed_zero_jumps = 0
-    collinear_group_count = 0
-
-    for representative_index, representative in enumerate(jump_tuple):
-        if assigned[representative_index]:
-            continue
-
-        representative_norm_square = float(norm_squares[representative_index])
-        if representative_norm_square <= zero_threshold:
-            assigned[representative_index] = True
-            removed_zero_jumps += 1
-            continue
-
-        group_indices = [representative_index]
-        assigned[representative_index] = True
-        scale_square = 1.0
-
-        for candidate_index in range(representative_index + 1, original_n_jumps):
-            if assigned[candidate_index]:
-                continue
-
-            candidate_norm_square = float(norm_squares[candidate_index])
-            if candidate_norm_square <= zero_threshold:
-                assigned[candidate_index] = True
-                removed_zero_jumps += 1
-                continue
-
-            overlap = complex(gram_matrix[representative_index, candidate_index])
-            residual_square = candidate_norm_square - abs(overlap) ** 2 / representative_norm_square
-            residual_tolerance = float(tolerance) * max(candidate_norm_square, 1.0)
-            if residual_square <= residual_tolerance:
-                assigned[candidate_index] = True
-                group_indices.append(candidate_index)
-                coefficient = overlap / representative_norm_square
-                scale_square += abs(coefficient) ** 2
-
-        if len(group_indices) > 1:
-            collinear_group_count += 1
-            compressed_jumps.append(_scale_jump_operator(representative, np.sqrt(scale_square)))
-        else:
-            compressed_jumps.append(representative)
-
-    compressed_tuple = tuple(compressed_jumps)
-    return compressed_tuple, _JumpCompressionSummary(
-        original_n_jumps=original_n_jumps,
-        compressed_n_jumps=len(compressed_tuple),
-        removed_zero_jumps=removed_zero_jumps,
-        collinear_group_count=collinear_group_count,
-        original_total_nnz=_total_operator_nnz(jump_tuple),
-        compressed_total_nnz=_total_operator_nnz(compressed_tuple),
-        tolerance=float(tolerance),
-    )
-
-
-def _hilbert_schmidt_gram_matrix(jumps: tuple[Any, ...]) -> NDArray[np.complex128]:
-    n_jumps = len(jumps)
-    gram_matrix = np.zeros((n_jumps, n_jumps), dtype=np.complex128)
-    for row_index, jump_left in enumerate(jumps):
-        for column_index in range(row_index, n_jumps):
-            value = _hilbert_schmidt_inner_product(jump_left, jumps[column_index])
-            gram_matrix[row_index, column_index] = value
-            if column_index != row_index:
-                gram_matrix[column_index, row_index] = value.conjugate()
-
-    return gram_matrix
-
-
-def _hilbert_schmidt_inner_product(left: Any, right: Any) -> complex:
-    if scipy_sparse.issparse(left) and scipy_sparse.issparse(right):
-        return complex(left.conjugate().multiply(right).sum())
-
-    if scipy_sparse.issparse(left):
-        return complex(np.vdot(left.toarray(), np.asarray(right, dtype=np.complex128)))
-
-    if scipy_sparse.issparse(right):
-        return complex(np.vdot(np.asarray(left, dtype=np.complex128), right.toarray()))
-
-    return complex(
-        np.vdot(np.asarray(left, dtype=np.complex128), np.asarray(right, dtype=np.complex128))
-    )
-
-
-def _scale_jump_operator(jump: Any, scale: float) -> Any:
-    if scipy_sparse.issparse(jump):
-        scaled = (float(scale) * jump).tocsr()
-        scaled.eliminate_zeros()
-        return scaled
-
-    return np.asarray(jump, dtype=np.complex128) * float(scale)
-
-
-def _total_operator_nnz(operators: tuple[Any, ...]) -> int | None:
-    if not operators:
-        return 0
-
-    if all(scipy_sparse.issparse(operator) for operator in operators):
-        return int(sum(int(operator.nnz) for operator in operators))
-
-    return None
-
-
-def _build_sparse_jump_rate_evaluator(
-    jumps: tuple[Any, ...],
-    *,
-    max_active_row_fraction: float = 0.5,
-    min_single_entry_matrix_jumps: int = 8,
-) -> _SparseJumpRateEvaluator | None:
-    """Return a sparse row evaluator when it should beat full sparse matmul.
-
-    The standard sparse-matrix product ``J @ states`` allocates a full
-    ``(dim, n_trajectories)`` dense block for every jump. Cage-Lindblad jumps
-    are often very row-sparse, so it is cheaper to evaluate only nonzero output
-    rows and sum their squared norms.
-    """
-    if not jumps or not all(scipy_sparse.issparse(jump) for jump in jumps):
-        return None
-
-    dim = int(jumps[0].shape[0])
-    csr_jumps: list[scipy_sparse.csr_array] = []
-    active_rows: list[NDArray[np.int64]] = []
-    row_columns: list[tuple[NDArray[np.int64], ...]] = []
-    row_values: list[tuple[NDArray[np.complex128], ...]] = []
-    single_entry_columns: list[NDArray[np.int64] | None] = []
-    single_entry_weights: list[NDArray[np.float64] | None] = []
-    total_active_rows = 0
-
-    for jump in jumps:
-        jump_csr = jump.tocsr().astype(np.complex128)
-        rows = np.flatnonzero(np.diff(jump_csr.indptr) > 0).astype(np.int64, copy=False)
-        jump_row_columns: list[NDArray[np.int64]] = []
-        jump_row_values: list[NDArray[np.complex128]] = []
-        one_entry_columns: list[int] = []
-        one_entry_weights: list[float] = []
-        has_only_one_entry_rows = True
-
-        indptr = jump_csr.indptr
-        indices = jump_csr.indices
-        data = jump_csr.data
-        for row in rows:
-            start = int(indptr[row])
-            stop = int(indptr[row + 1])
-            columns = indices[start:stop].astype(np.int64, copy=True)
-            values = data[start:stop].astype(np.complex128, copy=True)
-            jump_row_columns.append(columns)
-            jump_row_values.append(values)
-
-            if columns.size == 1:
-                one_entry_columns.append(int(columns[0]))
-                one_entry_weights.append(float(abs(values[0]) ** 2))
-            else:
-                has_only_one_entry_rows = False
-
-        csr_jumps.append(jump_csr)
-        active_rows.append(rows)
-        row_columns.append(tuple(jump_row_columns))
-        row_values.append(tuple(jump_row_values))
-        if has_only_one_entry_rows:
-            single_entry_columns.append(np.asarray(one_entry_columns, dtype=np.int64))
-            single_entry_weights.append(np.asarray(one_entry_weights, dtype=np.float64))
-        else:
-            single_entry_columns.append(None)
-            single_entry_weights.append(None)
-        total_active_rows += int(rows.size)
-
-    if dim <= 0:
-        return None
-
-    average_active_fraction = total_active_rows / float(dim * len(jumps))
-    if average_active_fraction > max_active_row_fraction:
-        return None
-
-    single_entry_rate_matrix: scipy_sparse.csr_array | None = None
-    single_entry_matrix_jump_count = sum(
-        columns is not None and columns.size > 0 for columns in single_entry_columns
-    )
-    if single_entry_matrix_jump_count >= min_single_entry_matrix_jumps:
-        matrix_row_blocks: list[NDArray[np.int64]] = []
-        matrix_col_blocks: list[NDArray[np.int64]] = []
-        matrix_value_blocks: list[NDArray[np.float64]] = []
-        for jump_index, (columns, weights) in enumerate(
-            zip(single_entry_columns, single_entry_weights, strict=True)
-        ):
-            if columns is None or weights is None or columns.size == 0:
-                continue
-
-            matrix_row_blocks.append(np.full(columns.size, jump_index, dtype=np.int64))
-            matrix_col_blocks.append(columns)
-            matrix_value_blocks.append(weights)
-
-        if matrix_value_blocks:
-            single_entry_rate_matrix = scipy_sparse.csr_array(
-                (
-                    np.concatenate(matrix_value_blocks),
-                    (np.concatenate(matrix_row_blocks), np.concatenate(matrix_col_blocks)),
-                ),
-                shape=(len(jumps), dim),
-                dtype=np.float64,
-            )
-            single_entry_rate_matrix.sum_duplicates()
-            single_entry_rate_matrix.eliminate_zeros()
-
-    generic_jump_indices = (
-        np.asarray(
-            [index for index, columns in enumerate(single_entry_columns) if columns is None],
-            dtype=np.int64,
-        )
-        if single_entry_rate_matrix is not None
-        else np.arange(len(jumps), dtype=np.int64)
-    )
-
-    (
-        expanded_rate_operator,
-        expanded_rate_jump_indices,
-        expanded_rate_row_splits,
-    ) = _build_expanded_sparse_rate_operator(
-        row_columns=tuple(row_columns),
-        row_values=tuple(row_values),
-        jump_indices=generic_jump_indices,
-        dim=dim,
-    )
-
-    return _SparseJumpRateEvaluator(
-        jumps=tuple(csr_jumps),
-        active_rows=tuple(active_rows),
-        row_columns=tuple(row_columns),
-        row_values=tuple(row_values),
-        single_entry_columns=tuple(single_entry_columns),
-        single_entry_weights=tuple(single_entry_weights),
-        single_entry_rate_matrix=single_entry_rate_matrix,
-        expanded_rate_operator=expanded_rate_operator,
-        expanded_rate_jump_indices=expanded_rate_jump_indices,
-        expanded_rate_row_splits=expanded_rate_row_splits,
-        generic_jump_indices=generic_jump_indices,
-    )
-
-
-def _build_expanded_sparse_rate_operator(
-    *,
-    row_columns: tuple[tuple[NDArray[np.int64], ...], ...],
-    row_values: tuple[tuple[NDArray[np.complex128], ...], ...],
-    jump_indices: NDArray[np.int64],
-    dim: int,
-) -> tuple[scipy_sparse.csr_array | None, NDArray[np.int64], NDArray[np.int64]]:
-    """Return one stacked sparse row operator for generic jump-rate evaluation.
-
-    Each row of the expanded operator is one nonzero output row of one jump.
-    A single sparse matmul gives all row amplitudes; grouped row-norm sums then
-    recover ``||J_mu psi||^2`` for each jump.  This removes the Python loop over
-    active rows in the common Cage-Lindblad case where jumps have multi-entry
-    rows and therefore cannot use the single-entry rate matrix.
-    """
-    if jump_indices.size == 0:
-        return None, np.zeros(0, dtype=np.int64), np.zeros(1, dtype=np.int64)
-
-    data_blocks: list[NDArray[np.complex128]] = []
-    row_blocks: list[NDArray[np.int64]] = []
-    column_blocks: list[NDArray[np.int64]] = []
-    expanded_jump_indices: list[int] = []
-    row_splits: list[int] = [0]
-    expanded_row = 0
-
-    for jump_index_raw in jump_indices:
-        jump_index = int(jump_index_raw)
-        rows_for_jump = 0
-        for columns, values in zip(row_columns[jump_index], row_values[jump_index], strict=True):
-            if columns.size == 0:
-                continue
-
-            data_blocks.append(values.astype(np.complex128, copy=False))
-            column_blocks.append(columns.astype(np.int64, copy=False))
-            row_blocks.append(np.full(columns.size, expanded_row, dtype=np.int64))
-            expanded_row += 1
-            rows_for_jump += 1
-
-        if rows_for_jump > 0:
-            expanded_jump_indices.append(jump_index)
-            row_splits.append(expanded_row)
-
-    if not data_blocks:
-        return None, np.zeros(0, dtype=np.int64), np.zeros(1, dtype=np.int64)
-
-    operator = scipy_sparse.csr_array(
-        (
-            np.concatenate(data_blocks),
-            (np.concatenate(row_blocks), np.concatenate(column_blocks)),
-        ),
-        shape=(expanded_row, dim),
-        dtype=np.complex128,
-    )
-    operator.sum_duplicates()
-    operator.eliminate_zeros()
-
-    return (
-        operator,
-        np.asarray(expanded_jump_indices, dtype=np.int64),
-        np.asarray(row_splits, dtype=np.int64),
-    )
-
-
 @dataclass(frozen=True, slots=True)
 class McwfOptions:
     """Options for Monte Carlo wave-function sampling."""
@@ -626,15 +146,10 @@ class McwfOptions:
     normalize_each_step: bool = True
     max_jump_probability: float = 0.1
     prefer_sparse_operators: bool = True
-    prefer_sparse_rate_evaluator: bool = True
     use_total_rate_first: bool = True
-    compress_collinear_jumps: bool = False
-    jump_compression_tolerance: float = 1.0e-10
     store_density_matrices: bool = True
     store_state_snapshots: bool = False
     trajectory_chunk_size: int | None = None
-    trajectory_chunk_workers: int | None = None
-    adaptive_trajectory_block_size: int | None = None
     fidelity_targets: Mapping[str, Any] | None = None
     timing_collector: MutableMapping[str, float] | None = None
 
@@ -644,40 +159,19 @@ class McwfOptions:
     max_substeps_per_interval: int = 100_000
 
     def validate(self) -> None:
-        """Validate MCWF time-step control options."""
+        """Validate MCWF sampling and time-step control options."""
         if self.n_trajectories <= 0:
             raise ValueError("options.n_trajectories must be positive.")
-
         if self.trajectory_chunk_size is not None and self.trajectory_chunk_size <= 0:
             raise ValueError("trajectory_chunk_size must be positive when set.")
-
-        if self.trajectory_chunk_workers is not None and self.trajectory_chunk_workers <= 0:
-            raise ValueError("trajectory_chunk_workers must be positive when set.")
-
-        if (
-            self.adaptive_trajectory_block_size is not None
-            and self.adaptive_trajectory_block_size <= 0
-        ):
-            raise ValueError("adaptive_trajectory_block_size must be positive when set.")
-
         if self.max_jump_probability <= 0.0:
             raise ValueError("max_jump_probability must be positive.")
-
-        if self.jump_compression_tolerance <= 0.0:
-            raise ValueError("jump_compression_tolerance must be positive.")
-
         if not (0.0 < self.adaptive_safety_factor <= 1.0):
             raise ValueError("adaptive_safety_factor must be in (0, 1].")
-
         if self.min_step_size <= 0.0:
             raise ValueError("min_step_size must be positive.")
-
         if self.max_substeps_per_interval <= 0:
             raise ValueError("max_substeps_per_interval must be positive.")
-
-        if not self.adaptive_time_step and self.max_substeps_per_interval != 100_000:
-            # Optional: probably do not need this check.
-            pass
 
 
 def _add_timing(
@@ -741,10 +235,7 @@ def expectation(state: Any, operator: Any) -> complex:
 
 def effective_hamiltonian(hamiltonian: Any, jumps: list[Any] | tuple[Any, ...]) -> Any:
     """Return H_eff = H - i/2 sum_mu J_mu^dagger J_mu."""
-    total_rate_operator = _total_jump_rate_operator(
-        tuple(jumps),
-        shape=tuple(int(axis) for axis in hamiltonian.shape),
-    )
+    total_rate_operator = _total_jump_rate_operator(tuple(jumps))
     return _effective_hamiltonian_from_total_rate_operator(
         hamiltonian,
         total_rate_operator,
@@ -778,88 +269,17 @@ def _effective_hamiltonian_from_total_rate_operator(
 
 def _total_jump_rate_operator(
     jumps: list[Any] | tuple[Any, ...],
-    *,
-    shape: tuple[int, int],
 ) -> Any | None:
-    """Return ``Gamma=sum_mu J_mu^dagger J_mu`` or ``None`` with no jumps."""
     if not jumps:
         return None
-
-    if all(scipy_sparse.issparse(jump) for jump in jumps):
-        sparse_gram_sum = _sparse_jump_gram_sum_csr(jumps, shape=shape)
-        if sparse_gram_sum is not None:
-            return sparse_gram_sum
 
     total = jumps[0].conj().T @ jumps[0]
     for jump in jumps[1:]:
         total = total + (jump.conj().T @ jump)
+
+    if scipy_sparse.issparse(total):
+        return total.tocsr()
     return total
-
-
-def _sparse_jump_gram_sum_csr(
-    jumps: list[Any] | tuple[Any, ...],
-    *,
-    shape: tuple[int, int],
-    max_row_nnz: int = 32,
-) -> scipy_sparse.csr_array | None:
-    """Return ``sum_mu J_mu.conj().T @ J_mu`` for row-sparse jumps.
-
-    This avoids doing many tiny sparse matrix multiplications and repeated sparse
-    additions during MCWF operator preparation.  The row-wise construction is
-    only used when every nonzero output row is sufficiently small; otherwise we
-    fall back to SciPy's sparse multiplication, which is better for row-dense
-    matrices.
-    """
-    if not jumps:
-        return scipy_sparse.csr_array(shape, dtype=np.complex128)
-
-    if shape[0] != shape[1]:
-        return None
-
-    dim = int(shape[0])
-    row_blocks: list[NDArray[np.int64]] = []
-    col_blocks: list[NDArray[np.int64]] = []
-    value_blocks: list[NDArray[np.complex128]] = []
-
-    for jump in jumps:
-        if not scipy_sparse.issparse(jump):
-            return None
-
-        jump_csr = jump.tocsr().astype(np.complex128, copy=False)
-        if jump_csr.shape != shape:
-            return None
-
-        indptr = jump_csr.indptr
-        indices = jump_csr.indices
-        data = jump_csr.data
-        row_counts = np.diff(indptr)
-        if row_counts.size and int(np.max(row_counts)) > max_row_nnz:
-            return None
-
-        active_rows = np.flatnonzero(row_counts > 0)
-        for row in active_rows:
-            start = int(indptr[row])
-            stop = int(indptr[row + 1])
-            columns = indices[start:stop].astype(np.int64, copy=False)
-            values = data[start:stop]
-            nnz = int(columns.size)
-            if nnz == 0:
-                continue
-
-            row_blocks.append(np.repeat(columns, nnz))
-            col_blocks.append(np.tile(columns, nnz))
-            value_blocks.append((values.conj().reshape(nnz, 1) * values.reshape(1, nnz)).ravel())
-
-    if not value_blocks:
-        return scipy_sparse.csr_array(shape, dtype=np.complex128)
-
-    rows = np.concatenate(row_blocks)
-    columns = np.concatenate(col_blocks)
-    values = np.concatenate(value_blocks).astype(np.complex128, copy=False)
-    gram = scipy_sparse.csr_array((values, (rows, columns)), shape=(dim, dim), dtype=np.complex128)
-    gram.sum_duplicates()
-    gram.eliminate_zeros()
-    return gram
 
 
 def jump_probabilities(
@@ -950,8 +370,6 @@ def run_quantum_jump_trajectory(
     normalize_each_step: bool = True,
     max_jump_probability: float = 0.1,
     prefer_sparse_operators: bool = True,
-    prefer_sparse_rate_evaluator: bool = True,
-    use_total_rate_first: bool = True,
     adaptive_time_step: bool = False,
     adaptive_safety_factor: float = 0.8,
     min_step_size: float = 1.0e-12,
@@ -968,7 +386,6 @@ def run_quantum_jump_trajectory(
         jumps=jumps,
         backend=backend,
         prefer_sparse_operators=prefer_sparse_operators,
-        prefer_sparse_rate_evaluator=prefer_sparse_rate_evaluator,
     )
     return _run_quantum_jump_trajectory_prepared(
         prepared=prepared,
@@ -979,7 +396,6 @@ def run_quantum_jump_trajectory(
         store_states=store_states,
         normalize_each_step=normalize_each_step,
         max_jump_probability=max_jump_probability,
-        use_total_rate_first=use_total_rate_first,
         adaptive_time_step=adaptive_time_step,
         adaptive_safety_factor=adaptive_safety_factor,
         min_step_size=min_step_size,
@@ -998,7 +414,6 @@ def _run_quantum_jump_trajectory_prepared(
     state_callback: Callable[[int, Any], None] | None = None,
     normalize_each_step: bool = True,
     max_jump_probability: float = 0.1,
-    use_total_rate_first: bool = True,
     adaptive_time_step: bool = False,
     adaptive_safety_factor: float = 0.8,
     min_step_size: float = 1.0e-12,
@@ -1010,23 +425,6 @@ def _run_quantum_jump_trajectory_prepared(
     generator = _rng_from_seed(rng)
     backend_obj = prepared.backend
 
-    if backend_obj.name == "scipy":
-        return _run_quantum_jump_trajectory_prepared_scipy(
-            prepared=prepared,
-            state_initial=state_initial,
-            times=times,
-            rng=generator,
-            return_backend_arrays=return_backend_arrays,
-            store_states=store_states,
-            state_callback=state_callback,
-            normalize_each_step=normalize_each_step,
-            max_jump_probability=max_jump_probability,
-            use_total_rate_first=use_total_rate_first,
-            adaptive_time_step=adaptive_time_step,
-            adaptive_safety_factor=adaptive_safety_factor,
-            min_step_size=min_step_size,
-            max_substeps_per_interval=max_substeps_per_interval,
-        )
     jump_operators = prepared.jumps
     has_jump_operators = len(jump_operators) > 0
 
@@ -1161,214 +559,6 @@ def _run_quantum_jump_trajectory_prepared(
     )
 
 
-def _run_quantum_jump_trajectory_prepared_scipy(
-    *,
-    prepared: _McwfPreparedOperators,
-    state_initial: Any,
-    times: NDArray[np.float64],
-    rng: np.random.Generator,
-    return_backend_arrays: bool = False,
-    store_states: bool = True,
-    state_callback: Callable[[int, Any], None] | None = None,
-    normalize_each_step: bool = True,
-    max_jump_probability: float = 0.1,
-    use_total_rate_first: bool = True,
-    adaptive_time_step: bool = False,
-    adaptive_safety_factor: float = 0.8,
-    min_step_size: float = 1.0e-12,
-    max_substeps_per_interval: int = 100_000,
-) -> TrajectoryResult:
-    """Run one trajectory with a NumPy-specialized inner loop."""
-    del return_backend_arrays  # SciPy backend states are already NumPy arrays.
-
-    state = _normalize_numpy_state(np.asarray(state_initial, dtype=np.complex128))
-    effective_hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.effective_hamiltonian_matrix)
-    total_jump_rate_operator = (
-        _as_numpy_or_scipy_sparse(prepared.total_jump_rate_operator)
-        if prepared.total_jump_rate_operator is not None
-        else None
-    )
-    jump_operators = tuple(_as_numpy_or_scipy_sparse(jump) for jump in prepared.jumps)
-    sparse_jump_rate_evaluator = prepared.sparse_jump_rate_evaluator
-    has_jump_operators = len(jump_operators) > 0
-
-    states: list[Any] = [None] * int(times.size) if store_states else []
-    if store_states:
-        states[0] = state.copy()
-
-    if state_callback is not None:
-        state_callback(0, state)
-
-    jump_times: list[float] = []
-    jump_indices: list[int] = []
-    norm_errors: list[float] = []
-
-    for time_index in range(times.size - 1):
-        interval_start = float(times[time_index])
-        interval_stop = float(times[time_index + 1])
-        current_time = interval_start
-        substeps = 0
-
-        while current_time < interval_stop:
-            remaining_step = interval_stop - current_time
-            step_size = remaining_step
-
-            jumped_states: tuple[ArrayC, ...] = ()
-            jumped_state_single: ArrayC | None = None
-            probabilities = np.zeros(0, dtype=np.float64)
-            total_jump_probability = 0.0
-
-            if has_jump_operators:
-                if _should_use_total_rate_first(
-                    use_total_rate_first,
-                    total_jump_rate_operator=total_jump_rate_operator,
-                    sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
-                ):
-                    total_jump_probability = step_size * _evaluate_total_jump_rate_numpy(
-                        state,
-                        total_jump_rate_operator,
-                    )
-                elif sparse_jump_rate_evaluator is not None:
-                    rates = _evaluate_sparse_jump_rates_numpy(
-                        state,
-                        sparse_jump_rate_evaluator,
-                    )
-                    probabilities = step_size * rates
-                    total_jump_probability = float(np.sum(probabilities))
-                elif len(jump_operators) == 1:
-                    jumped_state_single = jump_operators[0] @ state
-                    rate = max(float(np.vdot(jumped_state_single, jumped_state_single).real), 0.0)
-                    total_jump_probability = step_size * rate
-                else:
-                    jumped_states, rates = _evaluate_jumps_numpy(state, jump_operators)
-                    probabilities = step_size * rates
-                    total_jump_probability = float(np.sum(probabilities))
-
-                if total_jump_probability > max_jump_probability:
-                    if not adaptive_time_step:
-                        raise RuntimeError(
-                            "Time step is too large for first-order MCWF: "
-                            f"total jump probability={total_jump_probability:.6e}, "
-                            f"allowed maximum={max_jump_probability:.6e}. "
-                            "Use a finer time grid, enable adaptive_time_step=True, "
-                            "or increase max_jump_probability only if you know this is "
-                            "acceptable."
-                        )
-
-                    scale = adaptive_safety_factor * max_jump_probability / total_jump_probability
-                    step_size = max(remaining_step * scale, min_step_size)
-
-                    if step_size >= remaining_step:
-                        step_size = remaining_step
-
-                    if _should_use_total_rate_first(
-                        use_total_rate_first,
-                        total_jump_rate_operator=total_jump_rate_operator,
-                        sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
-                    ):
-                        total_jump_probability = step_size * _evaluate_total_jump_rate_numpy(
-                            state,
-                            total_jump_rate_operator,
-                        )
-                    elif len(jump_operators) == 1 and sparse_jump_rate_evaluator is None:
-                        total_jump_probability = step_size * rate
-                    else:
-                        probabilities = step_size * rates
-                        total_jump_probability = float(np.sum(probabilities))
-
-                    if total_jump_probability > max_jump_probability:
-                        raise RuntimeError(
-                            "Adaptive MCWF failed to reduce the step enough: "
-                            f"total jump probability={total_jump_probability:.6e}, "
-                            f"allowed maximum={max_jump_probability:.6e}. "
-                            "Try a smaller min_step_size or max_jump_probability."
-                        )
-
-            if step_size < min_step_size and remaining_step > min_step_size:
-                raise RuntimeError(
-                    "Adaptive MCWF reached min_step_size before completing "
-                    "the requested time interval."
-                )
-
-            if has_jump_operators and rng.random() < total_jump_probability:
-                if len(jump_operators) == 1:
-                    jump_index = 0
-                    if jumped_state_single is None:
-                        jumped_state_single = jump_operators[0] @ state
-                    state = jumped_state_single
-                else:
-                    if probabilities.size == 0:
-                        if sparse_jump_rate_evaluator is not None:
-                            rates = _evaluate_sparse_jump_rates_numpy(
-                                state,
-                                sparse_jump_rate_evaluator,
-                            )
-                        else:
-                            jumped_states, rates = _evaluate_jumps_numpy(state, jump_operators)
-                        probabilities = step_size * rates
-                    jump_index = choose_jump(probabilities, rng)
-                    if sparse_jump_rate_evaluator is not None or not jumped_states:
-                        state = jump_operators[jump_index] @ state
-                    else:
-                        state = jumped_states[jump_index]
-                jump_times.append(float(current_time + step_size))
-                jump_indices.append(jump_index)
-            else:
-                state = state - 1j * step_size * (effective_hamiltonian_matrix @ state)
-
-            state_norm = float(np.linalg.norm(state))
-            norm_errors.append(abs(state_norm - 1.0))
-
-            if normalize_each_step:
-                if state_norm == 0.0:
-                    raise RuntimeError("The MCWF state reached zero norm. Try a smaller time step.")
-                state = state / state_norm
-
-            current_time += step_size
-            substeps += 1
-
-            if substeps > max_substeps_per_interval:
-                raise RuntimeError(
-                    "Adaptive MCWF exceeded max_substeps_per_interval. "
-                    "Try increasing max_jump_probability, increasing "
-                    "max_substeps_per_interval, or checking jump rates."
-                )
-
-        if store_states:
-            states[time_index + 1] = state.copy()
-
-        if state_callback is not None:
-            state_callback(time_index + 1, state)
-
-    return TrajectoryResult(
-        times=times,
-        states=states,
-        jump_times=np.asarray(jump_times, dtype=np.float64),
-        jump_indices=np.asarray(jump_indices, dtype=np.int64),
-        norm_errors=np.asarray(norm_errors, dtype=np.float64),
-    )
-
-
-def _evaluate_jumps_numpy(
-    state: ArrayC,
-    jumps: tuple[ArrayC, ...],
-) -> tuple[tuple[ArrayC, ...], NDArray[np.float64]]:
-    """Return J_mu|psi> and rates for one NumPy MCWF state."""
-    if not jumps:
-        return (), np.zeros(0, dtype=np.float64)
-
-    jumped_states = tuple(jump @ state for jump in jumps)
-    rates = np.fromiter(
-        (
-            max(float(np.vdot(jumped_state, jumped_state).real), 0.0)
-            for jumped_state in jumped_states
-        ),
-        dtype=np.float64,
-        count=len(jumped_states),
-    )
-    return jumped_states, rates
-
-
 def _can_use_vectorized_mcwf_ensemble(
     *,
     options: McwfOptions,
@@ -1471,19 +661,6 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     rng: np.random.Generator,
 ) -> EnsembleResult:
     """Sample an MCWF ensemble with trajectory states stored as columns."""
-    adaptive_block_size = _effective_adaptive_trajectory_block_size(options)
-    if adaptive_block_size is not None:
-        return _sample_lindblad_mcwf_adaptive_blocked_vectorized_scipy(
-            prepared=prepared,
-            dim=dim,
-            times=times,
-            state_initial=state_initial,
-            state_sampler=state_sampler,
-            options=options,
-            rng=rng,
-            adaptive_block_size=adaptive_block_size,
-        )
-
     timing_collector = options.timing_collector
 
     start = _perf_counter()
@@ -1497,7 +674,6 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     _add_timing(timing_collector, "mcwf.initial_state_matrix", _perf_counter() - start)
 
     start = _perf_counter()
-    hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.hamiltonian)
     effective_hamiltonian_matrix = _as_numpy_or_scipy_sparse(prepared.effective_hamiltonian_matrix)
     total_jump_rate_operator = (
         _as_numpy_or_scipy_sparse(prepared.total_jump_rate_operator)
@@ -1505,11 +681,6 @@ def _sample_lindblad_mcwf_vectorized_scipy(
         else None
     )
     jump_operators = tuple(_as_numpy_or_scipy_sparse(jump) for jump in prepared.jumps)
-    sparse_jump_rate_evaluator = prepared.sparse_jump_rate_evaluator
-    reuse_total_rate_action_for_no_jump = _should_reuse_total_rate_action_for_no_jump(
-        hamiltonian_matrix,
-        effective_hamiltonian_matrix,
-    )
     _add_timing(timing_collector, "mcwf.operator_view_conversion", _perf_counter() - start)
 
     target_names, target_matrix = _prepare_fidelity_target_matrix(
@@ -1550,7 +721,6 @@ def _sample_lindblad_mcwf_vectorized_scipy(
             probabilities = np.zeros((0, options.n_trajectories), dtype=np.float64)
             total_jump_probabilities = np.zeros(options.n_trajectories, dtype=np.float64)
             rates: NDArray[np.float64] | None = None
-            total_jump_rate_action: ArrayC | None = None
 
             if jump_operators:
                 rate_step_size = step_size
@@ -1558,12 +728,10 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                     probabilities,
                     total_jump_probabilities,
                     rates,
-                    total_jump_rate_action,
                 ) = _evaluate_vectorized_jump_probabilities_numpy(
                     states=states,
                     step_size=rate_step_size,
                     jump_operators=jump_operators,
-                    sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
                     total_jump_rate_operator=total_jump_rate_operator,
                     use_total_rate_first=options.use_total_rate_first,
                     timing_collector=timing_collector,
@@ -1623,20 +791,7 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                 )
 
             start = _perf_counter()
-            if reuse_total_rate_action_for_no_jump and total_jump_rate_action is not None:
-                # The total-rate-first path already computed Gamma @ psi to get
-                # <psi|Gamma|psi>.  Reuse that action in the no-jump Euler
-                # update instead of applying H_eff = H - i Gamma/2, which
-                # would traverse Gamma a second time in the same substep.
-                hamiltonian_action = hamiltonian_matrix @ states
-                next_states = (
-                    states
-                    - 1j * step_size * hamiltonian_action
-                    - 0.5 * step_size * total_jump_rate_action
-                )
-                _add_counter(timing_collector, "mcwf.count.total_rate_action_reuses", 1.0)
-            else:
-                next_states = states - 1j * step_size * (effective_hamiltonian_matrix @ states)
+            next_states = states - 1j * step_size * (effective_hamiltonian_matrix @ states)
             _add_timing(timing_collector, "mcwf.no_jump_propagation", _perf_counter() - start)
 
             if jump_operators:
@@ -1645,16 +800,10 @@ def _sample_lindblad_mcwf_vectorized_scipy(
                 if np.any(jump_mask):
                     if rates is None:
                         channel_start = _perf_counter()
-                        if sparse_jump_rate_evaluator is not None:
-                            selected_rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
-                                states[:, jump_mask],
-                                sparse_jump_rate_evaluator,
-                            )
-                        else:
-                            selected_rates = _evaluate_jump_rates_state_matrix_numpy(
-                                states[:, jump_mask],
-                                jump_operators,
-                            )
+                        selected_rates = _evaluate_jump_rates_state_matrix_numpy(
+                            states[:, jump_mask],
+                            jump_operators,
+                        )
                         selected_probabilities = step_size * selected_rates
                         selected_total_probabilities = np.sum(selected_probabilities, axis=0)
                         channel_elapsed = _perf_counter() - channel_start
@@ -1743,103 +892,6 @@ def _sample_lindblad_mcwf_vectorized_scipy(
     )
 
 
-def _sample_lindblad_mcwf_adaptive_blocked_vectorized_scipy(
-    *,
-    prepared: _McwfPreparedOperators,
-    dim: int,
-    times: NDArray[np.float64],
-    state_initial: Any | None,
-    state_sampler: StateSampler | None,
-    options: McwfOptions,
-    rng: np.random.Generator,
-    adaptive_block_size: int,
-) -> EnsembleResult:
-    """Run Bernoulli MCWF in smaller adaptive-rate blocks inside one worker.
-
-    The normal vectorized adaptive sampler uses a single global step size for
-    every trajectory column in the current worker chunk.  One high-rate column
-    can therefore force all other columns to take the same tiny step.  This
-    helper preserves process-level trajectory chunks but splits the state matrix
-    into smaller sequential blocks, so each block chooses its own adaptive
-    substeps while still retaining BLAS/sparse-matmul batching inside the block.
-    """
-    timing_collector = options.timing_collector
-    n_trajectories = int(options.n_trajectories)
-    block_slices = _trajectory_chunk_slices(n_trajectories, adaptive_block_size)
-    block_seeds = rng.integers(
-        low=0,
-        high=np.iinfo(np.int64).max,
-        size=len(block_slices),
-        dtype=np.int64,
-    )
-
-    rho_t = (
-        [np.zeros((dim, dim), dtype=np.complex128) for _ in range(times.size)]
-        if options.store_density_matrices
-        else []
-    )
-    state_snapshots = (
-        [np.empty((dim, n_trajectories), dtype=np.complex128) for _ in range(times.size)]
-        if options.store_state_snapshots
-        else None
-    )
-    target_names, _ = _prepare_fidelity_target_matrix(
-        dim=dim,
-        fidelity_targets=options.fidelity_targets,
-    )
-    target_fidelity_series = (
-        {target_name: np.zeros(times.size, dtype=np.float64) for target_name in target_names}
-        if target_names
-        else None
-    )
-
-    block_start_time = _perf_counter()
-    for (block_start, block_stop), block_seed in zip(block_slices, block_seeds, strict=True):
-        block_n = int(block_stop - block_start)
-        block_options = replace(
-            options,
-            n_trajectories=block_n,
-            trajectory_chunk_size=None,
-            trajectory_chunk_workers=None,
-            adaptive_trajectory_block_size=None,
-        )
-        block_rng = np.random.default_rng(int(block_seed))
-
-        block_result = _sample_lindblad_mcwf_vectorized_scipy(
-            prepared=prepared,
-            dim=dim,
-            times=times,
-            state_initial=state_initial,
-            state_sampler=state_sampler,
-            options=block_options,
-            rng=block_rng,
-        )
-
-        _merge_mcwf_chunk_result(
-            parent_rho_t=rho_t,
-            parent_state_snapshots=state_snapshots,
-            parent_target_fidelities=target_fidelity_series,
-            chunk_result=block_result,
-            chunk_start=block_start,
-            chunk_stop=block_stop,
-            n_trajectories=n_trajectories,
-            timing_collector=timing_collector,
-        )
-        _add_counter(timing_collector, "mcwf.count.adaptive_trajectory_blocks", 1.0)
-
-    _add_timing(
-        timing_collector, "mcwf.adaptive_trajectory_block_wall", _perf_counter() - block_start_time
-    )
-
-    return EnsembleResult(
-        times=times,
-        rho_t=rho_t,
-        trajectories=None,
-        state_snapshots=(tuple(state_snapshots) if state_snapshots is not None else None),
-        target_fidelities=_finalize_streamed_target_fidelities(target_fidelity_series),
-    )
-
-
 def _sample_lindblad_mcwf_chunked_vectorized_scipy(
     *,
     prepared: _McwfPreparedOperators,
@@ -1855,8 +907,6 @@ def _sample_lindblad_mcwf_chunked_vectorized_scipy(
     This keeps the per-chunk state matrix small while preserving the public
     ensemble result.  Density matrices are merged as weighted averages.  State
     snapshots, when requested, are concatenated column-wise in trajectory order.
-    If ``options.trajectory_chunk_workers`` is greater than one, chunks are run
-    in worker processes and merged deterministically in trajectory order.
     """
     chunk_size = _effective_trajectory_chunk_size(options)
     if chunk_size is None:
@@ -1900,86 +950,33 @@ def _sample_lindblad_mcwf_chunked_vectorized_scipy(
         else None
     )
 
-    worker_count = _effective_trajectory_chunk_workers(options, n_chunks=len(chunk_slices))
-    if worker_count <= 1:
-        for (chunk_start, chunk_stop), chunk_seed in zip(chunk_slices, chunk_seeds, strict=True):
-            chunk_n = int(chunk_stop - chunk_start)
-            chunk_options = replace(
-                options,
-                n_trajectories=chunk_n,
-                trajectory_chunk_size=None,
-                trajectory_chunk_workers=None,
-            )
-            chunk_rng = np.random.default_rng(int(chunk_seed))
-
-            chunk_result = _sample_lindblad_mcwf_vectorized_scipy(
-                prepared=prepared,
-                dim=dim,
-                times=times,
-                state_initial=state_initial,
-                state_sampler=state_sampler,
-                options=chunk_options,
-                rng=chunk_rng,
-            )
-
-            _merge_mcwf_chunk_result(
-                parent_rho_t=rho_t,
-                parent_state_snapshots=state_snapshots,
-                parent_target_fidelities=target_fidelity_series,
-                chunk_result=chunk_result,
-                chunk_start=chunk_start,
-                chunk_stop=chunk_stop,
-                n_trajectories=n_trajectories,
-                timing_collector=timing_collector,
-            )
-    else:
-        worker_start = _perf_counter()
-        tasks = [
-            (
-                prepared,
-                dim,
-                times,
-                state_initial,
-                state_sampler,
-                replace(
-                    options,
-                    n_trajectories=int(chunk_stop - chunk_start),
-                    trajectory_chunk_size=None,
-                    trajectory_chunk_workers=None,
-                    timing_collector=None,
-                ),
-                int(chunk_seed),
-            )
-            for (chunk_start, chunk_stop), chunk_seed in zip(chunk_slices, chunk_seeds, strict=True)
-        ]
-        with ProcessPoolExecutor(
-            max_workers=worker_count,
-            mp_context=multiprocessing.get_context("spawn"),
-        ) as executor:
-            chunk_outputs = list(executor.map(_sample_lindblad_mcwf_chunk_worker, tasks))
-        _add_timing(timing_collector, "mcwf.chunk_parallel_wall", _perf_counter() - worker_start)
-
-        for (chunk_start, chunk_stop), (chunk_result, chunk_timing) in zip(
-            chunk_slices,
-            chunk_outputs,
-            strict=True,
-        ):
-            _merge_mcwf_timing(timing_collector, chunk_timing)
-            _merge_mcwf_timing(
-                timing_collector,
-                chunk_timing,
-                prefix="mcwf.worker.",
-            )
-            _merge_mcwf_chunk_result(
-                parent_rho_t=rho_t,
-                parent_state_snapshots=state_snapshots,
-                parent_target_fidelities=target_fidelity_series,
-                chunk_result=chunk_result,
-                chunk_start=chunk_start,
-                chunk_stop=chunk_stop,
-                n_trajectories=n_trajectories,
-                timing_collector=timing_collector,
-            )
+    for (chunk_start, chunk_stop), chunk_seed in zip(chunk_slices, chunk_seeds, strict=True):
+        chunk_n = int(chunk_stop - chunk_start)
+        chunk_options = replace(
+            options,
+            n_trajectories=chunk_n,
+            trajectory_chunk_size=None,
+        )
+        chunk_rng = np.random.default_rng(int(chunk_seed))
+        chunk_result = _sample_lindblad_mcwf_vectorized_scipy(
+            prepared=prepared,
+            dim=dim,
+            times=times,
+            state_initial=state_initial,
+            state_sampler=state_sampler,
+            options=chunk_options,
+            rng=chunk_rng,
+        )
+        _merge_mcwf_chunk_result(
+            parent_rho_t=rho_t,
+            parent_state_snapshots=state_snapshots,
+            parent_target_fidelities=target_fidelity_series,
+            chunk_result=chunk_result,
+            chunk_start=chunk_start,
+            chunk_stop=chunk_stop,
+            n_trajectories=n_trajectories,
+            timing_collector=timing_collector,
+        )
 
     return EnsembleResult(
         times=times,
@@ -1990,45 +987,6 @@ def _sample_lindblad_mcwf_chunked_vectorized_scipy(
             dict(target_fidelity_series) if target_fidelity_series is not None else None
         ),
     )
-
-
-def _sample_lindblad_mcwf_chunk_worker(
-    task: tuple[
-        _McwfPreparedOperators,
-        int,
-        NDArray[np.float64],
-        Any | None,
-        StateSampler | None,
-        McwfOptions,
-        int,
-    ],
-) -> tuple[EnsembleResult, dict[str, float]]:
-    """Run one MCWF chunk in a worker process.
-
-    The function is intentionally module-level so it is picklable under the
-    ``spawn`` multiprocessing start method used on macOS and Windows.
-    """
-    (
-        prepared,
-        dim,
-        times,
-        state_initial,
-        state_sampler,
-        options,
-        seed,
-    ) = task
-    timing: dict[str, float] = {}
-    chunk_options = replace(options, timing_collector=timing)
-    result = _sample_lindblad_mcwf_vectorized_scipy(
-        prepared=prepared,
-        dim=dim,
-        times=times,
-        state_initial=state_initial,
-        state_sampler=state_sampler,
-        options=chunk_options,
-        rng=np.random.default_rng(seed),
-    )
-    return result, timing
 
 
 def _merge_mcwf_chunk_result(
@@ -2064,44 +1022,12 @@ def _merge_mcwf_chunk_result(
     _add_timing(timing_collector, "mcwf.chunk_merge", _perf_counter() - start)
 
 
-def _merge_mcwf_timing(
-    timing_collector: MutableMapping[str, float] | None,
-    child_timing: MutableMapping[str, float],
-    *,
-    prefix: str = "",
-) -> None:
-    if timing_collector is None:
-        return
-
-    for stage, elapsed_seconds in child_timing.items():
-        _add_timing(timing_collector, f"{prefix}{stage}", elapsed_seconds)
-
-
 def _effective_trajectory_chunk_size(options: McwfOptions) -> int | None:
     chunk_size = options.trajectory_chunk_size
     if chunk_size is None or chunk_size >= options.n_trajectories:
         return None
 
     return int(chunk_size)
-
-
-def _effective_trajectory_chunk_workers(options: McwfOptions, *, n_chunks: int) -> int:
-    workers = options.trajectory_chunk_workers
-    if workers is None or workers <= 1 or n_chunks <= 1:
-        return 1
-
-    return min(int(workers), int(n_chunks))
-
-
-def _effective_adaptive_trajectory_block_size(options: McwfOptions) -> int | None:
-    block_size = options.adaptive_trajectory_block_size
-    if block_size is None:
-        return None
-
-    if not options.adaptive_time_step or block_size >= options.n_trajectories:
-        return None
-
-    return int(block_size)
 
 
 def _trajectory_chunk_slices(
@@ -2119,27 +1045,14 @@ def _evaluate_vectorized_jump_probabilities_numpy(
     states: ArrayC,
     step_size: float,
     jump_operators: tuple[Any, ...],
-    sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None,
     total_jump_rate_operator: Any | None,
     use_total_rate_first: bool,
     timing_collector: MutableMapping[str, float] | None,
-) -> tuple[
-    NDArray[np.float64],
-    NDArray[np.float64],
-    NDArray[np.float64] | None,
-    ArrayC | None,
-]:
-    """Return first-order jump probabilities for the vectorized MCWF path."""
+) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64] | None]:
+    """Return first-order jump probabilities for vectorized MCWF states."""
     start = _perf_counter()
-    if _should_use_total_rate_first(
-        use_total_rate_first,
-        total_jump_rate_operator=total_jump_rate_operator,
-        sparse_jump_rate_evaluator=sparse_jump_rate_evaluator,
-    ):
-        (
-            total_rates,
-            total_jump_rate_action,
-        ) = _evaluate_total_jump_rates_and_action_state_matrix_numpy(
+    if use_total_rate_first and total_jump_rate_operator is not None:
+        total_rates = _evaluate_total_jump_rates_state_matrix_numpy(
             states,
             total_jump_rate_operator,
         )
@@ -2151,63 +1064,15 @@ def _evaluate_vectorized_jump_probabilities_numpy(
             np.zeros((0, states.shape[1]), dtype=np.float64),
             total_jump_probabilities,
             None,
-            total_jump_rate_action,
         )
 
-    if sparse_jump_rate_evaluator is not None:
-        rates = _evaluate_sparse_jump_rates_state_matrix_numpy(
-            states,
-            sparse_jump_rate_evaluator,
-        )
-    else:
-        rates = _evaluate_jump_rates_state_matrix_numpy(states, jump_operators)
+    rates = _evaluate_jump_rates_state_matrix_numpy(states, jump_operators)
     probabilities = step_size * rates
     total_jump_probabilities = np.sum(probabilities, axis=0)
     elapsed = _perf_counter() - start
     _add_timing(timing_collector, "mcwf.channel_rate_evaluation", elapsed)
     _add_timing(timing_collector, "mcwf.rate_evaluation", elapsed)
-    return probabilities, total_jump_probabilities, rates, None
-
-
-def _should_use_total_rate_first(
-    enabled: bool,
-    *,
-    total_jump_rate_operator: Any | None,
-    sparse_jump_rate_evaluator: _SparseJumpRateEvaluator | None,
-) -> bool:
-    """Return whether to use total-rate-first sampling for this operator mix.
-
-    The total-rate path is structural: it avoids per-channel work on no-jump
-    steps.  It is not always the fastest kernel, however.  A pure single-entry
-    sparse rate matrix can be cheaper than applying ``Gamma=sum J†J``.  In that
-    case, keep the already vectorized channel-rate path.
-    """
-    if not enabled or total_jump_rate_operator is None:
-        return False
-
-    if sparse_jump_rate_evaluator is None:
-        return True
-
-    if (
-        sparse_jump_rate_evaluator.single_entry_rate_matrix is not None
-        and sparse_jump_rate_evaluator.expanded_rate_operator is None
-    ):
-        return False
-
-    channel_nnz = 0
-    if sparse_jump_rate_evaluator.single_entry_rate_matrix is not None:
-        channel_nnz += int(sparse_jump_rate_evaluator.single_entry_rate_matrix.nnz)
-    if sparse_jump_rate_evaluator.expanded_rate_operator is not None:
-        channel_nnz += int(sparse_jump_rate_evaluator.expanded_rate_operator.nnz)
-
-    if channel_nnz <= 0:
-        return True
-
-    if scipy_sparse.issparse(total_jump_rate_operator):
-        total_nnz = int(total_jump_rate_operator.nnz)
-        return total_nnz < channel_nnz
-
-    return True
+    return probabilities, total_jump_probabilities, rates
 
 
 def _evaluate_total_jump_rates_state_matrix_numpy(
@@ -2215,18 +1080,6 @@ def _evaluate_total_jump_rates_state_matrix_numpy(
     total_jump_rate_operator: Any,
 ) -> NDArray[np.float64]:
     """Return ``<psi_a|Gamma|psi_a>`` for state columns."""
-    rates, _ = _evaluate_total_jump_rates_and_action_state_matrix_numpy(
-        states,
-        total_jump_rate_operator,
-    )
-    return rates
-
-
-def _evaluate_total_jump_rates_and_action_state_matrix_numpy(
-    states: ArrayC,
-    total_jump_rate_operator: Any,
-) -> tuple[NDArray[np.float64], ArrayC]:
-    """Return ``<psi_a|Gamma|psi_a>`` and ``Gamma @ psi_a``."""
     acted_states = total_jump_rate_operator @ states
     rates = np.einsum(
         "ij,ij->j",
@@ -2236,117 +1089,7 @@ def _evaluate_total_jump_rates_and_action_state_matrix_numpy(
     ).real
     rates = np.asarray(rates, dtype=np.float64)
     np.maximum(rates, 0.0, out=rates)
-    return rates, np.asarray(acted_states, dtype=np.complex128)
-
-
-def _evaluate_total_jump_rate_numpy(
-    state: ArrayC,
-    total_jump_rate_operator: Any,
-) -> float:
-    """Return ``<psi|Gamma|psi>`` for one state."""
-    value = np.vdot(state, total_jump_rate_operator @ state).real
-    return max(float(value), 0.0)
-
-
-def _evaluate_sparse_jump_rates_numpy(
-    state: ArrayC,
-    evaluator: _SparseJumpRateEvaluator,
-) -> NDArray[np.float64]:
-    """Return ||J_mu psi||^2 without forming full dense J_mu|psi> vectors."""
-    rates = np.zeros(evaluator.n_jumps, dtype=np.float64)
-
-    if evaluator.single_entry_rate_matrix is not None:
-        state_weights = np.abs(state) ** 2
-        rates += np.asarray(evaluator.single_entry_rate_matrix @ state_weights).reshape(-1)
-
-    if evaluator.expanded_rate_operator is not None:
-        row_values = evaluator.expanded_rate_operator @ state
-        row_rates = np.abs(row_values) ** 2
-        grouped_rates = np.add.reduceat(
-            row_rates,
-            evaluator.expanded_rate_row_splits[:-1],
-        )
-        rates[evaluator.expanded_rate_jump_indices] += grouped_rates
-    else:
-        for jump_index in evaluator.generic_jump_indices:
-            columns = evaluator.single_entry_columns[int(jump_index)]
-            weights = evaluator.single_entry_weights[int(jump_index)]
-            if columns is not None and weights is not None:
-                rates[int(jump_index)] = max(float(weights @ np.abs(state[columns]) ** 2), 0.0)
-                continue
-
-            rate = 0.0
-            for row_columns, row_values in zip(
-                evaluator.row_columns[int(jump_index)],
-                evaluator.row_values[int(jump_index)],
-                strict=True,
-            ):
-                value = np.dot(row_values, state[row_columns])
-                rate += float(abs(value) ** 2)
-            rates[int(jump_index)] = max(rate, 0.0)
-
     return rates
-
-
-def _evaluate_sparse_jump_rates_state_matrix_numpy(
-    states: ArrayC,
-    evaluator: _SparseJumpRateEvaluator,
-) -> NDArray[np.float64]:
-    """Return ||J_mu psi_a||^2 without full dense J_mu|psi_a> blocks."""
-    rates = np.zeros((evaluator.n_jumps, states.shape[1]), dtype=np.float64)
-
-    if evaluator.single_entry_rate_matrix is not None:
-        state_weights = np.abs(states) ** 2
-        rates += np.asarray(evaluator.single_entry_rate_matrix @ state_weights)
-
-    if evaluator.expanded_rate_operator is not None:
-        expanded_values = evaluator.expanded_rate_operator @ states
-        expanded_row_rates = np.abs(expanded_values) ** 2
-        grouped_rates = np.add.reduceat(
-            expanded_row_rates,
-            evaluator.expanded_rate_row_splits[:-1],
-            axis=0,
-        )
-        rates[evaluator.expanded_rate_jump_indices, :] += grouped_rates
-    else:
-        for jump_index in evaluator.generic_jump_indices:
-            jump_index_int = int(jump_index)
-            columns = evaluator.single_entry_columns[jump_index_int]
-            weights = evaluator.single_entry_weights[jump_index_int]
-            if columns is not None and weights is not None:
-                if columns.size:
-                    rates[jump_index_int, :] = weights @ np.abs(states[columns, :]) ** 2
-                continue
-
-            for row_columns, row_values in zip(
-                evaluator.row_columns[jump_index_int],
-                evaluator.row_values[jump_index_int],
-                strict=True,
-            ):
-                row_values_for_states = row_values @ states[row_columns, :]
-                rates[jump_index_int, :] += np.abs(row_values_for_states) ** 2
-
-    np.maximum(rates, 0.0, out=rates)
-    return rates
-
-
-def _should_reuse_total_rate_action_for_no_jump(
-    hamiltonian_matrix: Any,
-    effective_hamiltonian_matrix: Any,
-) -> bool:
-    """Return whether cached ``Gamma @ states`` should be reused in no-jump updates.
-
-    The reuse path replaces one ``H_eff @ states`` sparse product by
-    ``H @ states`` plus the already-computed ``Gamma @ states`` from the
-    total-rate step.  It is only an obvious win when both operators are sparse
-    and ``H`` has fewer stored entries than ``H_eff``.  Dense arrays are left on
-    the single-matmul path to avoid extra Python/NumPy overhead.
-    """
-    return (
-        scipy_sparse.issparse(hamiltonian_matrix)
-        and scipy_sparse.issparse(effective_hamiltonian_matrix)
-        and int(hamiltonian_matrix.nnz) < int(effective_hamiltonian_matrix.nnz)
-    )
 
 
 def _evaluate_jump_rates_state_matrix_numpy(
@@ -2367,23 +1110,6 @@ def _evaluate_jump_rates_state_matrix_numpy(
 
     np.maximum(rates, 0.0, out=rates)
     return rates
-
-
-def _apply_selected_jumps_to_state_matrix_numpy(
-    *,
-    next_states: ArrayC,
-    states: ArrayC,
-    jumps: tuple[Any, ...],
-    jump_mask: NDArray[np.bool_],
-    selected_jump_indices: NDArray[np.int64],
-) -> None:
-    """Apply only the jump channels that were actually selected."""
-    active_jump_indices = np.unique(selected_jump_indices[jump_mask])
-
-    for jump_index in active_jump_indices:
-        selected_mask = jump_mask & (selected_jump_indices == jump_index)
-        if np.any(selected_mask):
-            next_states[:, selected_mask] = jumps[int(jump_index)] @ states[:, selected_mask]
 
 
 def _apply_selected_jumps_to_state_columns_numpy(
@@ -2536,10 +1262,6 @@ def sample_lindblad_mcwf(
         jumps=jumps,
         backend=options.backend,
         prefer_sparse_operators=options.prefer_sparse_operators,
-        prefer_sparse_rate_evaluator=options.prefer_sparse_rate_evaluator,
-        compress_collinear_jumps=options.compress_collinear_jumps,
-        jump_compression_tolerance=options.jump_compression_tolerance,
-        timing_collector=options.timing_collector,
     )
     _add_timing(options.timing_collector, "mcwf.operator_preparation", _perf_counter() - start)
     backend_obj = prepared.backend

@@ -4,6 +4,12 @@ This file supplements the repository-root `AGENTS.md`.
 
 - Keep solver kernels, jump construction, detector selection, diagnostics, and visualization
   as separate responsibilities.
+- Keep MCWF optimization structural and evidence-driven: sparse operator preservation, vectorized
+  ensemble evolution, adaptive time stepping, serial trajectory chunking, and total-rate-first
+  sampling are acceptable core mechanisms. Do not add jump-list compression, row-pattern-specific
+  rate kernels, multiprocessing chunk schedulers, or other fine-tuned microkernels without an
+  end-to-end benchmark that includes jump-design/preparation cost and demonstrates a material gain
+  on representative caging/Lindblad workloads.
 - `diagnostics` is a responsibility-oriented subpackage. Keep target-manifold observables, jump
   diagnostics, evolution analysis, state verification, monitor-kernel closure, dark-manifold
   diagnostics, and absorbing-projector diagnostics in their focused modules. Generic common-
