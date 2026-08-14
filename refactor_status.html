@@ -202,6 +202,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="repository_health.html">Repository health and governance</a></li>
 </ul>
 
     </div>
@@ -350,6 +351,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#current-decomposition">Current decomposition</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cage-stability">Cage stability</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#local-cage-search">Local cage search</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#caging-analysis">Caging analysis</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dark-manifold-detectors">Dark-manifold detectors</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#neutral-local-structure-migration">Neutral local-structure migration</a></li>
 </ul>
@@ -368,53 +370,73 @@
                   
   <section id="repository-refactor-status">
 <h1>Repository refactor status<a class="headerlink" href="#repository-refactor-status" title="Link to this heading">#</a></h1>
-<p>This page tracks temporary architecture bridges introduced while the caging and open-system
-research layers are being decomposed.  The bridges are migration aids, not long-term API
-commitments.</p>
+<p>This page records the stabilized module boundaries that remain after the temporary refactor
+facades were removed. The focused modules below are now the supported import paths for active
+package code.</p>
 <section id="current-decomposition">
 <h2>Current decomposition<a class="headerlink" href="#current-decomposition" title="Link to this heading">#</a></h2>
 <section id="cage-stability">
 <h3>Cage stability<a class="headerlink" href="#cage-stability" title="Link to this heading">#</a></h3>
-<p>The former monolithic <code class="docutils literal notranslate"><span class="pre">qlinks.caging.stability</span></code> implementation is split into:</p>
+<p>The cage-stability implementation now lives in the <code class="docutils literal notranslate"><span class="pre">qlinks.caging.stability</span></code> subpackage:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">stability_core</span></code> for perturbative stability, continuation, Jacobian, and subspace helpers;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stability_topology</span></code> for chiral, locality, CLS-completeness, and cohomological diagnostics;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stability_boundary</span></code> for boundary-cancellation matroid and periodic-scaling diagnostics;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stability_qdm</span></code> for square-QDM compact-cage and transfer diagnostics;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stability_laurent</span></code> for Laurent-polynomial constraint-module diagnostics;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stability_types</span></code> for report/data contracts; and</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stability_symmetry</span></code> for small shared symmetry linear-algebra helpers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">core</span></code> for perturbative stability, continuation, Jacobian, and subspace helpers;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">topology</span></code> for chiral, locality, CLS-completeness, and cohomological diagnostics;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">boundary</span></code> for boundary-cancellation matroid and periodic-scaling diagnostics;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">qdm</span></code> for square-QDM compact-cage and transfer diagnostics;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">laurent</span></code> for Laurent-polynomial constraint-module diagnostics;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">types</span></code> for report/data contracts; and</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">symmetry</span></code> for small shared symmetry linear-algebra helpers.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">qlinks.caging.stability</span></code> currently re-exports these objects so historical imports continue
-to work during migration.  Active package code must use the focused modules directly.</p>
+<p><code class="docutils literal notranslate"><span class="pre">qlinks.caging.stability</span></code> is now a real subpackage with a curated public API. Active
+implementation code should import the defining child module directly.</p>
 </section>
 <section id="local-cage-search">
 <h3>Local cage search<a class="headerlink" href="#local-cage-search" title="Link to this heading">#</a></h3>
-<p>The former <code class="docutils literal notranslate"><span class="pre">qlinks.caging.local_search</span></code> implementation is now split into:</p>
+<p>Local cage search now lives in the <code class="docutils literal notranslate"><span class="pre">qlinks.caging.local_search</span></code> subpackage:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">local_search_types</span></code> for passive configuration/report contracts;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">local_search_geometry</span></code> for pure stripe, snake, plaquette/link-region, and local-index
+<li><p><code class="docutils literal notranslate"><span class="pre">types</span></code> for passive configuration/report contracts;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">geometry</span></code> for pure stripe, snake, plaquette/link-region, and local-index
 geometry helpers;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">local_search_core</span></code> for generic local type-1 search algebra and adapter registration;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">local_search_qdm</span></code> for QDM local-region construction, basis enumeration, and local kinetic
+<li><p><code class="docutils literal notranslate"><span class="pre">core</span></code> for generic local type-1 search algebra and adapter registration;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">qdm</span></code> for QDM local-region construction, basis enumeration, and local kinetic
 algebra;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">local_search_global</span></code> for explicit global-QDM plaquette actions and limited global operators;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">local_search_padding</span></code> for single/multi-block exterior-padding search and structural
+<li><p><code class="docutils literal notranslate"><span class="pre">global_ops</span></code> for explicit global-QDM plaquette actions and limited global operators;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">padding</span></code> for single/multi-block exterior-padding search and structural
 validation;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">local_search_factorized</span></code> for exact factorized-product residual certification;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">local_search_certification</span></code> for local/multi-block residual certification and result assembly;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">local_search_proposals</span></code> for stripe/snake/adaptive proposal generation;</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">local_search_scan</span></code> for proposal execution and block collection; and</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">local_search_workflows</span></code> for robust multi-stage local-search orchestration.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">factorized</span></code> for exact factorized-product residual certification;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">certification</span></code> for local/multi-block residual certification and result assembly;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">proposals</span></code> for stripe/snake/adaptive proposal generation;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scan</span></code> for proposal execution and block collection; and</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">workflows</span></code> for robust multi-stage local-search orchestration.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">qlinks.caging.local_search</span></code> is now a temporary compatibility facade. Active first-party code
-uses the focused modules directly. Because qlinks is primarily group-internal software, this
-facade is intentionally minimal and should be removed during the later API-cleanup pass once the
-refactored interface has stabilized.</p>
+<p><code class="docutils literal notranslate"><span class="pre">qlinks.caging.local_search</span></code> is now a real subpackage with a curated public API. Active
+implementation code should import the defining child module directly.</p>
 <p>The focused local-search graph is required to remain free of both eager import cycles and
 TYPE_CHECKING/function-local static cycles. Passive result containers therefore live in
-<code class="docutils literal notranslate"><span class="pre">local_search_types</span></code> rather than importing their implementation modules back into the contract
+<code class="docutils literal notranslate"><span class="pre">local_search.types</span></code> rather than importing implementation modules back into the contract
 layer.</p>
+</section>
+<section id="caging-analysis">
+<h3>Caging analysis<a class="headerlink" href="#caging-analysis" title="Link to this heading">#</a></h3>
+<p>Post-search analysis now lives in <code class="docutils literal notranslate"><span class="pre">qlinks.caging.analysis</span></code>.  This move also corrects an early
+scientific over-interpretation: the former <code class="docutils literal notranslate"><span class="pre">classification</span></code> layer did not classify caged
+eigenstates.  Its valid role is to decide whether the exterior environment can be removed while
+constructing a bounded local caging operator.</p>
+<p>The analysis ownership is now:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">transitions</span></code> for support-aware weighted local transition signatures;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">environment</span></code> for exterior-environment reduction and its three accepted mechanisms: no
+exterior weight, projective annihilation, or the same local cancellation pattern;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">local_structure</span></code> for reduced-density-matrix and operator-structure diagnostics;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">support</span></code> and <code class="docutils literal notranslate"><span class="pre">support_morphology</span></code> for local support analysis independent of environment
+removability;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spectral</span></code> and <code class="docutils literal notranslate"><span class="pre">thermodynamic</span></code> for ensemble/spectrum diagnostics; and</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">evidence</span></code> for finite-size evidence summaries.</p></li>
+</ul>
+<p>A known interference-zero target is not sufficient to remove the environment.  Non-projective
+closure is accepted only when the target has the same support-aware weighted local transition
+signature.  Architecture tests enforce the one-way ownership and prevent the former
+<code class="docutils literal notranslate"><span class="pre">classification</span> <span class="pre">&lt;-&gt;</span> <span class="pre">diagnostics</span></code> static cycle from returning.</p>
 </section>
 <section id="dark-manifold-detectors">
 <h3>Dark-manifold detectors<a class="headerlink" href="#dark-manifold-detectors" title="Link to this heading">#</a></h3>
@@ -425,8 +447,8 @@ layer.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">manifold_residual</span></code> for residual-kernel diagnostics and targeted jump selection; and</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">manifold_detector_types</span></code> for passive report/data contracts.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">qlinks.open_system.manifold_detectors</span></code> is a temporary re-export facade.  Active package
-code must import the focused modules instead.</p>
+<p>The temporary <code class="docutils literal notranslate"><span class="pre">qlinks.open_system.manifold_detectors</span></code> facade has been removed. Active package
+code and tests must import the focused modules instead.</p>
 </section>
 <section id="neutral-local-structure-migration">
 <h3>Neutral local-structure migration<a class="headerlink" href="#neutral-local-structure-migration" title="Link to this heading">#</a></h3>
@@ -444,8 +466,8 @@ only to let notebooks and deprecated constructors migrate.</p>
 <li><p>supported public API tests target the replacement interface rather than the bridge; and</p></li>
 <li><p>the removal is recorded in the changelog or release/refactor milestone.</p></li>
 </ol>
-<p>No new implementation may depend on a temporary compatibility facade.  The architecture tests
-enforce this for the current local-search, stability, and manifold-detector facades.</p>
+<p>No new implementation may depend on the removed compatibility-module paths. The architecture
+tests enforce this for the former local-search, stability, and manifold-detector facades.</p>
 </section>
 </section>
 
@@ -499,6 +521,7 @@ enforce this for the current local-search, stability, and manifold-detector faca
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#current-decomposition">Current decomposition</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cage-stability">Cage stability</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#local-cage-search">Local cage search</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#caging-analysis">Caging analysis</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dark-manifold-detectors">Dark-manifold detectors</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#neutral-local-structure-migration">Neutral local-structure migration</a></li>
 </ul>

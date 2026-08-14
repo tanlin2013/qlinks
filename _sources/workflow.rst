@@ -118,29 +118,33 @@ A signature is usually interpreted as ``(kappa, z)``, where ``kappa`` is the
 kinetic eigenvalue target and ``z`` is the inferred uniform potential/self-loop
 value on the cage support.
 
-Classify a cage
----------------
+Analyze exterior-environment reduction
+--------------------------------------
 
-The classification layer explains how a cage avoids leaking into neighboring
-Fock-space states.  It is most useful after selecting one record from a search
-result:
+After selecting a cage record, diagnose whether the exterior environment can be removed while
+constructing a bounded local caging operator.  This is a property of the local-operator
+construction, not a classification of the eigenstate:
 
 .. code-block:: python
 
-   from qlinks.caging import CageClassificationConfig, classify_cage_state
+   from qlinks.caging.analysis import (
+       EnvironmentReductionConfig,
+       diagnose_cage_environment_reduction,
+   )
 
    record = search_result.first()
 
-   report = classify_cage_state(
+   environment_report = diagnose_cage_environment_reduction(
        record.cage_state,
        kinetic_matrix=build_result.kinetic,
        basis_configs=build_result.basis.states,
-       config=CageClassificationConfig(),
+       config=EnvironmentReductionConfig(),
    )
 
-The report contains interference-zero records, reduced local operator supports,
-classification labels, and diagnostics that can feed visualizers or open-system
-construction routines.
+The report records whether every exterior probe is safely removable and which of the three
+physical mechanisms applies: no exterior weight, projective annihilation, or the same
+support-aware local cancellation pattern.  Local-RDM structure and support morphology are
+separate analyses under :mod:`qlinks.caging.analysis`.
 
 Visualize
 ---------
@@ -193,7 +197,7 @@ problem from a type-1 cage, its classification report, and model metadata:
        model=model,
        build_result=build_result,
        cage_state=record.full_state,
-       classification_report=report,
+       environment_report=environment_report,
        z_value=record.potential_value,
    )
 

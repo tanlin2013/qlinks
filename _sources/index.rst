@@ -41,3 +41,4 @@ understand compact and regional cage states.
    :caption: Project
 
    contributing
+   repository_health

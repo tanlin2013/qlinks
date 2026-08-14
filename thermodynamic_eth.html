@@ -204,6 +204,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="repository_health.html">Repository health and governance</a></li>
 </ul>
 
     </div>
@@ -381,15 +382,15 @@ state at every size, and</p></li>
 <li><p>whether <span class="math notranslate nohighlight">\(Q_R=L_R^\dagger L_R\)</span> has a nonzero expectation value in a
 thermal ensemble from the same constrained symmetry sector.</p></li>
 </ol>
-<p>The APIs in <a class="reference internal" href="qlinks.caging.html#module-qlinks.caging.thermodynamic" title="qlinks.caging.thermodynamic"><code class="xref py py-mod docutils literal notranslate"><span class="pre">qlinks.caging.thermodynamic</span></code></a> keep the local transition pattern
+<p>The APIs in <a class="reference internal" href="qlinks.caging.html#module-qlinks.caging.analysis.thermodynamic" title="qlinks.caging.analysis.thermodynamic"><code class="xref py py-mod docutils literal notranslate"><span class="pre">qlinks.caging.analysis.thermodynamic</span></code></a> keep the local transition pattern
 independent of global variable labels, evaluate the projected constrained-basis
 operator exactly, and store finite-size scaling data without interpreting a
 short fit as a proof of a thermodynamic limit.</p>
 <section id="match-one-local-witness-across-sizes">
 <h2>Match one local witness across sizes<a class="headerlink" href="#match-one-local-witness-across-sizes" title="Link to this heading">#</a></h2>
-<p>After classifying one cage state at each size, identify reduced-IZ patterns that
+<p>After diagnosing environment reduction for one cage state at each size, identify reduced-IZ patterns that
 are exactly common to all reports:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">common_local_witness_families</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.analysis.thermodynamic</span><span class="w"> </span><span class="kn">import</span> <span class="n">common_local_witness_families</span>
 
 <span class="n">families</span> <span class="o">=</span> <span class="n">common_local_witness_families</span><span class="p">(</span>
     <span class="p">{</span>
@@ -405,13 +406,13 @@ are exactly common to all reports:</p>
 </div>
 <p>Translations are matched automatically because global variable indices are not
 part of the template key.  Rotated or reflected copies must currently use a
-consistent local variable ordering before classification.</p>
+consistent local variable ordering before environment-reduction analysis.</p>
 </section>
 <section id="evaluate-cage-and-thermal-expectations">
 <h2>Evaluate cage and thermal expectations<a class="headerlink" href="#evaluate-cage-and-thermal-expectations" title="Link to this heading">#</a></h2>
 <p>For a cage vector and the exact infinite-temperature ensemble in a constrained
 basis:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_eth_scaling_point</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.analysis.thermodynamic</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_eth_scaling_point</span>
 
 <span class="n">point_4x4</span> <span class="o">=</span> <span class="n">make_eth_scaling_point</span><span class="p">(</span>
     <span class="n">system_size</span><span class="o">=</span><span class="n">model_4x4</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">num_plaquettes</span><span class="p">,</span>
@@ -425,10 +426,10 @@ basis:</p>
 </div>
 <p>If <code class="docutils literal notranslate"><span class="pre">thermal_states</span></code> is supplied, the same helper evaluates an equal-weight or
 weighted state ensemble.  A finite-size microcanonical shell can be selected
-with <a class="reference internal" href="qlinks.caging.html#qlinks.caging.evaluate_local_witness_microcanonical" title="qlinks.caging.evaluate_local_witness_microcanonical"><code class="xref py py-func docutils literal notranslate"><span class="pre">qlinks.caging.evaluate_local_witness_microcanonical()</span></code></a>.</p>
+with <a class="reference internal" href="qlinks.caging.html#qlinks.caging.analysis.thermodynamic.evaluate_local_witness_microcanonical" title="qlinks.caging.analysis.thermodynamic.evaluate_local_witness_microcanonical"><code class="xref py py-func docutils literal notranslate"><span class="pre">qlinks.caging.analysis.thermodynamic.evaluate_local_witness_microcanonical()</span></code></a>.</p>
 <p>Collect points built from the same template in an
-<a class="reference internal" href="qlinks.caging.html#qlinks.caging.ETHScalingReport" title="qlinks.caging.ETHScalingReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">qlinks.caging.ETHScalingReport</span></code></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">ETHScalingReport</span>
+<a class="reference internal" href="qlinks.caging.html#qlinks.caging.analysis.thermodynamic.ETHScalingReport" title="qlinks.caging.analysis.thermodynamic.ETHScalingReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">qlinks.caging.analysis.thermodynamic.ETHScalingReport</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.analysis.thermodynamic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ETHScalingReport</span>
 
 <span class="n">scaling</span> <span class="o">=</span> <span class="n">ETHScalingReport</span><span class="p">(</span>
     <span class="n">template</span><span class="o">=</span><span class="n">family</span><span class="o">.</span><span class="n">template</span><span class="p">,</span>
@@ -448,7 +449,7 @@ bound rather than a thermodynamic proof.</p>
 <span class="math notranslate nohighlight">\(\prod_i d_i\)</span>, where <span class="math notranslate nohighlight">\(d_i\)</span> is the support size of block <code class="docutils literal notranslate"><span class="pre">i</span></code>.  The
 factorized path stores only the shared exterior assignment and contracts the
 Hamiltonian action as a sum of product vectors:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">certify_qdm_factorized_product_state</span><span class="p">,</span>
     <span class="n">find_factorized_qdm_block_paddings</span><span class="p">,</span>
 <span class="p">)</span>
@@ -592,7 +593,7 @@ current Fourier implementation assumes even <code class="docutils literal notran
 </section>
 <section id="evaluate-a-common-cage-witness-family">
 <h2>Evaluate a common cage witness family<a class="headerlink" href="#evaluate-a-common-cage-witness-family" title="Link to this heading">#</a></h2>
-<p>The output of <a class="reference internal" href="qlinks.caging.html#qlinks.caging.common_local_witness_families" title="qlinks.caging.common_local_witness_families"><code class="xref py py-func docutils literal notranslate"><span class="pre">qlinks.caging.common_local_witness_families()</span></code></a> can be sent
+<p>The output of <a class="reference internal" href="qlinks.caging.html#qlinks.caging.analysis.thermodynamic.common_local_witness_families" title="qlinks.caging.analysis.thermodynamic.common_local_witness_families"><code class="xref py py-func docutils literal notranslate"><span class="pre">qlinks.caging.analysis.thermodynamic.common_local_witness_families()</span></code></a> can be sent
 directly to the strip backend:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluate_square_qdm_witness_family_on_strips</span>
 
@@ -622,7 +623,7 @@ classification report and a same-sector thermal witness calculation.</p>
 <p>A reduced-IZ row has an arbitrary overall coefficient.  For thermodynamic
 comparisons use operator-norm normalization, which fixes
 <code class="docutils literal notranslate"><span class="pre">||Q_R||</span> <span class="pre">=</span> <span class="pre">||L_R||^2</span> <span class="pre">=</span> <span class="pre">1</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">witnesses</span> <span class="o">=</span> <span class="n">local_witnesses_from_classification_report</span><span class="p">(</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">witnesses</span> <span class="o">=</span> <span class="n">local_witnesses_from_environment_report</span><span class="p">(</span>
     <span class="n">classification</span><span class="p">,</span>
     <span class="n">normalization</span><span class="o">=</span><span class="s2">&quot;operator_norm&quot;</span><span class="p">,</span>
 <span class="p">)</span>

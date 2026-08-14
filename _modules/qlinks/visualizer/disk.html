@@ -201,6 +201,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../repository_health.html">Repository health and governance</a></li>
 </ul>
 
     </div>
@@ -754,7 +755,7 @@
 <span class="sd">    The public methods intentionally mirror the generic</span>
 <span class="sd">    :class:`BasisGridVisualizer` API: ``plot`` for arbitrary basis-state batches,</span>
 <span class="sd">    ``plot_cage_support`` for cage records, and ``plot_interference_zeros`` for</span>
-<span class="sd">    classification reports.</span>
+<span class="sd">    environment-reduction reports.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">lattice</span><span class="p">:</span> <span class="n">SquareLattice</span>
@@ -984,7 +985,7 @@
 <a class="viewcode-back" href="../../../qlinks.visualizer.html#qlinks.visualizer.QuantumDiskBasisGridVisualizer.plot_interference_zeros">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_interference_zeros</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">classification_report</span><span class="p">,</span>
+        <span class="n">environment_report</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">basis_configs</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
         <span class="n">mechanism</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span>
@@ -995,11 +996,11 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot disk basis states corresponding to nontrivial interference zeros.&quot;&quot;&quot;</span>
         <span class="n">basis_configs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">basis_configs</span><span class="p">)</span>
-        <span class="n">zero_indices</span> <span class="o">=</span> <span class="n">_zero_indices_for_mechanism</span><span class="p">(</span><span class="n">classification_report</span><span class="p">,</span> <span class="n">mechanism</span><span class="p">)</span>
+        <span class="n">zero_indices</span> <span class="o">=</span> <span class="n">_zero_indices_for_mechanism</span><span class="p">(</span><span class="n">environment_report</span><span class="p">,</span> <span class="n">mechanism</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">max_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">zero_indices</span> <span class="o">=</span> <span class="n">zero_indices</span><span class="p">[:</span><span class="n">max_states</span><span class="p">]</span>
         <span class="n">states</span> <span class="o">=</span> <span class="n">basis_configs</span><span class="p">[</span><span class="n">zero_indices</span><span class="p">]</span>
-        <span class="n">mechanism_labels</span> <span class="o">=</span> <span class="n">_zero_mechanism_label_map</span><span class="p">(</span><span class="n">classification_report</span><span class="p">)</span>
+        <span class="n">mechanism_labels</span> <span class="o">=</span> <span class="n">_zero_mechanism_label_map</span><span class="p">(</span><span class="n">environment_report</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>

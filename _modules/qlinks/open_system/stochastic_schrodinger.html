@@ -201,6 +201,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../repository_health.html">Repository health and governance</a></li>
 </ul>
 
     </div>
@@ -334,6 +335,7 @@
   <h1>Source code for qlinks.open_system.stochastic_schrodinger</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProcessPoolExecutor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">replace</span>
@@ -2318,7 +2320,10 @@
             <span class="p">)</span>
             <span class="k">for</span> <span class="p">(</span><span class="n">chunk_start</span><span class="p">,</span> <span class="n">chunk_stop</span><span class="p">),</span> <span class="n">chunk_seed</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chunk_slices</span><span class="p">,</span> <span class="n">chunk_seeds</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="p">]</span>
-        <span class="k">with</span> <span class="n">ProcessPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">worker_count</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">ProcessPoolExecutor</span><span class="p">(</span>
+            <span class="n">max_workers</span><span class="o">=</span><span class="n">worker_count</span><span class="p">,</span>
+            <span class="n">mp_context</span><span class="o">=</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">),</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
             <span class="n">chunk_outputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">executor</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_sample_lindblad_mcwf_chunk_worker</span><span class="p">,</span> <span class="n">tasks</span><span class="p">))</span>
         <span class="n">_add_timing</span><span class="p">(</span><span class="n">timing_collector</span><span class="p">,</span> <span class="s2">&quot;mcwf.chunk_parallel_wall&quot;</span><span class="p">,</span> <span class="n">_perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">worker_start</span><span class="p">)</span>
 

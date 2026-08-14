@@ -201,6 +201,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../repository_health.html">Repository health and governance</a></li>
 </ul>
 
     </div>
@@ -342,21 +343,21 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search_global</span><span class="w"> </span><span class="kn">import</span> <span class="n">_qdm_global_plaquette_actions</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search_padding</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.analysis.thermodynamic</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">EnergyDensityMatchReport</span><span class="p">,</span>
+    <span class="n">LocalWitness</span><span class="p">,</span>
+    <span class="n">WitnessNormalization</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search.global_ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">_qdm_global_plaquette_actions</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search.padding</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">factorized_qdm_padding_from_multi_padding</span><span class="p">,</span>
     <span class="n">make_qdm_cage_block</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search_types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.local_search.types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">FactorizedLocalQDMPadding</span><span class="p">,</span>
     <span class="n">LocalQDMCageBlock</span><span class="p">,</span>
     <span class="n">LocalQDMCageRecord</span><span class="p">,</span>
     <span class="n">MultiLocalQDMPadding</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.caging.thermodynamic</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">EnergyDensityMatchReport</span><span class="p">,</span>
-    <span class="n">LocalWitness</span><span class="p">,</span>
-    <span class="n">WitnessNormalization</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.constraints</span><span class="w"> </span><span class="kn">import</span> <span class="n">SquareQDMElectricWindingSector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.lattice</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundaryCondition</span><span class="p">,</span> <span class="n">SquareLattice</span>

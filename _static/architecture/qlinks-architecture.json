@@ -1,21 +1,8 @@
 {
   "boundary_violations": [],
-  "git_commit": "d72a152ca082",
+  "git_commit": "6362eaf6423d",
   "implementation_import_time_module_cycles": [],
-  "import_time_module_cycles": [
-    [
-      "qlinks.basis",
-      "qlinks.basis.sectors"
-    ],
-    [
-      "qlinks.caging",
-      "qlinks.caging.stability"
-    ],
-    [
-      "qlinks.encoded",
-      "qlinks.encoded.flux"
-    ]
-  ],
+  "import_time_module_cycles": [],
   "import_time_package_cycles": [],
   "module_edges": [
     {
@@ -70,7 +57,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.basis.sectors",
-      "target": "qlinks.basis",
+      "target": "qlinks.basis.configs",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -310,111 +297,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging",
-      "target": "qlinks.caging.classification",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.diagnostics",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.evidence",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
       "target": "qlinks.caging.invariant_subspace",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.local_search_certification",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.local_search_core",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.local_search_factorized",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.local_search_global",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.local_search_padding",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.local_search_proposals",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.local_search_qdm",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.local_search_scan",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.local_search_types",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.local_search_workflows",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -502,22 +385,6 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging",
-      "target": "qlinks.caging.spectral",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.stability",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
       "target": "qlinks.caging.strip_transfer",
       "type_checking_weight": 0,
       "weight": 1
@@ -526,23 +393,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging",
-      "target": "qlinks.caging.support",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
       "target": "qlinks.caging.tensor_network",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging",
-      "target": "qlinks.caging.thermodynamic",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -565,8 +416,136 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.biperiodic",
-      "target": "qlinks.caging.local_search_global",
+      "source": "qlinks.caging.analysis",
+      "target": "qlinks.caging.analysis.environment",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis",
+      "target": "qlinks.caging.analysis.local_structure",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis",
+      "target": "qlinks.caging.analysis.support",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis",
+      "target": "qlinks.caging.analysis.support_morphology",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis",
+      "target": "qlinks.caging.analysis.transitions",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment",
+      "target": "qlinks.caging.analysis.transitions",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment",
+      "target": "qlinks.caging.results",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.evidence",
+      "target": "qlinks.caging.analysis.spectral",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.evidence",
+      "target": "qlinks.caging.stability.core",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 0,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.local_structure",
+      "target": "qlinks.caging.analysis.environment",
+      "type_checking_weight": 1,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.local_structure",
+      "target": "qlinks.local_structure",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.support",
+      "target": "qlinks.caging.analysis.environment",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.support",
+      "target": "qlinks.caging.analysis.transitions",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.support_morphology",
+      "target": "qlinks.caging.analysis.environment",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.thermodynamic",
+      "target": "qlinks.caging.analysis.environment",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.thermodynamic",
+      "target": "qlinks.caging.analysis.support",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.thermodynamic",
+      "target": "qlinks.local_structure",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -574,7 +553,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.biperiodic",
-      "target": "qlinks.caging.local_search_padding",
+      "target": "qlinks.caging.local_search.global_ops",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -582,7 +561,15 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.biperiodic",
-      "target": "qlinks.caging.local_search_types",
+      "target": "qlinks.caging.local_search.padding",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.biperiodic",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -627,54 +614,6 @@
       "weight": 1
     },
     {
-      "eager_weight": 0,
-      "local_weight": 2,
-      "source": "qlinks.caging.classification",
-      "target": "qlinks.caging.diagnostics",
-      "type_checking_weight": 0,
-      "weight": 2
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging.classification",
-      "target": "qlinks.caging.results",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 0,
-      "local_weight": 0,
-      "source": "qlinks.caging.diagnostics",
-      "target": "qlinks.caging.classification",
-      "type_checking_weight": 1,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging.diagnostics",
-      "target": "qlinks.local_structure",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging.evidence",
-      "target": "qlinks.caging.spectral",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging.evidence",
-      "target": "qlinks.caging.stability_core",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.invariant_subspace",
@@ -686,7 +625,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.local_search",
-      "target": "qlinks.caging.local_search_certification",
+      "target": "qlinks.caging.local_search.certification",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -694,7 +633,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.local_search",
-      "target": "qlinks.caging.local_search_core",
+      "target": "qlinks.caging.local_search.core",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -702,7 +641,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.local_search",
-      "target": "qlinks.caging.local_search_factorized",
+      "target": "qlinks.caging.local_search.factorized",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -710,7 +649,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.local_search",
-      "target": "qlinks.caging.local_search_global",
+      "target": "qlinks.caging.local_search.global_ops",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -718,7 +657,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.local_search",
-      "target": "qlinks.caging.local_search_padding",
+      "target": "qlinks.caging.local_search.padding",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -726,7 +665,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.local_search",
-      "target": "qlinks.caging.local_search_proposals",
+      "target": "qlinks.caging.local_search.proposals",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -734,7 +673,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.local_search",
-      "target": "qlinks.caging.local_search_qdm",
+      "target": "qlinks.caging.local_search.qdm",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -742,7 +681,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.local_search",
-      "target": "qlinks.caging.local_search_scan",
+      "target": "qlinks.caging.local_search.scan",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -750,7 +689,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.local_search",
-      "target": "qlinks.caging.local_search_types",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -758,14 +697,14 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.local_search",
-      "target": "qlinks.caging.local_search_workflows",
+      "target": "qlinks.caging.local_search.workflows",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_certification",
+      "source": "qlinks.caging.local_search.certification",
       "target": "qlinks.basis",
       "type_checking_weight": 0,
       "weight": 1
@@ -773,7 +712,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_certification",
+      "source": "qlinks.caging.local_search.certification",
       "target": "qlinks.caging.candidate",
       "type_checking_weight": 0,
       "weight": 1
@@ -781,39 +720,39 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_certification",
-      "target": "qlinks.caging.local_search_global",
+      "source": "qlinks.caging.local_search.certification",
+      "target": "qlinks.caging.local_search.global_ops",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_certification",
-      "target": "qlinks.caging.local_search_padding",
+      "source": "qlinks.caging.local_search.certification",
+      "target": "qlinks.caging.local_search.padding",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_certification",
-      "target": "qlinks.caging.local_search_qdm",
+      "source": "qlinks.caging.local_search.certification",
+      "target": "qlinks.caging.local_search.qdm",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_certification",
-      "target": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.certification",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_certification",
+      "source": "qlinks.caging.local_search.certification",
       "target": "qlinks.caging.results",
       "type_checking_weight": 0,
       "weight": 1
@@ -821,7 +760,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_certification",
+      "source": "qlinks.caging.local_search.certification",
       "target": "qlinks.caging.search",
       "type_checking_weight": 0,
       "weight": 1
@@ -829,7 +768,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_core",
+      "source": "qlinks.caging.local_search.core",
       "target": "qlinks.basis",
       "type_checking_weight": 0,
       "weight": 1
@@ -837,7 +776,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_core",
+      "source": "qlinks.caging.local_search.core",
       "target": "qlinks.caging.candidate",
       "type_checking_weight": 0,
       "weight": 1
@@ -845,15 +784,15 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_core",
-      "target": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.core",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_core",
+      "source": "qlinks.caging.local_search.core",
       "target": "qlinks.caging.partition",
       "type_checking_weight": 0,
       "weight": 1
@@ -861,7 +800,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_core",
+      "source": "qlinks.caging.local_search.core",
       "target": "qlinks.caging.search",
       "type_checking_weight": 0,
       "weight": 1
@@ -869,7 +808,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_core",
+      "source": "qlinks.caging.local_search.core",
       "target": "qlinks.caging.solver",
       "type_checking_weight": 0,
       "weight": 1
@@ -877,39 +816,39 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_factorized",
-      "target": "qlinks.caging.local_search_global",
+      "source": "qlinks.caging.local_search.factorized",
+      "target": "qlinks.caging.local_search.global_ops",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_factorized",
-      "target": "qlinks.caging.local_search_padding",
+      "source": "qlinks.caging.local_search.factorized",
+      "target": "qlinks.caging.local_search.padding",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_factorized",
-      "target": "qlinks.caging.local_search_qdm",
+      "source": "qlinks.caging.local_search.factorized",
+      "target": "qlinks.caging.local_search.qdm",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_factorized",
-      "target": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.factorized",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_factorized",
+      "source": "qlinks.caging.local_search.factorized",
       "target": "qlinks.caging.search",
       "type_checking_weight": 0,
       "weight": 1
@@ -917,15 +856,15 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_geometry",
-      "target": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.geometry",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_geometry",
+      "source": "qlinks.caging.local_search.geometry",
       "target": "qlinks.variables",
       "type_checking_weight": 0,
       "weight": 1
@@ -933,7 +872,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_global",
+      "source": "qlinks.caging.local_search.global_ops",
       "target": "qlinks.basis",
       "type_checking_weight": 0,
       "weight": 1
@@ -941,23 +880,23 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_global",
-      "target": "qlinks.caging.local_search_qdm",
+      "source": "qlinks.caging.local_search.global_ops",
+      "target": "qlinks.caging.local_search.qdm",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_global",
-      "target": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.global_ops",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_global",
+      "source": "qlinks.caging.local_search.global_ops",
       "target": "qlinks.operators.plaquette",
       "type_checking_weight": 0,
       "weight": 1
@@ -965,55 +904,55 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_padding",
-      "target": "qlinks.caging.local_search_geometry",
+      "source": "qlinks.caging.local_search.padding",
+      "target": "qlinks.caging.local_search.geometry",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_padding",
-      "target": "qlinks.caging.local_search_global",
+      "source": "qlinks.caging.local_search.padding",
+      "target": "qlinks.caging.local_search.global_ops",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_padding",
-      "target": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.padding",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_proposals",
-      "target": "qlinks.caging.local_search_core",
+      "source": "qlinks.caging.local_search.proposals",
+      "target": "qlinks.caging.local_search.core",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_proposals",
-      "target": "qlinks.caging.local_search_geometry",
+      "source": "qlinks.caging.local_search.proposals",
+      "target": "qlinks.caging.local_search.geometry",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_proposals",
-      "target": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.proposals",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_qdm",
+      "source": "qlinks.caging.local_search.qdm",
       "target": "qlinks.basis",
       "type_checking_weight": 0,
       "weight": 1
@@ -1021,7 +960,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_qdm",
+      "source": "qlinks.caging.local_search.qdm",
       "target": "qlinks.caging.candidate",
       "type_checking_weight": 0,
       "weight": 1
@@ -1029,31 +968,31 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_qdm",
-      "target": "qlinks.caging.local_search_core",
+      "source": "qlinks.caging.local_search.qdm",
+      "target": "qlinks.caging.local_search.core",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_qdm",
-      "target": "qlinks.caging.local_search_geometry",
+      "source": "qlinks.caging.local_search.qdm",
+      "target": "qlinks.caging.local_search.geometry",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_qdm",
-      "target": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.qdm",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_qdm",
+      "source": "qlinks.caging.local_search.qdm",
       "target": "qlinks.caging.results",
       "type_checking_weight": 0,
       "weight": 1
@@ -1061,7 +1000,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_qdm",
+      "source": "qlinks.caging.local_search.qdm",
       "target": "qlinks.models.couplings",
       "type_checking_weight": 0,
       "weight": 1
@@ -1069,7 +1008,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_qdm",
+      "source": "qlinks.caging.local_search.qdm",
       "target": "qlinks.operators.plaquette",
       "type_checking_weight": 0,
       "weight": 1
@@ -1077,7 +1016,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_qdm",
+      "source": "qlinks.caging.local_search.qdm",
       "target": "qlinks.variables",
       "type_checking_weight": 0,
       "weight": 1
@@ -1085,31 +1024,31 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_scan",
-      "target": "qlinks.caging.local_search_core",
+      "source": "qlinks.caging.local_search.scan",
+      "target": "qlinks.caging.local_search.core",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_scan",
-      "target": "qlinks.caging.local_search_padding",
+      "source": "qlinks.caging.local_search.scan",
+      "target": "qlinks.caging.local_search.padding",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_scan",
-      "target": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.scan",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.types",
       "target": "qlinks.basis",
       "type_checking_weight": 0,
       "weight": 1
@@ -1117,7 +1056,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.types",
       "target": "qlinks.caging.candidate",
       "type_checking_weight": 0,
       "weight": 1
@@ -1125,7 +1064,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.types",
       "target": "qlinks.caging.results",
       "type_checking_weight": 0,
       "weight": 1
@@ -1133,7 +1072,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.types",
       "target": "qlinks.caging.search",
       "type_checking_weight": 0,
       "weight": 1
@@ -1141,7 +1080,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.types",
       "target": "qlinks.caging.types",
       "type_checking_weight": 0,
       "weight": 1
@@ -1149,7 +1088,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.types",
       "target": "qlinks.constraints",
       "type_checking_weight": 0,
       "weight": 1
@@ -1157,7 +1096,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.types",
       "target": "qlinks.variables",
       "type_checking_weight": 0,
       "weight": 1
@@ -1165,32 +1104,32 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_workflows",
-      "target": "qlinks.caging.local_search_certification",
+      "source": "qlinks.caging.local_search.workflows",
+      "target": "qlinks.caging.local_search.certification",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_workflows",
-      "target": "qlinks.caging.local_search_proposals",
+      "source": "qlinks.caging.local_search.workflows",
+      "target": "qlinks.caging.local_search.proposals",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_workflows",
-      "target": "qlinks.caging.local_search_scan",
+      "source": "qlinks.caging.local_search.workflows",
+      "target": "qlinks.caging.local_search.scan",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.local_search_workflows",
-      "target": "qlinks.caging.local_search_types",
+      "source": "qlinks.caging.local_search.workflows",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1222,7 +1161,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.periodic_sequence",
-      "target": "qlinks.caging.local_search_global",
+      "target": "qlinks.caging.analysis.thermodynamic",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1230,7 +1169,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.periodic_sequence",
-      "target": "qlinks.caging.local_search_padding",
+      "target": "qlinks.caging.local_search.global_ops",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1238,7 +1177,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.periodic_sequence",
-      "target": "qlinks.caging.local_search_types",
+      "target": "qlinks.caging.local_search.padding",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1246,7 +1185,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.periodic_sequence",
-      "target": "qlinks.caging.thermodynamic",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1350,7 +1289,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.singlet_product",
-      "target": "qlinks.caging.local_search_global",
+      "target": "qlinks.caging.local_search.global_ops",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1358,7 +1297,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.singlet_product",
-      "target": "qlinks.caging.local_search_padding",
+      "target": "qlinks.caging.local_search.padding",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1366,7 +1305,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.singlet_product",
-      "target": "qlinks.caging.local_search_proposals",
+      "target": "qlinks.caging.local_search.proposals",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1374,7 +1313,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.singlet_product",
-      "target": "qlinks.caging.local_search_qdm",
+      "target": "qlinks.caging.local_search.qdm",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1382,7 +1321,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.singlet_product",
-      "target": "qlinks.caging.local_search_scan",
+      "target": "qlinks.caging.local_search.scan",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1390,7 +1329,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.singlet_product",
-      "target": "qlinks.caging.local_search_types",
+      "target": "qlinks.caging.local_search.types",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1451,18 +1390,10 @@
       "weight": 1
     },
     {
-      "eager_weight": 7,
-      "local_weight": 0,
-      "source": "qlinks.caging.stability",
-      "target": "qlinks.caging",
-      "type_checking_weight": 0,
-      "weight": 7
-    },
-    {
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.stability",
-      "target": "qlinks.caging.stability_boundary",
+      "target": "qlinks.caging.stability.boundary",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1470,7 +1401,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.stability",
-      "target": "qlinks.caging.stability_core",
+      "target": "qlinks.caging.stability.core",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1478,7 +1409,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.stability",
-      "target": "qlinks.caging.stability_laurent",
+      "target": "qlinks.caging.stability.laurent",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1486,7 +1417,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.stability",
-      "target": "qlinks.caging.stability_qdm",
+      "target": "qlinks.caging.stability.qdm",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1494,7 +1425,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.stability",
-      "target": "qlinks.caging.stability_symmetry",
+      "target": "qlinks.caging.stability.topology",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1502,22 +1433,14 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.stability",
-      "target": "qlinks.caging.stability_topology",
+      "target": "qlinks.caging.stability.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability",
-      "target": "qlinks.caging.stability_types",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging.stability_boundary",
+      "source": "qlinks.caging.stability.boundary",
       "target": "qlinks.caging.nullspace",
       "type_checking_weight": 0,
       "weight": 1
@@ -1525,31 +1448,31 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_boundary",
-      "target": "qlinks.caging.stability_core",
+      "source": "qlinks.caging.stability.boundary",
+      "target": "qlinks.caging.stability.core",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_boundary",
-      "target": "qlinks.caging.stability_topology",
+      "source": "qlinks.caging.stability.boundary",
+      "target": "qlinks.caging.stability.topology",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_boundary",
-      "target": "qlinks.caging.stability_types",
+      "source": "qlinks.caging.stability.boundary",
+      "target": "qlinks.caging.stability.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_core",
+      "source": "qlinks.caging.stability.core",
       "target": "qlinks.caging.invariant_subspace",
       "type_checking_weight": 0,
       "weight": 1
@@ -1557,7 +1480,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_core",
+      "source": "qlinks.caging.stability.core",
       "target": "qlinks.caging.nullspace",
       "type_checking_weight": 0,
       "weight": 1
@@ -1565,15 +1488,15 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_core",
-      "target": "qlinks.caging.stability_types",
+      "source": "qlinks.caging.stability.core",
+      "target": "qlinks.caging.stability.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_laurent",
+      "source": "qlinks.caging.stability.laurent",
       "target": "qlinks.caging.nullspace",
       "type_checking_weight": 0,
       "weight": 1
@@ -1581,23 +1504,23 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_laurent",
-      "target": "qlinks.caging.stability_types",
+      "source": "qlinks.caging.stability.laurent",
+      "target": "qlinks.caging.stability.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_qdm",
-      "target": "qlinks.caging.local_search_global",
+      "source": "qlinks.caging.stability.qdm",
+      "target": "qlinks.caging.local_search.global_ops",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_qdm",
+      "source": "qlinks.caging.stability.qdm",
       "target": "qlinks.caging.localization",
       "type_checking_weight": 0,
       "weight": 1
@@ -1605,7 +1528,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_qdm",
+      "source": "qlinks.caging.stability.qdm",
       "target": "qlinks.caging.nullspace",
       "type_checking_weight": 0,
       "weight": 1
@@ -1613,7 +1536,7 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_qdm",
+      "source": "qlinks.caging.stability.qdm",
       "target": "qlinks.caging.periodic_sequence",
       "type_checking_weight": 0,
       "weight": 1
@@ -1621,39 +1544,39 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_qdm",
-      "target": "qlinks.caging.stability_boundary",
+      "source": "qlinks.caging.stability.qdm",
+      "target": "qlinks.caging.stability.boundary",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_qdm",
-      "target": "qlinks.caging.stability_core",
+      "source": "qlinks.caging.stability.qdm",
+      "target": "qlinks.caging.stability.core",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_qdm",
-      "target": "qlinks.caging.stability_symmetry",
+      "source": "qlinks.caging.stability.qdm",
+      "target": "qlinks.caging.stability.symmetry",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_qdm",
-      "target": "qlinks.caging.stability_types",
+      "source": "qlinks.caging.stability.qdm",
+      "target": "qlinks.caging.stability.types",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_topology",
+      "source": "qlinks.caging.stability.topology",
       "target": "qlinks.caging.nullspace",
       "type_checking_weight": 0,
       "weight": 1
@@ -1661,32 +1584,24 @@
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_topology",
-      "target": "qlinks.caging.stability_core",
+      "source": "qlinks.caging.stability.topology",
+      "target": "qlinks.caging.stability.core",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_topology",
-      "target": "qlinks.caging.stability_symmetry",
+      "source": "qlinks.caging.stability.topology",
+      "target": "qlinks.caging.stability.symmetry",
       "type_checking_weight": 0,
       "weight": 1
     },
     {
       "eager_weight": 1,
       "local_weight": 0,
-      "source": "qlinks.caging.stability_topology",
-      "target": "qlinks.caging.stability_types",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging.strip_transfer",
-      "target": "qlinks.caging.classification",
+      "source": "qlinks.caging.stability.topology",
+      "target": "qlinks.caging.stability.types",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1694,7 +1609,15 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.strip_transfer",
-      "target": "qlinks.caging.thermodynamic",
+      "target": "qlinks.caging.analysis.environment",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.strip_transfer",
+      "target": "qlinks.caging.analysis.thermodynamic",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -1723,14 +1646,6 @@
       "weight": 1
     },
     {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging.support",
-      "target": "qlinks.caging.classification",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
       "eager_weight": 0,
       "local_weight": 1,
       "source": "qlinks.caging.tensor_network",
@@ -1743,30 +1658,6 @@
       "local_weight": 0,
       "source": "qlinks.caging.tensor_network",
       "target": "qlinks.caging.singlet_product",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging.thermodynamic",
-      "target": "qlinks.caging.classification",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging.thermodynamic",
-      "target": "qlinks.caging.support",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.caging.thermodynamic",
-      "target": "qlinks.local_structure",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -2182,7 +2073,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.encoded.flux",
-      "target": "qlinks.encoded",
+      "target": "qlinks.encoded.binary_basis",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -3110,7 +3001,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.open_system.constructions.deprecated.cage",
-      "target": "qlinks.caging.classification",
+      "target": "qlinks.caging.analysis.environment",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -3118,7 +3009,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.open_system.constructions.deprecated.cage",
-      "target": "qlinks.caging.support",
+      "target": "qlinks.caging.analysis.support",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -3295,46 +3186,6 @@
       "local_weight": 0,
       "source": "qlinks.open_system.manifold_dark",
       "target": "qlinks.open_system.manifold_detector_types",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 4,
-      "local_weight": 0,
-      "source": "qlinks.open_system.manifold_detectors",
-      "target": "qlinks.open_system",
-      "type_checking_weight": 0,
-      "weight": 4
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.open_system.manifold_detectors",
-      "target": "qlinks.open_system.manifold_dark",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.open_system.manifold_detectors",
-      "target": "qlinks.open_system.manifold_detector_types",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.open_system.manifold_detectors",
-      "target": "qlinks.open_system.manifold_recycling",
-      "type_checking_weight": 0,
-      "weight": 1
-    },
-    {
-      "eager_weight": 1,
-      "local_weight": 0,
-      "source": "qlinks.open_system.manifold_detectors",
-      "target": "qlinks.open_system.manifold_residual",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -4361,11 +4212,11 @@
       "path": "qlinks/backends/sparse.py"
     },
     {
-      "fan_in": 21,
+      "fan_in": 20,
       "fan_out": 4,
-      "in_import_cycle": true,
-      "in_static_cycle": true,
-      "incoming_imports": 21,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 20,
       "lines": 49,
       "module": "qlinks.basis",
       "outgoing_imports": 4,
@@ -4385,11 +4236,11 @@
       "path": "qlinks/basis/basis.py"
     },
     {
-      "fan_in": 1,
+      "fan_in": 2,
       "fan_out": 0,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 1,
+      "incoming_imports": 2,
       "lines": 115,
       "module": "qlinks.basis.configs",
       "outgoing_imports": 0,
@@ -4399,8 +4250,8 @@
     {
       "fan_in": 1,
       "fan_out": 1,
-      "in_import_cycle": true,
-      "in_static_cycle": true,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
       "incoming_imports": 1,
       "lines": 64,
       "module": "qlinks.basis.sectors",
@@ -4517,16 +4368,124 @@
       "path": "qlinks/builders/triplets.py"
     },
     {
-      "fan_in": 3,
-      "fan_out": 35,
-      "in_import_cycle": true,
-      "in_static_cycle": true,
-      "incoming_imports": 9,
-      "lines": 1059,
+      "fan_in": 2,
+      "fan_out": 18,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 2,
+      "lines": 395,
       "module": "qlinks.caging",
-      "outgoing_imports": 35,
+      "outgoing_imports": 18,
       "package": "qlinks.caging",
       "path": "qlinks/caging/__init__.py"
+    },
+    {
+      "fan_in": 0,
+      "fan_out": 5,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 0,
+      "lines": 144,
+      "module": "qlinks.caging.analysis",
+      "outgoing_imports": 5,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/__init__.py"
+    },
+    {
+      "fan_in": 7,
+      "fan_out": 2,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 7,
+      "lines": 2847,
+      "module": "qlinks.caging.analysis.environment",
+      "outgoing_imports": 2,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/environment.py"
+    },
+    {
+      "fan_in": 0,
+      "fan_out": 2,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 0,
+      "lines": 825,
+      "module": "qlinks.caging.analysis.evidence",
+      "outgoing_imports": 2,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/evidence.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 2,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 1467,
+      "module": "qlinks.caging.analysis.local_structure",
+      "outgoing_imports": 2,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/local_structure.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 0,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 1026,
+      "module": "qlinks.caging.analysis.spectral",
+      "outgoing_imports": 0,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/spectral.py"
+    },
+    {
+      "fan_in": 3,
+      "fan_out": 2,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 3,
+      "lines": 217,
+      "module": "qlinks.caging.analysis.support",
+      "outgoing_imports": 2,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/support.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 1,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 326,
+      "module": "qlinks.caging.analysis.support_morphology",
+      "outgoing_imports": 1,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/support_morphology.py"
+    },
+    {
+      "fan_in": 2,
+      "fan_out": 3,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 2,
+      "lines": 1143,
+      "module": "qlinks.caging.analysis.thermodynamic",
+      "outgoing_imports": 3,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/thermodynamic.py"
+    },
+    {
+      "fan_in": 3,
+      "fan_out": 0,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 3,
+      "lines": 69,
+      "module": "qlinks.caging.analysis.transitions",
+      "outgoing_imports": 0,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/transitions.py"
     },
     {
       "fan_in": 1,
@@ -4577,42 +4536,6 @@
       "path": "qlinks/caging/checkerboard_exact.py"
     },
     {
-      "fan_in": 6,
-      "fan_out": 2,
-      "in_import_cycle": false,
-      "in_static_cycle": true,
-      "incoming_imports": 6,
-      "lines": 3568,
-      "module": "qlinks.caging.classification",
-      "outgoing_imports": 3,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/classification.py"
-    },
-    {
-      "fan_in": 2,
-      "fan_out": 2,
-      "in_import_cycle": false,
-      "in_static_cycle": true,
-      "incoming_imports": 3,
-      "lines": 1467,
-      "module": "qlinks.caging.diagnostics",
-      "outgoing_imports": 2,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/diagnostics.py"
-    },
-    {
-      "fan_in": 1,
-      "fan_out": 2,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 1,
-      "lines": 825,
-      "module": "qlinks.caging.evidence",
-      "outgoing_imports": 2,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/evidence.py"
-    },
-    {
       "fan_in": 3,
       "fan_out": 1,
       "in_import_cycle": false,
@@ -4642,47 +4565,47 @@
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 0,
-      "lines": 195,
+      "lines": 189,
       "module": "qlinks.caging.local_search",
       "outgoing_imports": 10,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search.py"
-    },
-    {
-      "fan_in": 3,
-      "fan_out": 8,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 3,
-      "lines": 1124,
-      "module": "qlinks.caging.local_search_certification",
-      "outgoing_imports": 8,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search_certification.py"
-    },
-    {
-      "fan_in": 5,
-      "fan_out": 6,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 5,
-      "lines": 322,
-      "module": "qlinks.caging.local_search_core",
-      "outgoing_imports": 6,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search_core.py"
+      "path": "qlinks/caging/local_search/__init__.py"
     },
     {
       "fan_in": 2,
-      "fan_out": 5,
+      "fan_out": 8,
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 2,
+      "lines": 1124,
+      "module": "qlinks.caging.local_search.certification",
+      "outgoing_imports": 8,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/local_search/certification.py"
+    },
+    {
+      "fan_in": 4,
+      "fan_out": 6,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 4,
+      "lines": 322,
+      "module": "qlinks.caging.local_search.core",
+      "outgoing_imports": 6,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/local_search/core.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 5,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
       "lines": 477,
-      "module": "qlinks.caging.local_search_factorized",
+      "module": "qlinks.caging.local_search.factorized",
       "outgoing_imports": 5,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search_factorized.py"
+      "path": "qlinks/caging/local_search/factorized.py"
     },
     {
       "fan_in": 3,
@@ -4691,94 +4614,94 @@
       "in_static_cycle": false,
       "incoming_imports": 3,
       "lines": 774,
-      "module": "qlinks.caging.local_search_geometry",
+      "module": "qlinks.caging.local_search.geometry",
       "outgoing_imports": 2,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search_geometry.py"
-    },
-    {
-      "fan_in": 9,
-      "fan_out": 4,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 9,
-      "lines": 256,
-      "module": "qlinks.caging.local_search_global",
-      "outgoing_imports": 4,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search_global.py"
+      "path": "qlinks/caging/local_search/geometry.py"
     },
     {
       "fan_in": 8,
-      "fan_out": 3,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 8,
-      "lines": 1339,
-      "module": "qlinks.caging.local_search_padding",
-      "outgoing_imports": 3,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search_padding.py"
-    },
-    {
-      "fan_in": 4,
-      "fan_out": 3,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 4,
-      "lines": 1414,
-      "module": "qlinks.caging.local_search_proposals",
-      "outgoing_imports": 3,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search_proposals.py"
-    },
-    {
-      "fan_in": 6,
-      "fan_out": 9,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 6,
-      "lines": 584,
-      "module": "qlinks.caging.local_search_qdm",
-      "outgoing_imports": 9,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search_qdm.py"
-    },
-    {
-      "fan_in": 4,
-      "fan_out": 3,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 4,
-      "lines": 271,
-      "module": "qlinks.caging.local_search_scan",
-      "outgoing_imports": 3,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search_scan.py"
-    },
-    {
-      "fan_in": 15,
-      "fan_out": 7,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 15,
-      "lines": 1749,
-      "module": "qlinks.caging.local_search_types",
-      "outgoing_imports": 7,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search_types.py"
-    },
-    {
-      "fan_in": 2,
       "fan_out": 4,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 2,
-      "lines": 122,
-      "module": "qlinks.caging.local_search_workflows",
+      "incoming_imports": 8,
+      "lines": 256,
+      "module": "qlinks.caging.local_search.global_ops",
       "outgoing_imports": 4,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/local_search_workflows.py"
+      "path": "qlinks/caging/local_search/global_ops.py"
+    },
+    {
+      "fan_in": 7,
+      "fan_out": 3,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 7,
+      "lines": 1339,
+      "module": "qlinks.caging.local_search.padding",
+      "outgoing_imports": 3,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/local_search/padding.py"
+    },
+    {
+      "fan_in": 3,
+      "fan_out": 3,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 3,
+      "lines": 1414,
+      "module": "qlinks.caging.local_search.proposals",
+      "outgoing_imports": 3,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/local_search/proposals.py"
+    },
+    {
+      "fan_in": 5,
+      "fan_out": 9,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 5,
+      "lines": 584,
+      "module": "qlinks.caging.local_search.qdm",
+      "outgoing_imports": 9,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/local_search/qdm.py"
+    },
+    {
+      "fan_in": 3,
+      "fan_out": 3,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 3,
+      "lines": 271,
+      "module": "qlinks.caging.local_search.scan",
+      "outgoing_imports": 3,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/local_search/scan.py"
+    },
+    {
+      "fan_in": 14,
+      "fan_out": 7,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 14,
+      "lines": 1749,
+      "module": "qlinks.caging.local_search.types",
+      "outgoing_imports": 7,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/local_search/types.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 4,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 122,
+      "module": "qlinks.caging.local_search.workflows",
+      "outgoing_imports": 4,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/local_search/workflows.py"
     },
     {
       "fan_in": 3,
@@ -4901,28 +4824,16 @@
       "path": "qlinks/caging/solver.py"
     },
     {
-      "fan_in": 2,
-      "fan_out": 0,
+      "fan_in": 0,
+      "fan_out": 6,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 2,
-      "lines": 1026,
-      "module": "qlinks.caging.spectral",
-      "outgoing_imports": 0,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/spectral.py"
-    },
-    {
-      "fan_in": 1,
-      "fan_out": 8,
-      "in_import_cycle": true,
-      "in_static_cycle": true,
-      "incoming_imports": 1,
-      "lines": 171,
+      "incoming_imports": 0,
+      "lines": 253,
       "module": "qlinks.caging.stability",
-      "outgoing_imports": 14,
+      "outgoing_imports": 6,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/stability.py"
+      "path": "qlinks/caging/stability/__init__.py"
     },
     {
       "fan_in": 2,
@@ -4931,10 +4842,10 @@
       "in_static_cycle": false,
       "incoming_imports": 2,
       "lines": 526,
-      "module": "qlinks.caging.stability_boundary",
+      "module": "qlinks.caging.stability.boundary",
       "outgoing_imports": 4,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/stability_boundary.py"
+      "path": "qlinks/caging/stability/boundary.py"
     },
     {
       "fan_in": 5,
@@ -4942,11 +4853,11 @@
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 5,
-      "lines": 1585,
-      "module": "qlinks.caging.stability_core",
+      "lines": 1586,
+      "module": "qlinks.caging.stability.core",
       "outgoing_imports": 3,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/stability_core.py"
+      "path": "qlinks/caging/stability/core.py"
     },
     {
       "fan_in": 1,
@@ -4955,10 +4866,10 @@
       "in_static_cycle": false,
       "incoming_imports": 1,
       "lines": 254,
-      "module": "qlinks.caging.stability_laurent",
+      "module": "qlinks.caging.stability.laurent",
       "outgoing_imports": 2,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/stability_laurent.py"
+      "path": "qlinks/caging/stability/laurent.py"
     },
     {
       "fan_in": 1,
@@ -4967,22 +4878,22 @@
       "in_static_cycle": false,
       "incoming_imports": 1,
       "lines": 1691,
-      "module": "qlinks.caging.stability_qdm",
+      "module": "qlinks.caging.stability.qdm",
       "outgoing_imports": 8,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/stability_qdm.py"
+      "path": "qlinks/caging/stability/qdm.py"
     },
     {
-      "fan_in": 3,
+      "fan_in": 2,
       "fan_out": 0,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 3,
+      "incoming_imports": 2,
       "lines": 19,
-      "module": "qlinks.caging.stability_symmetry",
+      "module": "qlinks.caging.stability.symmetry",
       "outgoing_imports": 0,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/stability_symmetry.py"
+      "path": "qlinks/caging/stability/symmetry.py"
     },
     {
       "fan_in": 2,
@@ -4991,10 +4902,10 @@
       "in_static_cycle": false,
       "incoming_imports": 2,
       "lines": 1166,
-      "module": "qlinks.caging.stability_topology",
+      "module": "qlinks.caging.stability.topology",
       "outgoing_imports": 4,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/stability_topology.py"
+      "path": "qlinks/caging/stability/topology.py"
     },
     {
       "fan_in": 6,
@@ -5002,11 +4913,11 @@
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 6,
-      "lines": 2227,
-      "module": "qlinks.caging.stability_types",
+      "lines": 2231,
+      "module": "qlinks.caging.stability.types",
       "outgoing_imports": 0,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/stability_types.py"
+      "path": "qlinks/caging/stability/types.py"
     },
     {
       "fan_in": 1,
@@ -5021,18 +4932,6 @@
       "path": "qlinks/caging/strip_transfer.py"
     },
     {
-      "fan_in": 3,
-      "fan_out": 1,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 3,
-      "lines": 237,
-      "module": "qlinks.caging.support",
-      "outgoing_imports": 1,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/support.py"
-    },
-    {
       "fan_in": 2,
       "fan_out": 2,
       "in_import_cycle": false,
@@ -5043,18 +4942,6 @@
       "outgoing_imports": 2,
       "package": "qlinks.caging",
       "path": "qlinks/caging/tensor_network.py"
-    },
-    {
-      "fan_in": 3,
-      "fan_out": 3,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 3,
-      "lines": 1140,
-      "module": "qlinks.caging.thermodynamic",
-      "outgoing_imports": 3,
-      "package": "qlinks.caging",
-      "path": "qlinks/caging/thermodynamic.py"
     },
     {
       "fan_in": 3,
@@ -5237,11 +5124,11 @@
       "path": "qlinks/distributed.py"
     },
     {
-      "fan_in": 8,
+      "fan_in": 7,
       "fan_out": 4,
-      "in_import_cycle": true,
-      "in_static_cycle": true,
-      "incoming_imports": 8,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 7,
       "lines": 77,
       "module": "qlinks.encoded",
       "outgoing_imports": 4,
@@ -5249,11 +5136,11 @@
       "path": "qlinks/encoded/__init__.py"
     },
     {
-      "fan_in": 7,
+      "fan_in": 8,
       "fan_out": 2,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 7,
+      "incoming_imports": 8,
       "lines": 242,
       "module": "qlinks.encoded.binary_basis",
       "outgoing_imports": 2,
@@ -5287,8 +5174,8 @@
     {
       "fan_in": 1,
       "fan_out": 3,
-      "in_import_cycle": true,
-      "in_static_cycle": true,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
       "incoming_imports": 1,
       "lines": 136,
       "module": "qlinks.encoded.flux",
@@ -5609,11 +5496,11 @@
       "path": "qlinks/models/toric_code.py"
     },
     {
-      "fan_in": 1,
+      "fan_in": 0,
       "fan_out": 13,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 4,
+      "incoming_imports": 0,
       "lines": 311,
       "module": "qlinks.open_system",
       "outgoing_imports": 13,
@@ -5729,11 +5616,11 @@
       "path": "qlinks/open_system/local_recycling.py"
     },
     {
-      "fan_in": 5,
+      "fan_in": 4,
       "fan_out": 1,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 5,
+      "incoming_imports": 4,
       "lines": 976,
       "module": "qlinks.open_system.manifold_dark",
       "outgoing_imports": 1,
@@ -5741,11 +5628,11 @@
       "path": "qlinks/open_system/manifold_dark.py"
     },
     {
-      "fan_in": 6,
+      "fan_in": 5,
       "fan_out": 0,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 6,
+      "incoming_imports": 5,
       "lines": 1264,
       "module": "qlinks.open_system.manifold_detector_types",
       "outgoing_imports": 0,
@@ -5753,23 +5640,11 @@
       "path": "qlinks/open_system/manifold_detector_types.py"
     },
     {
-      "fan_in": 0,
+      "fan_in": 3,
       "fan_out": 5,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 0,
-      "lines": 79,
-      "module": "qlinks.open_system.manifold_detectors",
-      "outgoing_imports": 8,
-      "package": "qlinks.open_system",
-      "path": "qlinks/open_system/manifold_detectors.py"
-    },
-    {
-      "fan_in": 4,
-      "fan_out": 5,
-      "in_import_cycle": false,
-      "in_static_cycle": false,
-      "incoming_imports": 4,
+      "incoming_imports": 3,
       "lines": 2669,
       "module": "qlinks.open_system.manifold_recycling",
       "outgoing_imports": 16,
@@ -5777,11 +5652,11 @@
       "path": "qlinks/open_system/manifold_recycling.py"
     },
     {
-      "fan_in": 3,
+      "fan_in": 2,
       "fan_out": 6,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 3,
+      "incoming_imports": 2,
       "lines": 1925,
       "module": "qlinks.open_system.manifold_residual",
       "outgoing_imports": 10,
@@ -5842,7 +5717,7 @@
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 1,
-      "lines": 2754,
+      "lines": 2758,
       "module": "qlinks.open_system.stochastic_schrodinger",
       "outgoing_imports": 2,
       "package": "qlinks.open_system",
@@ -6070,7 +5945,7 @@
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 2,
-      "lines": 736,
+      "lines": 733,
       "module": "qlinks.qec.profile",
       "outgoing_imports": 14,
       "package": "qlinks.qec",
@@ -6178,7 +6053,7 @@
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 2,
-      "lines": 6490,
+      "lines": 6500,
       "module": "qlinks.visualizer.basis",
       "outgoing_imports": 2,
       "package": "qlinks.visualizer",
@@ -6202,7 +6077,7 @@
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 3,
-      "lines": 2373,
+      "lines": 2371,
       "module": "qlinks.visualizer.hamiltonian_graph",
       "outgoing_imports": 0,
       "package": "qlinks.visualizer",
@@ -6532,10 +6407,10 @@
     {
       "fan_in": 4,
       "fan_out": 8,
-      "files": 46,
+      "files": 49,
       "in_cycle": false,
       "incoming_imports": 5,
-      "lines": 40120,
+      "lines": 39338,
       "outgoing_imports": 25,
       "package": "qlinks.caging"
     },
@@ -6632,10 +6507,10 @@
     {
       "fan_in": 0,
       "fan_out": 5,
-      "files": 20,
+      "files": 19,
       "in_cycle": false,
       "incoming_imports": 0,
-      "lines": 24980,
+      "lines": 24905,
       "outgoing_imports": 34,
       "package": "qlinks.open_system"
     },
@@ -6655,7 +6530,7 @@
       "files": 10,
       "in_cycle": false,
       "incoming_imports": 0,
-      "lines": 4693,
+      "lines": 4690,
       "outgoing_imports": 15,
       "package": "qlinks.qec"
     },
@@ -6675,57 +6550,27 @@
       "files": 7,
       "in_cycle": false,
       "incoming_imports": 0,
-      "lines": 10764,
+      "lines": 10772,
       "outgoing_imports": 5,
       "package": "qlinks.visualizer"
     }
   ],
   "schema_version": 2,
-  "static_module_cycles": [
-    [
-      "qlinks.basis",
-      "qlinks.basis.sectors"
-    ],
-    [
-      "qlinks.caging",
-      "qlinks.caging.stability"
-    ],
-    [
-      "qlinks.caging.classification",
-      "qlinks.caging.diagnostics"
-    ],
-    [
-      "qlinks.encoded",
-      "qlinks.encoded.flux"
-    ]
-  ],
+  "static_module_cycles": [],
   "static_package_cycles": [],
   "summary": {
     "boundary_violations": 0,
     "implementation_import_time_module_cycle_components": 0,
-    "import_time_module_cycle_components": 3,
+    "import_time_module_cycle_components": 0,
     "import_time_package_cycle_components": 0,
-    "internal_edges": 538,
-    "lines": 101305,
-    "modules": 160,
+    "internal_edges": 521,
+    "lines": 100453,
+    "modules": 162,
     "package_edges": 48,
     "packages": 19,
-    "static_module_cycle_components": 4,
+    "static_module_cycle_components": 0,
     "static_package_cycle_components": 0,
-    "surface_import_time_module_cycle_components": 3
+    "surface_import_time_module_cycle_components": 0
   },
-  "surface_import_time_module_cycles": [
-    [
-      "qlinks.basis",
-      "qlinks.basis.sectors"
-    ],
-    [
-      "qlinks.caging",
-      "qlinks.caging.stability"
-    ],
-    [
-      "qlinks.encoded",
-      "qlinks.encoded.flux"
-    ]
-  ]
+  "surface_import_time_module_cycles": []
 }

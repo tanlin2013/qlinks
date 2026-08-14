@@ -1,9 +1,9 @@
 Repository refactor status
 ==========================
 
-This page tracks temporary architecture bridges introduced while the caging and open-system
-research layers are being decomposed.  The bridges are migration aids, not long-term API
-commitments.
+This page records the stabilized module boundaries that remain after the temporary refactor
+facades were removed. The focused modules below are now the supported import paths for active
+package code.
 
 Current decomposition
 ---------------------
@@ -11,48 +11,70 @@ Current decomposition
 Cage stability
 ~~~~~~~~~~~~~~
 
-The former monolithic ``qlinks.caging.stability`` implementation is split into:
+The cage-stability implementation now lives in the ``qlinks.caging.stability`` subpackage:
 
-* ``stability_core`` for perturbative stability, continuation, Jacobian, and subspace helpers;
-* ``stability_topology`` for chiral, locality, CLS-completeness, and cohomological diagnostics;
-* ``stability_boundary`` for boundary-cancellation matroid and periodic-scaling diagnostics;
-* ``stability_qdm`` for square-QDM compact-cage and transfer diagnostics;
-* ``stability_laurent`` for Laurent-polynomial constraint-module diagnostics;
-* ``stability_types`` for report/data contracts; and
-* ``stability_symmetry`` for small shared symmetry linear-algebra helpers.
+* ``core`` for perturbative stability, continuation, Jacobian, and subspace helpers;
+* ``topology`` for chiral, locality, CLS-completeness, and cohomological diagnostics;
+* ``boundary`` for boundary-cancellation matroid and periodic-scaling diagnostics;
+* ``qdm`` for square-QDM compact-cage and transfer diagnostics;
+* ``laurent`` for Laurent-polynomial constraint-module diagnostics;
+* ``types`` for report/data contracts; and
+* ``symmetry`` for small shared symmetry linear-algebra helpers.
 
-``qlinks.caging.stability`` currently re-exports these objects so historical imports continue
-to work during migration.  Active package code must use the focused modules directly.
+``qlinks.caging.stability`` is now a real subpackage with a curated public API. Active
+implementation code should import the defining child module directly.
 
 Local cage search
 ~~~~~~~~~~~~~~~~~
 
-The former ``qlinks.caging.local_search`` implementation is now split into:
+Local cage search now lives in the ``qlinks.caging.local_search`` subpackage:
 
-* ``local_search_types`` for passive configuration/report contracts;
-* ``local_search_geometry`` for pure stripe, snake, plaquette/link-region, and local-index
+* ``types`` for passive configuration/report contracts;
+* ``geometry`` for pure stripe, snake, plaquette/link-region, and local-index
   geometry helpers;
-* ``local_search_core`` for generic local type-1 search algebra and adapter registration;
-* ``local_search_qdm`` for QDM local-region construction, basis enumeration, and local kinetic
+* ``core`` for generic local type-1 search algebra and adapter registration;
+* ``qdm`` for QDM local-region construction, basis enumeration, and local kinetic
   algebra;
-* ``local_search_global`` for explicit global-QDM plaquette actions and limited global operators;
-* ``local_search_padding`` for single/multi-block exterior-padding search and structural
+* ``global_ops`` for explicit global-QDM plaquette actions and limited global operators;
+* ``padding`` for single/multi-block exterior-padding search and structural
   validation;
-* ``local_search_factorized`` for exact factorized-product residual certification;
-* ``local_search_certification`` for local/multi-block residual certification and result assembly;
-* ``local_search_proposals`` for stripe/snake/adaptive proposal generation;
-* ``local_search_scan`` for proposal execution and block collection; and
-* ``local_search_workflows`` for robust multi-stage local-search orchestration.
+* ``factorized`` for exact factorized-product residual certification;
+* ``certification`` for local/multi-block residual certification and result assembly;
+* ``proposals`` for stripe/snake/adaptive proposal generation;
+* ``scan`` for proposal execution and block collection; and
+* ``workflows`` for robust multi-stage local-search orchestration.
 
-``qlinks.caging.local_search`` is now a temporary compatibility facade. Active first-party code
-uses the focused modules directly. Because qlinks is primarily group-internal software, this
-facade is intentionally minimal and should be removed during the later API-cleanup pass once the
-refactored interface has stabilized.
+``qlinks.caging.local_search`` is now a real subpackage with a curated public API. Active
+implementation code should import the defining child module directly.
 
 The focused local-search graph is required to remain free of both eager import cycles and
 TYPE_CHECKING/function-local static cycles. Passive result containers therefore live in
-``local_search_types`` rather than importing their implementation modules back into the contract
+``local_search.types`` rather than importing implementation modules back into the contract
 layer.
+
+Caging analysis
+~~~~~~~~~~~~~~~
+
+Post-search analysis now lives in ``qlinks.caging.analysis``.  This move also corrects an early
+scientific over-interpretation: the former ``classification`` layer did not classify caged
+eigenstates.  Its valid role is to decide whether the exterior environment can be removed while
+constructing a bounded local caging operator.
+
+The analysis ownership is now:
+
+* ``transitions`` for support-aware weighted local transition signatures;
+* ``environment`` for exterior-environment reduction and its three accepted mechanisms: no
+  exterior weight, projective annihilation, or the same local cancellation pattern;
+* ``local_structure`` for reduced-density-matrix and operator-structure diagnostics;
+* ``support`` and ``support_morphology`` for local support analysis independent of environment
+  removability;
+* ``spectral`` and ``thermodynamic`` for ensemble/spectrum diagnostics; and
+* ``evidence`` for finite-size evidence summaries.
+
+A known interference-zero target is not sufficient to remove the environment.  Non-projective
+closure is accepted only when the target has the same support-aware weighted local transition
+signature.  Architecture tests enforce the one-way ownership and prevent the former
+``classification <-> diagnostics`` static cycle from returning.
 
 Dark-manifold detectors
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,8 +86,8 @@ The former ``qlinks.open_system.manifold_detectors`` implementation is split int
 * ``manifold_residual`` for residual-kernel diagnostics and targeted jump selection; and
 * ``manifold_detector_types`` for passive report/data contracts.
 
-``qlinks.open_system.manifold_detectors`` is a temporary re-export facade.  Active package
-code must import the focused modules instead.
+The temporary ``qlinks.open_system.manifold_detectors`` facade has been removed. Active package
+code and tests must import the focused modules instead.
 
 Neutral local-structure migration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,5 +106,5 @@ A compatibility bridge should be deleted when:
 #. supported public API tests target the replacement interface rather than the bridge; and
 #. the removal is recorded in the changelog or release/refactor milestone.
 
-No new implementation may depend on a temporary compatibility facade.  The architecture tests
-enforce this for the current local-search, stability, and manifold-detector facades.
+No new implementation may depend on the removed compatibility-module paths. The architecture
+tests enforce this for the former local-search, stability, and manifold-detector facades.
