@@ -26,6 +26,8 @@ This pass converts those rules into a repository-health gate.
 - implementation modules to import defining child modules instead of an ancestor package API;
 - no package import from `experimental/`;
 - no common secret-bearing filenames, private-key material, or high-confidence token patterns;
+- local/generated workspace directories such as `.venv`, `.tox`, caches, and build outputs are
+  excluded from security scanning, while arbitrary `.gitignore` entries are intentionally still scanned;
 - a top-level least-privilege `permissions` baseline in every GitHub Actions workflow;
 - no `write-all` workflow permission and no obvious floating action refs (`@main`, `@master`, etc.);
 - the core pre-commit/CI/test-lane guardrails themselves to remain wired.

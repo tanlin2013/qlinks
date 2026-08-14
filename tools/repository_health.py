@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import os
 import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -45,6 +46,24 @@ _SECRET_PATTERNS = (
     ("OpenAI-style API key", re.compile(r"\bsk-(?:proj-)?[A-Za-z0-9_-]{24,}\b")),
 )
 _FLOATING_ACTION_REFS = {"main", "master", "latest", "head", "dev", "develop"}
+
+_IGNORED_WORKSPACE_DIR_NAMES = {
+    ".git",
+    ".mypy_cache",
+    ".nox",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "venv",
+}
+_IGNORED_WORKSPACE_ROOTS = {
+    "build",
+    "dist",
+    "docs/build",
+    "docs/_build",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -229,17 +248,36 @@ def _raw_forbidden_import_violations(root: Path) -> list[str]:
     return violations
 
 
+def _is_ignored_workspace_path(path: Path, root: Path) -> bool:
+    """Return whether ``path`` belongs to local/generated workspace state.
+
+    These directories are not repository-owned input and may contain third-party
+    certificates, test keys, caches, or generated files. Arbitrary ``.gitignore``
+    entries are intentionally *not* trusted here: a sensitive file elsewhere in
+    the working tree should still be reported even when Git ignores it.
+    """
+    relative = path.relative_to(root)
+    relative_posix = relative.as_posix()
+    if any(part in _IGNORED_WORKSPACE_DIR_NAMES for part in relative.parts):
+        return True
+    return any(
+        relative_posix == prefix or relative_posix.startswith(f"{prefix}/")
+        for prefix in _IGNORED_WORKSPACE_ROOTS
+    )
+
+
 def _iter_repository_files(root: Path) -> Iterable[Path]:
-    excluded_roots = {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", "docs/build"}
-    for path in root.rglob("*"):
-        if not path.is_file():
-            continue
-        relative = path.relative_to(root).as_posix()
-        if any(
-            relative == prefix or relative.startswith(f"{prefix}/") for prefix in excluded_roots
-        ):
-            continue
-        yield path
+    for current_root, directory_names, file_names in os.walk(root):
+        current_path = Path(current_root)
+        directory_names[:] = [
+            name
+            for name in directory_names
+            if not _is_ignored_workspace_path(current_path / name, root)
+        ]
+        for name in file_names:
+            path = current_path / name
+            if not _is_ignored_workspace_path(path, root):
+                yield path
 
 
 def _security_findings(root: Path) -> tuple[list[str], list[str]]:
@@ -311,10 +349,21 @@ def _workflow_findings(root: Path) -> tuple[list[str], list[str]]:
     return permission_findings, action_findings
 
 
+def _active_precommit_hook_ids(text: str) -> set[str]:
+    """Return active pre-commit hook IDs, excluding commented-out configuration."""
+    return set(
+        re.findall(
+            r"(?m)^\s*-\s+id:\s*([A-Za-z0-9_.-]+)\s*(?:#.*)?$",
+            text,
+        )
+    )
+
+
 def _guardrail_wiring_findings(root: Path) -> list[str]:
     findings: list[str] = []
 
     precommit = (root / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    active_hook_ids = _active_precommit_hook_ids(precommit)
     required_hook_ids = {
         "black",
         "check-added-large-files",
@@ -329,7 +378,7 @@ def _guardrail_wiring_findings(root: Path) -> list[str]:
         "test-health",
     }
     for hook_id in sorted(required_hook_ids):
-        if f"id: {hook_id}" not in precommit:
+        if hook_id not in active_hook_ids:
             findings.append(f"guardrail wiring: pre-commit hook {hook_id!r} is missing")
 
     pyproject = (root / "pyproject.toml").read_text(encoding="utf-8")

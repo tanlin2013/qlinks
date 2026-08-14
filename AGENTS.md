@@ -91,6 +91,9 @@ remain green in pre-commit/CI. In particular:
   through an ancestor package `__init__`; and
 - package code must never import from `experimental/`. Promotion flows from experimental code into
   reviewed package code, never the reverse.
+- repository-health security scans ignore only well-known local/generated workspace directories
+  such as `.venv`, `.tox`, caches, and build outputs; do not broaden this to arbitrary `.gitignore`
+  entries, because ignored repository-owned secrets must still be detected.
 
 The budgets in `tools/repository_health_budget.json` are review gates, not performance targets.
 Do not raise a ceiling merely to make a check pass. If a new dependency, public export, or temporary

@@ -17,6 +17,7 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Exclude local/generated workspace environments such as `.venv` from repository-health secret scanning without trusting arbitrary `.gitignore` entries, restore the local health hooks, and require guardrail-wiring checks to see active rather than commented pre-commit hooks.
 - Add blocking repository-health budgets for zero SCCs/boundary violations, reviewed package
   dependencies, source-module size ceilings, curated public APIs, package-internal import direction,
   workflow permissions, and high-confidence secret/private-key hygiene; wire them into pre-commit

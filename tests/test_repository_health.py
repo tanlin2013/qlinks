@@ -49,3 +49,49 @@ def test_repository_health_budget_tracks_curated_api_surfaces(repository_health_
     assert "qlinks/caging/local_search/__init__.py" in limits
     assert "qlinks/caging/stability/__init__.py" in limits
     assert "qlinks/open_system/__init__.py" in limits
+
+
+def test_security_scan_ignores_local_virtualenv(repository_health_module, tmp_path: Path) -> None:
+    virtualenv = tmp_path / ".venv" / "lib" / "python3.14" / "site-packages"
+    key_marker = "-----BEGIN " + "PRIVATE KEY-----"
+    private_key = virtualenv / "cryptography" / "serialization" / "ssh.py"
+    private_key.parent.mkdir(parents=True)
+    private_key.write_text(
+        f"TEST_KEY = {key_marker!r}\n",
+        encoding="utf-8",
+    )
+    certificate = virtualenv / "certifi" / "cacert.pem"
+    certificate.parent.mkdir(parents=True)
+    certificate.write_text("third-party certificate bundle\n", encoding="utf-8")
+
+    file_findings, secret_findings = repository_health_module._security_findings(tmp_path)
+
+    assert file_findings == []
+    assert secret_findings == []
+
+
+def test_security_scan_still_flags_repository_owned_secrets(
+    repository_health_module, tmp_path: Path
+) -> None:
+    sensitive_file = tmp_path / "config" / "production.key"
+    sensitive_file.parent.mkdir(parents=True)
+    sensitive_file.write_text("repository-owned-secret\n", encoding="utf-8")
+    key_marker = "-----BEGIN " + "PRIVATE KEY-----"
+    secret_source = tmp_path / "config" / "embedded_secret.py"
+    secret_source.write_text(f"TEST_KEY = {key_marker!r}\n", encoding="utf-8")
+
+    file_findings, secret_findings = repository_health_module._security_findings(tmp_path)
+
+    assert file_findings == ["sensitive filename: config/production.key"]
+    assert secret_findings == ["possible private key material: config/embedded_secret.py"]
+
+
+def test_precommit_wiring_ignores_commented_hook_ids(repository_health_module) -> None:
+    text = """
+-   repo: local
+    hooks:
+#    -   id: repository-health
+    -   id: test-health
+"""
+
+    assert repository_health_module._active_precommit_hook_ids(text) == {"test-health"}
