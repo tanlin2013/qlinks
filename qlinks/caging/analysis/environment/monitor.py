@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Protocol
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -9,10 +11,15 @@ from qlinks.caging.analysis.environment.contracts import (
     ReducedIZMonitorDecomposition,
     ReducedIZProbeSupport,
 )
-from qlinks.caging.analysis.environment.report import EnvironmentReductionReport
 from qlinks.caging.analysis.environment.support import (
     support_key_for_zero_report,
 )
+
+
+class _EnvironmentReductionReportLike(Protocol):
+    """Minimal report surface needed by reduced-IZ monitor selection."""
+
+    zero_reports: tuple[EnvironmentRemovalProbeReport, ...]
 
 
 def reduced_iz_probe_support_from_report(
@@ -50,7 +57,7 @@ def _reduced_iz_region_variables_from_supports(
 
 
 def select_reduced_iz_monitor_reports(
-    report: EnvironmentReductionReport,
+    report: _EnvironmentReductionReportLike,
     *,
     include_q_empty: bool = True,
     include_same_pattern_cancellation: bool = True,
