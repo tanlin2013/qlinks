@@ -6,10 +6,13 @@ This file supplements the repository-root `AGENTS.md`.
   construction, and thermodynamic diagnostics as separate responsibilities even when they share
   transition data. Environment reduction is not a classification of the caged eigenstate.
 - `analysis/` owns post-search scientific analysis. `transitions` is the shared leaf for
-  support-aware local transition patterns; `environment` determines whether exterior degrees of
-  freedom can be removed; `local_structure`, `support`, and `support_morphology` analyze the
-  resulting local object; `spectral`, `thermodynamic`, and `evidence` own ensemble/spectrum
-  diagnostics. Do not introduce reverse imports from `environment` into higher analysis layers.
+  support-aware local transition patterns; `environment/` determines whether exterior degrees of
+  freedom can be removed and is itself split by contracts, support keys, monitor planning, reduced
+  operators, zero discovery, mechanism annotation, reporting, and orchestration; `local_structure`,
+  `support`, and `support_morphology` analyze the resulting local object; `spectral`,
+  `thermodynamic`, and `evidence` own ensemble/spectrum diagnostics. Do not introduce reverse
+  imports from `environment` into higher analysis layers or reverse edges inside the environment
+  subpackage.
 - An exterior probe is safely removable only through one of three physical routes: no exterior
   wavefunction weight, projective annihilation, or the same support-aware local cancellation
   pattern. Merely reaching another known interference zero is insufficient. Pattern comparison

@@ -204,7 +204,71 @@ STABILITY_ALLOWED_DEPENDENCIES: dict[str, frozenset[str]] = {
 
 ANALYSIS_ALLOWED_DEPENDENCIES: dict[str, frozenset[str]] = {
     "qlinks.caging.analysis.transitions": frozenset(),
-    "qlinks.caging.analysis.environment": frozenset({"qlinks.caging.analysis.transitions"}),
+    "qlinks.caging.analysis.environment": frozenset(
+        {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.diagnosis",
+            "qlinks.caging.analysis.environment.monitor",
+            "qlinks.caging.analysis.environment.report",
+            "qlinks.caging.analysis.environment.support",
+            "qlinks.caging.analysis.transitions",
+        }
+    ),
+    "qlinks.caging.analysis.environment.contracts": frozenset(
+        {"qlinks.caging.analysis.transitions"}
+    ),
+    "qlinks.caging.analysis.environment.support": frozenset(
+        {"qlinks.caging.analysis.environment.contracts"}
+    ),
+    "qlinks.caging.analysis.environment.monitor": frozenset(
+        {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.support",
+        }
+    ),
+    "qlinks.caging.analysis.environment.operator": frozenset(
+        {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.support",
+            "qlinks.caging.analysis.transitions",
+        }
+    ),
+    "qlinks.caging.analysis.environment.discovery": frozenset(
+        {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.operator",
+            "qlinks.caging.analysis.environment.support",
+        }
+    ),
+    "qlinks.caging.analysis.environment.mechanisms": frozenset(
+        {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.operator",
+            "qlinks.caging.analysis.environment.support",
+            "qlinks.caging.analysis.transitions",
+        }
+    ),
+    "qlinks.caging.analysis.environment.summary": frozenset(
+        {"qlinks.caging.analysis.environment.contracts"}
+    ),
+    "qlinks.caging.analysis.environment.report": frozenset(
+        {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.monitor",
+        }
+    ),
+    "qlinks.caging.analysis.environment.diagnosis": frozenset(
+        {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.discovery",
+            "qlinks.caging.analysis.environment.mechanisms",
+            "qlinks.caging.analysis.environment.monitor",
+            "qlinks.caging.analysis.environment.operator",
+            "qlinks.caging.analysis.environment.report",
+            "qlinks.caging.analysis.environment.summary",
+            "qlinks.caging.analysis.transitions",
+        }
+    ),
     "qlinks.caging.analysis.local_structure": frozenset({"qlinks.caging.analysis.environment"}),
     "qlinks.caging.analysis.support": frozenset(
         {

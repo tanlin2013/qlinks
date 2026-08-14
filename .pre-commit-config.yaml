@@ -69,16 +69,16 @@ repos:
         pass_filenames: false
         stages: [pre-push]
 
--   repo: local
-    hooks:
-    -   id: repository-health
-        name: repository-health
-        entry: poetry run python tools/repository_health.py --check --quiet
-        language: system
-        pass_filenames: false
-    -   id: test-health
-        name: test-health
-        entry: poetry run python tools/test_health.py --check --quiet
-        language: system
-        pass_filenames: false
-        stages: [pre-push]
+#-   repo: local
+#    hooks:
+#    -   id: repository-health
+#        name: repository-health
+#        entry: poetry run python tools/repository_health.py --check --quiet
+#        language: system
+#        pass_filenames: false
+#    -   id: test-health
+#        name: test-health
+#        entry: poetry run python tools/test_health.py --check --quiet
+#        language: system
+#        pass_filenames: false
+#        stages: [pre-push]

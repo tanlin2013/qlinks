@@ -5,16 +5,20 @@ import scipy.sparse as sp
 from qlinks.caging.analysis.environment import (
     EnvironmentRemovalProbeReport,
     LocalTransitionPattern,
+    support_key_for_zero_report,
+)
+from qlinks.caging.analysis.environment.discovery import (
     _active_frontier_zero_indices,
-    _annotate_probe_mechanisms,
+    _find_trivial_zero_indices,
+)
+from qlinks.caging.analysis.environment.mechanisms import _annotate_probe_mechanisms
+from qlinks.caging.analysis.environment.operator import (
     _apply_reduced_local_operator,
     _build_config_to_index,
     _build_reduced_local_operator_application_context,
     _complement_support_indices,
-    _find_trivial_zero_indices,
     _group_local_transitions_by_source,
     _q_sector_weight,
-    support_key_for_zero_report,
 )
 from tests.caging.analysis._environment_helpers import (
     _minimal_zero_report,

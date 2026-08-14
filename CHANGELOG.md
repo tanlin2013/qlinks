@@ -17,6 +17,7 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Split the 2,847-line `qlinks.caging.analysis.environment` monolith into focused contracts, support-key, monitor-planning, reduced-operator, zero-discovery, mechanism-annotation, report, summary, and diagnosis modules; preserve the corrected environment-removal semantics and curated public API while retiring its oversized-module budget.
 - Split the 3,825-line `qlinks.open_system.diagnostics` monolith into focused target-manifold, jump, evolution, verification, monitor-kernel, dark-manifold, and absorbing-projector diagnostics; extract shared common-kernel/nullspace algebra to `qlinks.open_system._subspace`, preserve the curated diagnostics API, and retire the diagnostics oversized-module budget.
 - Split the 6,500-line `qlinks.visualizer.basis` monolith into a responsibility-oriented `basis` subpackage covering styles, render caches, generic rendering, periodic geometry, plaquette geometry/symbols, configuration rendering, grids, and local-structure overlays; retire its oversized-module grandfathering while preserving the public `qlinks.visualizer.basis` API.
 - Keep the full fast pytest lane CI-owned rather than running it on local pre-push, while

@@ -47,15 +47,15 @@ from documentation building so write permission exists only in the main-branch d
 
 ## Current baseline
 
-- Python modules: **173**
-- source lines: **100,813**
+- Python modules: **192**
+- source lines: **101,083**
 - top-level package dependency edges: **48**
 - static module SCCs: **0**
 - static package SCCs: **0**
 - import-time module SCCs: **0**
 - architecture boundary violations: **0**
-- grandfathered source modules above 1,500 lines: **14**
-- tracked package-level public APIs: **25**
+- grandfathered source modules above 1,500 lines: **12**
+- tracked package-level public APIs: **27**
 - sensitive filename findings: **0**
 - high-confidence secret-pattern findings: **0**
 - workflow permission findings: **0**
@@ -75,9 +75,15 @@ Generic common-kernel/nullspace algebra was extracted to the lower internal
 `qlinks.open_system._subspace` layer so manifold-detector code does not depend on diagnostics
 internals.
 
+The former 2,847-line `qlinks.caging.analysis.environment` module was removed from the
+grandfathered list after decomposition into a role-oriented environment-reduction subpackage.
+The corrected scientific boundary is now mechanically represented: transition signatures remain a
+shared analysis leaf, reduced local-operator application is separated from mechanism annotation,
+and the user-facing report/orchestrator sit above those primitives without static cycles.
+
 ## Remaining known debt / non-blocking checks
 
-The repository still has 13 oversized legacy modules. Their current sizes are frozen rather than
+The repository still has 12 oversized legacy modules. Their current sizes are frozen rather than
 being treated as acceptable targets; future decomposition should ratchet those limits downward.
 
 Mypy and broad Bandit reporting remain advisory. Dependency-vulnerability scanning is not promoted

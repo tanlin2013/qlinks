@@ -8,6 +8,8 @@ import numpy as np
 from qlinks.caging.analysis.environment import (
     EnvironmentReductionConfig,
     EnvironmentRemovalProbeReport,
+)
+from qlinks.caging.analysis.environment.mechanisms import (
     _find_nullspace_collective_cancellation_from_actions,
     _find_unit_sum_collective_cancellation_from_actions,
     _group_reports_by_local_pattern,

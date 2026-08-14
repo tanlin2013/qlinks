@@ -185,11 +185,55 @@ def test_stability_modules_follow_one_way_dependency_order() -> None:
 
 
 def test_caging_analysis_modules_follow_one_way_dependency_order() -> None:
-    """Shared transition patterns are a leaf and environment reduction has no reverse edge."""
+    """Analysis and environment-reduction responsibilities follow reviewed DAGs."""
 
     allowed_dependencies = {
         "transitions.py": set(),
-        "environment.py": {"qlinks.caging.analysis.transitions"},
+        "environment/__init__.py": {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.diagnosis",
+            "qlinks.caging.analysis.environment.monitor",
+            "qlinks.caging.analysis.environment.report",
+            "qlinks.caging.analysis.environment.support",
+            "qlinks.caging.analysis.transitions",
+        },
+        "environment/contracts.py": {"qlinks.caging.analysis.transitions"},
+        "environment/support.py": {"qlinks.caging.analysis.environment.contracts"},
+        "environment/monitor.py": {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.support",
+        },
+        "environment/operator.py": {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.support",
+            "qlinks.caging.analysis.transitions",
+        },
+        "environment/discovery.py": {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.operator",
+            "qlinks.caging.analysis.environment.support",
+        },
+        "environment/mechanisms.py": {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.operator",
+            "qlinks.caging.analysis.environment.support",
+            "qlinks.caging.analysis.transitions",
+        },
+        "environment/summary.py": {"qlinks.caging.analysis.environment.contracts"},
+        "environment/report.py": {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.monitor",
+        },
+        "environment/diagnosis.py": {
+            "qlinks.caging.analysis.environment.contracts",
+            "qlinks.caging.analysis.environment.discovery",
+            "qlinks.caging.analysis.environment.mechanisms",
+            "qlinks.caging.analysis.environment.monitor",
+            "qlinks.caging.analysis.environment.operator",
+            "qlinks.caging.analysis.environment.report",
+            "qlinks.caging.analysis.environment.summary",
+            "qlinks.caging.analysis.transitions",
+        },
         "local_structure.py": {"qlinks.caging.analysis.environment"},
         "support.py": {
             "qlinks.caging.analysis.environment",
@@ -207,11 +251,11 @@ def test_caging_analysis_modules_follow_one_way_dependency_order() -> None:
     violations: list[str] = []
     analysis_prefix = "qlinks.caging.analysis."
     analysis_root = _PACKAGE_ROOT / "caging" / "analysis"
-    for filename, allowed in allowed_dependencies.items():
-        path = analysis_root / filename
+    for relative_path, allowed in allowed_dependencies.items():
+        path = analysis_root / relative_path
         for imported_module in _python_imports(path):
             if imported_module.startswith(analysis_prefix) and imported_module not in allowed:
-                violations.append(f"{filename}: {imported_module}")
+                violations.append(f"{relative_path}: {imported_module}")
 
     assert not violations, "Caging-analysis dependency DAG violation:\n" + "\n".join(violations)
 

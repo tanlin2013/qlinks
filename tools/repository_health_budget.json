@@ -1,7 +1,6 @@
 {
   "max_new_module_lines": 1500,
   "oversized_module_line_limits": {
-    "qlinks.caging.analysis.environment": 2847,
     "qlinks.caging.local_search.types": 1749,
     "qlinks.caging.stability.core": 1586,
     "qlinks.caging.stability.qdm": 1691,
@@ -41,7 +40,8 @@
     "qlinks/variables/__init__.py": 8,
     "qlinks/visualizer/__init__.py": 48,
     "qlinks/visualizer/basis/__init__.py": 21,
-    "qlinks/open_system/diagnostics/__init__.py": 31
+    "qlinks/open_system/diagnostics/__init__.py": 31,
+    "qlinks/caging/analysis/environment/__init__.py": 24
   },
   "allowed_top_level_dependencies": {
     "qlinks": [],
