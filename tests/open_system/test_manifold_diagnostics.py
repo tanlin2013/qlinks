@@ -218,13 +218,12 @@ def test_common_kernel_h_invariant_sector_flags_h_closed_bad_vector():
 
 
 def test_common_kernel_h_invariant_sector_survives_svd_nonconvergence(monkeypatch):
-    import qlinks.open_system.diagnostics as diagnostics
     from qlinks.open_system import diagnose_common_kernel_h_invariant_sector
 
     def raising_svd(*_args, **_kwargs):
         raise np.linalg.LinAlgError("SVD did not converge")
 
-    monkeypatch.setattr(diagnostics.np.linalg, "svd", raising_svd)
+    monkeypatch.setattr(np.linalg, "svd", raising_svd)
 
     hamiltonian = np.zeros((4, 4), dtype=np.complex128)
     target = _basis_vector(4, 0)

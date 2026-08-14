@@ -49,6 +49,7 @@ def test_repository_health_budget_tracks_curated_api_surfaces(repository_health_
     assert "qlinks/caging/local_search/__init__.py" in limits
     assert "qlinks/caging/stability/__init__.py" in limits
     assert "qlinks/open_system/__init__.py" in limits
+    assert "qlinks/open_system/diagnostics/__init__.py" in limits
 
 
 def test_security_scan_ignores_local_virtualenv(repository_health_module, tmp_path: Path) -> None:

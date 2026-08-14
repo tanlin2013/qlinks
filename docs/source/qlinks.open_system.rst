@@ -17,12 +17,17 @@ qlinks.open_system.backend module
    :members:
    :show-inheritance:
 
-qlinks.open_system.diagnostics module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+qlinks.open_system.diagnostics package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: qlinks.open_system.diagnostics
    :members:
    :show-inheritance:
+
+The diagnostics implementation is split by responsibility into target-manifold observables,
+jump diagnostics, evolution analysis, verification, monitor-kernel closure, dark-manifold
+diagnostics, and absorbing-projector diagnostics. Active package code imports these focused
+child modules directly.
 
 qlinks.open_system.local_recycling module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

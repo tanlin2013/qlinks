@@ -20,6 +20,7 @@ PUBLIC_MODULES = (
     "qlinks.lattice",
     "qlinks.models",
     "qlinks.open_system",
+    "qlinks.open_system.diagnostics",
     "qlinks.open_system.constructions",
     "qlinks.operators",
     "qlinks.variables",
@@ -46,6 +47,11 @@ EXPECTED_EXPORTS = {
     "qlinks.basis": {
         "VariableOrderStrategy",
         "ValueOrderStrategy",
+    },
+    "qlinks.open_system.diagnostics": {
+        "DarkManifoldDiagnostics",
+        "diagnose_dark_manifold",
+        "target_manifold_weight_series",
     },
     "qlinks.open_system.constructions": {
         "CageLindbladDesignProblem",

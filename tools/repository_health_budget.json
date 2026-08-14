@@ -10,7 +10,6 @@
     "qlinks.caging.tensor_network": 3815,
     "qlinks.open_system.constructions.cage_lindblad": 3328,
     "qlinks.open_system.constructions.deprecated.cage": 4365,
-    "qlinks.open_system.diagnostics": 3825,
     "qlinks.open_system.manifold_recycling": 2669,
     "qlinks.open_system.manifold_residual": 1925,
     "qlinks.open_system.stochastic_schrodinger": 2758,
@@ -41,7 +40,8 @@
     "qlinks/qec/__init__.py": 36,
     "qlinks/variables/__init__.py": 8,
     "qlinks/visualizer/__init__.py": 48,
-    "qlinks/visualizer/basis/__init__.py": 21
+    "qlinks/visualizer/basis/__init__.py": 21,
+    "qlinks/open_system/diagnostics/__init__.py": 31
   },
   "allowed_top_level_dependencies": {
     "qlinks": [],

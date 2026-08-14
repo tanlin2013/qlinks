@@ -16,13 +16,15 @@ from qlinks.basis import basis_configs_from_build_result
 from qlinks.models.base import ModelBuildResult
 from qlinks.models.local_terms import LocalTermDescriptor, LocalTermKind
 from qlinks.open_system.backend import OpenSystemBackendName
-from qlinks.open_system.diagnostics import (
+from qlinks.open_system.diagnostics.dark import (
     CommonKernelHamiltonianInvariantSectorReport,
     DarkManifoldDiagnostics,
     bad_h_invariant_common_kernel_basis,
     diagnose_common_kernel_h_invariant_sector,
     diagnose_dark_manifold,
-    jump_activity_series,
+)
+from qlinks.open_system.diagnostics.jumps import jump_activity_series
+from qlinks.open_system.diagnostics.target_manifold import (
     target_manifold_coherence_series,
     target_manifold_density_matrix_series,
     target_manifold_entropy_series,
@@ -701,7 +703,6 @@ class DegenerateCageJumpDesignWorkflowReport:
         residual_report = self.residual_report
         targeted_report = self.targeted_report
         targeted_selection = self.targeted_selection
-
         if targeted_selection is None:
             n_targeted_jumps = 0
             targeted_selected_family_residual_kernel_dimension = None
@@ -746,7 +747,6 @@ class DegenerateCageJumpDesignWorkflowReport:
                 targeted_selection.combined_complement_common_kernel_removed
             )
             combined_inflow_norm = targeted_selection.combined_inflow_norm
-
         targeted_failure_counts = (
             None if targeted_report is None else targeted_report.targeted_search_failure_counts
         )

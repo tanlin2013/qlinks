@@ -2006,7 +2006,7 @@ def diagnose_recycled_manifold_candidate_family_kernel(
     the problem is the subset-selection heuristic rather than the operator
     family.
     """
-    from qlinks.open_system.diagnostics import diagnose_dark_manifold
+    from qlinks.open_system.diagnostics.dark import diagnose_dark_manifold
 
     regions = _normalize_local_regions(local_regions)
     state_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
@@ -2214,7 +2214,7 @@ def select_recycled_manifold_dark_detector_jumps(
     mode skips the expensive final common-kernel diagnostic; pass
     ``check_final_diagnostics=True`` when you want the full certificate.
     """
-    from qlinks.open_system.diagnostics import diagnose_dark_manifold
+    from qlinks.open_system.diagnostics.dark import diagnose_dark_manifold
 
     regions = _normalize_local_regions(local_regions)
     state_basis, _ = _normalize_state_columns(states, tolerance=tolerance)
@@ -2519,7 +2519,7 @@ def select_recycled_manifold_dark_detector_jumps(
     n_compression_passes = 0
     n_compressed_jumps_removed = 0
     if compression_strategy == "h_invariant" and len(selected_jumps) > 0:
-        from qlinks.open_system.diagnostics import diagnose_common_kernel_h_invariant_sector
+        from qlinks.open_system.diagnostics.dark import diagnose_common_kernel_h_invariant_sector
 
         current_h_report = diagnose_common_kernel_h_invariant_sector(
             hamiltonian=hamiltonian,

@@ -4,14 +4,15 @@ Baseline audit: `qlinks-current-d2e041e.zip` after the caging analysis/environme
 
 ## Repository-health guardrail follow-up (2026-08-14)
 
-The repository-health enforcement pass adds two fast regression tests for the blocking
-architecture/API/security budget. No existing test was reclassified. The current collection is:
+The repository-health enforcement and subsequent architecture-decomposition passes add fast
+regression tests for blocking architecture/API/security budgets and reviewed nested-module DAGs.
+The current collection is:
 
 - Python files under `tests/`: **191**;
-- test LOC including fixtures/helpers: **38,104**;
-- AST test functions: **1,399**;
-- pytest collected cases: **1,452**;
-- default fast selection: **1,379** cases;
+- test LOC including fixtures/helpers: **38,296**;
+- AST test functions: **1,406**;
+- pytest collected cases: **1,459**;
+- default fast selection: **1,386** cases;
 - integration: **40** cases;
 - scientific: **7** cases;
 - manual: **29** cases;

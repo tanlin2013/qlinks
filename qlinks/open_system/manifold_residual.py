@@ -1707,7 +1707,7 @@ def _bad_common_kernel_basis_for_jumps(
     tolerance: float,
 ) -> npt.NDArray[np.complex128]:
     """Return the complement common kernel for a concrete jump list."""
-    from qlinks.open_system.diagnostics import (
+    from qlinks.open_system._subspace import (
         _common_kernel_basis_from_sparse_operators,
         _kernel_basis_orthogonal_to_manifold,
     )
@@ -1764,7 +1764,7 @@ def select_targeted_residual_kernel_jumps(
     identical to the full-family residual basis used to create the targeted
     report.
     """
-    from qlinks.open_system.diagnostics import diagnose_dark_manifold
+    from qlinks.open_system.diagnostics.dark import diagnose_dark_manifold
 
     residual_basis = np.asarray(targeted_report.residual_basis, dtype=np.complex128)
     if residual_basis.ndim != 2:

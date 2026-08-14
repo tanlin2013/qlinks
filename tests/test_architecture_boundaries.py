@@ -277,6 +277,82 @@ def test_basis_visualizer_modules_follow_reviewed_dependency_dag() -> None:
     assert not violations, "Basis-visualizer dependency DAG violation:\n" + "\n".join(violations)
 
 
+def test_open_system_subspace_helpers_do_not_depend_on_diagnostics_or_manifolds() -> None:
+    """Shared common-kernel algebra stays below diagnostics and detector workflows."""
+
+    path = _PACKAGE_ROOT / "open_system" / "_subspace.py"
+    forbidden = (
+        "qlinks.open_system.diagnostics",
+        "qlinks.open_system.manifold_dark",
+        "qlinks.open_system.manifold_recycling",
+        "qlinks.open_system.manifold_residual",
+    )
+    violations = [
+        imported_module
+        for imported_module in _python_imports(path)
+        if any(
+            imported_module == prefix or imported_module.startswith(f"{prefix}.")
+            for prefix in forbidden
+        )
+    ]
+    assert not violations, "Shared open-system subspace algebra has upward dependencies: " + str(
+        violations
+    )
+
+
+def test_open_system_implementation_avoids_diagnostics_package_facade() -> None:
+    """Internal callers import focused diagnostics children rather than the public facade."""
+
+    open_system_root = _PACKAGE_ROOT / "open_system"
+    allowed = {open_system_root / "__init__.py"}
+    violations: list[str] = []
+    for path in sorted(open_system_root.rglob("*.py")):
+        if path in allowed or (open_system_root / "diagnostics") in path.parents:
+            continue
+        for imported_module in _python_imports(path):
+            if imported_module == "qlinks.open_system.diagnostics":
+                violations.append(str(path.relative_to(_REPOSITORY_ROOT)))
+    assert not violations, "Internal imports use the diagnostics package facade: " + str(violations)
+
+
+def test_open_system_diagnostics_modules_follow_reviewed_dependency_dag() -> None:
+    """Diagnostics responsibilities share only the reviewed numerical leaves."""
+
+    allowed_dependencies = {
+        "_formatting.py": set(),
+        "_linalg.py": set(),
+        "target_manifold.py": set(),
+        "jumps.py": {"qlinks.open_system.diagnostics.target_manifold"},
+        "verification.py": set(),
+        "evolution.py": {"qlinks.open_system.diagnostics.verification"},
+        "monitor.py": {
+            "qlinks.open_system.diagnostics._formatting",
+            "qlinks.open_system.diagnostics._linalg",
+        },
+        "dark.py": {
+            "qlinks.open_system.diagnostics._formatting",
+            "qlinks.open_system.diagnostics._linalg",
+        },
+        "absorbing.py": {
+            "qlinks.open_system.diagnostics._formatting",
+            "qlinks.open_system.diagnostics._linalg",
+        },
+    }
+
+    violations: list[str] = []
+    diagnostics_prefix = "qlinks.open_system.diagnostics."
+    diagnostics_root = _PACKAGE_ROOT / "open_system" / "diagnostics"
+    for filename, allowed in allowed_dependencies.items():
+        path = diagnostics_root / filename
+        for imported_module in _python_imports(path):
+            if imported_module.startswith(diagnostics_prefix) and imported_module not in allowed:
+                violations.append(f"{filename}: {imported_module}")
+
+    assert not violations, "Open-system diagnostics dependency DAG violation:\n" + "\n".join(
+        violations
+    )
+
+
 def test_repository_does_not_import_legacy_flat_refactor_modules() -> None:
     """First-party code must use the nested caging subpackage paths."""
 

@@ -69,9 +69,15 @@ The `qlinks.visualizer.basis` 6,500-line grandfathered module was removed in the
 ratcheting pass and replaced by a role-oriented subpackage whose child modules all satisfy the
 normal 1,500-line ceiling. Its grandfathered budget entry was deleted rather than transferred.
 
+The former 3,825-line `qlinks.open_system.diagnostics` module was likewise removed from the
+grandfathered list after decomposition into focused diagnostics modules below the normal ceiling.
+Generic common-kernel/nullspace algebra was extracted to the lower internal
+`qlinks.open_system._subspace` layer so manifold-detector code does not depend on diagnostics
+internals.
+
 ## Remaining known debt / non-blocking checks
 
-The repository still has 14 oversized legacy modules. Their current sizes are frozen rather than
+The repository still has 13 oversized legacy modules. Their current sizes are frozen rather than
 being treated as acceptable targets; future decomposition should ratchet those limits downward.
 
 Mypy and broad Bandit reporting remain advisory. Dependency-vulnerability scanning is not promoted

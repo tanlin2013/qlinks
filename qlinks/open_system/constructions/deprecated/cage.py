@@ -37,12 +37,10 @@ from qlinks.models.base import (
 )
 from qlinks.models.local_terms import LocalTermDescriptor, LocalTermKind
 from qlinks.open_system.backend import OpenSystemBackendName
-from qlinks.open_system.diagnostics import (
-    diagnose_absorbing_projector_symmetry,
-    diagnose_dark_subspace,
-    diagnose_monitor_kernel_closure,
-    verify_lindblad_final_state,
-)
+from qlinks.open_system.diagnostics.absorbing import diagnose_absorbing_projector_symmetry
+from qlinks.open_system.diagnostics.dark import diagnose_dark_subspace
+from qlinks.open_system.diagnostics.monitor import diagnose_monitor_kernel_closure
+from qlinks.open_system.diagnostics.verification import verify_lindblad_final_state
 from qlinks.open_system.local_recycling import (
     LocalRecyclingBuildResult,
     RecyclingJumpSource,

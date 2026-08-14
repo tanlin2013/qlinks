@@ -12,7 +12,7 @@ from qlinks.open_system.backend import (
     OpenSystemBackendName,
     get_open_system_backend,
 )
-from qlinks.open_system.diagnostics import verify_density_matrix
+from qlinks.open_system.diagnostics.verification import verify_density_matrix
 from qlinks.open_system.operators import (
     DenseLindbladOperators,
     SparseLindbladOperators,
