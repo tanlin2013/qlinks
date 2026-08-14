@@ -66,7 +66,9 @@ def test_cupy_backend_resolution_and_converters_with_fake_modules(monkeypatch) -
     np.testing.assert_allclose(backend.to_numpy(backend.asarray([1.0, 2.0])), [1.0, 2.0])
     assert backend.norm(np.asarray([3.0, 4.0])) == pytest.approx(5.0)
     np.testing.assert_allclose(backend.sparse_identity(2).toarray(), np.eye(2))
-    np.testing.assert_allclose(backend.sparse_kron(np.eye(1), np.eye(2)).toarray(), np.eye(2))
+    left = scipy_sparse.csr_array(np.eye(1))
+    right = scipy_sparse.csr_array(np.eye(2))
+    np.testing.assert_allclose(backend.sparse_kron(left, right).toarray(), np.eye(2))
 
     sparse_matrix = as_backend_sparse_matrix(matrix, backend=backend)
     dense_matrix = as_backend_dense_array(scipy_sparse.csr_array(matrix), backend=backend)
