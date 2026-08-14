@@ -1,0 +1,9 @@
+{
+  "max_private_symbol_imports": 48,
+  "max_test_file_lines": 1400,
+  "max_unused_global_fixtures": 0,
+  "max_unmarked_manual_visual_cases": 0,
+  "min_integration_cases": 40,
+  "min_scientific_cases": 7,
+  "min_manual_cases": 29
+}

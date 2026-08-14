@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import multiprocessing
 import time
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, replace
@@ -1951,7 +1952,10 @@ def _sample_lindblad_mcwf_chunked_vectorized_scipy(
             )
             for (chunk_start, chunk_stop), chunk_seed in zip(chunk_slices, chunk_seeds, strict=True)
         ]
-        with ProcessPoolExecutor(max_workers=worker_count) as executor:
+        with ProcessPoolExecutor(
+            max_workers=worker_count,
+            mp_context=multiprocessing.get_context("spawn"),
+        ) as executor:
             chunk_outputs = list(executor.map(_sample_lindblad_mcwf_chunk_worker, tasks))
         _add_timing(timing_collector, "mcwf.chunk_parallel_wall", _perf_counter() - worker_start)
 

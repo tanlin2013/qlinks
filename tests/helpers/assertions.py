@@ -4,7 +4,7 @@ import numpy as np
 from scipy import sparse
 
 
-def as_csr(matrix: sparse.spmatrix | sparse.sparray) -> sparse.csr_array:
+def _as_csr(matrix: sparse.spmatrix | sparse.sparray) -> sparse.csr_array:
     return sparse.csr_array(matrix)
 
 
@@ -14,8 +14,8 @@ def assert_sparse_allclose(
     *,
     atol: float = 1.0e-12,
 ) -> None:
-    actual_csr = as_csr(actual)
-    expected_csr = as_csr(expected)
+    actual_csr = _as_csr(actual)
+    expected_csr = _as_csr(expected)
 
     difference = actual_csr - expected_csr
     difference.eliminate_zeros()
@@ -32,7 +32,7 @@ def assert_hermitian_sparse(
     *,
     atol: float = 1.0e-12,
 ) -> None:
-    csr = as_csr(matrix)
+    csr = _as_csr(matrix)
     difference = csr - csr.conj().T
     difference.eliminate_zeros()
 
@@ -46,8 +46,8 @@ def assert_same_sparse_matrix(
     actual: sparse.spmatrix | sparse.sparray,
     expected: sparse.spmatrix | sparse.sparray,
 ) -> None:
-    actual_csr = as_csr(actual)
-    expected_csr = as_csr(expected)
+    actual_csr = _as_csr(actual)
+    expected_csr = _as_csr(expected)
     difference = actual_csr - expected_csr
     difference.eliminate_zeros()
     assert difference.nnz == 0

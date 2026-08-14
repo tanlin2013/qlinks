@@ -93,6 +93,9 @@ addopts = [
     "not integration and not scientific and not manual and not gpu",
 ]
 testpaths = ["tests"]
+filterwarnings = [
+    "error::Warning:qlinks\\..*",
+]
 markers = [
     "integration: small cross-module or optional-backend workflow tests",
     "scientific: expensive validation of a research claim; scheduled or explicitly dispatched",

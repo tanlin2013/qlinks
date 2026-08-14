@@ -55,6 +55,15 @@ jobs:
           QLINKS_COVERAGE_XML: "1"
         run: scripts/test.sh fast
 
+      - name: Check test-suite health
+        run: |
+          poetry run python tools/test_health.py \
+            --check \
+            --json "${RUNNER_TEMP}/test-health.json" \
+            --markdown "${RUNNER_TEMP}/test-health.md" \
+            --quiet
+          cat "${RUNNER_TEMP}/test-health.md" >> "${GITHUB_STEP_SUMMARY}"
+
       - name: Report coverage
         if: github.ref_name == 'main'
         uses: codecov/codecov-action@v4

@@ -153,6 +153,9 @@ Tests are classified by purpose, not by directory size or implementation object 
   implementation mirroring.
 - Prefer one parametrized behavioural test over many nearly identical tests.
 - Keep random tests reproducible with explicit seeds.
+- Keep broadly shared fixtures under `tests/fixtures/`; domain-specific fixtures belong in the
+  nearest test-package `conftest.py`. Delete unused global fixtures instead of retaining them for
+  hypothetical future tests.
 - Run the narrowest relevant lane before broader lanes.
 - Do not weaken a failing assertion merely to make CI pass; determine whether the code,
   invariant, fixture, or maturity classification is wrong.
@@ -170,7 +173,9 @@ See `docs/contributing/5.-testing.md` for lane details.
 
 The maintained test-suite health cache lives at `tests/TEST_HEALTH_AUDIT.md`. Update its
 remediation status after repository-wide test taxonomy or ownership changes so future
-refactors can distinguish known debt from regressions.
+refactors can distinguish known debt from regressions. Run `python tools/test_health.py --check`
+after broad test changes; `tests/test_health_budget.json` is a deliberate regression budget, not
+a target to game by hiding imports or markers.
 
 ## Scientific review requirements
 

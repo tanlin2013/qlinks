@@ -3,6 +3,56 @@
 Baseline audit: `qlinks-current-d2e041e.zip` after the caging analysis/environment refactor.
 
 
+## T3 remediation status (2026-08-14)
+
+The fixture/helper hygiene and CI-quality pass is implemented against
+`qlinks-current-75fab76.zip`. The goal is to keep the T1/T2 improvements observable and prevent
+known structural debt from growing silently.
+
+Completed in T3:
+
+- removed 13 unused globally registered lattice/layout/model fixtures;
+- moved the three environment-reduction fixtures from the root plugin registry to
+  `tests/caging/analysis/conftest.py`;
+- fixed the three warning sources seen in the fast lane: parallel MCWF chunks now use an explicit
+  spawn multiprocessing context, undirected NetworkX dimer edges no longer pass an inapplicable
+  `connectionstyle`, and animation smoke tests initialize the returned Matplotlib animation before
+  disposal;
+- promoted warnings attributed to qlinks modules to pytest errors, so new package-originated
+  warnings cannot accumulate unnoticed;
+- added `tools/test_health.py` and `tests/test_health_budget.json`; the reporter measures test LOC,
+  collected/fast/marker counts, largest files, direct private imports, globally registered fixture
+  usage, and unmarked manual-visual cases;
+- added the budgeted test-health check to the coverage-bearing fast CI job and publish its Markdown
+  snapshot to the GitHub job summary.
+
+The budget is a regression ceiling/floor, not a score to optimize mechanically. In particular, the
+48 intentional private imports retained after T2 remain visible rather than being hidden behind
+module attribute access.
+
+Post-T3 snapshot:
+
+- Python files under `tests/`: **190**;
+- test LOC including fixtures/helpers: **38,051**;
+- AST test functions: **1,397**;
+- pytest collected cases: **1,450**;
+- default fast selection: **1,377** cases;
+- integration: **40** cases;
+- scientific: **7** cases;
+- manual: **29** cases;
+- GPU: **4** cases;
+- direct private-symbol imports: **48**;
+- globally registered fixtures: **11**, all used;
+- unmarked manual-visual cases: **0**;
+- largest test file: **1,337** lines.
+
+T3 validation in the audit environment:
+
+- fixture-dependent focused suite: **104 passed, 2 skipped**;
+- warning-source focused suite: **5 passed** with no warnings;
+- default lane: **1357 passed, 20 skipped, 73 deselected** with **0 warnings**;
+- `python tools/test_health.py --check`: **PASS**.
+
 ## T2 remediation status (2026-08-14)
 
 The ownership/decomposition pass is implemented against `qlinks-current-8af7893.zip`. The goal
@@ -57,8 +107,7 @@ T2 validation in the audit environment:
 - default lane: **1357 passed, 20 skipped, 73 deselected** in 22.23 s;
 - no targeted test body changed semantically according to the AST comparison described above.
 
-The next work is T3: fixture/helper hygiene, warning cleanup, and a lightweight automated
-test-health report so these ownership and taxonomy improvements remain visible in CI.
+T3 fixture/helper hygiene and CI-quality work is recorded above.
 
 ## T1 remediation status (2026-08-14)
 

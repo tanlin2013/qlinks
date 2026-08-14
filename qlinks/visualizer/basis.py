@@ -1847,7 +1847,6 @@ class BasisConfigurationVisualizer:
                 edge_color=self.style.empty_edge_color,
                 alpha=self.style.empty_alpha,
                 arrows=False,
-                connectionstyle="arc3,rad=0.0",
             )
 
             nx.draw_networkx_edges(
@@ -1859,7 +1858,6 @@ class BasisConfigurationVisualizer:
                 edge_color=self.style.edge_color,
                 alpha=self.style.occupied_alpha,
                 arrows=False,
-                connectionstyle="arc3,rad=0.0",
             )
 
         elif mode == "arrows":

@@ -163,6 +163,7 @@ def test_stochastic_visualizer_animation_smoke() -> None:
     )
 
     assert animation is not None
+    animation._init_draw()
 
 
 def test_stochastic_visualizer_animation_redraw_each_frame_smoke() -> None:
@@ -200,6 +201,7 @@ def test_stochastic_visualizer_animation_redraw_each_frame_smoke() -> None:
     )
 
     assert animation is not None
+    animation._init_draw()
 
 
 @pytest.mark.manual
