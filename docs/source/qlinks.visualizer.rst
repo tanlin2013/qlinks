@@ -8,8 +8,8 @@ Some backends require the ``drawing`` extra.
 Submodules
 ----------
 
-qlinks.visualizer.basis module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+qlinks.visualizer.basis package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: qlinks.visualizer.basis
    :members:

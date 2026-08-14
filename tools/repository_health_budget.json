@@ -14,7 +14,6 @@
     "qlinks.open_system.manifold_recycling": 2669,
     "qlinks.open_system.manifold_residual": 1925,
     "qlinks.open_system.stochastic_schrodinger": 2758,
-    "qlinks.visualizer.basis": 6500,
     "qlinks.visualizer.hamiltonian_graph": 2371
   },
   "public_api_export_limits": {
@@ -41,7 +40,8 @@
     "qlinks/operators/__init__.py": 48,
     "qlinks/qec/__init__.py": 36,
     "qlinks/variables/__init__.py": 8,
-    "qlinks/visualizer/__init__.py": 48
+    "qlinks/visualizer/__init__.py": 48,
+    "qlinks/visualizer/basis/__init__.py": 21
   },
   "allowed_top_level_dependencies": {
     "qlinks": [],

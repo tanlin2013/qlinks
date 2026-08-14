@@ -14,7 +14,8 @@ from qlinks.visualizer import (
     automatic_grid_shape,
     plot_basis_grid,
 )
-from qlinks.visualizer.basis import _BasisGridRenderCache, _zero_indices_for_mechanism
+from qlinks.visualizer.basis.formatting import _zero_indices_for_mechanism
+from qlinks.visualizer.basis.render_cache import _BasisGridRenderCache
 
 matplotlib.use("Agg")
 

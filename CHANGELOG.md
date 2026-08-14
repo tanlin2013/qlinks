@@ -17,6 +17,7 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Split the 6,500-line `qlinks.visualizer.basis` monolith into a responsibility-oriented `basis` subpackage covering styles, render caches, generic rendering, periodic geometry, plaquette geometry/symbols, configuration rendering, grids, and local-structure overlays; retire its oversized-module grandfathering while preserving the public `qlinks.visualizer.basis` API.
 - Keep the full fast pytest lane CI-owned rather than running it on local pre-push, while
   retaining lightweight repository/test-health local gates; update the fake-CuPy backend test to
   exercise the sparse `kron` contract and avoid SciPy dense/dense migration warnings.

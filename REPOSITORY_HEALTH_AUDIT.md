@@ -47,15 +47,15 @@ from documentation building so write permission exists only in the main-branch d
 
 ## Current baseline
 
-- Python modules: **162**
-- source lines: **100,453**
+- Python modules: **173**
+- source lines: **100,813**
 - top-level package dependency edges: **48**
 - static module SCCs: **0**
 - static package SCCs: **0**
 - import-time module SCCs: **0**
 - architecture boundary violations: **0**
-- grandfathered source modules above 1,500 lines: **15**
-- tracked package-level public APIs: **23**
+- grandfathered source modules above 1,500 lines: **14**
+- tracked package-level public APIs: **25**
 - sensitive filename findings: **0**
 - high-confidence secret-pattern findings: **0**
 - workflow permission findings: **0**
@@ -65,9 +65,13 @@ from documentation building so write permission exists only in the main-branch d
 Test-architecture debt is tracked separately in `tests/TEST_HEALTH_AUDIT.md` and
 `tests/test_health_budget.json`.
 
+The `qlinks.visualizer.basis` 6,500-line grandfathered module was removed in the first debt-
+ratcheting pass and replaced by a role-oriented subpackage whose child modules all satisfy the
+normal 1,500-line ceiling. Its grandfathered budget entry was deleted rather than transferred.
+
 ## Remaining known debt / non-blocking checks
 
-The repository still has 15 oversized legacy modules. Their current sizes are frozen rather than
+The repository still has 14 oversized legacy modules. Their current sizes are frozen rather than
 being treated as acceptable targets; future decomposition should ratchet those limits downward.
 
 Mypy and broad Bandit reporting remain advisory. Dependency-vulnerability scanning is not promoted

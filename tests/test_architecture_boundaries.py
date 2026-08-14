@@ -216,6 +216,67 @@ def test_caging_analysis_modules_follow_one_way_dependency_order() -> None:
     assert not violations, "Caging-analysis dependency DAG violation:\n" + "\n".join(violations)
 
 
+def test_basis_visualizer_modules_follow_reviewed_dependency_dag() -> None:
+    """The split basis visualizer keeps rendering roles one-way and facade-free."""
+
+    allowed_dependencies = {
+        "styles.py": set(),
+        "render_cache.py": {"qlinks.visualizer.basis.styles"},
+        "formatting.py": {"qlinks.visualizer.basis.styles"},
+        "rendering.py": {
+            "qlinks.visualizer.basis.render_cache",
+            "qlinks.visualizer.basis.styles",
+        },
+        "periodic.py": {
+            "qlinks.visualizer.basis.render_cache",
+            "qlinks.visualizer.basis.styles",
+        },
+        "plaquette_geometry.py": {
+            "qlinks.visualizer.basis.render_cache",
+            "qlinks.visualizer.basis.styles",
+        },
+        "plaquette_symbols.py": {
+            "qlinks.visualizer.basis.render_cache",
+            "qlinks.visualizer.basis.styles",
+        },
+        "configuration.py": {
+            "qlinks.visualizer.basis.periodic",
+            "qlinks.visualizer.basis.plaquette_geometry",
+            "qlinks.visualizer.basis.plaquette_symbols",
+            "qlinks.visualizer.basis.render_cache",
+            "qlinks.visualizer.basis.rendering",
+            "qlinks.visualizer.basis.styles",
+        },
+        "api.py": {
+            "qlinks.visualizer.basis.configuration",
+            "qlinks.visualizer.basis.styles",
+        },
+        "grid.py": {
+            "qlinks.visualizer.basis.configuration",
+            "qlinks.visualizer.basis.formatting",
+            "qlinks.visualizer.basis.render_cache",
+            "qlinks.visualizer.basis.styles",
+        },
+        "local_grid.py": {
+            "qlinks.visualizer.basis.configuration",
+            "qlinks.visualizer.basis.formatting",
+            "qlinks.visualizer.basis.render_cache",
+            "qlinks.visualizer.basis.styles",
+        },
+    }
+
+    violations: list[str] = []
+    basis_prefix = "qlinks.visualizer.basis."
+    basis_root = _PACKAGE_ROOT / "visualizer" / "basis"
+    for filename, allowed in allowed_dependencies.items():
+        path = basis_root / filename
+        for imported_module in _python_imports(path):
+            if imported_module.startswith(basis_prefix) and imported_module not in allowed:
+                violations.append(f"{filename}: {imported_module}")
+
+    assert not violations, "Basis-visualizer dependency DAG violation:\n" + "\n".join(violations)
+
+
 def test_repository_does_not_import_legacy_flat_refactor_modules() -> None:
     """First-party code must use the nested caging subpackage paths."""
 

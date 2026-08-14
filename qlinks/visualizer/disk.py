@@ -12,9 +12,8 @@ from matplotlib.patches import Circle
 
 from qlinks.lattice import SquareLattice
 from qlinks.variables import VariableLayout
-from qlinks.visualizer.basis import (
-    BasisConfigLabelStyle,
-    VisualizerBackend,
+from qlinks.visualizer.basis import BasisConfigLabelStyle, VisualizerBackend
+from qlinks.visualizer.basis.formatting import (
     _amplitude_label,
     _select_cage_record,
     _zero_indices_for_mechanism,

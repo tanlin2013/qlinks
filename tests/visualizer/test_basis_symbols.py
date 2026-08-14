@@ -14,7 +14,7 @@ from qlinks.visualizer import (
     BasisConfigurationVisualizer,
     plot_basis_grid,
 )
-from qlinks.visualizer.basis import _SQUARE_QLM_PLAQUETTE_SYMBOLS
+from qlinks.visualizer.basis.plaquette_symbols import _SQUARE_QLM_PLAQUETTE_SYMBOLS
 
 matplotlib.use("Agg")
 
