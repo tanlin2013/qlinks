@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from qlinks.basis.configs import basis_configs_from_build_result
 from qlinks.models import (
@@ -72,6 +73,8 @@ def test_hxy_h3_model_uses_manuscript_coupling_convention() -> None:
     assert report.is_compatible
 
 
+@pytest.mark.integration
+@pytest.mark.scientific
 def test_hxy_h3_imaginary_j2_family_preserves_pi_tower() -> None:
     length = 8
     model = spin_one_xy_hxy_h3_imaginary_j2_model(

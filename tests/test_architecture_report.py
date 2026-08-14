@@ -6,11 +6,14 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 _REPORT_PATH = _REPOSITORY_ROOT / "tools" / "architecture_report.py"
 
 
-def _load_report_module():
+@pytest.fixture(scope="module")
+def architecture_report_module():
     spec = importlib.util.spec_from_file_location("qlinks_architecture_report", _REPORT_PATH)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -19,9 +22,14 @@ def _load_report_module():
     return module
 
 
-def test_architecture_report_analyzes_current_repository() -> None:
-    report = _load_report_module()
-    analysis = report.analyze_repository(_REPOSITORY_ROOT)
+@pytest.fixture(scope="module")
+def architecture_analysis(architecture_report_module):
+    """Analyze the repository once for all architecture-report tests."""
+    return architecture_report_module.analyze_repository(_REPOSITORY_ROOT)
+
+
+def test_architecture_report_analyzes_current_repository(architecture_analysis) -> None:
+    analysis = architecture_analysis
 
     assert analysis["summary"]["modules"] > 0
     assert analysis["summary"]["packages"] > 0
@@ -35,11 +43,22 @@ def test_architecture_report_analyzes_current_repository() -> None:
     )
 
 
-def test_architecture_report_writes_self_contained_html_and_json(tmp_path: Path) -> None:
-    report = _load_report_module()
+def test_architecture_report_writes_self_contained_html_and_json(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    architecture_report_module,
+    architecture_analysis,
+) -> None:
+    report = architecture_report_module
     html_path = tmp_path / "qlinks-architecture.html"
     json_path = tmp_path / "qlinks-architecture.json"
 
+    # Exercise report serialization/rendering without repeating the repository-wide AST analysis.
+    monkeypatch.setattr(
+        report,
+        "analyze_repository",
+        lambda *_args, **_kwargs: architecture_analysis,
+    )
     report.write_report(_REPOSITORY_ROOT, html_path, json_path)
 
     html_text = html_path.read_text(encoding="utf-8")

@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import scipy.sparse as sp
 
 from qlinks.caging.stability import (
@@ -704,6 +705,8 @@ def _physical_square_qdm_periodic_cage_unit_cell():
     )
 
 
+@pytest.mark.integration
+@pytest.mark.scientific
 def test_physical_periodic_product_cancellation_scaling_uses_actual_qdm_flips() -> None:
     from qlinks.caging.stability import scan_square_qdm_periodic_product_cancellation_scaling
 
@@ -774,6 +777,8 @@ def test_real_local_sign_obstruction_is_global_phase_invariant() -> None:
     assert int(np.sum(report.obstruction_witness)) > 0
 
 
+@pytest.mark.integration
+@pytest.mark.scientific
 def test_collective_square_qdm_local_grammar_has_only_product_kernel_at_8x4() -> None:
     from qlinks.caging import (
         CageSearchConfig,
@@ -1024,6 +1029,8 @@ def test_reduced_constraint_fredholm_candidate_distinguishes_square_and_tall_map
     assert np.isclose(tall.reduced_gap, np.sqrt(10.0))
 
 
+@pytest.mark.integration
+@pytest.mark.scientific
 def test_compact_qdm_reduced_winding_is_constant_and_trivial_at_fixed_width() -> None:
     from qlinks.caging.stability import diagnose_square_qdm_compact_cage_reduced_winding
 

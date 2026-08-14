@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from qlinks.caging import (
     SquareQDMPEPSOptimizationResult,
@@ -9,6 +10,8 @@ from qlinks.caging import (
 )
 from qlinks.models import SquareQDMModel
 from qlinks.visualizer import SquareQDMTensorNetworkVisualizer
+
+pytestmark = pytest.mark.integration
 
 
 def _basis():

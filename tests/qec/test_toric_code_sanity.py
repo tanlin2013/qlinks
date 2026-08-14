@@ -19,6 +19,8 @@ from qlinks.qec import (
 )
 from qlinks.variables import VariableLayout
 
+pytestmark = pytest.mark.integration
+
 
 @dataclass(frozen=True, slots=True)
 class _DenseIdentity:

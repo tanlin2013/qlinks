@@ -9,6 +9,9 @@ PUBLIC_MODULES = (
     "qlinks.basis.solvers",
     "qlinks.builders",
     "qlinks.caging",
+    "qlinks.caging.analysis",
+    "qlinks.caging.local_search",
+    "qlinks.caging.stability",
     "qlinks.constraints",
     "qlinks.conventions",
     "qlinks.encoded",
@@ -25,6 +28,21 @@ PUBLIC_MODULES = (
 
 
 EXPECTED_EXPORTS = {
+    "qlinks.caging.analysis": {
+        "EnvironmentReductionReport",
+        "EnvironmentRemovalMechanismLabel",
+        "diagnose_cage_environment_reduction",
+    },
+    "qlinks.caging.local_search": {
+        "LocalCageSearcher",
+        "LocalQDMCageSearcher",
+        "robust_qdm_local_cage_search",
+    },
+    "qlinks.caging.stability": {
+        "CageStabilityDiagnostic",
+        "diagnose_cage_stability",
+        "diagnose_many_body_topological_localization",
+    },
     "qlinks.basis": {
         "VariableOrderStrategy",
         "ValueOrderStrategy",

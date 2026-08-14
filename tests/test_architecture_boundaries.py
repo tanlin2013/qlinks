@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import ast
+from functools import lru_cache
 from pathlib import Path
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 _PACKAGE_ROOT = _REPOSITORY_ROOT / "qlinks"
 
 
+@lru_cache(maxsize=None)
 def _python_imports(path: Path) -> tuple[str, ...]:
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     imports: list[str] = []

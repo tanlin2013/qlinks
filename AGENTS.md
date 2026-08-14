@@ -163,6 +163,10 @@ scripts/test.sh all
 
 See `docs/contributing/5.-testing.md` for lane details.
 
+The maintained test-suite health cache lives at `tests/TEST_HEALTH_AUDIT.md`. Update its
+remediation status after repository-wide test taxonomy or ownership changes so future
+refactors can distinguish known debt from regressions.
+
 ## Scientific review requirements
 
 For caging changes, preserve or explicitly re-evaluate as applicable:

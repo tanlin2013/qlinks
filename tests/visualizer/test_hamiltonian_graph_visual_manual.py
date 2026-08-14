@@ -7,10 +7,13 @@ import scipy.sparse as scipy_sparse
 
 from qlinks.visualizer import HamiltonianGraphStyle, HamiltonianGraphVisualizer
 
-pytestmark = pytest.mark.skipif(
-    os.environ.get("QLINKS_SHOW_PLOTS") != "1",
-    reason="Manual visual tests. Run with QLINKS_SHOW_PLOTS=1.",
-)
+pytestmark = [
+    pytest.mark.manual,
+    pytest.mark.skipif(
+        os.environ.get("QLINKS_SHOW_PLOTS") != "1",
+        reason="Manual visual tests. Run with QLINKS_SHOW_PLOTS=1.",
+    ),
+]
 
 
 def test_plot_hamiltonian_graph_bipartition_igraph() -> None:

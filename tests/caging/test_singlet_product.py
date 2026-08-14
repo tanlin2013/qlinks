@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from qlinks.caging import (
     QDMSingletTNProblem,
@@ -11,6 +12,8 @@ from qlinks.caging import (
     square_qdm_two_plaquette_singlet_blocks,
 )
 from qlinks.models import SquareQDMModel
+
+pytestmark = pytest.mark.integration
 
 
 def _square_model(lx: int, ly: int) -> SquareQDMModel:
@@ -66,6 +69,7 @@ def test_square_singlet_stripe_product_has_full_rank_leakage() -> None:
     assert problem.loss(report.padding.global_amplitudes) > 0.0
 
 
+@pytest.mark.scientific
 def test_6x6_exact_covers_and_sampled_no_go_reports() -> None:
     model = _square_model(6, 6)
     blocks = square_qdm_two_plaquette_singlet_blocks(model)

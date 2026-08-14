@@ -17,10 +17,13 @@ from qlinks.visualizer import (
     plot_basis_grid,
 )
 
-pytestmark = pytest.mark.skipif(
-    os.environ.get("QLINKS_SHOW_PLOTS") != "1",
-    reason="Manual visual tests. Run with QLINKS_SHOW_PLOTS=1.",
-)
+pytestmark = [
+    pytest.mark.manual,
+    pytest.mark.skipif(
+        os.environ.get("QLINKS_SHOW_PLOTS") != "1",
+        reason="Manual visual tests. Run with QLINKS_SHOW_PLOTS=1.",
+    ),
+]
 
 
 def _force_circulating_plaquette(
