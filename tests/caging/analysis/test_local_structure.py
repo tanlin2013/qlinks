@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from qlinks.caging import (
+from qlinks.caging.analysis import (
     analyze_local_rdm_structure,
     local_reduced_density_matrix_readout_from_state,
     local_structure_report_from_readouts,

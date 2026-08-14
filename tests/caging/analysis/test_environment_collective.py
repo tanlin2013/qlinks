@@ -5,12 +5,14 @@ from dataclasses import fields
 
 import numpy as np
 
-from qlinks.caging.classification import (
-    CageClassificationConfig,
-    InterferenceZeroReport,
+from qlinks.caging.analysis.environment import (
+    EnvironmentReductionConfig,
+    EnvironmentRemovalProbeReport,
     _find_nullspace_collective_cancellation_from_actions,
     _find_unit_sum_collective_cancellation_from_actions,
+    _group_reports_by_local_pattern,
 )
+from qlinks.caging.analysis.transitions import LocalTransitionPattern
 
 
 def _binary_basis(n_variables: int) -> np.ndarray:
@@ -36,12 +38,12 @@ def _basis_index(
     return int(indices[0])
 
 
-def _classification_config() -> CageClassificationConfig:
-    return CageClassificationConfig(
+def _environment_reduction_config() -> EnvironmentReductionConfig:
+    return EnvironmentReductionConfig(
         amplitude_tolerance=1e-12,
         cancellation_tolerance=1e-12,
         action_tolerance=1e-12,
-        collective_cancellation_mode="same_local_support_sum",
+        collective_cancellation_mode="same_local_pattern_sum",
     )
 
 
@@ -51,8 +53,9 @@ def _fake_zero_report(
     local_mask: np.ndarray,
     mechanism_label: str = "unexplained_leakage",
     complement_action_norm: float = 1.0,
-) -> InterferenceZeroReport:
-    """Create the minimal InterferenceZeroReport needed for collective tests.
+    local_transitions: tuple[LocalTransitionPattern, ...] = (),
+) -> EnvironmentRemovalProbeReport:
+    """Create the minimal EnvironmentRemovalProbeReport needed for collective tests.
 
     The kwargs are filtered against the actual dataclass fields so this helper
     remains compatible while the report schema is evolving.
@@ -73,7 +76,7 @@ def _fake_zero_report(
         # Local reduced-operator geometry.
         "common_mask": common_mask,
         "local_mask": local_mask,
-        "local_transitions": tuple(),
+        "local_transitions": local_transitions,
         # Operator-action diagnostics.
         "q_sector_weight": 0.0,
         "reduced_action_norm": 0.0,
@@ -85,7 +88,7 @@ def _fake_zero_report(
         "complement_targets_are_known_zeros": False,
         # Complement target explanations.
         "trivial_target_indices": empty_i64,
-        "known_nonprojector_iz_target_indices": empty_i64,
+        "same_pattern_iz_target_indices": empty_i64,
         "projector_like_iz_target_indices": empty_i64,
         "unexpected_target_indices": empty_i64,
         # Projector-like input diagnostics.
@@ -107,18 +110,18 @@ def _fake_zero_report(
         "collective_cancellation_norm": np.inf,
     }
 
-    valid_fields = {field.name for field in fields(InterferenceZeroReport)}
+    valid_fields = {field.name for field in fields(EnvironmentRemovalProbeReport)}
     filtered_kwargs = {key: value for key, value in kwargs.items() if key in valid_fields}
 
-    return InterferenceZeroReport(**filtered_kwargs)
+    return EnvironmentRemovalProbeReport(**filtered_kwargs)
 
 
 def test_unit_sum_collective_cancellation_from_actions():
-    config = CageClassificationConfig(
+    config = EnvironmentReductionConfig(
         amplitude_tolerance=1e-12,
         cancellation_tolerance=1e-12,
         action_tolerance=1e-12,
-        collective_cancellation_mode="same_local_support_sum",
+        collective_cancellation_mode="same_local_pattern_sum",
     )
 
     local_mask = np.array([False, True, True], dtype=np.bool_)
@@ -148,7 +151,7 @@ def test_unit_sum_collective_cancellation_from_actions():
         ],
         group_id=0,
         config=config,
-        grouping_kind="same_local_support",
+        grouping_kind="same_local_pattern",
     )
 
     assert collective is not None
@@ -169,11 +172,11 @@ def test_unit_sum_collective_cancellation_from_actions():
 
 
 def test_unit_sum_collective_cancellation_from_actions_rejects_nonzero_sum():
-    config = CageClassificationConfig(
+    config = EnvironmentReductionConfig(
         amplitude_tolerance=1e-12,
         cancellation_tolerance=1e-12,
         action_tolerance=1e-12,
-        collective_cancellation_mode="same_local_support_sum",
+        collective_cancellation_mode="same_local_pattern_sum",
     )
 
     local_mask = np.array([False, True, True], dtype=np.bool_)
@@ -203,89 +206,51 @@ def test_unit_sum_collective_cancellation_from_actions_rejects_nonzero_sum():
         ],
         group_id=0,
         config=config,
-        grouping_kind="same_local_support",
+        grouping_kind="same_local_pattern",
     )
 
     assert collective is None
 
 
-def test_all_problematic_unit_sum_collective_cancellation_from_actions():
-    config = CageClassificationConfig(
-        amplitude_tolerance=1e-12,
-        cancellation_tolerance=1e-12,
-        action_tolerance=1e-12,
-        collective_cancellation_mode="all_problematic_sum",
-    )
-
+def test_collective_grouping_rejects_different_local_transition_patterns():
+    local_mask = np.array([False, True, True], dtype=np.bool_)
     reports = [
         _fake_zero_report(
             zero_index=0,
-            local_mask=np.array([True, False, False], dtype=np.bool_),
-            complement_action_norm=1.0,
+            local_mask=local_mask,
+            local_transitions=(LocalTransitionPattern((0, 0), (1, 0), 1.0 + 0.0j),),
         ),
         _fake_zero_report(
             zero_index=4,
-            local_mask=np.array([False, True, False], dtype=np.bool_),
-            complement_action_norm=1.0,
-        ),
-        _fake_zero_report(
-            zero_index=6,
-            local_mask=np.array([False, False, True], dtype=np.bool_),
-            complement_action_norm=2.0,
+            local_mask=local_mask,
+            local_transitions=(LocalTransitionPattern((0, 0), (1, 0), -1.0 + 0.0j),),
         ),
     ]
 
-    action_0 = np.array([1.0, 0.0, 0.0], dtype=np.complex128)
-    action_1 = np.array([0.0, 2.0, 0.0], dtype=np.complex128)
-    action_2 = np.array([-1.0, -2.0, 0.0], dtype=np.complex128)
+    groups = _group_reports_by_local_pattern(reports)
 
-    collective = _find_unit_sum_collective_cancellation_from_actions(
-        reports,
-        [action_0, action_1, action_2],
-        [
-            np.array([7], dtype=np.int64),
-            np.array([8], dtype=np.int64),
-            np.array([7, 8], dtype=np.int64),
-        ],
-        group_id=0,
-        config=config,
-        grouping_kind="all_problematic",
-    )
-
-    assert collective is not None
-    assert collective.group_size == 3
-    assert collective.relation_kind == "unit_sum"
-    assert collective.grouping_kind == "all_problematic"
-    assert collective.collective_action_norm <= 1e-12
-    assert collective.source_zero_indices.tolist() == [0, 4, 6]
-    assert collective.collective_target_indices.tolist() == [7, 8]
-    assert collective.local_mask.tolist() == [True, True, True]
+    assert len(groups) == 2
+    assert {int(group[0].zero_index) for group in groups} == {0, 4}
 
 
-def test_all_problematic_nullspace_collective_cancellation_from_actions():
-    config = CageClassificationConfig(
+def test_same_local_pattern_nullspace_collective_cancellation_from_actions():
+    config = EnvironmentReductionConfig(
         amplitude_tolerance=1e-12,
         cancellation_tolerance=1e-12,
         action_tolerance=1e-12,
-        collective_cancellation_mode="all_problematic_nullspace",
+        collective_cancellation_mode="same_local_pattern_nullspace",
     )
 
+    local_mask = np.array([False, True, True], dtype=np.bool_)
+    local_transitions = (LocalTransitionPattern((0, 0), (1, 0), 1.0 + 0.0j),)
     reports = [
         _fake_zero_report(
-            zero_index=0,
-            local_mask=np.array([True, False, False], dtype=np.bool_),
+            zero_index=zero_index,
+            local_mask=local_mask,
             complement_action_norm=1.0,
-        ),
-        _fake_zero_report(
-            zero_index=4,
-            local_mask=np.array([False, True, False], dtype=np.bool_),
-            complement_action_norm=1.0,
-        ),
-        _fake_zero_report(
-            zero_index=6,
-            local_mask=np.array([False, False, True], dtype=np.bool_),
-            complement_action_norm=1.0,
-        ),
+            local_transitions=local_transitions,
+        )
+        for zero_index in (0, 4, 6)
     ]
 
     # Columns are linearly dependent, but not equal-weight cancelling.
@@ -303,15 +268,15 @@ def test_all_problematic_nullspace_collective_cancellation_from_actions():
         ],
         group_id=0,
         config=config,
-        grouping_kind="all_problematic",
+        grouping_kind="same_local_pattern",
     )
 
     assert collective is not None
     assert collective.group_size == 3
     assert collective.relation_kind == "nullspace"
-    assert collective.grouping_kind == "all_problematic"
+    assert collective.grouping_kind == "same_local_pattern"
     assert collective.collective_action_norm <= 1e-12
-    assert collective.local_mask.tolist() == [True, True, True]
+    assert collective.local_mask.tolist() == [False, True, True]
 
     residual = (
         action_0 * collective.coefficients[0]

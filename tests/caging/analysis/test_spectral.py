@@ -3,14 +3,21 @@ from __future__ import annotations
 import numpy as np
 import scipy.sparse as sp
 
-from qlinks.caging import (
+from qlinks.caging.analysis.spectral import (
     adjacent_gap_ratio_report,
     basis_permutation_from_variable_permutation,
+    commuting_cyclic_symmetry_sector_basis,
     cyclic_symmetry_sector_basis,
     diagnose_eigenpair,
+    gaussian_spectral_filter,
+    microcanonical_ensemble_from_spectrum,
+    product_basis_diagonal_phase_factors,
     project_operator_to_sector,
     refine_sector_by_involution,
     select_microcanonical_window_by_count,
+    select_microcanonical_window_by_width,
+    spectral_observable_moments,
+    thermodynamic_energy_window_plan,
 )
 
 
@@ -81,13 +88,6 @@ def test_adjacent_gap_ratio_report_filters_degeneracies() -> None:
 
 
 def test_thermodynamic_width_filter_and_projected_second_moment() -> None:
-    from qlinks.caging import (
-        gaussian_spectral_filter,
-        select_microcanonical_window_by_width,
-        spectral_observable_moments,
-        thermodynamic_energy_window_plan,
-    )
-
     plan = thermodynamic_energy_window_plan(
         volume=16,
         energy_density=0.25,
@@ -129,11 +129,6 @@ def test_thermodynamic_width_filter_and_projected_second_moment() -> None:
 
 
 def test_commuting_cyclic_sector_and_product_basis_phases() -> None:
-    from qlinks.caging import (
-        commuting_cyclic_symmetry_sector_basis,
-        product_basis_diagonal_phase_factors,
-    )
-
     # Regular action of Z2 x Z2 on four basis states.
     tx = np.asarray([1, 0, 3, 2], dtype=np.int64)
     ty = np.asarray([2, 3, 0, 1], dtype=np.int64)
@@ -158,8 +153,6 @@ def test_commuting_cyclic_sector_and_product_basis_phases() -> None:
 
 
 def test_low_rank_microcanonical_ensemble() -> None:
-    from qlinks.caging import microcanonical_ensemble_from_spectrum
-
     energies = np.asarray([-2.0, -0.5, 0.5, 2.0])
     vectors = np.eye(4, dtype=np.complex128)
     ensemble = microcanonical_ensemble_from_spectrum(

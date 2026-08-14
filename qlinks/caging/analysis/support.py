@@ -5,22 +5,23 @@ from typing import Literal
 
 import numpy as np
 
-from qlinks.caging.classification import (
-    CageClassificationReport,
-    InterferenceZeroReport,
-    IZProbeMechanismLabel,
+from qlinks.caging.analysis.environment import (
+    EnvironmentProbeDetailLabel,
+    EnvironmentReductionReport,
+    EnvironmentRemovalProbeReport,
     ReducedIZProbeSupport,
     reduced_iz_probe_support_from_report,
 )
+from qlinks.caging.analysis.transitions import transition_pattern_key
 
-CageSupportExtractionPolicy = Literal[
+EnvironmentReductionSupportPolicy = Literal[
     "raise_on_unexplained",
     "ignore_unexplained",
 ]
 
 
 @dataclass(frozen=True, slots=True)
-class CageRegionSupport:
+class LocalCagingRegionSupport:
     """Union support R extracted from reduced IZ probes."""
 
     variable_indices: tuple[int, ...]
@@ -50,22 +51,22 @@ class CageRegionSupport:
         return int(variable_index) in self.variable_index_set
 
 
-def extract_cage_region_support(
-    report: CageClassificationReport,
+def extract_local_caging_region(
+    report: EnvironmentReductionReport,
     *,
-    policy: CageSupportExtractionPolicy = "raise_on_unexplained",
+    policy: EnvironmentReductionSupportPolicy = "raise_on_unexplained",
     include_q_empty: bool = True,
-    include_closed_by_known_zeros: bool = True,
+    include_same_pattern_cancellation: bool = True,
     include_projector_like: bool = True,
     include_collective_cancellation: bool = True,
     complement_action_tolerance: float | None = None,
-) -> CageRegionSupport:
+) -> LocalCagingRegionSupport:
     """Extract the union support R from trusted reduced IZ probes.
 
     This function does not interpret the report label as a scaling statement.
     It only asks whether each reduced probe has explained complement behavior.
 
-    By default, q_empty, closed_by_known_zeros, domain_blocked, and
+    By default, q_empty, closed_by_same_pattern_zeros, domain_blocked, and
     projector_like probes are all allowed.  Only unexplained_leakage is
     rejected.
     """
@@ -83,7 +84,7 @@ def extract_cage_region_support(
         use_probe = _should_use_probe_support(
             probe_support,
             include_q_empty=include_q_empty,
-            include_closed_by_known_zeros=include_closed_by_known_zeros,
+            include_same_pattern_cancellation=include_same_pattern_cancellation,
             include_projector_like=include_projector_like,
             include_collective_cancellation=include_collective_cancellation,
             complement_action_tolerance=complement_action_tolerance,
@@ -113,7 +114,7 @@ def extract_cage_region_support(
     complement_norms = [support.complement_action_norm for support in probe_supports]
     reduced_norms = [support.reduced_action_norm for support in probe_supports]
 
-    return CageRegionSupport(
+    return LocalCagingRegionSupport(
         variable_indices=tuple(sorted(union_variables)),
         probe_supports=tuple(probe_supports),
         ignored_probe_supports=tuple(ignored_probe_supports),
@@ -124,7 +125,8 @@ def extract_cage_region_support(
         max_complement_action_norm=(max(complement_norms) if complement_norms else 0.0),
         max_reduced_action_norm=(max(reduced_norms) if reduced_norms else 0.0),
         metadata={
-            "report_label": report.label,
+            "environment_safely_removable": report.is_safely_removable,
+            "removal_mechanisms": report.removal_mechanisms,
             "support_size": report.support_size,
             "hilbert_size": report.hilbert_size,
             "support_fraction": report.support_fraction,
@@ -138,7 +140,7 @@ def _should_use_probe_support(
     probe_support: ReducedIZProbeSupport,
     *,
     include_q_empty: bool,
-    include_closed_by_known_zeros: bool,
+    include_same_pattern_cancellation: bool,
     include_projector_like: bool,
     include_collective_cancellation: bool = True,
     complement_action_tolerance: float | None,
@@ -150,8 +152,8 @@ def _should_use_probe_support(
     if probe_support.mechanism_label == "q_empty":
         return include_q_empty
 
-    if probe_support.mechanism_label == "closed_by_known_zeros":
-        return include_closed_by_known_zeros
+    if probe_support.mechanism_label == "closed_by_same_pattern_zeros":
+        return include_same_pattern_cancellation
 
     if probe_support.mechanism_label in {"domain_blocked", "projector_like"}:
         return include_projector_like
@@ -166,27 +168,27 @@ def _should_use_probe_support(
 
 
 @dataclass(frozen=True, slots=True)
-class ReducedIZPatternSupport:
+class LocalCancellationPatternSupport:
     """One distinct reduced IZ local pattern and the variables it uses."""
 
     pattern_key: tuple[tuple[tuple[int, ...], tuple[int, ...], tuple[float, float]], ...]
     variable_indices: tuple[int, ...]
     source_zero_indices: tuple[int, ...]
-    mechanism_labels: tuple[IZProbeMechanismLabel, ...]
+    mechanism_labels: tuple[EnvironmentProbeDetailLabel, ...]
 
 
-def distinct_reduced_iz_pattern_supports(
-    report: CageClassificationReport,
+def distinct_local_cancellation_pattern_supports(
+    report: EnvironmentReductionReport,
     *,
     include_projector_like: bool = True,
-) -> tuple[ReducedIZPatternSupport, ...]:
+) -> tuple[LocalCancellationPatternSupport, ...]:
     """Group reduced IZ probes by local transition pattern and support."""
     grouped: dict[
         tuple[
             tuple[int, ...],
             tuple[tuple[tuple[int, ...], tuple[int, ...], tuple[float, float]], ...],
         ],
-        list[InterferenceZeroReport],
+        list[EnvironmentRemovalProbeReport],
     ] = {}
 
     for zero_report in report.zero_reports:
@@ -197,14 +199,14 @@ def distinct_reduced_iz_pattern_supports(
                 continue
 
         variables = tuple(int(i) for i in np.flatnonzero(zero_report.local_mask))
-        key = (variables, _public_local_pattern_key(zero_report))
+        key = (variables, transition_pattern_key(zero_report.local_transitions))
         grouped.setdefault(key, []).append(zero_report)
 
-    pattern_supports: list[ReducedIZPatternSupport] = []
+    pattern_supports: list[LocalCancellationPatternSupport] = []
 
     for (variables, pattern_key), zero_reports in grouped.items():
         pattern_supports.append(
-            ReducedIZPatternSupport(
+            LocalCancellationPatternSupport(
                 pattern_key=pattern_key,
                 variable_indices=variables,
                 source_zero_indices=tuple(int(report.zero_index) for report in zero_reports),
@@ -213,25 +215,3 @@ def distinct_reduced_iz_pattern_supports(
         )
 
     return tuple(pattern_supports)
-
-
-def _public_local_pattern_key(
-    report: InterferenceZeroReport,
-) -> tuple[tuple[tuple[int, ...], tuple[int, ...], tuple[float, float]], ...]:
-    return tuple(
-        sorted(
-            (
-                transition.source_local,
-                transition.target_local,
-                _complex_key(transition.matrix_element),
-            )
-            for transition in report.local_transitions
-        )
-    )
-
-
-def _complex_key(value: complex, *, digits: int = 12) -> tuple[float, float]:
-    return (
-        round(float(np.real(value)), digits),
-        round(float(np.imag(value)), digits),
-    )

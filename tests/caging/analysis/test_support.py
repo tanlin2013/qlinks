@@ -7,17 +7,18 @@ import numpy as np
 import pytest
 import scipy.sparse as scipy_sparse
 
-from qlinks.caging.classification import (
-    CageClassificationConfig,
-    CageClassificationReport,
-    classify_full_state,
+from qlinks.caging.analysis.environment import (
+    EnvironmentReductionConfig,
+    EnvironmentReductionReport,
+    EnvironmentRemovalSummary,
+    diagnose_environment_reduction,
 )
-from qlinks.caging.support import (
-    distinct_reduced_iz_pattern_supports,
-    extract_cage_region_support,
+from qlinks.caging.analysis.support import (
+    distinct_local_cancellation_pattern_supports,
+    extract_local_caging_region,
 )
 
-from .test_collective_cancellation import _fake_zero_report
+from .test_environment_collective import _fake_zero_report
 
 
 def _binary_basis(n_variables: int) -> np.ndarray:
@@ -43,8 +44,8 @@ def _basis_index(
     return int(indices[0])
 
 
-def _base_config() -> CageClassificationConfig:
-    return CageClassificationConfig(
+def _base_config() -> EnvironmentReductionConfig:
+    return EnvironmentReductionConfig(
         amplitude_tolerance=1e-12,
         cancellation_tolerance=1e-12,
         action_tolerance=1e-12,
@@ -72,7 +73,7 @@ def _make_pairwise_interference_kinetic(
     return kinetic, {"h": h, "v1": v1, "v2": v2}
 
 
-def test_extract_cage_region_support_from_q_empty_probe():
+def test_extract_local_caging_region_from_q_empty_probe():
     basis_configs = _binary_basis(n_variables=3)
     kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
 
@@ -82,7 +83,7 @@ def test_extract_cage_region_support_from_q_empty_probe():
 
     sector_mask = np.ones(basis_configs.shape[0], dtype=bool)
 
-    report = classify_full_state(
+    report = diagnose_environment_reduction(
         state,
         kinetic_matrix=kinetic,
         basis_configs=basis_configs,
@@ -90,7 +91,7 @@ def test_extract_cage_region_support_from_q_empty_probe():
         config=_base_config(),
     )
 
-    region = extract_cage_region_support(report)
+    region = extract_local_caging_region(report)
 
     assert region.variable_indices == (1, 2)
     assert region.region_size == 2
@@ -139,7 +140,7 @@ def _make_two_zero_closed_interference_kinetic(
     }
 
 
-def test_extract_cage_region_support_from_closed_zero_network():
+def test_extract_local_caging_region_from_closed_zero_network():
     basis_configs = _binary_basis(n_variables=3)
     kinetic, indices = _make_two_zero_closed_interference_kinetic(basis_configs)
 
@@ -151,7 +152,7 @@ def test_extract_cage_region_support_from_closed_zero_network():
 
     sector_mask = np.ones(basis_configs.shape[0], dtype=bool)
 
-    report = classify_full_state(
+    report = diagnose_environment_reduction(
         state,
         kinetic_matrix=kinetic,
         basis_configs=basis_configs,
@@ -159,17 +160,19 @@ def test_extract_cage_region_support_from_closed_zero_network():
         config=_base_config(),
     )
 
-    region = extract_cage_region_support(report)
+    region = extract_local_caging_region(report)
 
     assert region.variable_indices == (1, 2)
     assert region.n_total_probes == 2
     assert region.n_used_probes == 2
     assert region.n_unexplained_leakage_probes == 0
 
-    assert {probe.mechanism_label for probe in region.probe_supports} == {"closed_by_known_zeros"}
+    assert {probe.mechanism_label for probe in region.probe_supports} == {
+        "closed_by_same_pattern_zeros"
+    }
 
 
-def test_distinct_reduced_iz_pattern_supports_deduplicates_translated_pattern():
+def test_distinct_local_cancellation_pattern_supports_deduplicates_translated_pattern():
     basis_configs = _binary_basis(n_variables=3)
     kinetic, indices = _make_two_zero_closed_interference_kinetic(basis_configs)
 
@@ -181,7 +184,7 @@ def test_distinct_reduced_iz_pattern_supports_deduplicates_translated_pattern():
 
     sector_mask = np.ones(basis_configs.shape[0], dtype=bool)
 
-    report = classify_full_state(
+    report = diagnose_environment_reduction(
         state,
         kinetic_matrix=kinetic,
         basis_configs=basis_configs,
@@ -189,7 +192,7 @@ def test_distinct_reduced_iz_pattern_supports_deduplicates_translated_pattern():
         config=_base_config(),
     )
 
-    patterns = distinct_reduced_iz_pattern_supports(report)
+    patterns = distinct_local_cancellation_pattern_supports(report)
 
     assert len(patterns) == 1
     assert patterns[0].variable_indices == (1, 2)
@@ -199,7 +202,7 @@ def test_distinct_reduced_iz_pattern_supports_deduplicates_translated_pattern():
     }
 
 
-def test_extract_cage_region_support_raises_on_unexplained_leakage():
+def test_extract_local_caging_region_raises_on_unexplained_leakage():
     basis_configs = _binary_basis(n_variables=3)
     kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
 
@@ -215,7 +218,7 @@ def test_extract_cage_region_support_raises_on_unexplained_leakage():
     state /= np.linalg.norm(state)
     sector_mask = np.ones(basis_configs.shape[0], dtype=bool)
 
-    report = classify_full_state(
+    report = diagnose_environment_reduction(
         state,
         kinetic_matrix=kinetic,
         basis_configs=basis_configs,
@@ -226,10 +229,10 @@ def test_extract_cage_region_support_raises_on_unexplained_leakage():
     assert report.n_invalid_source_probes > 0
 
     with pytest.raises(ValueError, match="unexplained leakage"):
-        extract_cage_region_support(report)
+        extract_local_caging_region(report)
 
 
-def test_extract_cage_region_support_can_ignore_unexplained_leakage():
+def test_extract_local_caging_region_can_ignore_unexplained_leakage():
     basis_configs = _binary_basis(n_variables=3)
     kinetic, indices = _make_pairwise_interference_kinetic(basis_configs)
 
@@ -242,7 +245,7 @@ def test_extract_cage_region_support_can_ignore_unexplained_leakage():
     state /= np.linalg.norm(state)
     sector_mask = np.ones(basis_configs.shape[0], dtype=bool)
 
-    report = classify_full_state(
+    report = diagnose_environment_reduction(
         state,
         kinetic_matrix=kinetic,
         basis_configs=basis_configs,
@@ -250,7 +253,7 @@ def test_extract_cage_region_support_can_ignore_unexplained_leakage():
         config=_base_config(),
     )
 
-    region = extract_cage_region_support(
+    region = extract_local_caging_region(
         report,
         policy="ignore_unexplained",
     )
@@ -259,9 +262,9 @@ def test_extract_cage_region_support_can_ignore_unexplained_leakage():
     assert region.n_unexplained_leakage_probes > 0
 
 
-def _fake_classification_report(
+def _fake_environment_report(
     zero_reports,
-) -> CageClassificationReport:
+) -> EnvironmentReductionReport:
     zero_reports = tuple(zero_reports)
 
     empty_i64 = np.array([], dtype=np.int64)
@@ -297,7 +300,7 @@ def _fake_classification_report(
         [
             int(report.zero_index)
             for report in zero_reports
-            if report.probe_mechanism_label == "closed_by_known_zeros"
+            if report.probe_mechanism_label == "closed_by_same_pattern_zeros"
         ],
         dtype=np.int64,
     )
@@ -311,14 +314,6 @@ def _fake_classification_report(
         dtype=np.int64,
     )
 
-    regional_indices = np.concatenate([q_empty_indices, closed_indices]).astype(
-        np.int64, copy=False
-    )
-
-    extended_indices = np.concatenate([projector_indices, collective_indices]).astype(
-        np.int64, copy=False
-    )
-
     n_complement_targets = sum(
         int(report.complement_target_indices.size) for report in zero_reports
     )
@@ -327,8 +322,7 @@ def _fake_classification_report(
     )
 
     kwargs = {
-        # High-level label and dimensions.
-        "label": "extended_candidate",
+        # State-size context.
         "hilbert_size": 8,
         "support_size": 2,
         "support_fraction": 2.0 / 8.0,
@@ -339,25 +333,23 @@ def _fake_classification_report(
         # Complement target summaries.
         "n_complement_targets": int(n_complement_targets),
         "n_unexplained_complement_targets": int(n_unexplained_complement_targets),
-        "fraction_zeros_with_closed_complement_targets": 0.0,
+        "fraction_probes_safely_removable": (
+            0.0 if not zero_reports else 1.0 - float(unexplained_indices.size) / len(zero_reports)
+        ),
         # Mechanism counts / index arrays.
         "n_q_empty_source_probes": int(q_empty_indices.size),
         "q_empty_source_zero_indices": q_empty_indices,
-        "n_closed_by_known_zero_network_source_probes": int(closed_indices.size),
-        "closed_by_known_zero_network_source_zero_indices": closed_indices,
+        "n_same_pattern_zero_closure_probes": int(closed_indices.size),
+        "same_pattern_zero_closure_indices": closed_indices,
         "n_projector_like_source_probes": int(projector_indices.size),
         "projector_like_source_zero_indices": projector_indices,
         "n_collective_cancellation_source_probes": int(collective_indices.size),
         "collective_cancellation_source_zero_indices": collective_indices,
         "n_invalid_source_probes": int(unexplained_indices.size),
         "invalid_source_zero_indices": unexplained_indices,
-        # Regional / extended source summaries.
-        "n_regional_source_probes": int(regional_indices.size),
-        "regional_source_zero_indices": regional_indices,
-        "extended_source_zero_indices": extended_indices,
         # Target-explanation summaries.
         "n_trivial_targets": 0,
-        "n_known_nonprojector_iz_targets": 0,
+        "n_same_pattern_iz_targets": 0,
         "n_projector_like_iz_targets": 0,
         "n_unexpected_targets": 0,
         # Probe-failure summaries.
@@ -383,19 +375,27 @@ def _fake_classification_report(
         "max_reduced_action_norm": 0.0,
         "mean_complement_action_norm": 1.0,
         "max_complement_action_norm": 1.0,
+        "removal_summary": EnvironmentRemovalSummary(
+            n_no_environment_weight_probes=int(q_empty_indices.size),
+            n_projective_annihilation_probes=int(projector_indices.size),
+            n_same_local_cancellation_pattern_probes=int(
+                closed_indices.size + collective_indices.size
+            ),
+            n_unsafe_probes=int(unexplained_indices.size),
+        ),
     }
 
-    valid_fields = {field.name for field in fields(CageClassificationReport)}
+    valid_fields = {field.name for field in fields(EnvironmentReductionReport)}
     filtered_kwargs = {key: value for key, value in kwargs.items() if key in valid_fields}
 
-    return CageClassificationReport(**filtered_kwargs)
+    return EnvironmentReductionReport(**filtered_kwargs)
 
 
 def test_extract_region_support_includes_collective_cancellation_probes():
     local_mask_0 = np.array([False, True, True, False], dtype=np.bool_)
     local_mask_1 = np.array([False, False, True, True], dtype=np.bool_)
 
-    report = _fake_classification_report(
+    report = _fake_environment_report(
         [
             _fake_zero_report(
                 zero_index=0,
@@ -412,7 +412,7 @@ def test_extract_region_support_includes_collective_cancellation_probes():
         ]
     )
 
-    region = extract_cage_region_support(report)
+    region = extract_local_caging_region(report)
 
     assert region.variable_indices == (1, 2, 3)
     assert region.region_size == 3
@@ -428,7 +428,7 @@ def test_extract_region_support_includes_collective_cancellation_probes():
 def test_extract_region_support_can_exclude_collective_cancellation_probes():
     local_mask = np.array([False, True, True, False], dtype=np.bool_)
 
-    report = _fake_classification_report(
+    report = _fake_environment_report(
         [
             _fake_zero_report(
                 zero_index=0,
@@ -439,7 +439,7 @@ def test_extract_region_support_can_exclude_collective_cancellation_probes():
         ]
     )
 
-    region = extract_cage_region_support(
+    region = extract_local_caging_region(
         report,
         include_collective_cancellation=False,
     )

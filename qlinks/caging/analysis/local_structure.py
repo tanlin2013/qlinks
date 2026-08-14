@@ -15,8 +15,8 @@ from qlinks.local_structure import (
 )
 
 if TYPE_CHECKING:
-    from qlinks.caging.classification import (
-        CageClassificationReport,
+    from qlinks.caging.analysis.environment import (
+        EnvironmentReductionReport,
         ReducedIZMonitorDecomposition,
     )
 else:
@@ -30,7 +30,7 @@ class LocalReducedDensityMatrixReadout:
     The readout keeps the full :class:`LocalReducedDensityMatrix` object and a
     truncated local matrix-unit expansion of its density matrix.  The optional
     component metadata is populated when the readout comes from a reduced-IZ
-    frustration-free decomposition of a classification report.
+    frustration-free decomposition of a environment-reduction report.
     """
 
     variable_indices: tuple[int, ...]
@@ -155,7 +155,7 @@ def local_reduced_density_matrix_readout_from_state(
 
 
 def reduced_iz_local_rdm_readouts_from_report(
-    report: CageClassificationReport,
+    report: EnvironmentReductionReport,
     *,
     basis_configs: npt.NDArray[np.integer],
     state: npt.ArrayLike,
@@ -168,7 +168,7 @@ def reduced_iz_local_rdm_readouts_from_report(
     """Return local-RDM readouts for reduced-IZ monitor components.
 
     The components are the same frustration-free reduced-IZ groups cached by
-    :class:`CageClassificationReport` and used by the Lindblad-construction
+    :class:`EnvironmentReductionReport` and used by the Lindblad-construction
     layer.  For each component support, this function computes the target state
     reduced density matrix and expands that RDM in local matrix units so that it
     can be inspected in notebooks.
@@ -637,8 +637,8 @@ def local_structure_report_from_readouts(
     )
 
 
-def local_structure_report_from_classification_report(
-    report: CageClassificationReport,
+def local_structure_report_from_environment_report(
+    report: EnvironmentReductionReport,
     *,
     basis_configs: npt.NDArray[np.integer],
     state: npt.ArrayLike,

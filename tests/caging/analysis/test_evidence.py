@@ -3,11 +3,12 @@ from __future__ import annotations
 import numpy as np
 import scipy.sparse as sp
 
-from qlinks.caging import (
+from qlinks.caging.analysis.evidence import (
     Quasi1DSequencePoint,
     audit_quasi_1d_sequence,
     beta_zero_matching_subspace,
     cage_finite_size_scorecard,
+    operator_coefficient_compatibility,
     project_coefficients_to_beta_zero_match,
     scan_windowed_operator_annihilators,
 )
@@ -116,8 +117,6 @@ def test_quasi_one_dimensional_audit_accepts_energy_matched_microcanonical() -> 
 
 
 def test_operator_coefficient_compatibility_distinguishes_fixed_vectors() -> None:
-    from qlinks.caging import operator_coefficient_compatibility
-
     identity = sp.identity(2, format="csr")
     pauli_x = sp.csr_array(np.asarray([[0.0, 1.0], [1.0, 0.0]]))
     pauli_z = sp.csr_array(np.asarray([[1.0, 0.0], [0.0, -1.0]]))

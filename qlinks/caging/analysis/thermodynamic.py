@@ -8,10 +8,13 @@ import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
 
-from qlinks.caging.classification import CageClassificationReport, IZProbeMechanismLabel
-from qlinks.caging.support import (
-    ReducedIZPatternSupport,
-    distinct_reduced_iz_pattern_supports,
+from qlinks.caging.analysis.environment import (
+    EnvironmentProbeDetailLabel,
+    EnvironmentReductionReport,
+)
+from qlinks.caging.analysis.support import (
+    LocalCancellationPatternSupport,
+    distinct_local_cancellation_pattern_supports,
 )
 from qlinks.local_structure import embed_local_pattern_operator
 
@@ -86,7 +89,7 @@ class LocalWitnessTemplate:
     local_patterns: tuple[tuple[int, ...], ...]
     local_operator: npt.NDArray[np.complex128]
     source_zero_indices: tuple[int, ...] = ()
-    mechanism_labels: tuple[IZProbeMechanismLabel, ...] = ()
+    mechanism_labels: tuple[EnvironmentProbeDetailLabel, ...] = ()
     metadata: dict[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -209,7 +212,7 @@ def directed_transition_witness_template(
     amplitudes: npt.ArrayLike,
     pattern_key: ReducedIZPatternKey = (),
     source_zero_indices: Sequence[int] = (),
-    mechanism_labels: Sequence[IZProbeMechanismLabel] = (),
+    mechanism_labels: Sequence[EnvironmentProbeDetailLabel] = (),
     metadata: Mapping[str, object] | None = None,
     normalization: WitnessNormalization = "none",
 ) -> LocalWitnessTemplate:
@@ -772,7 +775,7 @@ class EnergyDensityMatchReport:
 
 
 def local_witness_template_from_pattern_support(
-    pattern_support: ReducedIZPatternSupport,
+    pattern_support: LocalCancellationPatternSupport,
     *,
     normalization: WitnessNormalization = "none",
     metadata: Mapping[str, object] | None = None,
@@ -813,15 +816,15 @@ def local_witness_template_from_pattern_support(
     return template.normalized(normalization)
 
 
-def local_witnesses_from_classification_report(
-    report: CageClassificationReport,
+def local_witnesses_from_environment_report(
+    report: EnvironmentReductionReport,
     *,
     include_projector_like: bool = True,
     normalization: WitnessNormalization = "none",
 ) -> tuple[LocalWitness, ...]:
     """Return all trusted reduced-IZ witness embeddings in one finite system."""
     witnesses: list[LocalWitness] = []
-    for pattern_support in distinct_reduced_iz_pattern_supports(
+    for pattern_support in distinct_local_cancellation_pattern_supports(
         report,
         include_projector_like=include_projector_like,
     ):
@@ -834,7 +837,7 @@ def local_witnesses_from_classification_report(
 
 
 def common_local_witness_families(
-    reports: Mapping[Hashable, CageClassificationReport],
+    reports: Mapping[Hashable, EnvironmentReductionReport],
     *,
     include_projector_like: bool = True,
     require_all_systems: bool = True,
@@ -845,17 +848,17 @@ def common_local_witness_families(
     Matching is exact in the ordered local pattern basis.  Translations are
     automatically matched because global variable indices are not part of the
     template key.  Rotations or reflections require the caller to relabel local
-    variables consistently before classification.
+    variables consistently before environment-reduction analysis.
     """
     if not reports:
         return ()
 
     grouped: dict[
         ReducedIZPatternKey,
-        dict[Hashable, list[tuple[ReducedIZPatternSupport, LocalWitness]]],
+        dict[Hashable, list[tuple[LocalCancellationPatternSupport, LocalWitness]]],
     ] = {}
     for system_label, report in reports.items():
-        for pattern_support in distinct_reduced_iz_pattern_supports(
+        for pattern_support in distinct_local_cancellation_pattern_supports(
             report,
             include_projector_like=include_projector_like,
         ):

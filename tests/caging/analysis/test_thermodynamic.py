@@ -4,9 +4,11 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from qlinks.caging import (
+from qlinks.caging.analysis import (
+    LocalCancellationPatternSupport,
+)
+from qlinks.caging.analysis.thermodynamic import (
     ETHScalingReport,
-    ReducedIZPatternSupport,
     common_local_witness_families,
     diagnose_local_channel_spectrum,
     directed_transition_witness_template,
@@ -20,8 +22,8 @@ from qlinks.caging import (
 )
 
 
-def _lowering_pattern_support(*, variable_index: int = 0) -> ReducedIZPatternSupport:
-    return ReducedIZPatternSupport(
+def _lowering_pattern_support(*, variable_index: int = 0) -> LocalCancellationPatternSupport:
+    return LocalCancellationPatternSupport(
         pattern_key=(((1,), (0,), (1.0, 0.0)),),
         variable_indices=(variable_index,),
         source_zero_indices=(3,),
