@@ -1133,12 +1133,12 @@ def test_subgraph_for_cage_state_and_zero_edges() -> None:
 
 def test_extract_cage_zero_indices_from_report_like_object() -> None:
     class Report:
-        nontrivial_zero_indices = [1]
-        projector_like_zero_indices = ((2, 3), np.array([3, 4]))
+        q_empty_source_zero_indices = [1]
+        projector_like_source_zero_indices = ((2, 3), np.array([3, 4]))
 
     extracted = HamiltonianGraphVisualizer._extract_cage_zero_indices(
         zero_indices=[0],
-        classification_report=Report(),
+        environment_report=Report(),
     )
 
     np.testing.assert_array_equal(extracted, np.array([0, 1, 2, 3, 4], dtype=np.int64))

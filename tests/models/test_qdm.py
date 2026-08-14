@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from qlinks.builders import is_hermitian_sparse
+from qlinks.caging.analysis.spectral import product_basis_diagonal_phase_factors
 from qlinks.models import (
     HoneycombQDMModel,
     KagomeQDMModel,
@@ -387,7 +388,6 @@ def test_kagome_qdm_builds_and_bitmask_matches_sparse() -> None:
 
 def test_square_qdm_link_gauge_peierls_couplings_are_unitarily_equivalent() -> None:
     from qlinks.basis.configs import basis_configs_from_build_result
-    from qlinks.caging import product_basis_diagonal_phase_factors
     from qlinks.models import (
         qdm_peierls_couplings_from_link_phases,
         qdm_plaquette_link_gauge_matrix,

@@ -127,7 +127,7 @@ The caging diagnostics layer can inspect a state on a chosen set of variables:
 
 .. code-block:: python
 
-   from qlinks.caging import local_reduced_density_matrix_readout_from_state
+   from qlinks.caging.analysis import local_reduced_density_matrix_readout_from_state
 
    readout = local_reduced_density_matrix_readout_from_state(
        basis_configs=build_result.basis.states,

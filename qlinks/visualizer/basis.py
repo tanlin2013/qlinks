@@ -4882,33 +4882,46 @@ def _zero_indices_for_mechanism(
     report,
     mechanism: str,
 ) -> npt.NDArray[np.int64]:
-    """Return zero indices selected by mechanism name."""
+    """Return source-zero indices selected by environment-removal mechanism."""
+    zero_reports = tuple(report.zero_reports)
     if mechanism == "all":
-        return np.array(
-            [int(zero.zero_index) for zero in report.zero_reports],
-            dtype=np.int64,
+        selected = zero_reports
+    elif mechanism in {
+        "q_empty",
+        "closed_by_same_pattern_zeros",
+        "domain_blocked",
+        "projector_like",
+        "collective_cancellation",
+        "unexplained_leakage",
+    }:
+        selected = tuple(zero for zero in zero_reports if zero.probe_mechanism_label == mechanism)
+    elif mechanism in {
+        "no_environment_weight",
+        "projective_annihilation",
+        "same_local_cancellation_pattern",
+        "unsafe",
+    }:
+        selected = tuple(zero for zero in zero_reports if zero.removal_mechanism == mechanism)
+    else:
+        allowed = (
+            "all",
+            "q_empty",
+            "closed_by_same_pattern_zeros",
+            "domain_blocked",
+            "projector_like",
+            "collective_cancellation",
+            "unexplained_leakage",
+            "no_environment_weight",
+            "projective_annihilation",
+            "same_local_cancellation_pattern",
+            "unsafe",
+        )
+        raise ValueError(
+            f"Unknown environment-removal mechanism {mechanism!r}. "
+            f"Expected one of: {', '.join(allowed)}."
         )
 
-    field_name_by_mechanism = {
-        "q_empty": "q_empty_zero_indices",
-        "closed_by_known_zeros": "closed_by_known_zero_indices",
-        "domain_blocked": "domain_blocked_zero_indices",
-        "projector_like": "projector_like_zero_indices",
-        "unexplained_leakage": "unexplained_leakage_zero_indices",
-        "regional": "regional_mechanism_zero_indices",
-        "extended": "extended_mechanism_zero_indices",
-        "failure": "failure_mechanism_zero_indices",
-    }
-
-    try:
-        field_name = field_name_by_mechanism[mechanism]
-    except KeyError as exc:
-        allowed = ", ".join(["all", *field_name_by_mechanism])
-        raise ValueError(
-            f"Unknown zero mechanism {mechanism!r}. Expected one of: {allowed}."
-        ) from exc
-
-    return np.asarray(getattr(report, field_name), dtype=np.int64)
+    return np.asarray([int(zero.zero_index) for zero in selected], dtype=np.int64)
 
 
 @dataclass(frozen=True)
@@ -6152,7 +6165,7 @@ class BasisGridVisualizer:
 
     def plot_interference_zeros(
         self,
-        classification_report,
+        environment_report,
         *,
         basis_configs: npt.ArrayLike,
         mechanism: str = "all",
@@ -6165,28 +6178,27 @@ class BasisGridVisualizer:
 
         Parameters
         ----------
-        classification_report:
-            CageClassificationReport returned by classify_cage_state or
-            classify_full_state.
+        environment_report:
+            EnvironmentReductionReport returned by diagnose_cage_environment_reduction or
+            diagnose_environment_reduction.
         basis_configs:
             Basis configuration array with shape (hilbert_size, n_variables).
         mechanism:
             One of:
                 "all",
                 "q_empty",
-                "closed_by_known_zeros",
+                "closed_by_same_pattern_zeros",
                 "domain_blocked",
                 "projector_like",
+                "collective_cancellation",
                 "unexplained_leakage",
-                "regional",
-                "extended",
-                "failure".
+                or one of the four coarse environment-removal mechanisms.
         max_states:
             Optional cap on the number of zero states to plot.
         """
         basis_configs = np.asarray(basis_configs)
         zero_indices = _zero_indices_for_mechanism(
-            classification_report,
+            environment_report,
             mechanism,
         )
 
@@ -6194,7 +6206,7 @@ class BasisGridVisualizer:
             zero_indices = zero_indices[:max_states]
 
         states = basis_configs[zero_indices]
-        mechanism_labels = _zero_mechanism_label_map(classification_report)
+        mechanism_labels = _zero_mechanism_label_map(environment_report)
 
         if labels is None:
             labels = [

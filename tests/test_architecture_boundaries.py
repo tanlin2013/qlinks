@@ -182,6 +182,38 @@ def test_stability_modules_follow_one_way_dependency_order() -> None:
     assert not violations, "Stability dependency DAG violation:\n" + "\n".join(violations)
 
 
+def test_caging_analysis_modules_follow_one_way_dependency_order() -> None:
+    """Shared transition patterns are a leaf and environment reduction has no reverse edge."""
+
+    allowed_dependencies = {
+        "transitions.py": set(),
+        "environment.py": {"qlinks.caging.analysis.transitions"},
+        "local_structure.py": {"qlinks.caging.analysis.environment"},
+        "support.py": {
+            "qlinks.caging.analysis.environment",
+            "qlinks.caging.analysis.transitions",
+        },
+        "support_morphology.py": {"qlinks.caging.analysis.environment"},
+        "spectral.py": set(),
+        "thermodynamic.py": {
+            "qlinks.caging.analysis.environment",
+            "qlinks.caging.analysis.support",
+        },
+        "evidence.py": {"qlinks.caging.analysis.spectral"},
+    }
+
+    violations: list[str] = []
+    analysis_prefix = "qlinks.caging.analysis."
+    analysis_root = _PACKAGE_ROOT / "caging" / "analysis"
+    for filename, allowed in allowed_dependencies.items():
+        path = analysis_root / filename
+        for imported_module in _python_imports(path):
+            if imported_module.startswith(analysis_prefix) and imported_module not in allowed:
+                violations.append(f"{filename}: {imported_module}")
+
+    assert not violations, "Caging-analysis dependency DAG violation:\n" + "\n".join(violations)
+
+
 def test_repository_does_not_import_legacy_flat_refactor_modules() -> None:
     """First-party code must use the nested caging subpackage paths."""
 
@@ -204,6 +236,12 @@ def test_repository_does_not_import_legacy_flat_refactor_modules() -> None:
         "qlinks.caging.stability_qdm",
         "qlinks.caging.stability_laurent",
         "qlinks.caging.stability_symmetry",
+        "qlinks.caging.classification",
+        "qlinks.caging.diagnostics",
+        "qlinks.caging.support",
+        "qlinks.caging.spectral",
+        "qlinks.caging.thermodynamic",
+        "qlinks.caging.evidence",
         "qlinks.open_system.manifold_detectors",
     }
 

@@ -8,6 +8,11 @@ from typing import Literal
 import numpy as np
 import numpy.typing as npt
 
+from qlinks.caging.analysis.thermodynamic import (
+    EnergyDensityMatchReport,
+    LocalWitness,
+    WitnessNormalization,
+)
 from qlinks.caging.local_search.global_ops import _qdm_global_plaquette_actions
 from qlinks.caging.local_search.padding import (
     factorized_qdm_padding_from_multi_padding,
@@ -18,11 +23,6 @@ from qlinks.caging.local_search.types import (
     LocalQDMCageBlock,
     LocalQDMCageRecord,
     MultiLocalQDMPadding,
-)
-from qlinks.caging.thermodynamic import (
-    EnergyDensityMatchReport,
-    LocalWitness,
-    WitnessNormalization,
 )
 from qlinks.constraints import SquareQDMElectricWindingSector
 from qlinks.lattice import BoundaryCondition, SquareLattice

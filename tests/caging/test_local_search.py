@@ -12,7 +12,9 @@ from qlinks.caging import (
     CageSearchResult,
     CageState,
     CandidateSubgraph,
-    classify_cage_state,
+)
+from qlinks.caging.analysis import (
+    diagnose_cage_environment_reduction,
 )
 from qlinks.caging.local_search import (
     AdaptiveRegionProposal,
@@ -1449,7 +1451,7 @@ def test_local_qdm_certified_result_can_feed_classification_on_limited_basis() -
     )
 
     record = certified.first((0, 4))
-    report = classify_cage_state(
+    report = diagnose_cage_environment_reduction(
         record.cage_state,
         kinetic_matrix=certified.kinetic_matrix,
         basis_configs=certified.basis.states,
@@ -1653,13 +1655,13 @@ def test_qdm_multi_block_certified_result_reuses_limited_result_protocol() -> No
     assert record.cage_state.full_residual < 1.0e-9
     assert record.full_state is not None
 
-    classification = classify_cage_state(
+    environment_report = diagnose_cage_environment_reduction(
         record.cage_state,
         kinetic_matrix=certified.kinetic_matrix,
         basis_configs=certified.basis.states,
         hilbert_size=certified.hilbert_size,
     )
-    assert classification.support_size == record.cage_state.support_size
+    assert environment_report.support_size == record.cage_state.support_size
 
     from_reports = certified_qdm_result_from_multi_block_reports(
         model,

@@ -22,23 +22,27 @@ matplotlib.use("Agg")
 class DummyZeroReport:
     def __init__(self, zero_index, mechanism_label):
         self.zero_index = zero_index
-        self.mechanism_label = mechanism_label
+        self.probe_mechanism_label = mechanism_label
+
+    @property
+    def removal_mechanism(self):
+        if self.probe_mechanism_label == "q_empty":
+            return "no_environment_weight"
+        if self.probe_mechanism_label in {"domain_blocked", "projector_like"}:
+            return "projective_annihilation"
+        if self.probe_mechanism_label in {
+            "closed_by_same_pattern_zeros",
+            "collective_cancellation",
+        }:
+            return "same_local_cancellation_pattern"
+        return "unsafe"
 
 
-class DummyClassificationReport:
+class DummyEnvironmentReport:
     zero_reports = (
         DummyZeroReport(2, "q_empty"),
         DummyZeroReport(5, "projector_like"),
     )
-
-    q_empty_zero_indices = np.array([2], dtype=np.int64)
-    closed_by_known_zero_indices = np.array([], dtype=np.int64)
-    projector_like_zero_indices = np.array([5], dtype=np.int64)
-    unexplained_leakage_zero_indices = np.array([], dtype=np.int64)
-
-    regional_mechanism_zero_indices = np.array([2], dtype=np.int64)
-    extended_mechanism_zero_indices = np.array([5], dtype=np.int64)
-    failure_mechanism_zero_indices = np.array([], dtype=np.int64)
 
 
 def test_automatic_grid_shape_near_square() -> None:
@@ -265,7 +269,7 @@ def test_basis_grid_reuses_plaquette_primitives(monkeypatch) -> None:
 
 
 def test_zero_indices_for_mechanism_all():
-    report = DummyClassificationReport()
+    report = DummyEnvironmentReport()
 
     indices = _zero_indices_for_mechanism(report, "all")
 
@@ -273,17 +277,17 @@ def test_zero_indices_for_mechanism_all():
 
 
 def test_zero_indices_for_mechanism_projector_like():
-    report = DummyClassificationReport()
+    report = DummyEnvironmentReport()
 
     indices = _zero_indices_for_mechanism(report, "projector_like")
 
     assert indices.tolist() == [5]
 
 
-def test_zero_indices_for_mechanism_extended_group():
-    report = DummyClassificationReport()
+def test_zero_indices_for_projective_annihilation_group():
+    report = DummyEnvironmentReport()
 
-    indices = _zero_indices_for_mechanism(report, "extended")
+    indices = _zero_indices_for_mechanism(report, "projective_annihilation")
 
     assert indices.tolist() == [5]
 

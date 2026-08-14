@@ -66,6 +66,9 @@ Repository-level rules:
 - Visualization, reporting, and serialization helpers must not become hidden dependencies
   of numerical kernels.
 - New cross-layer imports require an architecture note in the pull request.
+- In caging analysis, environment removability is a property of the local-operator construction,
+  not a taxonomy of eigenstates. Do not use environment-removal mechanisms as cage-state classes.
+  Same-pattern removal requires equality of the support-aware weighted local transition signature.
 
 The active caging and open-system paths satisfy this boundary. The explicitly deprecated
 open-system cage constructors retain compatibility imports from caging; do not expand that

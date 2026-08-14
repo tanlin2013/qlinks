@@ -8,7 +8,7 @@ The thermodynamic caging workflow separates two finite-size questions:
 #. whether :math:`Q_R=L_R^\dagger L_R` has a nonzero expectation value in a
    thermal ensemble from the same constrained symmetry sector.
 
-The APIs in :mod:`qlinks.caging.thermodynamic` keep the local transition pattern
+The APIs in :mod:`qlinks.caging.analysis.thermodynamic` keep the local transition pattern
 independent of global variable labels, evaluate the projected constrained-basis
 operator exactly, and store finite-size scaling data without interpreting a
 short fit as a proof of a thermodynamic limit.
@@ -16,10 +16,10 @@ short fit as a proof of a thermodynamic limit.
 Match one local witness across sizes
 ------------------------------------
 
-After classifying one cage state at each size, identify reduced-IZ patterns that
+After diagnosing environment reduction for one cage state at each size, identify reduced-IZ patterns that
 are exactly common to all reports::
 
-   from qlinks.caging import common_local_witness_families
+   from qlinks.caging.analysis.thermodynamic import common_local_witness_families
 
    families = common_local_witness_families(
        {
@@ -34,7 +34,7 @@ are exactly common to all reports::
 
 Translations are matched automatically because global variable indices are not
 part of the template key.  Rotated or reflected copies must currently use a
-consistent local variable ordering before classification.
+consistent local variable ordering before environment-reduction analysis.
 
 Evaluate cage and thermal expectations
 --------------------------------------
@@ -42,7 +42,7 @@ Evaluate cage and thermal expectations
 For a cage vector and the exact infinite-temperature ensemble in a constrained
 basis::
 
-   from qlinks.caging import make_eth_scaling_point
+   from qlinks.caging.analysis.thermodynamic import make_eth_scaling_point
 
    point_4x4 = make_eth_scaling_point(
        system_size=model_4x4.lattice.num_plaquettes,
@@ -55,12 +55,12 @@ basis::
 
 If ``thermal_states`` is supplied, the same helper evaluates an equal-weight or
 weighted state ensemble.  A finite-size microcanonical shell can be selected
-with :func:`qlinks.caging.evaluate_local_witness_microcanonical`.
+with :func:`qlinks.caging.analysis.thermodynamic.evaluate_local_witness_microcanonical`.
 
 Collect points built from the same template in an
-:class:`qlinks.caging.ETHScalingReport`::
+:class:`qlinks.caging.analysis.thermodynamic.ETHScalingReport`::
 
-   from qlinks.caging import ETHScalingReport
+   from qlinks.caging.analysis.thermodynamic import ETHScalingReport
 
    scaling = ETHScalingReport(
        template=family.template,
@@ -236,7 +236,7 @@ current Fourier implementation assumes even ``Lx`` and ``Ly``.
 Evaluate a common cage witness family
 -------------------------------------
 
-The output of :func:`qlinks.caging.common_local_witness_families` can be sent
+The output of :func:`qlinks.caging.analysis.thermodynamic.common_local_witness_families` can be sent
 directly to the strip backend::
 
    from qlinks.caging import evaluate_square_qdm_witness_family_on_strips
@@ -268,7 +268,7 @@ A reduced-IZ row has an arbitrary overall coefficient.  For thermodynamic
 comparisons use operator-norm normalization, which fixes
 ``||Q_R|| = ||L_R||^2 = 1``::
 
-   witnesses = local_witnesses_from_classification_report(
+   witnesses = local_witnesses_from_environment_report(
        classification,
        normalization="operator_norm",
    )

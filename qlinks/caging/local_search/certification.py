@@ -512,7 +512,7 @@ def certified_qdm_result_from_multi_block_reports(
     The returned object uses the same ``CertifiedLocalQDMCageSearchResult``
     container as the single-block local-padding path. Its basis is the limited
     union of certified support configurations and their one-hop kinetic shell,
-    so downstream classification and visualization tools can consume it without
+    so downstream environment-reduction and visualization tools can consume it without
     enumerating the full global Hilbert space.
     """
     multi_config = LocalQDMMultiPaddingConfig() if config is None else config

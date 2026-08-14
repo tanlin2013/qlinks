@@ -1480,7 +1480,7 @@ def summarize_cage_record_stability(
     perturbations: Sequence[object],
     records: Sequence[object],
     *,
-    classification_reports: Sequence[object] | None = None,
+    environment_reports: Sequence[object] | None = None,
     coefficient_field: CoefficientField = "real",
     tolerance: float = 1e-10,
 ) -> tuple[CageRecordStabilitySummary, ...]:
@@ -1492,8 +1492,8 @@ def summarize_cage_record_stability(
     whether one preferred localized representative is more fragile than the
     others.
     """
-    if classification_reports is not None and len(classification_reports) != len(records):
-        raise ValueError("classification_reports length must match records.")
+    if environment_reports is not None and len(environment_reports) != len(records):
+        raise ValueError("environment_reports length must match records.")
 
     summaries: list[CageRecordStabilitySummary] = []
     for record_index, record in enumerate(records):
@@ -1510,22 +1510,23 @@ def summarize_cage_record_stability(
             coefficient_field=coefficient_field,
             tolerance=tolerance,
         )
-        classification = (
-            None if classification_reports is None else classification_reports[record_index]
-        )
+        environment = None if environment_reports is None else environment_reports[record_index]
         summaries.append(
             CageRecordStabilitySummary(
                 record_index=record_index,
                 signature=tuple(int(value) for value in record.signature),
                 support_size=int(np.asarray(record.support).size),
                 inverse_participation_ratio=float(np.sum(np.abs(state) ** 4)),
-                classification_label=(
-                    None if classification is None else str(classification.label)
+                environment_safely_removable=(
+                    None if environment is None else bool(environment.is_safely_removable)
+                ),
+                environment_removal_mechanisms=(
+                    None if environment is None else tuple(environment.removal_mechanisms)
                 ),
                 n_collective_cancellation_source_probes=(
                     None
-                    if classification is None
-                    else int(classification.n_collective_cancellation_source_probes)
+                    if environment is None
+                    else int(environment.n_collective_cancellation_source_probes)
                 ),
                 formal_compatible_dimension=hierarchy.first_order.compatible_dimension,
                 exact_fixed_state_dimension=hierarchy.fixed_state.compatible_dimension,

@@ -397,7 +397,7 @@ class QuantumDiskBasisGridVisualizer:
     The public methods intentionally mirror the generic
     :class:`BasisGridVisualizer` API: ``plot`` for arbitrary basis-state batches,
     ``plot_cage_support`` for cage records, and ``plot_interference_zeros`` for
-    classification reports.
+    environment-reduction reports.
     """
 
     lattice: SquareLattice
@@ -607,7 +607,7 @@ class QuantumDiskBasisGridVisualizer:
 
     def plot_interference_zeros(
         self,
-        classification_report,
+        environment_report,
         *,
         basis_configs: npt.ArrayLike,
         mechanism: str = "all",
@@ -618,11 +618,11 @@ class QuantumDiskBasisGridVisualizer:
     ):
         """Plot disk basis states corresponding to nontrivial interference zeros."""
         basis_configs = np.asarray(basis_configs)
-        zero_indices = _zero_indices_for_mechanism(classification_report, mechanism)
+        zero_indices = _zero_indices_for_mechanism(environment_report, mechanism)
         if max_states is not None:
             zero_indices = zero_indices[:max_states]
         states = basis_configs[zero_indices]
-        mechanism_labels = _zero_mechanism_label_map(classification_report)
+        mechanism_labels = _zero_mechanism_label_map(environment_report)
 
         if labels is None:
             labels = [

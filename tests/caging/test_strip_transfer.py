@@ -3,13 +3,17 @@ from __future__ import annotations
 import numpy as np
 
 from qlinks.caging import (
-    LocalWitnessEmbeddingRecord,
-    LocalWitnessFamily,
-    ReducedIZPatternSupport,
     SquareQDMStripTransferMatrix,
     SquareQDMWitnessPlacement,
-    evaluate_local_witness_on_diagonal_ensemble,
     evaluate_square_qdm_witness_family_on_strips,
+)
+from qlinks.caging.analysis import (
+    LocalCancellationPatternSupport,
+)
+from qlinks.caging.analysis.thermodynamic import (
+    LocalWitnessEmbeddingRecord,
+    LocalWitnessFamily,
+    evaluate_local_witness_on_diagonal_ensemble,
     local_witness_template_from_pattern_support,
 )
 from qlinks.models import SquareQDMModel
@@ -26,7 +30,7 @@ def _plaquette_flip_witness(
         model.layout.link_variable_index(int(link_id))
         for link_id in model.lattice.plaquette_links(plaquette_id)
     )
-    pattern_support = ReducedIZPatternSupport(
+    pattern_support = LocalCancellationPatternSupport(
         pattern_key=(
             (
                 (1, 0, 1, 0),
@@ -95,7 +99,7 @@ def test_periodic_reference_seam_is_unwrapped_to_a_bounded_placement() -> None:
 def test_single_link_lowering_has_zero_projected_qdm_weight() -> None:
     model = SquareQDMModel(lx=4, ly=4, boundary_condition="periodic")
     variable_index = model.layout.link_variable_index(0)
-    pattern_support = ReducedIZPatternSupport(
+    pattern_support = LocalCancellationPatternSupport(
         pattern_key=(((1,), (0,), (1.0, 0.0)),),
         variable_indices=(variable_index,),
         source_zero_indices=(),

@@ -17,6 +17,7 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Replace the former caged-state `classification` layer with `qlinks.caging.analysis.environment`: environment reduction now asks only whether exterior degrees of freedom can be removed, distinguishes no-weight, projective-annihilation, and same-local-cancellation-pattern mechanisms, and requires support-aware weighted transition-pattern matching rather than mere closure onto another known interference zero. Move local structure/support, spectral, thermodynamic, and evidence diagnostics under `qlinks.caging.analysis` and eliminate the final static caging SCC.
 - Promote the stabilized caging local-search and stability families into nested `qlinks.caging.local_search` and `qlinks.caging.stability` subpackages, remove the temporary flat module paths, and contract the top-level caging API from 499 to 299 exports.
 - Stabilize the local cage-search architecture into an acyclic dependency DAG, separating proposal generation/execution, global QDM primitives, exterior-padding search, factorized certification, and residual result assembly.
 - Decompose cage stability, local cage search, and dark-manifold detector god modules into responsibility-specific implementation modules and migrate first-party callers to focused modules.

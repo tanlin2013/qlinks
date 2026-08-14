@@ -1,15 +1,15 @@
 import pytest
 
 from tests.helpers.caging_toys import (
-    base_classification_config,
+    base_environment_reduction_config,
     pairwise_interference_system,
     two_zero_closed_interference_system,
 )
 
 
 @pytest.fixture
-def classification_config():
-    return base_classification_config()
+def environment_reduction_config():
+    return base_environment_reduction_config()
 
 
 @pytest.fixture

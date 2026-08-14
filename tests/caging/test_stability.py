@@ -296,16 +296,24 @@ def test_summarize_cage_record_stability_compares_preferred_representatives():
             signature=(0, 4),
         ),
     )
-    classifications = (
-        SimpleNamespace(label="regional_candidate", n_collective_cancellation_source_probes=0),
-        SimpleNamespace(label="extended_candidate", n_collective_cancellation_source_probes=3),
+    environment_reports = (
+        SimpleNamespace(
+            is_safely_removable=True,
+            removal_mechanisms=("no_environment_weight",),
+            n_collective_cancellation_source_probes=0,
+        ),
+        SimpleNamespace(
+            is_safely_removable=True,
+            removal_mechanisms=("same_local_cancellation_pattern",),
+            n_collective_cancellation_source_probes=3,
+        ),
     )
 
     summaries = summarize_cage_record_stability(
         base,
         (strong, structural, incompatible),
         records,
-        classification_reports=classifications,
+        environment_reports=environment_reports,
         tolerance=1.0e-12,
     )
 

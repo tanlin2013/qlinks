@@ -1,39 +1,34 @@
 qlinks.caging package
 =====================
 
-The caging package contains high-level cage search, classification, diagnostics,
-local-cage search, and thermodynamic witness helpers.  Shared local algebra lives
-in :mod:`qlinks.local_structure`; open-system construction lives separately in
+The caging package contains the core cage search/solver API plus focused subpackages for local
+search, post-search analysis, and stability. Shared local algebra lives in
+:mod:`qlinks.local_structure`; open-system construction lives separately in
 :mod:`qlinks.open_system`.
 
-Submodules
-----------
+Subpackages
+-----------
 
-qlinks.caging.candidate module
+qlinks.caging.analysis package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: qlinks.caging.candidate
+``analysis.environment`` diagnoses whether the exterior environment can be safely removed when
+constructing a bounded local caging operator.  It deliberately does **not** classify the caged
+eigenstate.  Broader local structure and support morphology are separate analyses.
+
+.. automodule:: qlinks.caging.analysis
    :members:
    :show-inheritance:
 
-qlinks.caging.classification module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: qlinks.caging.classification
+.. automodule:: qlinks.caging.analysis.environment
    :members:
    :show-inheritance:
 
-qlinks.caging.diagnostics module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: qlinks.caging.diagnostics
+.. automodule:: qlinks.caging.analysis.local_structure
    :members:
    :show-inheritance:
 
-qlinks.caging.local_search.workflows module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: qlinks.caging.local_search.workflows
+.. automodule:: qlinks.caging.analysis.thermodynamic
    :members:
    :show-inheritance:
 
@@ -51,22 +46,12 @@ qlinks.caging.stability package
    :members:
    :show-inheritance:
 
-qlinks.caging.thermodynamic module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: qlinks.caging.thermodynamic
-   :members:
-   :show-inheritance:
-
-qlinks.caging.search module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Core modules
+------------
 
 .. automodule:: qlinks.caging.search
    :members:
    :show-inheritance:
-
-qlinks.caging.solver module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: qlinks.caging.solver
    :members:

@@ -12,20 +12,24 @@ import pandas as pd
 import scipy.sparse as sp
 from IPython.display import display
 
-from qlinks.caging import (
-    CageClassificationConfig,
-    classify_cage_state,
+from qlinks.caging.analysis import (
+    EnvironmentReductionConfig,
+    diagnose_cage_environment_reduction,
 )
 
-ZERO_MECHANISM_FIELDS = {
-    "all": None,
-    "q_empty": "q_empty_zero_indices",
-    "closed_by_known_zeros": "closed_by_known_zero_indices",
-    "projector_like": "projector_like_zero_indices",
-    "unexplained_leakage": "unexplained_leakage_zero_indices",
-    "regional": "regional_mechanism_zero_indices",
-    "extended": "extended_mechanism_zero_indices",
-    "failure": "failure_mechanism_zero_indices",
+ZERO_DETAIL_MECHANISMS = {
+    "q_empty",
+    "closed_by_same_pattern_zeros",
+    "domain_blocked",
+    "projector_like",
+    "collective_cancellation",
+    "unexplained_leakage",
+}
+ZERO_REMOVAL_MECHANISMS = {
+    "no_environment_weight",
+    "projective_annihilation",
+    "same_local_cancellation_pattern",
+    "unsafe",
 }
 
 
@@ -297,7 +301,7 @@ def projector_deleted_block_covariance(
     }
 
 
-def classify_cage_search_result(
+def diagnose_cage_search_environment_reduction(
     search_result,
     *,
     kinetic_matrix,
@@ -305,17 +309,17 @@ def classify_cage_search_result(
     sector_mask=None,
     config=None,
 ) -> tuple[pd.DataFrame, list]:
-    """Classify all CageRecords in a CageSearchResult.
+    """Diagnose exterior-environment reduction for all CageRecords in a CageSearchResult.
 
     Returns
     -------
     df:
         One row per cage record.
     reports:
-        The full CageClassificationReport objects, in the same order as df.
+        The full EnvironmentReductionReport objects, in the same order as df.
     """
     if config is None:
-        config = CageClassificationConfig()
+        config = EnvironmentReductionConfig()
 
     rows = []
     reports = []
@@ -324,7 +328,7 @@ def classify_cage_search_result(
         records = search_result[signature]
 
         for record_index, record in enumerate(records):
-            report = classify_cage_state(
+            report = diagnose_cage_environment_reduction(
                 record.cage_state,
                 kinetic_matrix=kinetic_matrix,
                 basis_configs=basis_configs,
@@ -349,8 +353,8 @@ def classify_cage_search_result(
                     "n_nontrivial_zeros": int(report.n_nontrivial_zeros),
                     "n_distinct_local_patterns": int(report.n_distinct_local_patterns),
                     "n_q_empty_source_probes": int(report.n_q_empty_source_probes),
-                    "n_closed_by_known_zero_network_source_probes": int(
-                        report.n_closed_by_known_zero_network_source_probes
+                    "n_same_pattern_zero_closure_probes": int(
+                        report.n_same_pattern_zero_closure_probes
                     ),
                     "n_projector_like_source_probes": int(report.n_projector_like_source_probes),
                     "n_invalid_source_probes": int(report.n_invalid_source_probes),
@@ -448,34 +452,34 @@ def display_basis_dataframe(
     return df
 
 
-def zero_indices_from_report(classification_report, *, mechanism: str = "all"):
-    """Return nontrivial-zero basis indices, optionally split by mechanism."""
-    if mechanism not in ZERO_MECHANISM_FIELDS:
-        allowed = ", ".join(ZERO_MECHANISM_FIELDS)
-        raise ValueError(f"Unknown mechanism {mechanism!r}. Expected one of: {allowed}.")
+def zero_indices_from_report(environment_report, *, mechanism: str = "all"):
+    """Return nontrivial-zero indices selected by environment-removal mechanism."""
+    zero_reports = tuple(environment_report.zero_reports)
+    if mechanism == "all":
+        selected = zero_reports
+    elif mechanism in ZERO_DETAIL_MECHANISMS:
+        selected = tuple(zero for zero in zero_reports if zero.probe_mechanism_label == mechanism)
+    elif mechanism in ZERO_REMOVAL_MECHANISMS:
+        selected = tuple(zero for zero in zero_reports if zero.removal_mechanism == mechanism)
+    else:
+        allowed = sorted({"all", *ZERO_DETAIL_MECHANISMS, *ZERO_REMOVAL_MECHANISMS})
+        raise ValueError(f"Unknown mechanism {mechanism!r}. Expected one of: {', '.join(allowed)}.")
 
-    field = ZERO_MECHANISM_FIELDS[mechanism]
-    if field is None:
-        return np.array(
-            [int(zero.zero_index) for zero in classification_report.zero_reports],
-            dtype=np.int64,
-        )
-
-    return np.asarray(getattr(classification_report, field), dtype=np.int64)
+    return np.asarray([int(zero.zero_index) for zero in selected], dtype=np.int64)
 
 
-def zero_mechanism_map(classification_report):
+def zero_mechanism_map(environment_report):
     """Map zero basis index to zero-mechanism label."""
     return {
         int(zero.zero_index): str(zero.probe_mechanism_label)
-        for zero in classification_report.zero_reports
+        for zero in environment_report.zero_reports
     }
 
 
-def interference_zero_dataframe(classification_report, basis_configs, *, mechanism: str = "all"):
+def interference_zero_dataframe(environment_report, basis_configs, *, mechanism: str = "all"):
     """Return nontrivial interference-zero states as a DataFrame."""
-    indices = zero_indices_from_report(classification_report, mechanism=mechanism)
-    mechanism_by_index = zero_mechanism_map(classification_report)
+    indices = zero_indices_from_report(environment_report, mechanism=mechanism)
+    mechanism_by_index = zero_mechanism_map(environment_report)
 
     df = basis_dataframe(basis_configs, indices=indices)
     df.insert(1, "mechanism", [mechanism_by_index.get(int(index), "unknown") for index in indices])

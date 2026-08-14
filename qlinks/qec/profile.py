@@ -219,7 +219,7 @@ class QECCodeCandidateReport:
     local_indistinguishability: LocalIndistinguishabilityReport
     logical_operators: LogicalOperatorReport | None = None
     error_algebra: ProjectedErrorAlgebraReport | None = None
-    classification_labels: tuple[str, ...] = ()
+    environment_reduction_summaries: tuple[str, ...] = ()
     metadata: dict[str, object] = field(default_factory=dict)
 
     @property
@@ -248,7 +248,7 @@ class QECCodeCandidateReport:
             "qec_candidate": self.qec_candidate,
             "first_violating_weight": self.first_violating_weight,
             "local_indistinguishability_weight": self.local_indistinguishability_weight,
-            "classification_labels": self.classification_labels,
+            "environment_reduction_summaries": self.environment_reduction_summaries,
             "metadata": dict(self.metadata),
             "local_indistinguishability": (self.local_indistinguishability.to_summary_dict()),
             "logical_operators": (
@@ -278,7 +278,7 @@ class QECCodeCandidateReport:
                         "local indistinguishability weight",
                         self.local_indistinguishability_weight,
                     ),
-                    ("classification labels", self.classification_labels),
+                    ("environment reduction", self.environment_reduction_summaries),
                 ),
             ),
             self.local_indistinguishability.to_text(),
@@ -320,7 +320,7 @@ class QECCodeCandidateReport:
                     "local indistinguishability weight",
                     self.local_indistinguishability_weight,
                 ),
-                ("classification labels", self.classification_labels),
+                ("environment reduction", self.environment_reduction_summaries),
             ),
         )
         renderables = [overview, self.local_indistinguishability.to_rich()]
@@ -538,7 +538,7 @@ def diagnose_cage_code_candidate(
     include_logical_operators: bool = True,
     include_error_algebra: bool = False,
     allow_rank_deficient: bool = True,
-    classification_reports: Sequence[Any] = (),
+    environment_reports: Sequence[Any] = (),
     metadata: Mapping[str, object] | None = None,
 ) -> QECCodeCandidateReport:
     """Build a code from cage records and diagnose local indistinguishability."""
@@ -576,7 +576,7 @@ def diagnose_cage_code_candidate(
         local_indistinguishability=local_report,
         logical_operators=logical_report,
         error_algebra=algebra_report,
-        classification_labels=_classification_label_tuple(classification_reports),
+        environment_reduction_summaries=_environment_reduction_summary_tuple(environment_reports),
         metadata=dict(metadata or {}),
     )
 
@@ -591,7 +591,7 @@ def diagnose_cage_collection_code_candidate(
     include_logical_operators: bool = True,
     include_error_algebra: bool = False,
     allow_rank_deficient: bool = True,
-    classification_reports: Sequence[Any] = (),
+    environment_reports: Sequence[Any] = (),
     metadata: Mapping[str, object] | None = None,
 ) -> QECCodeCandidateReport:
     """Diagnose a cross-sector cage collection as one candidate code space."""
@@ -635,7 +635,7 @@ def diagnose_cage_collection_code_candidate(
         local_indistinguishability=local_report,
         logical_operators=logical_report,
         error_algebra=algebra_report,
-        classification_labels=_classification_label_tuple(classification_reports),
+        environment_reduction_summaries=_environment_reduction_summary_tuple(environment_reports),
         metadata=merged_metadata,
     )
 
@@ -714,20 +714,17 @@ def _pair_support_variables(errors: LocalErrorSet, names: tuple[str, str]) -> tu
     return tuple(sorted(int(index) for index in support))
 
 
-def _classification_label_tuple(classification_reports: Sequence[Any]) -> tuple[str, ...]:
-    labels: list[str] = []
-    for report in classification_reports:
-        label = getattr(report, "label", None)
-        if label is not None:
-            labels.append(str(label))
+def _environment_reduction_summary_tuple(environment_reports: Sequence[Any]) -> tuple[str, ...]:
+    summaries: list[str] = []
+    for report in environment_reports:
+        safe = getattr(report, "is_safely_removable", None)
+        mechanisms = tuple(getattr(report, "removal_mechanisms", ()))
+        if safe is None and not mechanisms:
             continue
-        closure = getattr(report, "closure_mechanism_label", None)
-        fock = getattr(report, "fock_support_morphology_label", None)
-        real_space = getattr(report, "real_space_support_morphology_label", None)
-        parts = [str(part) for part in (closure, fock, real_space) if part is not None]
-        if parts:
-            labels.append("/".join(parts))
-    return tuple(labels)
+        status = "safe" if bool(safe) else "unsafe"
+        mechanism_text = "+".join(str(value) for value in mechanisms) or "unspecified"
+        summaries.append(f"{status}:{mechanism_text}")
+    return tuple(summaries)
 
 
 def _none_as_large(value: int | None) -> int:

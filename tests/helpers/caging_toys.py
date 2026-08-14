@@ -3,12 +3,12 @@ from __future__ import annotations
 import numpy as np
 import scipy.sparse as scipy_sparse
 
-from qlinks.caging.classification import CageClassificationConfig
+from qlinks.caging.analysis.environment import EnvironmentReductionConfig
 from tests.helpers.states import binary_product_states, config_index
 
 
-def base_classification_config() -> CageClassificationConfig:
-    return CageClassificationConfig(
+def base_environment_reduction_config() -> EnvironmentReductionConfig:
+    return EnvironmentReductionConfig(
         amplitude_tolerance=1.0e-12,
         cancellation_tolerance=1.0e-12,
         action_tolerance=1.0e-12,

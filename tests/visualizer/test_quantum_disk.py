@@ -35,18 +35,23 @@ class DummyZeroReport:
     zero_index: int
     probe_mechanism_label: str
 
+    @property
+    def removal_mechanism(self) -> str:
+        if self.probe_mechanism_label == "q_empty":
+            return "no_environment_weight"
+        if self.probe_mechanism_label in {"domain_blocked", "projector_like"}:
+            return "projective_annihilation"
+        if self.probe_mechanism_label in {
+            "closed_by_same_pattern_zeros",
+            "collective_cancellation",
+        }:
+            return "same_local_cancellation_pattern"
+        return "unsafe"
+
 
 @dataclass(frozen=True)
-class DummyClassificationReport:
+class DummyEnvironmentReport:
     zero_reports: tuple[DummyZeroReport, ...]
-    q_empty_zero_indices: np.ndarray
-    closed_by_known_zero_indices: np.ndarray
-    domain_blocked_zero_indices: np.ndarray
-    projector_like_zero_indices: np.ndarray
-    unexplained_leakage_zero_indices: np.ndarray
-    regional_mechanism_zero_indices: np.ndarray
-    extended_mechanism_zero_indices: np.ndarray
-    failure_mechanism_zero_indices: np.ndarray
 
 
 def test_quantum_disk_visualizer_api_is_exported() -> None:
@@ -172,19 +177,11 @@ def test_quantum_disk_grid_plot_interference_zeros() -> None:
     model = SquareQuantumDiskModel(lx=2, ly=2, boundary_condition="open")
     basis = model.build_basis(sort=True)
     visualizer = QuantumDiskBasisGridVisualizer.from_model(model)
-    report = DummyClassificationReport(
+    report = DummyEnvironmentReport(
         zero_reports=(
             DummyZeroReport(1, "q_empty"),
             DummyZeroReport(3, "projector_like"),
         ),
-        q_empty_zero_indices=np.array([1], dtype=np.int64),
-        closed_by_known_zero_indices=np.array([], dtype=np.int64),
-        domain_blocked_zero_indices=np.array([], dtype=np.int64),
-        projector_like_zero_indices=np.array([3], dtype=np.int64),
-        unexplained_leakage_zero_indices=np.array([], dtype=np.int64),
-        regional_mechanism_zero_indices=np.array([1], dtype=np.int64),
-        extended_mechanism_zero_indices=np.array([3], dtype=np.int64),
-        failure_mechanism_zero_indices=np.array([], dtype=np.int64),
     )
 
     fig, axes = visualizer.plot_interference_zeros(

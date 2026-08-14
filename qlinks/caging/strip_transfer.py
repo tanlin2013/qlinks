@@ -9,13 +9,13 @@ import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
 
-from qlinks.caging.classification import CageClassificationReport
-from qlinks.caging.thermodynamic import (
+from qlinks.caging.analysis.environment import EnvironmentReductionReport
+from qlinks.caging.analysis.thermodynamic import (
     LocalWitness,
     LocalWitnessFamily,
     LocalWitnessTemplate,
     WitnessNormalization,
-    local_witnesses_from_classification_report,
+    local_witnesses_from_environment_report,
 )
 from qlinks.lattice import BoundaryCondition, SquareLattice
 from qlinks.models import SquareQDMModel
@@ -444,8 +444,8 @@ class SquareQDMWitnessFamilyStripReport:
 
 
 @dataclass(frozen=True, slots=True)
-class SquareQDMClassificationWitnessStripRecord:
-    """One actual reduced-IZ witness extracted from a cage classification."""
+class SquareQDMEnvironmentWitnessStripRecord:
+    """One reduced-IZ witness extracted from an environment-reduction report."""
 
     witness_index: int
     witness: LocalWitness
@@ -467,10 +467,10 @@ class SquareQDMClassificationWitnessStripRecord:
 
 
 @dataclass(frozen=True, slots=True)
-class SquareQDMClassificationWitnessStripReport:
-    """Transfer results for every trusted reduced-IZ witness of one cage."""
+class SquareQDMEnvironmentWitnessStripReport:
+    """Transfer results for every trusted environment-reduction witness of one cage."""
 
-    records: tuple[SquareQDMClassificationWitnessStripRecord, ...]
+    records: tuple[SquareQDMEnvironmentWitnessStripRecord, ...]
     normalization: WitnessNormalization
 
     @property
@@ -1609,8 +1609,8 @@ def evaluate_square_qdm_witness_family_on_strips(
     )
 
 
-def evaluate_square_qdm_classification_witnesses_on_strips(
-    report: CageClassificationReport,
+def evaluate_square_qdm_environment_witnesses_on_strips(
+    report: EnvironmentReductionReport,
     *,
     model: SquareQDMModel,
     lengths: Sequence[int],
@@ -1620,19 +1620,19 @@ def evaluate_square_qdm_classification_witnesses_on_strips(
     include_projector_like: bool = True,
     winding_projection: WindingProjectionMethod = "auto",
     fourier_points: int | None = None,
-) -> SquareQDMClassificationWitnessStripReport:
+) -> SquareQDMEnvironmentWitnessStripReport:
     """Evaluate the actual cage-derived reduced-IZ witnesses on strips.
 
     The default operator-norm normalization fixes ``||Q_R|| = 1``.  This
     removes the arbitrary coefficient scale from comparisons between distinct
     interference-zero rows and between different system sizes.
     """
-    witnesses = local_witnesses_from_classification_report(
+    witnesses = local_witnesses_from_environment_report(
         report,
         include_projector_like=include_projector_like,
         normalization=normalization,
     )
-    records: list[SquareQDMClassificationWitnessStripRecord] = []
+    records: list[SquareQDMEnvironmentWitnessStripRecord] = []
     for witness_index, witness in enumerate(witnesses):
         placement = SquareQDMWitnessPlacement.from_local_witness(model, witness)
         transfer = SquareQDMStripTransferMatrix(circumference=placement.circumference)
@@ -1645,14 +1645,14 @@ def evaluate_square_qdm_classification_witnesses_on_strips(
             fourier_points=fourier_points,
         )
         records.append(
-            SquareQDMClassificationWitnessStripRecord(
+            SquareQDMEnvironmentWitnessStripRecord(
                 witness_index=witness_index,
                 witness=witness,
                 placement=placement,
                 scaling_report=scaling,
             )
         )
-    return SquareQDMClassificationWitnessStripReport(
+    return SquareQDMEnvironmentWitnessStripReport(
         records=tuple(records),
         normalization=normalization,
     )

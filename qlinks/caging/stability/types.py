@@ -186,7 +186,8 @@ class CageRecordStabilitySummary:
     signature: tuple[int, int]
     support_size: int
     inverse_participation_ratio: float
-    classification_label: str | None
+    environment_safely_removable: bool | None
+    environment_removal_mechanisms: tuple[str, ...] | None
     n_collective_cancellation_source_probes: int | None
     formal_compatible_dimension: int
     exact_fixed_state_dimension: int
@@ -204,7 +205,8 @@ class CageRecordStabilitySummary:
             "signature": self.signature,
             "support_size": self.support_size,
             "inverse_participation_ratio": self.inverse_participation_ratio,
-            "classification_label": self.classification_label,
+            "environment_safely_removable": self.environment_safely_removable,
+            "environment_removal_mechanisms": self.environment_removal_mechanisms,
             "n_collective_cancellation_source_probes": (
                 self.n_collective_cancellation_source_probes
             ),

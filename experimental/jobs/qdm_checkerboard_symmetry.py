@@ -41,7 +41,7 @@ from qdm_checkerboard_large_strip import (
 )
 
 from qlinks.basis import Basis
-from qlinks.caging.spectral import SymmetrySectorBasis
+from qlinks.caging.analysis.spectral import SymmetrySectorBasis
 from qlinks.encoded import BinaryEncodedBasis
 
 

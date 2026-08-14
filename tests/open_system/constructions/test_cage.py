@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 import scipy.sparse as sp
 
-from qlinks.caging.classification import (
-    InterferenceZeroReport,
+from qlinks.caging.analysis.environment import (
+    EnvironmentRemovalProbeReport,
     LocalTransitionPattern,
 )
 from qlinks.encoded import BinaryEncodedBasis
@@ -111,8 +111,8 @@ def _zero_report(
     label: str = "q_empty",
     transitions: tuple[LocalTransitionPattern, ...] = (),
     reduced_action_vector: np.ndarray | None = None,
-) -> InterferenceZeroReport:
-    return InterferenceZeroReport(
+) -> EnvironmentRemovalProbeReport:
+    return EnvironmentRemovalProbeReport(
         zero_index=zero_index,
         active_neighbors=np.array([], dtype=np.int64),
         active_matrix_elements=np.array([], dtype=np.complex128),
@@ -129,7 +129,7 @@ def _zero_report(
         unexplained_complement_target_indices=np.array([], dtype=np.int64),
         complement_targets_are_known_zeros=True,
         trivial_target_indices=np.array([], dtype=np.int64),
-        known_nonprojector_iz_target_indices=np.array([], dtype=np.int64),
+        same_pattern_iz_target_indices=np.array([], dtype=np.int64),
         projector_like_iz_target_indices=np.array([], dtype=np.int64),
         unexpected_target_indices=np.array([], dtype=np.int64),
         complement_support_indices=np.array([], dtype=np.int64),

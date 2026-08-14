@@ -1,7 +1,7 @@
 import numpy as np
 
 from qlinks.basis.configs import basis_configs_from_build_result
-from qlinks.caging.spectral import basis_permutation_from_variable_permutation
+from qlinks.caging.analysis.spectral import basis_permutation_from_variable_permutation
 from qlinks.caging.stability import (
     ManyBodyCLSCompletenessSequencePoint,
     ManyBodyCLSCompletenessSequenceReport,

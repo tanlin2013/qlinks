@@ -5,14 +5,18 @@ from functools import lru_cache
 import numpy as np
 
 from qlinks.caging import (
-    CageClassificationConfig,
     SquareQDMPeriodicProductUnitCell,
     certify_local_witness_on_square_qdm_periodic_sequence,
     certify_square_qdm_periodic_product_sequence,
-    classify_cage_state,
-    evaluate_square_qdm_classification_witnesses_on_strips,
-    local_witnesses_from_classification_report,
+    evaluate_square_qdm_environment_witnesses_on_strips,
     scan_square_qdm_beta_zero_energy_density,
+)
+from qlinks.caging.analysis import (
+    EnvironmentReductionConfig,
+    diagnose_cage_environment_reduction,
+)
+from qlinks.caging.analysis.thermodynamic import (
+    local_witnesses_from_environment_report,
 )
 from qlinks.caging.local_search import (
     LocalQDMCageSearchConfig,
@@ -69,14 +73,14 @@ def _stripe_cage_fixture():
 REPEATABLE_X_REPORT_INDEX = 4
 
 
-def _repeatable_x_classification_report():
+def _repeatable_x_environment_report():
     _model, certified, _context = _stripe_cage_fixture()
-    return classify_cage_state(
+    return diagnose_cage_environment_reduction(
         certified.records[REPEATABLE_X_REPORT_INDEX].cage_state,
         kinetic_matrix=certified.kinetic_matrix,
         basis_configs=certified.basis.states,
         hilbert_size=certified.hilbert_size,
-        config=CageClassificationConfig(sector_policy="infer_support_component"),
+        config=EnvironmentReductionConfig(sector_policy="infer_support_component"),
     )
 
 
@@ -115,7 +119,7 @@ def test_actual_cage_witness_annihilates_entire_periodic_sequence() -> None:
         repeat_axis="x",
     )
     sequence = certify_square_qdm_periodic_product_sequence(unit_cell)
-    witness = local_witnesses_from_classification_report(_repeatable_x_classification_report())[0]
+    witness = local_witnesses_from_environment_report(_repeatable_x_environment_report())[0]
 
     certificate = certify_local_witness_on_square_qdm_periodic_sequence(
         sequence,
@@ -131,8 +135,8 @@ def test_actual_cage_witness_annihilates_entire_periodic_sequence() -> None:
 
 def test_actual_cage_witness_has_positive_same_sector_thermal_weight() -> None:
     model, _certified, _context = _stripe_cage_fixture()
-    report = evaluate_square_qdm_classification_witnesses_on_strips(
-        _repeatable_x_classification_report(),
+    report = evaluate_square_qdm_environment_witnesses_on_strips(
+        _repeatable_x_environment_report(),
         model=model,
         lengths=(4, 8, 12),
         winding_sector=(0, 0),
@@ -167,7 +171,7 @@ def test_pure_kinetic_sequence_matches_beta_zero_energy_exactly() -> None:
     )
     witness_certificate = certify_local_witness_on_square_qdm_periodic_sequence(
         sequence,
-        local_witnesses_from_classification_report(_repeatable_x_classification_report())[0],
+        local_witnesses_from_environment_report(_repeatable_x_environment_report())[0],
         normalization="operator_norm",
     )
 

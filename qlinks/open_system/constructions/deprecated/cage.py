@@ -9,9 +9,9 @@ import scipy.sparse as sp
 from numpy.typing import NDArray
 
 from qlinks.basis import basis_configs_from_build_result
-from qlinks.caging.classification import (
-    CageClassificationReport,
-    InterferenceZeroReport,
+from qlinks.caging.analysis.environment import (
+    EnvironmentReductionReport,
+    EnvironmentRemovalProbeReport,
     LocalTransitionPattern,
     ReducedIZMonitorDecomposition,
     group_reduced_iz_monitor_reports,
@@ -21,7 +21,7 @@ from qlinks.caging.classification import (
     support_key_for_zero_report,
     support_key_from_mask,
 )
-from qlinks.caging.support import CageRegionSupport, extract_cage_region_support
+from qlinks.caging.analysis.support import LocalCagingRegionSupport, extract_local_caging_region
 from qlinks.encoded import BinaryEncodedBasis
 from qlinks.local_structure import (
     LocalMatrixUnitTerm,
@@ -405,9 +405,9 @@ class _LazySparseSumOperator:
 
 @dataclass(slots=True)
 class _LazyReducedIZMonitorOperator:
-    """Lazy reduced-IZ sparse monitor assembled from classification reports."""
+    """Lazy reduced-IZ sparse monitor assembled from environment-reduction reports."""
 
-    reports: tuple[InterferenceZeroReport, ...]
+    reports: tuple[EnvironmentRemovalProbeReport, ...]
     basis_configs: NDArray[np.integer] | None
     config_to_index: dict[tuple[int, ...], int] | None
     shape: tuple[int, int]
@@ -658,14 +658,14 @@ def _state_action_from_component_group(
 
 def _report_groups_from_component_groups(
     *,
-    selected_reports: tuple[InterferenceZeroReport, ...],
+    selected_reports: tuple[EnvironmentRemovalProbeReport, ...],
     component_groups: tuple[Any, ...],
-) -> tuple[tuple[InterferenceZeroReport, ...], ...]:
+) -> tuple[tuple[EnvironmentRemovalProbeReport, ...], ...]:
     reports_by_zero_index = {int(report.zero_index): report for report in selected_reports}
-    report_groups: list[tuple[InterferenceZeroReport, ...]] = []
+    report_groups: list[tuple[EnvironmentRemovalProbeReport, ...]] = []
 
     for component_group in component_groups:
-        group_reports: list[InterferenceZeroReport] = []
+        group_reports: list[EnvironmentRemovalProbeReport] = []
         for zero_index in component_group.zero_indices:
             try:
                 group_reports.append(reports_by_zero_index[int(zero_index)])
@@ -843,7 +843,7 @@ class CageLindbladConstruction:
     """
 
     cage_state: NDArray[np.complex128]
-    region: CageRegionSupport
+    region: LocalCagingRegionSupport
     z_value: complex | None
 
     inside_plaquette_ids: tuple[int, ...]
@@ -1392,7 +1392,7 @@ def build_type1_cage_lindblad_construction(
     model: Any,
     build_result: ModelBuildResult,
     cage_state: NDArray[np.complex128],
-    classification_report: CageClassificationReport,
+    environment_report: EnvironmentReductionReport,
     z_value: complex | None = None,
     local_term_kind: LocalTermKind | None = None,
     builder: HamiltonianBuilderName = "sparse",
@@ -1423,7 +1423,7 @@ def build_type1_cage_lindblad_construction(
     local_rdm_parent_projector_rate: float = 1.0,
     local_rdm_reset_rate: float = 1.0,
     include_q_empty: bool = True,
-    include_closed_by_known_zeros: bool = True,
+    include_same_pattern_cancellation: bool = True,
     include_projector_like: bool = True,
     include_collective_cancellation: bool = True,
     use_collective_coefficients: bool = True,
@@ -1434,9 +1434,9 @@ def build_type1_cage_lindblad_construction(
 ) -> CageLindbladConstruction:
     """Build monitor and jump operators for a type-1 cage state.
 
-    This assembly routine connects the caging classification layer with the
+    This assembly routine connects the caging environment-reduction layer with the
     open-system layer.  It infers the local monitor region from the
-    classification report, builds a monitor that annihilates the target, and
+    environment-reduction report, builds a monitor that annihilates the target, and
     constructs Lindblad jumps according to the selected design and optional
     recycler policy.
 
@@ -1445,7 +1445,7 @@ def build_type1_cage_lindblad_construction(
         build_result: Existing model build result fixing the global basis and
             Hamiltonian terms.
         cage_state: Target cage state in the global basis.
-        classification_report: Reduced-IZ classification report for the target.
+        environment_report: Reduced-IZ environment-reduction report for the target.
         z_value: Optional sharp type-1 potential value.  If omitted, the value
             is inferred when needed.
         local_term_kind: Optional local-term geometry filter.  Leave as ``None``
@@ -1466,7 +1466,7 @@ def build_type1_cage_lindblad_construction(
             jumps.
         recycling_jump_source: Optional local-recycler construction strategy.
         include_q_empty: Include q-empty reduced-IZ reports.
-        include_closed_by_known_zeros: Include reports closed by known zeros.
+        include_same_pattern_cancellation: Include reports closed by known zeros.
         include_projector_like: Include projector-like reports.
         include_collective_cancellation: Include collective-cancellation
             reports.
@@ -1534,8 +1534,8 @@ def build_type1_cage_lindblad_construction(
         )
 
     stage_start = time.perf_counter()
-    region = extract_cage_region_support(
-        classification_report,
+    region = extract_local_caging_region(
+        environment_report,
         include_collective_cancellation=include_collective_cancellation,
     )
     _record_construction_stage(timing_collector, "extract_region", stage_start)
@@ -1639,7 +1639,7 @@ def build_type1_cage_lindblad_construction(
 
         if reduced_iz_monitor_decomposition == "single_sum":
             monitor, reduced_iz_monitor_reports, reduced_iz_z_value = _build_reduced_iz_monitor(
-                classification_report=classification_report,
+                environment_report=environment_report,
                 basis_configs=basis_configs,
                 shape=shape,
                 model=model,
@@ -1653,7 +1653,7 @@ def build_type1_cage_lindblad_construction(
                 reduced_iz_monitor_content=reduced_iz_monitor_content,
                 residual_tolerance=residual_tolerance,
                 include_q_empty=include_q_empty,
-                include_closed_by_known_zeros=include_closed_by_known_zeros,
+                include_same_pattern_cancellation=include_same_pattern_cancellation,
                 include_projector_like=include_projector_like,
                 include_collective_cancellation=include_collective_cancellation,
                 use_collective_coefficients=use_collective_coefficients,
@@ -1670,10 +1670,10 @@ def build_type1_cage_lindblad_construction(
                     )
                 z_value = reduced_iz_z_value
 
-            single_component_groups = classification_report.reduced_iz_component_groups(
+            single_component_groups = environment_report.reduced_iz_component_groups(
                 decomposition="single_sum",
                 include_q_empty=include_q_empty,
-                include_closed_by_known_zeros=include_closed_by_known_zeros,
+                include_same_pattern_cancellation=include_same_pattern_cancellation,
                 include_projector_like=include_projector_like,
                 include_collective_cancellation=include_collective_cancellation,
                 use_collective_coefficients=use_collective_coefficients,
@@ -1720,7 +1720,7 @@ def build_type1_cage_lindblad_construction(
                 monitor_components,
                 component_jumps,
             ) = _build_reduced_iz_monitor_components(
-                classification_report=classification_report,
+                environment_report=environment_report,
                 basis_configs=basis_configs,
                 shape=shape,
                 decomposition=reduced_iz_monitor_decomposition,
@@ -1736,7 +1736,7 @@ def build_type1_cage_lindblad_construction(
                 local_term_cache=local_term_cache,
                 residual_tolerance=residual_tolerance,
                 include_q_empty=include_q_empty,
-                include_closed_by_known_zeros=include_closed_by_known_zeros,
+                include_same_pattern_cancellation=include_same_pattern_cancellation,
                 include_projector_like=include_projector_like,
                 include_collective_cancellation=include_collective_cancellation,
                 use_collective_coefficients=use_collective_coefficients,
@@ -2414,7 +2414,7 @@ def _build_local_kinetic_plus_potential(
 
 def _recycling_regions_from_construction_context(
     *,
-    region: CageRegionSupport,
+    region: LocalCagingRegionSupport,
     monitor_components: tuple[Any, ...] | None = None,
 ) -> tuple[tuple[int, ...], ...]:
     if monitor_components is not None and len(monitor_components) > 0:
@@ -2881,7 +2881,7 @@ def _local_vector_support_indices(
 
 def _monitor_recycler_region_specs(
     *,
-    region: CageRegionSupport,
+    region: LocalCagingRegionSupport,
     monitor: Any,
     monitor_components: tuple[ReducedIZMonitorComponent, ...],
 ) -> tuple[tuple[tuple[int, ...], Any], ...]:
@@ -3256,7 +3256,7 @@ def _build_monitor_recycler_jump_operators(
 
 
 # Reduced-IZ report selection and support/decomposition grouping live in
-# qlinks.caging.classification.  Keep private aliases here for compatibility
+# qlinks.caging.analysis.environment.  Keep private aliases here for compatibility
 # with older tests and downstream imports that used the construction module.
 _reduced_iz_reports_for_monitor = select_reduced_iz_monitor_reports
 _support_key_from_mask = support_key_from_mask
@@ -3545,7 +3545,7 @@ class _ReducedIZAssemblyCache:
 
 def _reduced_iz_monitor_state_from_reports(
     *,
-    reports: tuple[InterferenceZeroReport, ...],
+    reports: tuple[EnvironmentRemovalProbeReport, ...],
     state: NDArray[np.complex128],
     use_collective_coefficients: bool,
 ) -> NDArray[np.complex128] | None:
@@ -3572,7 +3572,7 @@ def _reduced_iz_monitor_state_from_reports(
 
 def _build_reduced_iz_monitor_from_reports(
     *,
-    reports: tuple[InterferenceZeroReport, ...],
+    reports: tuple[EnvironmentRemovalProbeReport, ...],
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int] | None,
     shape: tuple[int, int],
@@ -3649,7 +3649,7 @@ def _build_reduced_iz_monitor_from_reports(
 
 def _build_reduced_iz_monitor(
     *,
-    classification_report: CageClassificationReport,
+    environment_report: EnvironmentReductionReport,
     basis_configs: NDArray[np.integer],
     shape: tuple[int, int],
     model: Any | None = None,
@@ -3663,15 +3663,15 @@ def _build_reduced_iz_monitor(
     reduced_iz_monitor_content: ReducedIZMonitorContent = "offdiagonal_only",
     residual_tolerance: float = 1e-10,
     include_q_empty: bool = True,
-    include_closed_by_known_zeros: bool = True,
+    include_same_pattern_cancellation: bool = True,
     include_projector_like: bool = True,
     include_collective_cancellation: bool = True,
     use_collective_coefficients: bool = True,
-) -> tuple[sp.csr_array, tuple[InterferenceZeroReport, ...], complex | None]:
+) -> tuple[sp.csr_array, tuple[EnvironmentRemovalProbeReport, ...], complex | None]:
     selected_reports = _reduced_iz_reports_for_monitor(
-        classification_report,
+        environment_report,
         include_q_empty=include_q_empty,
-        include_closed_by_known_zeros=include_closed_by_known_zeros,
+        include_same_pattern_cancellation=include_same_pattern_cancellation,
         include_projector_like=include_projector_like,
         include_collective_cancellation=include_collective_cancellation,
     )
@@ -3725,7 +3725,7 @@ def _build_reduced_iz_monitor(
 
 def _build_reduced_iz_monitor_components(
     *,
-    classification_report: CageClassificationReport,
+    environment_report: EnvironmentReductionReport,
     basis_configs: NDArray[np.integer] | None,
     shape: tuple[int, int],
     decomposition: ReducedIZMonitorDecomposition,
@@ -3741,7 +3741,7 @@ def _build_reduced_iz_monitor_components(
     residual_tolerance: float,
     local_term_cache: _LocalTermMatrixCache | None = None,
     include_q_empty: bool = True,
-    include_closed_by_known_zeros: bool = True,
+    include_same_pattern_cancellation: bool = True,
     include_projector_like: bool = True,
     include_collective_cancellation: bool = True,
     use_collective_coefficients: bool = True,
@@ -3752,21 +3752,21 @@ def _build_reduced_iz_monitor_components(
     timing_collector: dict[str, float] | None = None,
 ) -> tuple[
     sp.csr_array,
-    tuple[InterferenceZeroReport, ...],
+    tuple[EnvironmentRemovalProbeReport, ...],
     tuple[ReducedIZMonitorComponent, ...],
     tuple[Any, ...],
 ]:
     selected_reports = _reduced_iz_reports_for_monitor(
-        classification_report,
+        environment_report,
         include_q_empty=include_q_empty,
-        include_closed_by_known_zeros=include_closed_by_known_zeros,
+        include_same_pattern_cancellation=include_same_pattern_cancellation,
         include_projector_like=include_projector_like,
         include_collective_cancellation=include_collective_cancellation,
     )
 
     # Keep sparse reduced-IZ matrix assembly lazy for the offdiagonal-only
     # component path.  The fast construction path only needs cached action
-    # vectors stored in the classification report; basis-index maps are built
+    # vectors stored in the environment-reduction report; basis-index maps are built
     # later only if a caller materializes a monitor matrix.
     config_to_index: dict[tuple[int, ...], int] | None = None
     assembly_cache: _ReducedIZAssemblyCache | None = None
@@ -3782,10 +3782,10 @@ def _build_reduced_iz_monitor_components(
             config_to_index=config_to_index,
         )
 
-    component_groups = classification_report.reduced_iz_component_groups(
+    component_groups = environment_report.reduced_iz_component_groups(
         decomposition=decomposition,
         include_q_empty=include_q_empty,
-        include_closed_by_known_zeros=include_closed_by_known_zeros,
+        include_same_pattern_cancellation=include_same_pattern_cancellation,
         include_projector_like=include_projector_like,
         include_collective_cancellation=include_collective_cancellation,
         use_collective_coefficients=use_collective_coefficients,
@@ -4015,7 +4015,7 @@ def _build_reduced_iz_monitor_components(
 
 
 def _union_support_for_zero_reports(
-    reports: tuple[InterferenceZeroReport, ...],
+    reports: tuple[EnvironmentRemovalProbeReport, ...],
 ) -> tuple[int, ...]:
     support: set[int] = set()
 
@@ -4214,7 +4214,7 @@ def _add_potential_to_monitor(
 
 
 def _monitor_coefficient_for_zero_report(
-    zero_report: InterferenceZeroReport,
+    zero_report: EnvironmentRemovalProbeReport,
     *,
     use_collective_coefficients: bool,
 ) -> complex:
@@ -4254,7 +4254,7 @@ def _group_local_transitions_by_source(
 
 def _build_reduced_iz_operator_matrix(
     *,
-    zero_report: InterferenceZeroReport,
+    zero_report: EnvironmentRemovalProbeReport,
     basis_configs: NDArray[np.integer],
     config_to_index: dict[tuple[int, ...], int],
     shape: tuple[int, int],

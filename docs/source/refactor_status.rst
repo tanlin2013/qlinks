@@ -52,6 +52,30 @@ TYPE_CHECKING/function-local static cycles. Passive result containers therefore 
 ``local_search.types`` rather than importing implementation modules back into the contract
 layer.
 
+Caging analysis
+~~~~~~~~~~~~~~~
+
+Post-search analysis now lives in ``qlinks.caging.analysis``.  This move also corrects an early
+scientific over-interpretation: the former ``classification`` layer did not classify caged
+eigenstates.  Its valid role is to decide whether the exterior environment can be removed while
+constructing a bounded local caging operator.
+
+The analysis ownership is now:
+
+* ``transitions`` for support-aware weighted local transition signatures;
+* ``environment`` for exterior-environment reduction and its three accepted mechanisms: no
+  exterior weight, projective annihilation, or the same local cancellation pattern;
+* ``local_structure`` for reduced-density-matrix and operator-structure diagnostics;
+* ``support`` and ``support_morphology`` for local support analysis independent of environment
+  removability;
+* ``spectral`` and ``thermodynamic`` for ensemble/spectrum diagnostics; and
+* ``evidence`` for finite-size evidence summaries.
+
+A known interference-zero target is not sufficient to remove the environment.  Non-projective
+closure is accepted only when the target has the same support-aware weighted local transition
+signature.  Architecture tests enforce the one-way ownership and prevent the former
+``classification <-> diagnostics`` static cycle from returning.
+
 Dark-manifold detectors
 ~~~~~~~~~~~~~~~~~~~~~~~
 

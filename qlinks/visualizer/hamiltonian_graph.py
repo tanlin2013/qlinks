@@ -1428,7 +1428,7 @@ class HamiltonianGraphVisualizer:
         state_vector: npt.ArrayLike,
         *,
         zero_indices: Sequence[int] | None = None,
-        classification_report=None,
+        environment_report=None,
         support_tolerance: float = 1.0e-10,
         include_zero_edges: bool = True,
         include_self_loops: bool = False,
@@ -1446,7 +1446,7 @@ class HamiltonianGraphVisualizer:
         return full.subgraph_for_cage_state(
             state_vector,
             zero_indices=zero_indices,
-            classification_report=classification_report,
+            environment_report=environment_report,
             support_tolerance=support_tolerance,
             include_zero_edges=include_zero_edges,
         )
@@ -1456,7 +1456,7 @@ class HamiltonianGraphVisualizer:
         state_vector: npt.ArrayLike,
         *,
         zero_indices: Sequence[int] | None = None,
-        classification_report=None,
+        environment_report=None,
         support_tolerance: float = 1.0e-10,
         include_zero_edges: bool = True,
     ) -> HamiltonianGraphVisualizer:
@@ -1468,8 +1468,8 @@ class HamiltonianGraphVisualizer:
             Full Hilbert-space vector in the same basis as this graph.
         zero_indices:
             Optional explicit nontrivial-zero node indices.
-        classification_report:
-            Optional caging classification report. If supplied, this method tries
+        environment_report:
+            Optional environment-reduction report. If supplied, this method tries
             to extract zero indices from common report fields.
         support_tolerance:
             Nodes with |psi_i| > support_tolerance are included as cage support.
@@ -1486,7 +1486,7 @@ class HamiltonianGraphVisualizer:
 
         extracted_zero_indices = self._extract_cage_zero_indices(
             zero_indices=zero_indices,
-            classification_report=classification_report,
+            environment_report=environment_report,
         )
 
         selected_indices = np.unique(
@@ -1549,7 +1549,7 @@ class HamiltonianGraphVisualizer:
     def _extract_cage_zero_indices(
         *,
         zero_indices: Sequence[int] | None,
-        classification_report,
+        environment_report,
     ) -> npt.NDArray[np.int64]:
         """Extract nontrivial-zero node indices from explicit input or report."""
         indices: list[int] = []
@@ -1557,23 +1557,21 @@ class HamiltonianGraphVisualizer:
         if zero_indices is not None:
             indices.extend(int(index) for index in zero_indices)
 
-        if classification_report is not None:
+        if environment_report is not None:
             candidate_field_names = (
-                "nontrivial_zero_indices",
-                "zero_indices",
-                "known_zero_indices",
-                "q_empty_zero_indices",
-                "closed_by_known_zeros_indices",
-                "domain_blocked_zero_indices",
-                "projector_like_zero_indices",
-                "collective_cancellation_zero_indices",
+                "q_empty_source_zero_indices",
+                "same_pattern_zero_closure_indices",
+                "domain_blocked_source_zero_indices",
+                "projector_like_source_zero_indices",
+                "collective_cancellation_source_zero_indices",
+                "invalid_source_zero_indices",
             )
 
             for field_name in candidate_field_names:
-                if not hasattr(classification_report, field_name):
+                if not hasattr(environment_report, field_name):
                     continue
 
-                value = getattr(classification_report, field_name)
+                value = getattr(environment_report, field_name)
 
                 if value is None:
                     continue
@@ -1581,7 +1579,7 @@ class HamiltonianGraphVisualizer:
                 indices.extend(_flatten_int_indices(value))
 
             # Fallback for report.zero_reports, if present.
-            zero_reports = getattr(classification_report, "zero_reports", None)
+            zero_reports = getattr(environment_report, "zero_reports", None)
             if zero_reports is not None:
                 for zero_report in zero_reports:
                     zero_index = getattr(zero_report, "zero_index", None)

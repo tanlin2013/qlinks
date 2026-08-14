@@ -28,7 +28,7 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
 from qlinks.basis import Basis
-from qlinks.caging.spectral import SymmetrySectorBasis
+from qlinks.caging.analysis.spectral import SymmetrySectorBasis
 from qlinks.encoded import BinaryEncodedBasis, encode_binary_config
 
 
