@@ -5,6 +5,8 @@ import numpy as np
 from qlinks.caging import (
     CageState,
     CandidateSubgraph,
+)
+from qlinks.caging.local_search import (
     FactorizedLocalQDMPadding,
     LocalQDMCageRecord,
     LocalQDMMultiPaddingConfig,
@@ -167,7 +169,10 @@ def test_factorized_certificate_matches_explicit_certificate() -> None:
 
 
 def test_factorized_certificate_handles_coherent_full_square_qdm_cage() -> None:
-    from qlinks.caging import LocalQDMCageSearchConfig, LocalQDMCageSearcher
+    from qlinks.caging.local_search import (
+        LocalQDMCageSearchConfig,
+        LocalQDMCageSearcher,
+    )
 
     model = SquareQDMModel(
         lx=4,

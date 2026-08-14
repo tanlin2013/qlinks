@@ -8,12 +8,12 @@ from typing import Literal
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.caging.local_search_global import _qdm_global_plaquette_actions
-from qlinks.caging.local_search_padding import (
+from qlinks.caging.local_search.global_ops import _qdm_global_plaquette_actions
+from qlinks.caging.local_search.padding import (
     factorized_qdm_padding_from_multi_padding,
     iter_multi_qdm_block_paddings,
 )
-from qlinks.caging.local_search_types import (
+from qlinks.caging.local_search.types import (
     FactorizedLocalQDMPadding,
     LocalQDMCageBlock,
     LocalQDMMultiPaddingConfig,

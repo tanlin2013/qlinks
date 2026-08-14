@@ -8,11 +8,11 @@ from dataclasses import dataclass, field, replace
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.caging.local_search_core import (
+from qlinks.caging.local_search.core import (
     LocalCageSearcher,
     local_cage_adapter_for_model,
 )
-from qlinks.caging.local_search_geometry import (
+from qlinks.caging.local_search.geometry import (
     _adaptive_region_frontier,
     _adaptive_region_score,
     _adaptive_seed_plaquette_ids,
@@ -40,7 +40,7 @@ from qlinks.caging.local_search_geometry import (
     _winding_from_lifted_displacement,
     _zero_cell_displacement,
 )
-from qlinks.caging.local_search_types import (
+from qlinks.caging.local_search.types import (
     AdaptiveRegionProposalRecord,
     ConnectedRegionProposalRecord,
     LocalCageModelAdapter,

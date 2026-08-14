@@ -2,7 +2,7 @@
 
 This layer turns local cage records into independent blocks and searches shared exterior
 assignments.  It depends only on local-search contracts, geometry helpers, and global QDM
-primitives; residual-based certification remains in ``local_search_certification``.
+primitives; residual-based certification remains in ``local_search.certification``.
 """
 
 from __future__ import annotations
@@ -13,8 +13,8 @@ from collections.abc import Iterator, Sequence
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.caging.local_search_geometry import _unique_int_array, _validate_plaquette_ids
-from qlinks.caging.local_search_global import (
+from qlinks.caging.local_search.geometry import _unique_int_array, _validate_plaquette_ids
+from qlinks.caging.local_search.global_ops import (
     _constant_qdm_block_site_counts,
     _global_configs_satisfy_model_sectors,
     _global_configs_satisfy_qdm_constraints,
@@ -24,7 +24,7 @@ from qlinks.caging.local_search_global import (
     _qdm_global_plaquette_actions,
     _qdm_plaquette_is_flippable_from_action,
 )
-from qlinks.caging.local_search_types import (
+from qlinks.caging.local_search.types import (
     FactorizedLocalQDMPadding,
     LocalQDMCageBlock,
     LocalQDMCageRecord,

@@ -11,7 +11,7 @@ import scipy.sparse as scipy_sparse
 
 from qlinks.caging.invariant_subspace import invariant_boundary_nullspace
 from qlinks.caging.nullspace import as_dense_array, nullspace_svd
-from qlinks.caging.stability_types import (
+from qlinks.caging.stability.types import (
     CageBranchPoint,
     CageBranchReport,
     CageCompatibilityHierarchyReport,

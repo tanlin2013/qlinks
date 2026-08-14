@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 
-from qlinks.caging import (
+from qlinks.caging.stability import (
     cage_compatibility_hierarchy_from_hamiltonians,
     cage_jacobian_conditioning_from_hamiltonian,
     combine_perturbations_from_coefficients,
@@ -281,7 +281,7 @@ def test_subspace_complement_basis_returns_parent_orthogonal_remainder() -> None
 def test_summarize_cage_record_stability_compares_preferred_representatives():
     from types import SimpleNamespace
 
-    from qlinks.caging import summarize_cage_record_stability
+    from qlinks.caging.stability import summarize_cage_record_stability
 
     base, strong, structural, incompatible, cage_state = _toy_problem()
     records = (
@@ -317,7 +317,7 @@ def test_summarize_cage_record_stability_compares_preferred_representatives():
 
 
 def test_fixed_manifold_compatibility_allows_internal_rotation() -> None:
-    from qlinks.caging import fixed_cage_manifold_compatibility
+    from qlinks.caging.stability import fixed_cage_manifold_compatibility
 
     boundary = np.zeros((1, 3), dtype=np.complex128)
     manifold = np.eye(3, dtype=np.complex128)[:, :2]
@@ -342,7 +342,7 @@ def test_fixed_manifold_compatibility_allows_internal_rotation() -> None:
 
 
 def test_chiral_index_separates_index_and_paired_zero_modes() -> None:
-    from qlinks.caging import diagnose_chiral_index
+    from qlinks.caging.stability import diagnose_chiral_index
 
     block = np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]], dtype=np.complex128)
     report = diagnose_chiral_index(block, trim_isolated_rows=False, tolerance=1.0e-12)
@@ -355,7 +355,7 @@ def test_chiral_index_separates_index_and_paired_zero_modes() -> None:
 
 
 def test_locality_restricted_chiral_profile_detects_regional_zero_mode() -> None:
-    from qlinks.caging import diagnose_locality_restricted_chiral_profile
+    from qlinks.caging.stability import diagnose_locality_restricted_chiral_profile
 
     hamiltonian = np.array(
         [
@@ -382,7 +382,7 @@ def test_locality_restricted_chiral_profile_detects_regional_zero_mode() -> None
 
 
 def test_regional_chiral_kernel_span_finds_uncaptured_collective_mode() -> None:
-    from qlinks.caging import regional_chiral_kernel_span
+    from qlinks.caging.stability import regional_chiral_kernel_span
 
     hamiltonian = np.zeros((6, 6), dtype=np.complex128)
     hamiltonian[4, 0] = hamiltonian[0, 4] = 1.0
@@ -408,7 +408,7 @@ def test_regional_chiral_kernel_span_finds_uncaptured_collective_mode() -> None:
 
 
 def test_regional_cage_quotient_isolates_collective_direction() -> None:
-    from qlinks.caging import regional_cage_quotient
+    from qlinks.caging.stability import regional_cage_quotient
 
     hamiltonian = np.zeros((6, 6), dtype=np.complex128)
     hamiltonian[4, 0] = hamiltonian[0, 4] = 1.0
@@ -431,7 +431,7 @@ def test_regional_cage_quotient_isolates_collective_direction() -> None:
 
 
 def test_signed_boundary_holonomy_detects_z2_cycle_sign() -> None:
-    from qlinks.caging.stability_topology import diagnose_signed_boundary_holonomy
+    from qlinks.caging.stability.topology import diagnose_signed_boundary_holonomy
 
     positive = np.asarray([[1.0, 1.0], [1.0, 1.0]])
     negative = np.asarray([[1.0, 1.0], [1.0, -1.0]])
@@ -447,7 +447,7 @@ def test_signed_boundary_holonomy_detects_z2_cycle_sign() -> None:
 
 
 def test_relative_mod2_cycle_quotients_regional_cycles() -> None:
-    from qlinks.caging.stability_topology import diagnose_relative_mod2_cycles
+    from qlinks.caging.stability.topology import diagnose_relative_mod2_cycles
 
     boundary = np.asarray([[1.0, 1.0], [1.0, 1.0]])
 
@@ -465,7 +465,7 @@ def test_relative_mod2_cycle_quotients_regional_cycles() -> None:
 
 
 def test_boundary_cancellation_matroid_isolates_weighted_collective_class() -> None:
-    from qlinks.caging import diagnose_boundary_cancellation_matroid
+    from qlinks.caging.stability import diagnose_boundary_cancellation_matroid
 
     boundary = np.asarray([[1.0, 1.0, 1.0, 1.0]], dtype=np.complex128)
     report = diagnose_boundary_cancellation_matroid(
@@ -486,7 +486,7 @@ def test_boundary_cancellation_matroid_isolates_weighted_collective_class() -> N
 
 
 def test_boundary_cancellation_matroid_scan_detects_relative_rank_jump() -> None:
-    from qlinks.caging import scan_boundary_cancellation_matroid
+    from qlinks.caging.stability import scan_boundary_cancellation_matroid
 
     base = np.asarray(
         [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]],
@@ -510,7 +510,7 @@ def test_boundary_cancellation_matroid_scan_detects_relative_rank_jump() -> None
 
 
 def test_periodic_boundary_cancellation_scaling_separates_flat_and_lifted_bands() -> None:
-    from qlinks.caging import scan_periodic_boundary_cancellation_scaling
+    from qlinks.caging.stability import scan_periodic_boundary_cancellation_scaling
 
     base = np.asarray(
         [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]],
@@ -548,7 +548,7 @@ def test_periodic_boundary_cancellation_scaling_separates_flat_and_lifted_bands(
 
 
 def test_periodic_boundary_cancellation_scaling_detects_isolated_gapless_mode() -> None:
-    from qlinks.caging import scan_periodic_boundary_cancellation_scaling
+    from qlinks.caging.stability import scan_periodic_boundary_cancellation_scaling
 
     base = np.asarray(
         [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]],
@@ -578,8 +578,8 @@ def test_periodic_boundary_cancellation_scaling_detects_isolated_gapless_mode() 
 
 
 def test_periodic_boundary_fourier_sum_matches_explicit_block_circulant_nullity() -> None:
-    from qlinks.caging import scan_periodic_boundary_cancellation_scaling
     from qlinks.caging.nullspace import nullspace_svd
+    from qlinks.caging.stability import scan_periodic_boundary_cancellation_scaling
 
     base = np.asarray(
         [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]],
@@ -618,7 +618,7 @@ def test_periodic_boundary_fourier_sum_matches_explicit_block_circulant_nullity(
 def test_periodic_boundary_scaling_rejects_coupling_that_breaks_regional_circuits() -> None:
     import pytest
 
-    from qlinks.caging import scan_periodic_boundary_cancellation_scaling
+    from qlinks.caging.stability import scan_periodic_boundary_cancellation_scaling
 
     base = np.asarray(
         [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]],
@@ -640,10 +640,10 @@ def test_periodic_boundary_scaling_rejects_coupling_that_breaks_regional_circuit
 
 
 def _physical_square_qdm_periodic_cage_unit_cell():
-    from qlinks.caging import (
+    from qlinks.caging import SquareQDMPeriodicProductUnitCell
+    from qlinks.caging.local_search import (
         LocalQDMCageSearchConfig,
         RobustQDMLocalCageSearchConfig,
-        SquareQDMPeriodicProductUnitCell,
         robust_qdm_local_cage_search,
     )
     from qlinks.models import SquareQDMModel
@@ -697,7 +697,7 @@ def _physical_square_qdm_periodic_cage_unit_cell():
 
 
 def test_physical_periodic_product_cancellation_scaling_uses_actual_qdm_flips() -> None:
-    from qlinks.caging import scan_square_qdm_periodic_product_cancellation_scaling
+    from qlinks.caging.stability import scan_square_qdm_periodic_product_cancellation_scaling
 
     report = scan_square_qdm_periodic_product_cancellation_scaling(
         _physical_square_qdm_periodic_cage_unit_cell(),
@@ -724,7 +724,7 @@ def test_physical_periodic_product_cancellation_scaling_uses_actual_qdm_flips() 
 def test_periodic_product_support_materialization_respects_size_cap() -> None:
     import pytest
 
-    from qlinks.caging import materialize_square_qdm_periodic_product_support
+    from qlinks.caging.stability import materialize_square_qdm_periodic_product_support
 
     instance = _physical_square_qdm_periodic_cage_unit_cell().instantiate(3)
     with pytest.raises(ValueError, match="exceeds max_support_size"):
@@ -735,7 +735,7 @@ def test_periodic_product_support_materialization_respects_size_cap() -> None:
 
 
 def test_real_local_sign_obstruction_is_global_phase_invariant() -> None:
-    from qlinks.caging import diagnose_real_local_sign_obstruction
+    from qlinks.caging.stability import diagnose_real_local_sign_obstruction
 
     a = (0, 0, 0)
     b = (1, 1, 1)
@@ -770,8 +770,8 @@ def test_collective_square_qdm_local_grammar_has_only_product_kernel_at_8x4() ->
     from qlinks.caging import (
         CageSearchConfig,
         CageSearcher,
-        scan_square_qdm_collective_locality_extension,
     )
+    from qlinks.caging.stability import scan_square_qdm_collective_locality_extension
     from qlinks.models import SquareQDMModel
 
     model = SquareQDMModel(
@@ -834,7 +834,7 @@ def test_collective_square_qdm_local_grammar_has_only_product_kernel_at_8x4() ->
 
 
 def test_cyclic_amplitude_bond_profile_detects_exact_schmidt_rank() -> None:
-    from qlinks.caging import diagnose_cyclic_amplitude_bond_profile
+    from qlinks.caging.stability import diagnose_cyclic_amplitude_bond_profile
 
     zero = (0, 0, 0)
     one = (1, 1, 1)
@@ -858,7 +858,7 @@ def test_cyclic_amplitude_bond_profile_detects_exact_schmidt_rank() -> None:
 
 
 def test_square_qdm_finite_bond_transfer_invariant_resolves_trivial_sector() -> None:
-    from qlinks.caging import diagnose_square_qdm_finite_bond_transfer_invariant
+    from qlinks.caging.stability import diagnose_square_qdm_finite_bond_transfer_invariant
     from qlinks.models import SquareQDMModel
 
     model = SquareQDMModel(
@@ -902,7 +902,7 @@ def test_square_qdm_finite_bond_transfer_invariant_resolves_trivial_sector() -> 
 
 
 def test_laurent_polynomial_constraint_module_resolves_free_and_torsion_parts() -> None:
-    from qlinks.caging import diagnose_laurent_polynomial_constraint_module
+    from qlinks.caging.stability import diagnose_laurent_polynomial_constraint_module
 
     free_report = diagnose_laurent_polynomial_constraint_module(
         ((0, np.zeros((1, 1))),),
@@ -929,7 +929,7 @@ def test_laurent_polynomial_constraint_module_resolves_free_and_torsion_parts() 
 
 
 def test_laurent_polynomial_constraint_module_detects_even_period_torsion() -> None:
-    from qlinks.caging import diagnose_laurent_polynomial_constraint_module
+    from qlinks.caging.stability import diagnose_laurent_polynomial_constraint_module
 
     report = diagnose_laurent_polynomial_constraint_module(
         ((0, np.ones((1, 1))), (1, np.ones((1, 1)))),
@@ -946,7 +946,7 @@ def test_laurent_polynomial_constraint_module_detects_even_period_torsion() -> N
 
 
 def test_laurent_periodic_dimension_consistency_detects_divisibility_obstruction() -> None:
-    from qlinks.caging import diagnose_laurent_periodic_dimension_consistency
+    from qlinks.caging.stability import diagnose_laurent_periodic_dimension_consistency
 
     report = diagnose_laurent_periodic_dimension_consistency(
         (1, 2, 3),
@@ -962,7 +962,7 @@ def test_laurent_periodic_dimension_consistency_detects_divisibility_obstruction
 
 
 def test_laurent_periodic_dimension_consistency_accepts_order_two_torsion() -> None:
-    from qlinks.caging import diagnose_laurent_periodic_dimension_consistency
+    from qlinks.caging.stability import diagnose_laurent_periodic_dimension_consistency
 
     report = diagnose_laurent_periodic_dimension_consistency(
         (1, 2, 4),
@@ -988,7 +988,7 @@ def test_cage_jacobian_conditioning_reports_positive_gap() -> None:
 
 
 def test_reduced_constraint_fredholm_candidate_distinguishes_square_and_tall_maps() -> None:
-    from qlinks.caging import diagnose_reduced_constraint_fredholm_candidate
+    from qlinks.caging.stability import diagnose_reduced_constraint_fredholm_candidate
 
     kernel = np.asarray([[1.0], [1.0]], dtype=np.complex128) / np.sqrt(2.0)
     square = diagnose_reduced_constraint_fredholm_candidate(
@@ -1017,7 +1017,7 @@ def test_reduced_constraint_fredholm_candidate_distinguishes_square_and_tall_map
 
 
 def test_compact_qdm_reduced_winding_is_constant_and_trivial_at_fixed_width() -> None:
-    from qlinks.caging import diagnose_square_qdm_compact_cage_reduced_winding
+    from qlinks.caging.stability import diagnose_square_qdm_compact_cage_reduced_winding
 
     report = diagnose_square_qdm_compact_cage_reduced_winding(
         _physical_square_qdm_periodic_cage_unit_cell(),

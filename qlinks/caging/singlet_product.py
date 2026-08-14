@@ -25,26 +25,26 @@ import numpy.typing as npt
 from scipy import linalg as scipy_linalg
 from scipy import sparse as scipy_sparse
 
-from qlinks.caging.local_search_global import (
+from qlinks.caging.local_search.global_ops import (
     _config_key,
     _qdm_flip_transition_from_action,
     _qdm_global_plaquette_actions,
     _qdm_global_self_loop_values_from_actions,
 )
-from qlinks.caging.local_search_padding import (
+from qlinks.caging.local_search.padding import (
     _make_qdm_multi_padding_from_exterior,
     iter_multi_qdm_block_paddings,
     make_qdm_cage_block,
 )
-from qlinks.caging.local_search_proposals import StripeMotifRegionProposal
-from qlinks.caging.local_search_qdm import (
+from qlinks.caging.local_search.proposals import StripeMotifRegionProposal
+from qlinks.caging.local_search.qdm import (
     build_qdm_local_kinetic_matrix,
     build_qdm_local_region_from_plaquettes,
     enumerate_qdm_local_basis,
     qdm_local_self_loop_values,
 )
-from qlinks.caging.local_search_scan import run_local_region_proposal
-from qlinks.caging.local_search_types import (
+from qlinks.caging.local_search.scan import run_local_region_proposal
+from qlinks.caging.local_search.types import (
     LocalQDMCageBlock,
     LocalQDMCageSearchConfig,
     LocalQDMMultiPaddingConfig,

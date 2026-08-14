@@ -14,7 +14,7 @@ from collections.abc import Iterator, Sequence
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.caging.local_search_types import (
+from qlinks.caging.local_search.types import (
     AdaptiveRegionProposalRecord,
     LocalQDMRegion,
     SnakeStripeKindPattern,

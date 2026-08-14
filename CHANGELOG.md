@@ -17,8 +17,9 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Promote the stabilized caging local-search and stability families into nested `qlinks.caging.local_search` and `qlinks.caging.stability` subpackages, remove the temporary flat module paths, and contract the top-level caging API from 499 to 299 exports.
 - Stabilize the local cage-search architecture into an acyclic dependency DAG, separating proposal generation/execution, global QDM primitives, exterior-padding search, factorized certification, and residual result assembly.
-- Decompose cage stability, local cage search, and dark-manifold detector god modules into responsibility-specific implementation modules; migrate first-party callers to focused modules and keep historical module paths only as temporary migration facades.
+- Decompose cage stability, local cage search, and dark-manifold detector god modules into responsibility-specific implementation modules and migrate first-party callers to focused modules.
 - Add exact checkerboard 4N x 4 periodic-product cage certification and fully resolve the positive-phase checkerboard translation irrep before raw finite-beta and stripe-concentration evidence.
 - Add the gated square-QDM checkerboard fixed-width evidence workflow, including transfer-energy matching, size-independent compatibility and gauge tests, reduced-symmetry thermal pilots, translated A/Z joint-dark cleaning, and complete stripe-algebra concentration.
 - Add reduced Fredholm-candidate diagnostics for compact square-QDM cage sequences, showing a rectangular state complement and a constant zero-winding coupling symbol across fixed width.

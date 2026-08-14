@@ -36,6 +36,7 @@ notebook or has one successful numerical run.
 - Every compatibility facade must name its replacement path and a removal gate. Do not add new
   functionality to a facade merely to keep old imports convenient.
 - Do not add package-level re-exports without an explicit public-API decision.
+- Once a coherent module family has stable responsibility boundaries, prefer a nested subpackage over a long flat filename prefix. Keep subpackage `__init__.py` files curated; implementation modules should import siblings directly rather than through the subpackage API.
 - Do not silently change tolerances, convergence criteria, basis conventions, winding
   conventions, or normalization rules. Document the mathematical or numerical reason.
 - Do not hide numerical failures by returning empty results, zero arrays, or partially valid

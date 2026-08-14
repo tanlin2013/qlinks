@@ -11,45 +11,45 @@ Current decomposition
 Cage stability
 ~~~~~~~~~~~~~~
 
-The former monolithic ``qlinks.caging.stability`` implementation is split into:
+The cage-stability implementation now lives in the ``qlinks.caging.stability`` subpackage:
 
-* ``stability_core`` for perturbative stability, continuation, Jacobian, and subspace helpers;
-* ``stability_topology`` for chiral, locality, CLS-completeness, and cohomological diagnostics;
-* ``stability_boundary`` for boundary-cancellation matroid and periodic-scaling diagnostics;
-* ``stability_qdm`` for square-QDM compact-cage and transfer diagnostics;
-* ``stability_laurent`` for Laurent-polynomial constraint-module diagnostics;
-* ``stability_types`` for report/data contracts; and
-* ``stability_symmetry`` for small shared symmetry linear-algebra helpers.
+* ``core`` for perturbative stability, continuation, Jacobian, and subspace helpers;
+* ``topology`` for chiral, locality, CLS-completeness, and cohomological diagnostics;
+* ``boundary`` for boundary-cancellation matroid and periodic-scaling diagnostics;
+* ``qdm`` for square-QDM compact-cage and transfer diagnostics;
+* ``laurent`` for Laurent-polynomial constraint-module diagnostics;
+* ``types`` for report/data contracts; and
+* ``symmetry`` for small shared symmetry linear-algebra helpers.
 
-The temporary ``qlinks.caging.stability`` facade has been removed. Active package code and
-tests must import the focused modules directly.
+``qlinks.caging.stability`` is now a real subpackage with a curated public API. Active
+implementation code should import the defining child module directly.
 
 Local cage search
 ~~~~~~~~~~~~~~~~~
 
-The former ``qlinks.caging.local_search`` implementation is now split into:
+Local cage search now lives in the ``qlinks.caging.local_search`` subpackage:
 
-* ``local_search_types`` for passive configuration/report contracts;
-* ``local_search_geometry`` for pure stripe, snake, plaquette/link-region, and local-index
+* ``types`` for passive configuration/report contracts;
+* ``geometry`` for pure stripe, snake, plaquette/link-region, and local-index
   geometry helpers;
-* ``local_search_core`` for generic local type-1 search algebra and adapter registration;
-* ``local_search_qdm`` for QDM local-region construction, basis enumeration, and local kinetic
+* ``core`` for generic local type-1 search algebra and adapter registration;
+* ``qdm`` for QDM local-region construction, basis enumeration, and local kinetic
   algebra;
-* ``local_search_global`` for explicit global-QDM plaquette actions and limited global operators;
-* ``local_search_padding`` for single/multi-block exterior-padding search and structural
+* ``global_ops`` for explicit global-QDM plaquette actions and limited global operators;
+* ``padding`` for single/multi-block exterior-padding search and structural
   validation;
-* ``local_search_factorized`` for exact factorized-product residual certification;
-* ``local_search_certification`` for local/multi-block residual certification and result assembly;
-* ``local_search_proposals`` for stripe/snake/adaptive proposal generation;
-* ``local_search_scan`` for proposal execution and block collection; and
-* ``local_search_workflows`` for robust multi-stage local-search orchestration.
+* ``factorized`` for exact factorized-product residual certification;
+* ``certification`` for local/multi-block residual certification and result assembly;
+* ``proposals`` for stripe/snake/adaptive proposal generation;
+* ``scan`` for proposal execution and block collection; and
+* ``workflows`` for robust multi-stage local-search orchestration.
 
-The temporary ``qlinks.caging.local_search`` facade has been removed. Active first-party code,
-tests, and notebooks should import the focused local-search modules directly.
+``qlinks.caging.local_search`` is now a real subpackage with a curated public API. Active
+implementation code should import the defining child module directly.
 
 The focused local-search graph is required to remain free of both eager import cycles and
 TYPE_CHECKING/function-local static cycles. Passive result containers therefore live in
-``local_search_types`` rather than importing their implementation modules back into the contract
+``local_search.types`` rather than importing implementation modules back into the contract
 layer.
 
 Dark-manifold detectors

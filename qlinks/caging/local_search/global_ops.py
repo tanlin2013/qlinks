@@ -14,8 +14,8 @@ import numpy.typing as npt
 import scipy.sparse as scipy_sparse
 
 from qlinks.basis import Basis
-from qlinks.caging.local_search_qdm import _backward_coefficient, _forward_coefficient
-from qlinks.caging.local_search_types import LocalQDMCageBlock, _QDMGlobalPlaquetteAction
+from qlinks.caging.local_search.qdm import _backward_coefficient, _forward_coefficient
+from qlinks.caging.local_search.types import LocalQDMCageBlock, _QDMGlobalPlaquetteAction
 from qlinks.operators.plaquette import alternating_binary_patterns
 
 

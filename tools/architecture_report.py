@@ -105,89 +105,104 @@ BROAD_BOUNDARY_RULES: tuple[BoundaryRule, ...] = (
         forbidden_prefixes=("qlinks.caging",),
         excluded_paths=("qlinks/open_system/constructions/deprecated/",),
     ),
-    BoundaryRule(
-        name="active caging code must not depend on temporary facades",
-        source_prefix="qlinks.caging",
-        forbidden_prefixes=("qlinks.caging.local_search", "qlinks.caging.stability"),
-        excluded_exact_paths=("qlinks/caging/__init__.py",),
-    ),
-    BoundaryRule(
-        name="active open_system code must not depend on temporary detector facade",
-        source_prefix="qlinks.open_system",
-        forbidden_prefixes=("qlinks.open_system.manifold_detectors",),
-    ),
 )
 
 LOCAL_SEARCH_ALLOWED_DEPENDENCIES: dict[str, frozenset[str]] = {
-    "qlinks.caging.local_search_types": frozenset(),
-    "qlinks.caging.local_search_geometry": frozenset({"qlinks.caging.local_search_types"}),
-    "qlinks.caging.local_search_core": frozenset({"qlinks.caging.local_search_types"}),
-    "qlinks.caging.local_search_qdm": frozenset(
+    "qlinks.caging.local_search.types": frozenset(),
+    "qlinks.caging.local_search.geometry": frozenset({"qlinks.caging.local_search.types"}),
+    "qlinks.caging.local_search.core": frozenset({"qlinks.caging.local_search.types"}),
+    "qlinks.caging.local_search.qdm": frozenset(
         {
-            "qlinks.caging.local_search_core",
-            "qlinks.caging.local_search_geometry",
-            "qlinks.caging.local_search_types",
+            "qlinks.caging.local_search.core",
+            "qlinks.caging.local_search.geometry",
+            "qlinks.caging.local_search.types",
         }
     ),
-    "qlinks.caging.local_search_global": frozenset(
+    "qlinks.caging.local_search.global_ops": frozenset(
         {
-            "qlinks.caging.local_search_qdm",
-            "qlinks.caging.local_search_types",
+            "qlinks.caging.local_search.qdm",
+            "qlinks.caging.local_search.types",
         }
     ),
-    "qlinks.caging.local_search_padding": frozenset(
+    "qlinks.caging.local_search.padding": frozenset(
         {
-            "qlinks.caging.local_search_geometry",
-            "qlinks.caging.local_search_global",
-            "qlinks.caging.local_search_types",
+            "qlinks.caging.local_search.geometry",
+            "qlinks.caging.local_search.global_ops",
+            "qlinks.caging.local_search.types",
         }
     ),
-    "qlinks.caging.local_search_factorized": frozenset(
+    "qlinks.caging.local_search.factorized": frozenset(
         {
-            "qlinks.caging.local_search_global",
-            "qlinks.caging.local_search_padding",
-            "qlinks.caging.local_search_qdm",
-            "qlinks.caging.local_search_types",
+            "qlinks.caging.local_search.global_ops",
+            "qlinks.caging.local_search.padding",
+            "qlinks.caging.local_search.qdm",
+            "qlinks.caging.local_search.types",
         }
     ),
-    "qlinks.caging.local_search_certification": frozenset(
+    "qlinks.caging.local_search.certification": frozenset(
         {
-            "qlinks.caging.local_search_global",
-            "qlinks.caging.local_search_padding",
-            "qlinks.caging.local_search_qdm",
-            "qlinks.caging.local_search_types",
+            "qlinks.caging.local_search.global_ops",
+            "qlinks.caging.local_search.padding",
+            "qlinks.caging.local_search.qdm",
+            "qlinks.caging.local_search.types",
         }
     ),
-    "qlinks.caging.local_search_proposals": frozenset(
+    "qlinks.caging.local_search.proposals": frozenset(
         {
-            "qlinks.caging.local_search_core",
-            "qlinks.caging.local_search_geometry",
-            "qlinks.caging.local_search_types",
+            "qlinks.caging.local_search.core",
+            "qlinks.caging.local_search.geometry",
+            "qlinks.caging.local_search.types",
         }
     ),
-    "qlinks.caging.local_search_scan": frozenset(
+    "qlinks.caging.local_search.scan": frozenset(
         {
-            "qlinks.caging.local_search_core",
-            "qlinks.caging.local_search_padding",
-            "qlinks.caging.local_search_types",
+            "qlinks.caging.local_search.core",
+            "qlinks.caging.local_search.padding",
+            "qlinks.caging.local_search.types",
         }
     ),
-    "qlinks.caging.local_search_workflows": frozenset(
+    "qlinks.caging.local_search.workflows": frozenset(
         {
-            "qlinks.caging.local_search_certification",
-            "qlinks.caging.local_search_proposals",
-            "qlinks.caging.local_search_scan",
-            "qlinks.caging.local_search_types",
+            "qlinks.caging.local_search.certification",
+            "qlinks.caging.local_search.proposals",
+            "qlinks.caging.local_search.scan",
+            "qlinks.caging.local_search.types",
         }
     ),
 }
 
 
-SURFACE_FACADE_MODULES = {
-    "qlinks.caging.local_search",
-    "qlinks.caging.stability",
-    "qlinks.open_system.manifold_detectors",
+STABILITY_ALLOWED_DEPENDENCIES: dict[str, frozenset[str]] = {
+    "qlinks.caging.stability.types": frozenset(),
+    "qlinks.caging.stability.symmetry": frozenset(),
+    "qlinks.caging.stability.core": frozenset({"qlinks.caging.stability.types"}),
+    "qlinks.caging.stability.laurent": frozenset({"qlinks.caging.stability.types"}),
+    "qlinks.caging.stability.topology": frozenset(
+        {
+            "qlinks.caging.stability.core",
+            "qlinks.caging.stability.symmetry",
+            "qlinks.caging.stability.types",
+        }
+    ),
+    "qlinks.caging.stability.boundary": frozenset(
+        {
+            "qlinks.caging.stability.core",
+            "qlinks.caging.stability.topology",
+            "qlinks.caging.stability.types",
+        }
+    ),
+    "qlinks.caging.stability.qdm": frozenset(
+        {
+            "qlinks.caging.stability.boundary",
+            "qlinks.caging.stability.core",
+            "qlinks.caging.stability.symmetry",
+            "qlinks.caging.stability.types",
+        }
+    ),
 }
+
+
+SURFACE_FACADE_MODULES: set[str] = set()
 
 
 def _module_name(path: Path, repository_root: Path) -> str:
@@ -445,12 +460,28 @@ def _architecture_violations(
         allowed_local_search_dependencies = LOCAL_SEARCH_ALLOWED_DEPENDENCIES.get(occurrence.source)
         if (
             allowed_local_search_dependencies is not None
-            and occurrence.target.startswith("qlinks.caging.local_search_")
+            and occurrence.target.startswith("qlinks.caging.local_search.")
             and occurrence.target not in allowed_local_search_dependencies
         ):
             violations.append(
                 BoundaryViolation(
                     rule="local-search focused modules must follow the reviewed dependency DAG",
+                    source=occurrence.source,
+                    target=occurrence.target,
+                    path=occurrence.path,
+                    line=occurrence.line,
+                )
+            )
+
+        allowed_stability_dependencies = STABILITY_ALLOWED_DEPENDENCIES.get(occurrence.source)
+        if (
+            allowed_stability_dependencies is not None
+            and occurrence.target.startswith("qlinks.caging.stability.")
+            and occurrence.target not in allowed_stability_dependencies
+        ):
+            violations.append(
+                BoundaryViolation(
+                    rule="stability focused modules must follow the reviewed dependency DAG",
                     source=occurrence.source,
                     target=occurrence.target,
                     path=occurrence.path,

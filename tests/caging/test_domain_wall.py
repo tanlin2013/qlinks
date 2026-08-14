@@ -134,7 +134,10 @@ def test_frustrated_incidence_interface_lifts_local_h0_mode() -> None:
 
 def test_spin_one_xy_bond_sign_wall_does_not_change_cyclotomic_root() -> None:
     from qlinks.basis.configs import basis_configs_from_build_result
-    from qlinks.caging import diagnose_hard_core_laurent_lift, partition_cage_hamiltonian
+    from qlinks.caging.stability import (
+        diagnose_hard_core_laurent_lift,
+        partition_cage_hamiltonian,
+    )
     from qlinks.models import SpinOneXYChainModel, spin_one_xy_scar_tower_states
 
     length = 4

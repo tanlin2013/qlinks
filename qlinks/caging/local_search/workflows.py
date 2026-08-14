@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-from qlinks.caging.local_search_certification import (
+from qlinks.caging.local_search.certification import (
     _deduplicate_qdm_multi_block_reports,
     certified_qdm_result_from_multi_block_reports,
     diagnose_qdm_multi_block_paddings,
     qdm_multi_padding_config_schedule,
     robust_certify_qdm_multi_block_result,
 )
-from qlinks.caging.local_search_proposals import _robust_qdm_region_proposals
-from qlinks.caging.local_search_scan import (
+from qlinks.caging.local_search.proposals import _robust_qdm_region_proposals
+from qlinks.caging.local_search.scan import (
     collect_qdm_cage_blocks_from_region_proposals,
     collect_qdm_cage_blocks_with_scan_from_region_proposals,
 )
-from qlinks.caging.local_search_types import (
+from qlinks.caging.local_search.types import (
     CertifiedLocalQDMCageSearchResult,
     LocalCageModelAdapter,
     MultiLocalQDMCertificationReport,

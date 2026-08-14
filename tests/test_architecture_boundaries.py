@@ -85,57 +85,58 @@ def test_local_search_modules_follow_one_way_dependency_order() -> None:
     """Focused local-search modules must follow the reviewed dependency DAG."""
 
     allowed_dependencies = {
-        "local_search_types.py": set(),
-        "local_search_geometry.py": {"qlinks.caging.local_search_types"},
-        "local_search_core.py": {"qlinks.caging.local_search_types"},
-        "local_search_qdm.py": {
-            "qlinks.caging.local_search_core",
-            "qlinks.caging.local_search_geometry",
-            "qlinks.caging.local_search_types",
+        "types.py": set(),
+        "geometry.py": {"qlinks.caging.local_search.types"},
+        "core.py": {"qlinks.caging.local_search.types"},
+        "qdm.py": {
+            "qlinks.caging.local_search.core",
+            "qlinks.caging.local_search.geometry",
+            "qlinks.caging.local_search.types",
         },
-        "local_search_global.py": {
-            "qlinks.caging.local_search_qdm",
-            "qlinks.caging.local_search_types",
+        "global_ops.py": {
+            "qlinks.caging.local_search.qdm",
+            "qlinks.caging.local_search.types",
         },
-        "local_search_padding.py": {
-            "qlinks.caging.local_search_geometry",
-            "qlinks.caging.local_search_global",
-            "qlinks.caging.local_search_types",
+        "padding.py": {
+            "qlinks.caging.local_search.geometry",
+            "qlinks.caging.local_search.global_ops",
+            "qlinks.caging.local_search.types",
         },
-        "local_search_factorized.py": {
-            "qlinks.caging.local_search_global",
-            "qlinks.caging.local_search_padding",
-            "qlinks.caging.local_search_qdm",
-            "qlinks.caging.local_search_types",
+        "factorized.py": {
+            "qlinks.caging.local_search.global_ops",
+            "qlinks.caging.local_search.padding",
+            "qlinks.caging.local_search.qdm",
+            "qlinks.caging.local_search.types",
         },
-        "local_search_certification.py": {
-            "qlinks.caging.local_search_global",
-            "qlinks.caging.local_search_padding",
-            "qlinks.caging.local_search_qdm",
-            "qlinks.caging.local_search_types",
+        "certification.py": {
+            "qlinks.caging.local_search.global_ops",
+            "qlinks.caging.local_search.padding",
+            "qlinks.caging.local_search.qdm",
+            "qlinks.caging.local_search.types",
         },
-        "local_search_proposals.py": {
-            "qlinks.caging.local_search_core",
-            "qlinks.caging.local_search_geometry",
-            "qlinks.caging.local_search_types",
+        "proposals.py": {
+            "qlinks.caging.local_search.core",
+            "qlinks.caging.local_search.geometry",
+            "qlinks.caging.local_search.types",
         },
-        "local_search_scan.py": {
-            "qlinks.caging.local_search_core",
-            "qlinks.caging.local_search_padding",
-            "qlinks.caging.local_search_types",
+        "scan.py": {
+            "qlinks.caging.local_search.core",
+            "qlinks.caging.local_search.padding",
+            "qlinks.caging.local_search.types",
         },
-        "local_search_workflows.py": {
-            "qlinks.caging.local_search_certification",
-            "qlinks.caging.local_search_proposals",
-            "qlinks.caging.local_search_scan",
-            "qlinks.caging.local_search_types",
+        "workflows.py": {
+            "qlinks.caging.local_search.certification",
+            "qlinks.caging.local_search.proposals",
+            "qlinks.caging.local_search.scan",
+            "qlinks.caging.local_search.types",
         },
     }
 
     violations: list[str] = []
-    local_prefix = "qlinks.caging.local_search_"
+    local_prefix = "qlinks.caging.local_search."
+    local_root = _PACKAGE_ROOT / "caging" / "local_search"
     for filename, allowed in allowed_dependencies.items():
-        path = _PACKAGE_ROOT / "caging" / filename
+        path = local_root / filename
         for imported_module in _python_imports(path):
             if imported_module.startswith(local_prefix) and imported_module not in allowed:
                 violations.append(f"{filename}: {imported_module}")
@@ -143,26 +144,77 @@ def test_local_search_modules_follow_one_way_dependency_order() -> None:
     assert not violations, "Local-search dependency DAG violation:\n" + "\n".join(violations)
 
 
-def test_repository_does_not_import_removed_refactor_facades() -> None:
-    """No code or tests should still import the removed migration-only module paths."""
+def test_stability_modules_follow_one_way_dependency_order() -> None:
+    """Focused stability modules must follow the reviewed responsibility DAG."""
 
-    forbidden_prefixes = (
-        "qlinks.caging.local_search",
-        "qlinks.caging.stability",
+    allowed_dependencies = {
+        "types.py": set(),
+        "symmetry.py": set(),
+        "core.py": {"qlinks.caging.stability.types"},
+        "laurent.py": {"qlinks.caging.stability.types"},
+        "topology.py": {
+            "qlinks.caging.stability.core",
+            "qlinks.caging.stability.symmetry",
+            "qlinks.caging.stability.types",
+        },
+        "boundary.py": {
+            "qlinks.caging.stability.core",
+            "qlinks.caging.stability.topology",
+            "qlinks.caging.stability.types",
+        },
+        "qdm.py": {
+            "qlinks.caging.stability.boundary",
+            "qlinks.caging.stability.core",
+            "qlinks.caging.stability.symmetry",
+            "qlinks.caging.stability.types",
+        },
+    }
+
+    violations: list[str] = []
+    stability_prefix = "qlinks.caging.stability."
+    stability_root = _PACKAGE_ROOT / "caging" / "stability"
+    for filename, allowed in allowed_dependencies.items():
+        path = stability_root / filename
+        for imported_module in _python_imports(path):
+            if imported_module.startswith(stability_prefix) and imported_module not in allowed:
+                violations.append(f"{filename}: {imported_module}")
+
+    assert not violations, "Stability dependency DAG violation:\n" + "\n".join(violations)
+
+
+def test_repository_does_not_import_legacy_flat_refactor_modules() -> None:
+    """First-party code must use the nested caging subpackage paths."""
+
+    forbidden_modules = {
+        "qlinks.caging.local_search_types",
+        "qlinks.caging.local_search_geometry",
+        "qlinks.caging.local_search_core",
+        "qlinks.caging.local_search_qdm",
+        "qlinks.caging.local_search_global",
+        "qlinks.caging.local_search_padding",
+        "qlinks.caging.local_search_factorized",
+        "qlinks.caging.local_search_certification",
+        "qlinks.caging.local_search_proposals",
+        "qlinks.caging.local_search_scan",
+        "qlinks.caging.local_search_workflows",
+        "qlinks.caging.stability_types",
+        "qlinks.caging.stability_core",
+        "qlinks.caging.stability_topology",
+        "qlinks.caging.stability_boundary",
+        "qlinks.caging.stability_qdm",
+        "qlinks.caging.stability_laurent",
+        "qlinks.caging.stability_symmetry",
         "qlinks.open_system.manifold_detectors",
-    )
+    }
 
     violations: list[str] = []
     for tree in (_PACKAGE_ROOT, _REPOSITORY_ROOT / "tests"):
         for path in sorted(tree.rglob("*.py")):
             for imported_module in _python_imports(path):
-                if any(
-                    imported_module == prefix or imported_module.startswith(f"{prefix}.")
-                    for prefix in forbidden_prefixes
-                ):
+                if imported_module in forbidden_modules:
                     relative_path = path.relative_to(_REPOSITORY_ROOT)
                     violations.append(f"{relative_path}: {imported_module}")
 
     assert (
         not violations
-    ), "Removed refactor facade imports remain in the repository:\n" + "\n".join(violations)
+    ), "Legacy flat refactor-module imports remain in the repository:\n" + "\n".join(violations)

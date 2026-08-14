@@ -16,7 +16,7 @@ import scipy.sparse as scipy_sparse
 
 from qlinks.basis import Basis
 from qlinks.caging.candidate import CandidateSubgraph
-from qlinks.caging.local_search_global import (
+from qlinks.caging.local_search.global_ops import (
     _config_key,
     _qdm_flip_transition,
     _qdm_flip_transition_from_action,
@@ -24,15 +24,15 @@ from qlinks.caging.local_search_global import (
     build_qdm_global_limited_kinetic_matrix,
     qdm_global_self_loop_values,
 )
-from qlinks.caging.local_search_padding import (
+from qlinks.caging.local_search.padding import (
     _multi_padding_has_static_exterior,
     _qdm_action_plaquette_class,
     _qdm_multi_block_certification_actions,
     find_shared_qdm_exterior_paddings,
     iter_multi_qdm_block_paddings,
 )
-from qlinks.caging.local_search_qdm import _infer_potential_unit_from_model
-from qlinks.caging.local_search_types import (
+from qlinks.caging.local_search.qdm import _infer_potential_unit_from_model
+from qlinks.caging.local_search.types import (
     CertifiedLocalQDMCageSearchResult,
     LocalQDMCageBlock,
     LocalQDMCageRecord,

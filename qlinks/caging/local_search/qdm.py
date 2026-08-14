@@ -11,10 +11,10 @@ import scipy.sparse as scipy_sparse
 
 from qlinks.basis import Basis, DFSBasisSolver
 from qlinks.caging.candidate import CandidateSubgraph
-from qlinks.caging.local_search_core import (
+from qlinks.caging.local_search.core import (
     register_local_cage_adapter_factory,
 )
-from qlinks.caging.local_search_geometry import (
+from qlinks.caging.local_search.geometry import (
     _expand_plaquettes_by_shared_links,
     _local_binary_layout,
     _plaquette_local_indices,
@@ -26,7 +26,7 @@ from qlinks.caging.local_search_geometry import (
     _validate_link_ids,
     _validate_plaquette_ids,
 )
-from qlinks.caging.local_search_types import (
+from qlinks.caging.local_search.types import (
     LocalBoundaryMode,
     LocalCageModelAdapter,
     LocalQDMCageRecord,

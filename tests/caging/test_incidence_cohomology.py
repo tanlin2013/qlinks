@@ -1,7 +1,7 @@
 import numpy as np
 
 from qlinks.basis.configs import basis_configs_from_build_result
-from qlinks.caging import (
+from qlinks.caging.stability import (
     diagnose_boundary_incidence_cohomology,
     diagnose_hard_core_laurent_lift,
     partition_cage_hamiltonian,

@@ -18,7 +18,7 @@ import scipy.linalg as scipy_linalg
 import scipy.sparse as sp
 
 from qlinks.caging.spectral import MatrixLike, diagnose_eigenpair
-from qlinks.caging.stability_core import partition_cage_hamiltonian
+from qlinks.caging.stability.core import partition_cage_hamiltonian
 
 WindowMetric = Literal["chebyshev", "manhattan"]
 

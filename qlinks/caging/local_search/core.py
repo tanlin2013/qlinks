@@ -12,7 +12,7 @@ import scipy.sparse as scipy_sparse
 
 from qlinks.basis import Basis
 from qlinks.caging.candidate import CandidateSubgraph
-from qlinks.caging.local_search_types import (
+from qlinks.caging.local_search.types import (
     CertifiedLocalQDMCageSearchResult,
     LocalCageModelAdapter,
     LocalQDMCageRecord,

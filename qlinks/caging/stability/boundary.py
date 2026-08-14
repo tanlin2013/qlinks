@@ -10,13 +10,13 @@ import numpy.typing as npt
 import scipy.linalg as scipy_linalg
 
 from qlinks.caging.nullspace import as_dense_array, nullspace_svd
-from qlinks.caging.stability_core import (
+from qlinks.caging.stability.core import (
     estimate_power_law_exponent,
     partition_cage_hamiltonian,
     subspace_principal_overlaps,
 )
-from qlinks.caging.stability_topology import _boundary_edge_labels
-from qlinks.caging.stability_types import (
+from qlinks.caging.stability.topology import _boundary_edge_labels
+from qlinks.caging.stability.types import (
     BoundaryCancellationCircuitEntry,
     BoundaryCancellationMatroidBranchPoint,
     BoundaryCancellationMatroidBranchReport,

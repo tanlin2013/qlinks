@@ -6,14 +6,17 @@ import numpy as np
 import pytest
 
 from qlinks.caging import (
-    AdaptiveRegionProposal,
-    AdaptiveRegionProposalRecord,
     CageRecord,
     CageSearchConfig,
     CageSearcher,
     CageSearchResult,
     CageState,
     CandidateSubgraph,
+    classify_cage_state,
+)
+from qlinks.caging.local_search import (
+    AdaptiveRegionProposal,
+    AdaptiveRegionProposalRecord,
     ConnectedRegionProposal,
     ConnectedRegionProposalRecord,
     LocalCageSearchConfig,
@@ -40,7 +43,6 @@ from qlinks.caging import (
     certify_qdm_local_result,
     certify_qdm_multi_block_padding,
     certify_qdm_multi_block_result,
-    classify_cage_state,
     collect_qdm_cage_blocks_from_region_proposals,
     collect_qdm_cage_blocks_with_scan_from_region_proposals,
     diagnose_qdm_multi_block_paddings,

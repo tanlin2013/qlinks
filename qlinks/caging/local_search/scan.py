@@ -10,9 +10,9 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 
-from qlinks.caging.local_search_core import LocalCageSearcher
-from qlinks.caging.local_search_padding import make_qdm_cage_block
-from qlinks.caging.local_search_types import (
+from qlinks.caging.local_search.core import LocalCageSearcher
+from qlinks.caging.local_search.padding import make_qdm_cage_block
+from qlinks.caging.local_search.types import (
     LocalCageModelAdapter,
     LocalQDMCageBlock,
     LocalQDMCageSearchConfig,

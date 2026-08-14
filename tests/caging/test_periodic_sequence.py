@@ -6,16 +6,18 @@ import numpy as np
 
 from qlinks.caging import (
     CageClassificationConfig,
-    LocalQDMCageSearchConfig,
-    RobustQDMLocalCageSearchConfig,
     SquareQDMPeriodicProductUnitCell,
     certify_local_witness_on_square_qdm_periodic_sequence,
     certify_square_qdm_periodic_product_sequence,
     classify_cage_state,
     evaluate_square_qdm_classification_witnesses_on_strips,
     local_witnesses_from_classification_report,
-    robust_qdm_local_cage_search,
     scan_square_qdm_beta_zero_energy_density,
+)
+from qlinks.caging.local_search import (
+    LocalQDMCageSearchConfig,
+    RobustQDMLocalCageSearchConfig,
+    robust_qdm_local_cage_search,
 )
 from qlinks.models import SquareQDMModel
 
@@ -178,10 +180,10 @@ def test_pure_kinetic_sequence_matches_beta_zero_energy_exactly() -> None:
 
 def test_frozen_product_tile_certifies_true_two_dimensional_sequence() -> None:
     from qlinks.caging import (
-        FactorizedLocalQDMPadding,
         SquareQDMBiperiodicProductTile,
         certify_square_qdm_biperiodic_product_sequence,
     )
+    from qlinks.caging.local_search import FactorizedLocalQDMPadding
 
     model = SquareQDMModel(
         lx=4,

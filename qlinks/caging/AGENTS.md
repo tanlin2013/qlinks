@@ -4,29 +4,19 @@ This file supplements the repository-root `AGENTS.md`.
 
 - Treat cage classification, local search, stability, tensor-network construction, and
   thermodynamic diagnostics as separate responsibilities even when they share data.
-- The temporary `local_search.py` facade has been removed. Keep first-party imports on the
-  focused local-search modules directly; do not reintroduce a monolithic compatibility surface.
-- Preserve the local-search dependency DAG rather than a single monolithic chain.
-  `local_search_types` is the passive contract leaf; `local_search_geometry` contains pure region
-  geometry; `local_search_core` owns generic cage-search algebra; `local_search_qdm` adapts that
-  algebra to QDM local regions; `local_search_global` owns explicit global-QDM action primitives;
-  `local_search_padding` owns exterior-padding search and structural block validation;
-  `local_search_factorized` owns exact factorized-product certification;
-  `local_search_certification` owns residual certification/result assembly;
-  `local_search_proposals` generates regions; `local_search_scan` executes proposal streams; and
-  `local_search_workflows` orchestrates the high-level robust search. Do not add reverse imports
-  that recreate a static or eager dependency cycle.
-- The temporary `stability.py` facade has been removed. Import the focused
-  `stability_core`, `stability_topology`, `stability_boundary`, `stability_qdm`,
-  `stability_laurent`, or `stability_types` module directly.
-- Local-search data/result contracts and pure region geometry live in `local_search_types.py` and
-  `local_search_geometry.py`; generic search algebra/adapter registration lives in
-  `local_search_core.py`; QDM local-region algebra lives in `local_search_qdm.py`; explicit global
-  QDM actions live in `local_search_global.py`; exterior-padding enumeration lives in
-  `local_search_padding.py`; exact factorized-product contraction lives in
-  `local_search_factorized.py`; residual certification lives in `local_search_certification.py`;
-  proposal generation lives in `local_search_proposals.py`; proposal execution lives in
-  `local_search_scan.py`; robust portfolio orchestration lives in `local_search_workflows.py`.
+- `local_search/` is the local-cage-search sublayer. Preserve its dependency DAG:
+  `types` is the passive contract leaf; `geometry` contains pure region geometry; `core` owns
+  generic cage-search algebra; `qdm` adapts that algebra to QDM local regions; `global_ops` owns
+  explicit global-QDM actions; `padding` owns exterior-padding search; `factorized` owns exact
+  factorized-product certification; `certification` owns residual certification/result assembly;
+  `proposals` generates regions; `scan` executes proposal streams; and `workflows` orchestrates
+  high-level robust search. Do not add reverse imports that recreate a static or eager cycle.
+- `stability/` is the cage-stability sublayer. Use `core`, `topology`, `boundary`, `qdm`,
+  `laurent`, `symmetry`, and `types` according to scientific responsibility rather than adding
+  another broad stability facade.
+- `qlinks.caging.local_search` and `qlinks.caging.stability` are curated subpackage APIs. New
+  first-party implementation code should still import the defining child module directly; use the
+  subpackage API at workflow/user boundaries.
 - Do not import from `qlinks.open_system`. Extract genuinely shared local algebra or operator
   primitives into a neutral lower layer.
 - Keep exact algebraic certification separate from heuristic search ranking and from

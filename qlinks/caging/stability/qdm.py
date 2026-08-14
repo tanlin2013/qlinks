@@ -13,7 +13,7 @@ import scipy.linalg as scipy_linalg
 import scipy.sparse as scipy_sparse
 import scipy.sparse.linalg as scipy_sparse_linalg
 
-from qlinks.caging.local_search_global import (
+from qlinks.caging.local_search.global_ops import (
     _qdm_flip_transition_from_action,
     _qdm_global_plaquette_actions,
 )
@@ -23,15 +23,15 @@ from qlinks.caging.periodic_sequence import (
     SquareQDMPeriodicProductInstance,
     SquareQDMPeriodicProductUnitCell,
 )
-from qlinks.caging.stability_boundary import _orthonormal_basis_absolute
-from qlinks.caging.stability_core import (
+from qlinks.caging.stability.boundary import _orthonormal_basis_absolute
+from qlinks.caging.stability.core import (
     _orthonormal_columns,
     estimate_power_law_exponent,
     subspace_complement_basis,
     subspace_principal_overlaps,
 )
-from qlinks.caging.stability_symmetry import _subspace_symmetry_representation
-from qlinks.caging.stability_types import (
+from qlinks.caging.stability.symmetry import _subspace_symmetry_representation
+from qlinks.caging.stability.types import (
     CyclicAmplitudeBondProfile,
     QDMCompactCageReducedWindingPoint,
     QDMCompactCageReducedWindingReport,

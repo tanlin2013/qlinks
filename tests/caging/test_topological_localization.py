@@ -1,13 +1,13 @@
 import numpy as np
 
 from qlinks.basis.configs import basis_configs_from_build_result
-from qlinks.caging import (
+from qlinks.caging.spectral import basis_permutation_from_variable_permutation
+from qlinks.caging.stability import (
     ManyBodyCLSCompletenessSequencePoint,
     ManyBodyCLSCompletenessSequenceReport,
     diagnose_many_body_cls_completeness,
     diagnose_many_body_topological_localization,
 )
-from qlinks.caging.spectral import basis_permutation_from_variable_permutation
 from qlinks.models import SpinOneXYChainModel, spin_one_xy_scar_tower_states
 
 

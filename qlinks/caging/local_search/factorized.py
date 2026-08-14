@@ -9,13 +9,13 @@ from collections.abc import Sequence
 import numpy as np
 import numpy.typing as npt
 
-from qlinks.caging.local_search_global import _config_key, _qdm_global_plaquette_actions
-from qlinks.caging.local_search_padding import (
+from qlinks.caging.local_search.global_ops import _config_key, _qdm_global_plaquette_actions
+from qlinks.caging.local_search.padding import (
     _factorized_padding_validation_reason,
     factorized_qdm_padding_from_multi_padding,
 )
-from qlinks.caging.local_search_qdm import _infer_potential_unit_from_model
-from qlinks.caging.local_search_types import (
+from qlinks.caging.local_search.qdm import _infer_potential_unit_from_model
+from qlinks.caging.local_search.types import (
     FactorizedLocalQDMPadding,
     LocalQDMCageBlock,
     LocalQDMMultiPaddingConfig,

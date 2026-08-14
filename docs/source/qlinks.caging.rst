@@ -30,10 +30,24 @@ qlinks.caging.diagnostics module
    :members:
    :show-inheritance:
 
-qlinks.caging.local_search_workflows module
+qlinks.caging.local_search.workflows module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: qlinks.caging.local_search_workflows
+.. automodule:: qlinks.caging.local_search.workflows
+   :members:
+   :show-inheritance:
+
+qlinks.caging.local_search package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: qlinks.caging.local_search
+   :members:
+   :show-inheritance:
+
+qlinks.caging.stability package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: qlinks.caging.stability
    :members:
    :show-inheritance:
 

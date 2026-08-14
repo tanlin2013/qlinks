@@ -81,7 +81,7 @@ The old multi-block padding path materializes a global support of size
 factorized path stores only the shared exterior assignment and contracts the
 Hamiltonian action as a sum of product vectors::
 
-   from qlinks.caging import (
+   from qlinks.caging.local_search import (
        certify_qdm_factorized_product_state,
        find_factorized_qdm_block_paddings,
    )

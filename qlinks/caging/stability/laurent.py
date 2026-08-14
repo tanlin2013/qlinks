@@ -10,7 +10,7 @@ import numpy.typing as npt
 import scipy.linalg as scipy_linalg
 
 from qlinks.caging.nullspace import as_dense_array
-from qlinks.caging.stability_types import (
+from qlinks.caging.stability.types import (
     LaurentDimensionDivisibilityViolation,
     LaurentPeriodicDimensionConsistencyReport,
     LaurentPolynomialConstraintModuleReport,
