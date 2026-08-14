@@ -1,0 +1,739 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>qlinks.open_system.diagnostics.absorbing &#8212; qlinks</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../../_static/documentation_options.js?v=eeb54e98"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/qlinks/open_system/diagnostics/absorbing';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.3" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">qlinks</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/tanlin2013/qlinks" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../../../index.html">
+                    qlinks
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../workflow.html">Typical workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../thermodynamic_eth.html">Thermodynamic ETH diagnostics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tensor_network.html">Tensor-network cage ansatzes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples.html">Minimal examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development_status.html">Current development status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../refactor_status.html">Repository refactor status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture_diagnostics.html">Architecture diagnostics</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../qlinks.html">qlinks package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.backends.html">qlinks.backends package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../qlinks.basis.html">qlinks.basis package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../qlinks.basis.solvers.html">qlinks.basis.solvers package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.builders.html">qlinks.builders package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.caging.html">qlinks.caging package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.constraints.html">qlinks.constraints package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.conventions.html">qlinks.conventions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.encoded.html">qlinks.encoded package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.exceptions.html">qlinks.exceptions package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.io.html">qlinks.io package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.lattice.html">qlinks.lattice package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.local_structure.html">qlinks.local_structure package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.models.html">qlinks.models package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.open_system.html">qlinks.open_system package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.operators.html">qlinks.operators package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.variables.html">qlinks.variables package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../qlinks.visualizer.html">qlinks.visualizer package</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../repository_health.html">Repository health and governance</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/tanlin2013/qlinks/issues/new?title=Issue%20on%20page%20%2F_modules/qlinks/open_system/diagnostics/absorbing.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for qlinks.open_system.diagnostics.absorbing</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system._subspace</span><span class="w"> </span><span class="kn">import</span> <span class="n">_as_scipy_csr_matrix</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenSystemBackend</span><span class="p">,</span> <span class="n">OpenSystemBackendName</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.diagnostics._formatting</span><span class="w"> </span><span class="kn">import</span> <span class="n">_format_float</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.diagnostics._linalg</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_low_rank_operator_frobenius_norm</span><span class="p">,</span>
+    <span class="n">_orthogonal_component_norm</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="AbsorbingProjectorJumpDiagnostics">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.diagnostics.AbsorbingProjectorJumpDiagnostics">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbsorbingProjectorJumpDiagnostics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagnostics for one jump relative to a target projector.&quot;&quot;&quot;</span>
+
+    <span class="n">jump_index</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">target_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">outflow_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">inflow_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">commutator_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">dissipator_adjoint_projector_norm</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_dark_on_target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_residual</span> <span class="o">&lt;</span> <span class="mf">1e-10</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_inflow</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflow_norm</span> <span class="o">&gt;</span> <span class="mf">1e-10</span></div>
+
+
+
+<div class="viewcode-block" id="AbsorbingProjectorSymmetryDiagnostics">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.diagnostics.AbsorbingProjectorSymmetryDiagnostics">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbsorbingProjectorSymmetryDiagnostics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagnostics for the absorbing-state projector symmetry P_psi.&quot;&quot;&quot;</span>
+
+    <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_jumps</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">hamiltonian_commutator_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">liouvillian_adjoint_projector_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">max_target_residual</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">max_outflow_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">max_inflow_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">max_jump_projector_commutator_norm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">jump_diagnostics</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">AbsorbingProjectorJumpDiagnostics</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="n">absorbing_projector_is_conserved</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">target_is_dark</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">has_recycling_inflow</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">has_absorbing_projector_symmetry</span><span class="p">:</span> <span class="nb">bool</span>
+
+<div class="viewcode-block" id="AbsorbingProjectorSymmetryDiagnostics.to_summary_dict">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.diagnostics.AbsorbingProjectorSymmetryDiagnostics.to_summary_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_summary_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;dim&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span>
+            <span class="s2">&quot;n_jumps&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_jumps</span><span class="p">,</span>
+            <span class="s2">&quot;hamiltonian_commutator_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hamiltonian_commutator_norm</span><span class="p">,</span>
+            <span class="s2">&quot;liouvillian_adjoint_projector_norm&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">liouvillian_adjoint_projector_norm</span><span class="p">),</span>
+            <span class="s2">&quot;max_target_residual&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_target_residual</span><span class="p">,</span>
+            <span class="s2">&quot;max_outflow_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_outflow_norm</span><span class="p">,</span>
+            <span class="s2">&quot;max_inflow_norm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_inflow_norm</span><span class="p">,</span>
+            <span class="s2">&quot;max_jump_projector_commutator_norm&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_jump_projector_commutator_norm</span><span class="p">),</span>
+            <span class="s2">&quot;absorbing_projector_is_conserved&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">absorbing_projector_is_conserved</span><span class="p">),</span>
+            <span class="s2">&quot;target_is_dark&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_is_dark</span><span class="p">,</span>
+            <span class="s2">&quot;has_recycling_inflow&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_recycling_inflow</span><span class="p">,</span>
+            <span class="s2">&quot;has_absorbing_projector_symmetry&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">has_absorbing_projector_symmetry</span><span class="p">),</span>
+            <span class="s2">&quot;jump_diagnostics&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;jump_index&quot;</span><span class="p">:</span> <span class="n">diagnostic</span><span class="o">.</span><span class="n">jump_index</span><span class="p">,</span>
+                    <span class="s2">&quot;target_residual&quot;</span><span class="p">:</span> <span class="n">diagnostic</span><span class="o">.</span><span class="n">target_residual</span><span class="p">,</span>
+                    <span class="s2">&quot;outflow_norm&quot;</span><span class="p">:</span> <span class="n">diagnostic</span><span class="o">.</span><span class="n">outflow_norm</span><span class="p">,</span>
+                    <span class="s2">&quot;inflow_norm&quot;</span><span class="p">:</span> <span class="n">diagnostic</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">,</span>
+                    <span class="s2">&quot;commutator_norm&quot;</span><span class="p">:</span> <span class="n">diagnostic</span><span class="o">.</span><span class="n">commutator_norm</span><span class="p">,</span>
+                    <span class="s2">&quot;dissipator_adjoint_projector_norm&quot;</span><span class="p">:</span> <span class="p">(</span>
+                        <span class="n">diagnostic</span><span class="o">.</span><span class="n">dissipator_adjoint_projector_norm</span>
+                    <span class="p">),</span>
+                <span class="p">}</span>
+                <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">jump_diagnostics</span>
+            <span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="AbsorbingProjectorSymmetryDiagnostics.to_rich">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.diagnostics.AbsorbingProjectorSymmetryDiagnostics.to_rich">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_rich</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">rich.console</span><span class="w"> </span><span class="kn">import</span> <span class="n">Group</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">rich.panel</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panel</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">rich.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">rich.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">Text</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="s2">&quot;AbsorbingProjectorSymmetryDiagnostics.to_rich() &quot;</span>
+                <span class="s2">&quot;requires rich. Install it with `pip install rich`.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="n">overview</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_column</span><span class="p">()</span>
+
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;Hilbert dimension&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">))</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;number of jumps&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jumps</span><span class="p">))</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;target is dark&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_is_dark</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;has recycling inflow&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">has_recycling_inflow</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;P_psi conserved&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">absorbing_projector_is_conserved</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">overview</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;absorbing-projector symmetry&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">has_absorbing_projector_symmetry</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">global_table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Global projector diagnostics&quot;</span><span class="p">)</span>
+        <span class="n">global_table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;quantity&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+        <span class="n">global_table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+
+        <span class="n">global_table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;||[H, P_psi]||&quot;</span><span class="p">,</span>
+            <span class="n">_format_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hamiltonian_commutator_norm</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">global_table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;||L†(P_psi)||&quot;</span><span class="p">,</span>
+            <span class="n">_format_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">liouvillian_adjoint_projector_norm</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">global_table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;max ||J psi||&quot;</span><span class="p">,</span>
+            <span class="n">_format_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_target_residual</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">global_table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;max ||(I-P) J P||&quot;</span><span class="p">,</span>
+            <span class="n">_format_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_outflow_norm</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">global_table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;max ||P J (I-P)||&quot;</span><span class="p">,</span>
+            <span class="n">_format_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_inflow_norm</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">global_table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+            <span class="s2">&quot;max ||[J, P]||&quot;</span><span class="p">,</span>
+            <span class="n">_format_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_jump_projector_commutator_norm</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">jumps</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Jump-by-jump projector diagnostics&quot;</span><span class="p">)</span>
+        <span class="n">jumps</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;jump&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">jumps</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;||J psi||&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">jumps</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;outflow&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">jumps</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;inflow&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">jumps</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;||[J,P]||&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+        <span class="n">jumps</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;||D†_J(P)||&quot;</span><span class="p">,</span> <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">jump_diagnostics</span><span class="p">:</span>
+            <span class="n">jumps</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">jump_index</span><span class="p">),</span>
+                <span class="n">_format_float</span><span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">target_residual</span><span class="p">),</span>
+                <span class="n">_format_float</span><span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">outflow_norm</span><span class="p">),</span>
+                <span class="n">_format_float</span><span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">inflow_norm</span><span class="p">),</span>
+                <span class="n">_format_float</span><span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">commutator_norm</span><span class="p">),</span>
+                <span class="n">_format_float</span><span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">dissipator_adjoint_projector_norm</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Panel</span><span class="p">(</span>
+            <span class="n">Group</span><span class="p">(</span><span class="n">overview</span><span class="p">,</span> <span class="n">global_table</span><span class="p">,</span> <span class="n">jumps</span><span class="p">),</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">Text</span><span class="p">(</span>
+                <span class="s2">&quot;Absorbing-projector symmetry diagnostics&quot;</span><span class="p">,</span>
+                <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bold cyan&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">border_style</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="diagnose_absorbing_projector_symmetry">
+<a class="viewcode-back" href="../../../../qlinks.open_system.html#qlinks.open_system.diagnostics.diagnose_absorbing_projector_symmetry">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diagnose_absorbing_projector_symmetry</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">hamiltonian</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">jumps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">target_state</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">OpenSystemBackendName</span> <span class="o">|</span> <span class="n">OpenSystemBackend</span> <span class="o">=</span> <span class="s2">&quot;scipy&quot;</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbsorbingProjectorSymmetryDiagnostics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagnose whether P_psi is an absorbing-state projector symmetry.</span>
+
+<span class="sd">    The target projector is</span>
+
+<span class="sd">        P_psi = |psi&gt;&lt;psi|.</span>
+
+<span class="sd">    The relevant obstruction to attraction is:</span>
+
+<span class="sd">        J_mu |psi&gt; = 0</span>
+<span class="sd">        and</span>
+<span class="sd">        P_psi J_mu (I - P_psi) = 0</span>
+
+<span class="sd">    for all jumps. Then the target is dark, but there is no jump-induced</span>
+<span class="sd">    inflow from psi_perp into psi. Equivalently, P_psi is conserved by the</span>
+<span class="sd">    Heisenberg-picture Lindbladian.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># _backend_obj = get_open_system_backend(backend)</span>
+
+    <span class="n">hamiltonian_sparse</span> <span class="o">=</span> <span class="n">_as_scipy_csr_matrix</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">)</span>
+    <span class="n">jumps_sparse</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_as_scipy_csr_matrix</span><span class="p">(</span><span class="n">jump</span><span class="p">)</span> <span class="k">for</span> <span class="n">jump</span> <span class="ow">in</span> <span class="n">jumps</span><span class="p">)</span>
+
+    <span class="n">target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">target_state</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;target_state must be one-dimensional.&quot;</span><span class="p">)</span>
+
+    <span class="n">target_norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">target_norm</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;target_state must be nonzero.&quot;</span><span class="p">)</span>
+
+    <span class="n">target</span> <span class="o">=</span> <span class="n">target</span> <span class="o">/</span> <span class="n">target_norm</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">hamiltonian_sparse</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;hamiltonian shape must be compatible with target_state.&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">jump</span> <span class="ow">in</span> <span class="n">jumps_sparse</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">jump</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Every jump operator must have shape &quot;</span> <span class="s2">&quot;(len(target_state), len(target_state)).&quot;</span>
+            <span class="p">)</span>
+
+    <span class="n">hamiltonian_target</span> <span class="o">=</span> <span class="n">hamiltonian_sparse</span> <span class="o">@</span> <span class="n">target</span>
+    <span class="n">hamiltonian_commutator_norm</span> <span class="o">=</span> <span class="n">_low_rank_operator_frobenius_norm</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">hamiltonian_target</span><span class="p">,</span> <span class="n">target</span><span class="p">),</span>
+            <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">hamiltonian_target</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">jump_diagnostics</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AbsorbingProjectorJumpDiagnostics</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">liouvillian_adjoint_terms</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">complex</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="n">hamiltonian_target</span><span class="p">,</span> <span class="n">target</span><span class="p">),</span>
+        <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">hamiltonian_target</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">jump_index</span><span class="p">,</span> <span class="n">jump</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">jumps_sparse</span><span class="p">):</span>
+        <span class="n">jump_target</span> <span class="o">=</span> <span class="n">jump</span> <span class="o">@</span> <span class="n">target</span>
+        <span class="n">jump_dagger_target</span> <span class="o">=</span> <span class="n">jump</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">target</span>
+        <span class="n">jump_dagger_jump_target</span> <span class="o">=</span> <span class="n">jump</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">jump_target</span>
+
+        <span class="n">target_residual</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">jump_target</span><span class="p">))</span>
+        <span class="n">outflow_norm</span> <span class="o">=</span> <span class="n">_orthogonal_component_norm</span><span class="p">(</span><span class="n">jump_target</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+        <span class="n">inflow_norm</span> <span class="o">=</span> <span class="n">_orthogonal_component_norm</span><span class="p">(</span><span class="n">jump_dagger_target</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+        <span class="n">commutator_norm</span> <span class="o">=</span> <span class="n">_low_rank_operator_frobenius_norm</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">jump_target</span><span class="p">,</span> <span class="n">target</span><span class="p">),</span>
+                <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">jump_dagger_target</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">dissipator_terms</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">jump_dagger_target</span><span class="p">,</span> <span class="n">jump_dagger_target</span><span class="p">),</span>
+            <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">jump_dagger_jump_target</span><span class="p">,</span> <span class="n">target</span><span class="p">),</span>
+            <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">jump_dagger_jump_target</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">dissipator_adjoint_projector_norm</span> <span class="o">=</span> <span class="n">_low_rank_operator_frobenius_norm</span><span class="p">(</span><span class="n">dissipator_terms</span><span class="p">)</span>
+
+        <span class="n">liouvillian_adjoint_terms</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dissipator_terms</span><span class="p">)</span>
+
+        <span class="n">jump_diagnostics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">AbsorbingProjectorJumpDiagnostics</span><span class="p">(</span>
+                <span class="n">jump_index</span><span class="o">=</span><span class="n">jump_index</span><span class="p">,</span>
+                <span class="n">target_residual</span><span class="o">=</span><span class="n">target_residual</span><span class="p">,</span>
+                <span class="n">outflow_norm</span><span class="o">=</span><span class="n">outflow_norm</span><span class="p">,</span>
+                <span class="n">inflow_norm</span><span class="o">=</span><span class="n">inflow_norm</span><span class="p">,</span>
+                <span class="n">commutator_norm</span><span class="o">=</span><span class="n">commutator_norm</span><span class="p">,</span>
+                <span class="n">dissipator_adjoint_projector_norm</span><span class="o">=</span><span class="n">dissipator_adjoint_projector_norm</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">max_target_residual</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">target_residual</span> <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="n">jump_diagnostics</span><span class="p">),</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">max_outflow_norm</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">outflow_norm</span> <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="n">jump_diagnostics</span><span class="p">),</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">max_inflow_norm</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">inflow_norm</span> <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="n">jump_diagnostics</span><span class="p">),</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">max_jump_projector_commutator_norm</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">commutator_norm</span> <span class="k">for</span> <span class="n">diagnostic</span> <span class="ow">in</span> <span class="n">jump_diagnostics</span><span class="p">),</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">liouvillian_adjoint_projector_norm</span> <span class="o">=</span> <span class="n">_low_rank_operator_frobenius_norm</span><span class="p">(</span>
+        <span class="nb">tuple</span><span class="p">(</span><span class="n">liouvillian_adjoint_terms</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">target_is_dark</span> <span class="o">=</span> <span class="n">max_target_residual</span> <span class="o">&lt;=</span> <span class="n">tolerance</span>
+    <span class="n">has_recycling_inflow</span> <span class="o">=</span> <span class="n">max_inflow_norm</span> <span class="o">&gt;</span> <span class="n">tolerance</span>
+    <span class="n">absorbing_projector_is_conserved</span> <span class="o">=</span> <span class="n">liouvillian_adjoint_projector_norm</span> <span class="o">&lt;=</span> <span class="n">tolerance</span>
+
+    <span class="n">has_absorbing_projector_symmetry</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">target_is_dark</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_recycling_inflow</span> <span class="ow">and</span> <span class="n">absorbing_projector_is_conserved</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">AbsorbingProjectorSymmetryDiagnostics</span><span class="p">(</span>
+        <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span>
+        <span class="n">n_jumps</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">jumps_sparse</span><span class="p">),</span>
+        <span class="n">hamiltonian_commutator_norm</span><span class="o">=</span><span class="n">hamiltonian_commutator_norm</span><span class="p">,</span>
+        <span class="n">liouvillian_adjoint_projector_norm</span><span class="o">=</span><span class="n">liouvillian_adjoint_projector_norm</span><span class="p">,</span>
+        <span class="n">max_target_residual</span><span class="o">=</span><span class="n">max_target_residual</span><span class="p">,</span>
+        <span class="n">max_outflow_norm</span><span class="o">=</span><span class="n">max_outflow_norm</span><span class="p">,</span>
+        <span class="n">max_inflow_norm</span><span class="o">=</span><span class="n">max_inflow_norm</span><span class="p">,</span>
+        <span class="n">max_jump_projector_commutator_norm</span><span class="o">=</span><span class="p">(</span><span class="n">max_jump_projector_commutator_norm</span><span class="p">),</span>
+        <span class="n">jump_diagnostics</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">jump_diagnostics</span><span class="p">),</span>
+        <span class="n">absorbing_projector_is_conserved</span><span class="o">=</span><span class="n">absorbing_projector_is_conserved</span><span class="p">,</span>
+        <span class="n">target_is_dark</span><span class="o">=</span><span class="n">target_is_dark</span><span class="p">,</span>
+        <span class="n">has_recycling_inflow</span><span class="o">=</span><span class="n">has_recycling_inflow</span><span class="p">,</span>
+        <span class="n">has_absorbing_projector_symmetry</span><span class="o">=</span><span class="p">(</span><span class="n">has_absorbing_projector_symmetry</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Tan Tao-Lin
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Tan Tao-Lin.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

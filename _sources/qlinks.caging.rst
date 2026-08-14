@@ -12,7 +12,7 @@ Subpackages
 qlinks.caging.analysis package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``analysis.environment`` diagnoses whether the exterior environment can be safely removed when
+``analysis.environment`` is a role-oriented subpackage that diagnoses whether the exterior environment can be safely removed when
 constructing a bounded local caging operator.  It deliberately does **not** classify the caged
 eigenstate.  Broader local structure and support morphology are separate analyses.
 

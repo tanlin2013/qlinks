@@ -351,13 +351,15 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelBuildResult</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.models.local_terms</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalTermDescriptor</span><span class="p">,</span> <span class="n">LocalTermKind</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenSystemBackendName</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.diagnostics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.diagnostics.dark</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CommonKernelHamiltonianInvariantSectorReport</span><span class="p">,</span>
     <span class="n">DarkManifoldDiagnostics</span><span class="p">,</span>
     <span class="n">bad_h_invariant_common_kernel_basis</span><span class="p">,</span>
     <span class="n">diagnose_common_kernel_h_invariant_sector</span><span class="p">,</span>
     <span class="n">diagnose_dark_manifold</span><span class="p">,</span>
-    <span class="n">jump_activity_series</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.diagnostics.jumps</span><span class="w"> </span><span class="kn">import</span> <span class="n">jump_activity_series</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.diagnostics.target_manifold</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">target_manifold_coherence_series</span><span class="p">,</span>
     <span class="n">target_manifold_density_matrix_series</span><span class="p">,</span>
     <span class="n">target_manifold_entropy_series</span><span class="p">,</span>
@@ -1042,7 +1044,6 @@
         <span class="n">residual_report</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual_report</span>
         <span class="n">targeted_report</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">targeted_report</span>
         <span class="n">targeted_selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">targeted_selection</span>
-
         <span class="k">if</span> <span class="n">targeted_selection</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">n_targeted_jumps</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">targeted_selected_family_residual_kernel_dimension</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1087,7 +1088,6 @@
                 <span class="n">targeted_selection</span><span class="o">.</span><span class="n">combined_complement_common_kernel_removed</span>
             <span class="p">)</span>
             <span class="n">combined_inflow_norm</span> <span class="o">=</span> <span class="n">targeted_selection</span><span class="o">.</span><span class="n">combined_inflow_norm</span>
-
         <span class="n">targeted_failure_counts</span> <span class="o">=</span> <span class="p">(</span>
             <span class="kc">None</span> <span class="k">if</span> <span class="n">targeted_report</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">targeted_report</span><span class="o">.</span><span class="n">targeted_search_failure_counts</span>
         <span class="p">)</span>

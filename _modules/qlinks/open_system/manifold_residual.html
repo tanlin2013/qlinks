@@ -2084,7 +2084,7 @@
     <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the complement common kernel for a concrete jump list.&quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.diagnostics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system._subspace</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">_common_kernel_basis_from_sparse_operators</span><span class="p">,</span>
         <span class="n">_kernel_basis_orthogonal_to_manifold</span><span class="p">,</span>
     <span class="p">)</span>
@@ -2143,7 +2143,7 @@
 <span class="sd">    identical to the full-family residual basis used to create the targeted</span>
 <span class="sd">    report.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.diagnostics</span><span class="w"> </span><span class="kn">import</span> <span class="n">diagnose_dark_manifold</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">qlinks.open_system.diagnostics.dark</span><span class="w"> </span><span class="kn">import</span> <span class="n">diagnose_dark_manifold</span>
 
     <span class="n">residual_basis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">targeted_report</span><span class="o">.</span><span class="n">residual_basis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">residual_basis</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>

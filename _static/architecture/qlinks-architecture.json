@@ -1,6 +1,6 @@
 {
   "boundary_violations": [],
-  "git_commit": "6362eaf6423d",
+  "git_commit": "c638813d1f6b",
   "implementation_import_time_module_cycles": [],
   "import_time_module_cycles": [],
   "import_time_package_cycles": [],
@@ -457,7 +457,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.analysis.environment",
-      "target": "qlinks.caging.analysis.transitions",
+      "target": "qlinks.caging.analysis.environment.contracts",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -465,7 +465,247 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.caging.analysis.environment",
+      "target": "qlinks.caging.analysis.environment.diagnosis",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment",
+      "target": "qlinks.caging.analysis.environment.monitor",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment",
+      "target": "qlinks.caging.analysis.environment.report",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment",
+      "target": "qlinks.caging.analysis.environment.support",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment",
+      "target": "qlinks.caging.analysis.transitions",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.contracts",
+      "target": "qlinks.caging.analysis.transitions",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.diagnosis",
+      "target": "qlinks.caging.analysis.environment.contracts",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.diagnosis",
+      "target": "qlinks.caging.analysis.environment.discovery",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.diagnosis",
+      "target": "qlinks.caging.analysis.environment.mechanisms",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.diagnosis",
+      "target": "qlinks.caging.analysis.environment.monitor",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.diagnosis",
+      "target": "qlinks.caging.analysis.environment.operator",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.diagnosis",
+      "target": "qlinks.caging.analysis.environment.report",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.diagnosis",
+      "target": "qlinks.caging.analysis.environment.summary",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.diagnosis",
+      "target": "qlinks.caging.analysis.transitions",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.diagnosis",
       "target": "qlinks.caging.results",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.discovery",
+      "target": "qlinks.caging.analysis.environment.contracts",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.discovery",
+      "target": "qlinks.caging.analysis.environment.operator",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.discovery",
+      "target": "qlinks.caging.analysis.environment.support",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.mechanisms",
+      "target": "qlinks.caging.analysis.environment.contracts",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.mechanisms",
+      "target": "qlinks.caging.analysis.environment.operator",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.mechanisms",
+      "target": "qlinks.caging.analysis.environment.support",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.mechanisms",
+      "target": "qlinks.caging.analysis.transitions",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.monitor",
+      "target": "qlinks.caging.analysis.environment.contracts",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.monitor",
+      "target": "qlinks.caging.analysis.environment.support",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.operator",
+      "target": "qlinks.caging.analysis.environment.contracts",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.operator",
+      "target": "qlinks.caging.analysis.environment.support",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.operator",
+      "target": "qlinks.caging.analysis.transitions",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.report",
+      "target": "qlinks.caging.analysis.environment.contracts",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.report",
+      "target": "qlinks.caging.analysis.environment.monitor",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.summary",
+      "target": "qlinks.caging.analysis.environment.contracts",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.caging.analysis.environment.support",
+      "target": "qlinks.caging.analysis.environment.contracts",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -2905,7 +3145,23 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.open_system.constructions.cage_lindblad",
-      "target": "qlinks.open_system.diagnostics",
+      "target": "qlinks.open_system.diagnostics.dark",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.constructions.cage_lindblad",
+      "target": "qlinks.open_system.diagnostics.jumps",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.constructions.cage_lindblad",
+      "target": "qlinks.open_system.diagnostics.target_manifold",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -3057,7 +3313,31 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.open_system.constructions.deprecated.cage",
-      "target": "qlinks.open_system.diagnostics",
+      "target": "qlinks.open_system.diagnostics.absorbing",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.constructions.deprecated.cage",
+      "target": "qlinks.open_system.diagnostics.dark",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.constructions.deprecated.cage",
+      "target": "qlinks.open_system.diagnostics.monitor",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.constructions.deprecated.cage",
+      "target": "qlinks.open_system.diagnostics.verification",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -3145,7 +3425,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.open_system.diagnostics",
-      "target": "qlinks.open_system.backend",
+      "target": "qlinks.open_system.diagnostics.absorbing",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -3153,6 +3433,198 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.open_system.diagnostics",
+      "target": "qlinks.open_system.diagnostics.dark",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics",
+      "target": "qlinks.open_system.diagnostics.evolution",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics",
+      "target": "qlinks.open_system.diagnostics.jumps",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics",
+      "target": "qlinks.open_system.diagnostics.monitor",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics",
+      "target": "qlinks.open_system.diagnostics.target_manifold",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics",
+      "target": "qlinks.open_system.diagnostics.verification",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics._linalg",
+      "target": "qlinks.open_system._subspace",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.absorbing",
+      "target": "qlinks.open_system._subspace",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.absorbing",
+      "target": "qlinks.open_system.backend",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.absorbing",
+      "target": "qlinks.open_system.diagnostics._formatting",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.absorbing",
+      "target": "qlinks.open_system.diagnostics._linalg",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.dark",
+      "target": "qlinks.open_system._subspace",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.dark",
+      "target": "qlinks.open_system.backend",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.dark",
+      "target": "qlinks.open_system.diagnostics._formatting",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.dark",
+      "target": "qlinks.open_system.diagnostics._linalg",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.dark",
+      "target": "qlinks.open_system.operators",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.evolution",
+      "target": "qlinks.open_system.backend",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.evolution",
+      "target": "qlinks.open_system.diagnostics.verification",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.evolution",
+      "target": "qlinks.open_system.operators",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.jumps",
+      "target": "qlinks.open_system.diagnostics.target_manifold",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.monitor",
+      "target": "qlinks.open_system._subspace",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.monitor",
+      "target": "qlinks.open_system.diagnostics._formatting",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.monitor",
+      "target": "qlinks.open_system.diagnostics._linalg",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.verification",
+      "target": "qlinks.open_system.backend",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.open_system.diagnostics.verification",
       "target": "qlinks.open_system.operators",
       "type_checking_weight": 0,
       "weight": 1
@@ -3209,7 +3681,7 @@
       "eager_weight": 0,
       "local_weight": 3,
       "source": "qlinks.open_system.manifold_recycling",
-      "target": "qlinks.open_system.diagnostics",
+      "target": "qlinks.open_system.diagnostics.dark",
       "type_checking_weight": 0,
       "weight": 3
     },
@@ -3247,11 +3719,19 @@
     },
     {
       "eager_weight": 0,
-      "local_weight": 2,
+      "local_weight": 1,
       "source": "qlinks.open_system.manifold_residual",
-      "target": "qlinks.open_system.diagnostics",
+      "target": "qlinks.open_system._subspace",
       "type_checking_weight": 0,
-      "weight": 2
+      "weight": 1
+    },
+    {
+      "eager_weight": 0,
+      "local_weight": 1,
+      "source": "qlinks.open_system.manifold_residual",
+      "target": "qlinks.open_system.diagnostics.dark",
+      "type_checking_weight": 0,
+      "weight": 1
     },
     {
       "eager_weight": 1,
@@ -3297,7 +3777,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.open_system.solvers",
-      "target": "qlinks.open_system.diagnostics",
+      "target": "qlinks.open_system.diagnostics.verification",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -4113,7 +4593,7 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.visualizer.basis",
-      "target": "qlinks.lattice",
+      "target": "qlinks.visualizer.basis.api",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -4121,7 +4601,327 @@
       "eager_weight": 1,
       "local_weight": 0,
       "source": "qlinks.visualizer.basis",
+      "target": "qlinks.visualizer.basis.configuration",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis",
+      "target": "qlinks.visualizer.basis.formatting",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis",
+      "target": "qlinks.visualizer.basis.grid",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis",
+      "target": "qlinks.visualizer.basis.local_grid",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis",
+      "target": "qlinks.visualizer.basis.styles",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.api",
+      "target": "qlinks.lattice",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.api",
       "target": "qlinks.variables",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.api",
+      "target": "qlinks.visualizer.basis.configuration",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.api",
+      "target": "qlinks.visualizer.basis.styles",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.configuration",
+      "target": "qlinks.lattice",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.configuration",
+      "target": "qlinks.variables",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.configuration",
+      "target": "qlinks.visualizer.basis.periodic",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.configuration",
+      "target": "qlinks.visualizer.basis.plaquette_geometry",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.configuration",
+      "target": "qlinks.visualizer.basis.plaquette_symbols",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.configuration",
+      "target": "qlinks.visualizer.basis.render_cache",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.configuration",
+      "target": "qlinks.visualizer.basis.rendering",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.configuration",
+      "target": "qlinks.visualizer.basis.styles",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.formatting",
+      "target": "qlinks.visualizer.basis.styles",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.grid",
+      "target": "qlinks.lattice",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.grid",
+      "target": "qlinks.variables",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.grid",
+      "target": "qlinks.visualizer.basis.configuration",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.grid",
+      "target": "qlinks.visualizer.basis.formatting",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.grid",
+      "target": "qlinks.visualizer.basis.render_cache",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.grid",
+      "target": "qlinks.visualizer.basis.styles",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.local_grid",
+      "target": "qlinks.lattice",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.local_grid",
+      "target": "qlinks.variables",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.local_grid",
+      "target": "qlinks.visualizer.basis.configuration",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.local_grid",
+      "target": "qlinks.visualizer.basis.formatting",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.local_grid",
+      "target": "qlinks.visualizer.basis.render_cache",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.local_grid",
+      "target": "qlinks.visualizer.basis.styles",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.periodic",
+      "target": "qlinks.lattice",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.periodic",
+      "target": "qlinks.visualizer.basis.render_cache",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.plaquette_geometry",
+      "target": "qlinks.lattice",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.plaquette_geometry",
+      "target": "qlinks.visualizer.basis.render_cache",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.plaquette_geometry",
+      "target": "qlinks.visualizer.basis.styles",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.plaquette_symbols",
+      "target": "qlinks.lattice",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.plaquette_symbols",
+      "target": "qlinks.visualizer.basis.render_cache",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.render_cache",
+      "target": "qlinks.visualizer.basis.styles",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.rendering",
+      "target": "qlinks.lattice",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.rendering",
+      "target": "qlinks.visualizer.basis.render_cache",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.basis.rendering",
+      "target": "qlinks.visualizer.basis.styles",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -4146,6 +4946,14 @@
       "local_weight": 0,
       "source": "qlinks.visualizer.disk",
       "target": "qlinks.visualizer.basis",
+      "type_checking_weight": 0,
+      "weight": 1
+    },
+    {
+      "eager_weight": 1,
+      "local_weight": 0,
+      "source": "qlinks.visualizer.disk",
+      "target": "qlinks.visualizer.basis.formatting",
       "type_checking_weight": 0,
       "weight": 1
     },
@@ -4393,15 +5201,123 @@
     },
     {
       "fan_in": 7,
-      "fan_out": 2,
+      "fan_out": 6,
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 7,
-      "lines": 2847,
+      "lines": 61,
       "module": "qlinks.caging.analysis.environment",
+      "outgoing_imports": 6,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/environment/__init__.py"
+    },
+    {
+      "fan_in": 9,
+      "fan_out": 1,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 9,
+      "lines": 357,
+      "module": "qlinks.caging.analysis.environment.contracts",
+      "outgoing_imports": 1,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/environment/contracts.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 9,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 342,
+      "module": "qlinks.caging.analysis.environment.diagnosis",
+      "outgoing_imports": 9,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/environment/diagnosis.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 3,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 375,
+      "module": "qlinks.caging.analysis.environment.discovery",
+      "outgoing_imports": 3,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/environment/discovery.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 4,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 620,
+      "module": "qlinks.caging.analysis.environment.mechanisms",
+      "outgoing_imports": 4,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/environment/mechanisms.py"
+    },
+    {
+      "fan_in": 3,
+      "fan_out": 2,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 3,
+      "lines": 268,
+      "module": "qlinks.caging.analysis.environment.monitor",
       "outgoing_imports": 2,
       "package": "qlinks.caging",
-      "path": "qlinks/caging/analysis/environment.py"
+      "path": "qlinks/caging/analysis/environment/monitor.py"
+    },
+    {
+      "fan_in": 3,
+      "fan_out": 3,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 3,
+      "lines": 388,
+      "module": "qlinks.caging.analysis.environment.operator",
+      "outgoing_imports": 3,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/environment/operator.py"
+    },
+    {
+      "fan_in": 2,
+      "fan_out": 2,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 2,
+      "lines": 588,
+      "module": "qlinks.caging.analysis.environment.report",
+      "outgoing_imports": 2,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/environment/report.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 1,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 49,
+      "module": "qlinks.caging.analysis.environment.summary",
+      "outgoing_imports": 1,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/environment/summary.py"
+    },
+    {
+      "fan_in": 5,
+      "fan_out": 1,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 5,
+      "lines": 20,
+      "module": "qlinks.caging.analysis.environment.support",
+      "outgoing_imports": 1,
+      "package": "qlinks.caging",
+      "path": "qlinks/caging/analysis/environment/support.py"
     },
     {
       "fan_in": 0,
@@ -4476,11 +5392,11 @@
       "path": "qlinks/caging/analysis/thermodynamic.py"
     },
     {
-      "fan_in": 3,
+      "fan_in": 7,
       "fan_out": 0,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 3,
+      "incoming_imports": 7,
       "lines": 69,
       "module": "qlinks.caging.analysis.transitions",
       "outgoing_imports": 0,
@@ -5232,11 +6148,11 @@
       "path": "qlinks/io/hdf5.py"
     },
     {
-      "fan_in": 25,
+      "fan_in": 32,
       "fan_out": 7,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 25,
+      "incoming_imports": 32,
       "lines": 37,
       "module": "qlinks.lattice",
       "outgoing_imports": 7,
@@ -5508,11 +6424,23 @@
       "path": "qlinks/open_system/__init__.py"
     },
     {
-      "fan_in": 7,
+      "fan_in": 5,
       "fan_out": 0,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 7,
+      "incoming_imports": 5,
+      "lines": 381,
+      "module": "qlinks.open_system._subspace",
+      "outgoing_imports": 0,
+      "package": "qlinks.open_system",
+      "path": "qlinks/open_system/_subspace.py"
+    },
+    {
+      "fan_in": 10,
+      "fan_out": 0,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 10,
       "lines": 174,
       "module": "qlinks.open_system.backend",
       "outgoing_imports": 0,
@@ -5533,13 +6461,13 @@
     },
     {
       "fan_in": 1,
-      "fan_out": 13,
+      "fan_out": 15,
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 1,
       "lines": 3328,
       "module": "qlinks.open_system.constructions.cage_lindblad",
-      "outgoing_imports": 13,
+      "outgoing_imports": 15,
       "package": "qlinks.open_system",
       "path": "qlinks/open_system/constructions/cage_lindblad.py"
     },
@@ -5557,13 +6485,13 @@
     },
     {
       "fan_in": 1,
-      "fan_out": 13,
+      "fan_out": 16,
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 1,
-      "lines": 4365,
+      "lines": 4363,
       "module": "qlinks.open_system.constructions.deprecated.cage",
-      "outgoing_imports": 13,
+      "outgoing_imports": 16,
       "package": "qlinks.open_system",
       "path": "qlinks/open_system/constructions/deprecated/cage.py"
     },
@@ -5592,16 +6520,124 @@
       "path": "qlinks/open_system/constructions/spin_one_xy.py"
     },
     {
-      "fan_in": 6,
+      "fan_in": 1,
+      "fan_out": 7,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 85,
+      "module": "qlinks.open_system.diagnostics",
+      "outgoing_imports": 7,
+      "package": "qlinks.open_system",
+      "path": "qlinks/open_system/diagnostics/__init__.py"
+    },
+    {
+      "fan_in": 3,
+      "fan_out": 0,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 3,
+      "lines": 64,
+      "module": "qlinks.open_system.diagnostics._formatting",
+      "outgoing_imports": 0,
+      "package": "qlinks.open_system",
+      "path": "qlinks/open_system/diagnostics/_formatting.py"
+    },
+    {
+      "fan_in": 3,
+      "fan_out": 1,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 3,
+      "lines": 234,
+      "module": "qlinks.open_system.diagnostics._linalg",
+      "outgoing_imports": 1,
+      "package": "qlinks.open_system",
+      "path": "qlinks/open_system/diagnostics/_linalg.py"
+    },
+    {
+      "fan_in": 2,
+      "fan_out": 4,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 2,
+      "lines": 320,
+      "module": "qlinks.open_system.diagnostics.absorbing",
+      "outgoing_imports": 4,
+      "package": "qlinks.open_system",
+      "path": "qlinks/open_system/diagnostics/absorbing.py"
+    },
+    {
+      "fan_in": 5,
+      "fan_out": 5,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 7,
+      "lines": 1282,
+      "module": "qlinks.open_system.diagnostics.dark",
+      "outgoing_imports": 5,
+      "package": "qlinks.open_system",
+      "path": "qlinks/open_system/diagnostics/dark.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 3,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 466,
+      "module": "qlinks.open_system.diagnostics.evolution",
+      "outgoing_imports": 3,
+      "package": "qlinks.open_system",
+      "path": "qlinks/open_system/diagnostics/evolution.py"
+    },
+    {
+      "fan_in": 2,
+      "fan_out": 1,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 2,
+      "lines": 290,
+      "module": "qlinks.open_system.diagnostics.jumps",
+      "outgoing_imports": 1,
+      "package": "qlinks.open_system",
+      "path": "qlinks/open_system/diagnostics/jumps.py"
+    },
+    {
+      "fan_in": 2,
+      "fan_out": 3,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 2,
+      "lines": 302,
+      "module": "qlinks.open_system.diagnostics.monitor",
+      "outgoing_imports": 3,
+      "package": "qlinks.open_system",
+      "path": "qlinks/open_system/diagnostics/monitor.py"
+    },
+    {
+      "fan_in": 3,
+      "fan_out": 0,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 3,
+      "lines": 435,
+      "module": "qlinks.open_system.diagnostics.target_manifold",
+      "outgoing_imports": 0,
+      "package": "qlinks.open_system",
+      "path": "qlinks/open_system/diagnostics/target_manifold.py"
+    },
+    {
+      "fan_in": 4,
       "fan_out": 2,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 9,
-      "lines": 3825,
-      "module": "qlinks.open_system.diagnostics",
+      "incoming_imports": 4,
+      "lines": 171,
+      "module": "qlinks.open_system.diagnostics.verification",
       "outgoing_imports": 2,
       "package": "qlinks.open_system",
-      "path": "qlinks/open_system/diagnostics.py"
+      "path": "qlinks/open_system/diagnostics/verification.py"
     },
     {
       "fan_in": 3,
@@ -5653,7 +6689,7 @@
     },
     {
       "fan_in": 2,
-      "fan_out": 6,
+      "fan_out": 7,
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 2,
@@ -5664,11 +6700,11 @@
       "path": "qlinks/open_system/manifold_residual.py"
     },
     {
-      "fan_in": 6,
+      "fan_in": 8,
       "fan_out": 1,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 6,
+      "incoming_imports": 8,
       "lines": 376,
       "module": "qlinks.open_system.operators",
       "outgoing_imports": 1,
@@ -5717,7 +6753,7 @@
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 1,
-      "lines": 2758,
+      "lines": 1480,
       "module": "qlinks.open_system.stochastic_schrodinger",
       "outgoing_imports": 2,
       "package": "qlinks.open_system",
@@ -5976,11 +7012,11 @@
       "path": "qlinks/qec/sector_matching.py"
     },
     {
-      "fan_in": 40,
+      "fan_in": 43,
       "fan_out": 4,
       "in_import_cycle": false,
       "in_static_cycle": false,
-      "incoming_imports": 40,
+      "incoming_imports": 43,
       "lines": 23,
       "module": "qlinks.variables",
       "outgoing_imports": 4,
@@ -6049,15 +7085,87 @@
     },
     {
       "fan_in": 2,
-      "fan_out": 2,
+      "fan_out": 6,
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 2,
-      "lines": 6500,
+      "lines": 53,
       "module": "qlinks.visualizer.basis",
+      "outgoing_imports": 6,
+      "package": "qlinks.visualizer",
+      "path": "qlinks/visualizer/basis/__init__.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 4,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 74,
+      "module": "qlinks.visualizer.basis.api",
+      "outgoing_imports": 4,
+      "package": "qlinks.visualizer",
+      "path": "qlinks/visualizer/basis/api.py"
+    },
+    {
+      "fan_in": 4,
+      "fan_out": 8,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 4,
+      "lines": 1425,
+      "module": "qlinks.visualizer.basis.configuration",
+      "outgoing_imports": 8,
+      "package": "qlinks.visualizer",
+      "path": "qlinks/visualizer/basis/configuration.py"
+    },
+    {
+      "fan_in": 4,
+      "fan_out": 1,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 4,
+      "lines": 188,
+      "module": "qlinks.visualizer.basis.formatting",
+      "outgoing_imports": 1,
+      "package": "qlinks.visualizer",
+      "path": "qlinks/visualizer/basis/formatting.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 6,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 500,
+      "module": "qlinks.visualizer.basis.grid",
+      "outgoing_imports": 6,
+      "package": "qlinks.visualizer",
+      "path": "qlinks/visualizer/basis/grid.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 6,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 1238,
+      "module": "qlinks.visualizer.basis.local_grid",
+      "outgoing_imports": 6,
+      "package": "qlinks.visualizer",
+      "path": "qlinks/visualizer/basis/local_grid.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 2,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 693,
+      "module": "qlinks.visualizer.basis.periodic",
       "outgoing_imports": 2,
       "package": "qlinks.visualizer",
-      "path": "qlinks/visualizer/basis.py"
+      "path": "qlinks/visualizer/basis/periodic.py"
     },
     {
       "fan_in": 1,
@@ -6065,9 +7173,69 @@
       "in_import_cycle": false,
       "in_static_cycle": false,
       "incoming_imports": 1,
-      "lines": 699,
-      "module": "qlinks.visualizer.disk",
+      "lines": 816,
+      "module": "qlinks.visualizer.basis.plaquette_geometry",
       "outgoing_imports": 3,
+      "package": "qlinks.visualizer",
+      "path": "qlinks/visualizer/basis/plaquette_geometry.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 2,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 754,
+      "module": "qlinks.visualizer.basis.plaquette_symbols",
+      "outgoing_imports": 2,
+      "package": "qlinks.visualizer",
+      "path": "qlinks/visualizer/basis/plaquette_symbols.py"
+    },
+    {
+      "fan_in": 7,
+      "fan_out": 1,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 7,
+      "lines": 72,
+      "module": "qlinks.visualizer.basis.render_cache",
+      "outgoing_imports": 1,
+      "package": "qlinks.visualizer",
+      "path": "qlinks/visualizer/basis/render_cache.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 3,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 763,
+      "module": "qlinks.visualizer.basis.rendering",
+      "outgoing_imports": 3,
+      "package": "qlinks.visualizer",
+      "path": "qlinks/visualizer/basis/rendering.py"
+    },
+    {
+      "fan_in": 9,
+      "fan_out": 0,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 9,
+      "lines": 155,
+      "module": "qlinks.visualizer.basis.styles",
+      "outgoing_imports": 0,
+      "package": "qlinks.visualizer",
+      "path": "qlinks/visualizer/basis/styles.py"
+    },
+    {
+      "fan_in": 1,
+      "fan_out": 4,
+      "in_import_cycle": false,
+      "in_static_cycle": false,
+      "incoming_imports": 1,
+      "lines": 698,
+      "module": "qlinks.visualizer.disk",
+      "outgoing_imports": 4,
       "package": "qlinks.visualizer",
       "path": "qlinks/visualizer/disk.py"
     },
@@ -6355,12 +7523,12 @@
     {
       "source": "qlinks.visualizer",
       "target": "qlinks.lattice",
-      "weight": 2
+      "weight": 9
     },
     {
       "source": "qlinks.visualizer",
       "target": "qlinks.variables",
-      "weight": 2
+      "weight": 5
     }
   ],
   "packages": [
@@ -6407,10 +7575,10 @@
     {
       "fan_in": 4,
       "fan_out": 8,
-      "files": 49,
+      "files": 58,
       "in_cycle": false,
       "incoming_imports": 5,
-      "lines": 39338,
+      "lines": 39559,
       "outgoing_imports": 25,
       "package": "qlinks.caging"
     },
@@ -6479,7 +7647,7 @@
       "fan_out": 0,
       "files": 8,
       "in_cycle": false,
-      "incoming_imports": 25,
+      "incoming_imports": 32,
       "lines": 1985,
       "outgoing_imports": 0,
       "package": "qlinks.lattice"
@@ -6507,10 +7675,10 @@
     {
       "fan_in": 0,
       "fan_out": 5,
-      "files": 19,
+      "files": 29,
       "in_cycle": false,
       "incoming_imports": 0,
-      "lines": 24905,
+      "lines": 23830,
       "outgoing_imports": 34,
       "package": "qlinks.open_system"
     },
@@ -6539,7 +7707,7 @@
       "fan_out": 0,
       "files": 5,
       "in_cycle": false,
-      "incoming_imports": 40,
+      "incoming_imports": 43,
       "lines": 655,
       "outgoing_imports": 0,
       "package": "qlinks.variables"
@@ -6547,11 +7715,11 @@
     {
       "fan_in": 0,
       "fan_out": 3,
-      "files": 7,
+      "files": 18,
       "in_cycle": false,
       "incoming_imports": 0,
-      "lines": 10772,
-      "outgoing_imports": 5,
+      "lines": 11002,
+      "outgoing_imports": 15,
       "package": "qlinks.visualizer"
     }
   ],
@@ -6563,9 +7731,9 @@
     "implementation_import_time_module_cycle_components": 0,
     "import_time_module_cycle_components": 0,
     "import_time_package_cycle_components": 0,
-    "internal_edges": 521,
-    "lines": 100453,
-    "modules": 162,
+    "internal_edges": 622,
+    "lines": 99829,
+    "modules": 192,
     "package_edges": 48,
     "packages": 19,
     "static_module_cycle_components": 0,
