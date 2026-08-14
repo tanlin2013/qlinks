@@ -144,6 +144,11 @@ Tests are classified by purpose, not by directory size or implementation object 
 ### Test design rules
 
 - Test public behaviour and scientific invariants rather than every private helper.
+- When a source family has stable nested responsibility boundaries, mirror those responsibilities
+  in the test tree rather than keeping a single pre-refactor monolithic test module.
+- If a private numerical kernel genuinely needs direct tests, isolate those contracts in an
+  explicitly named internal-kernel test module; do not spread private imports through public
+  behavioural tests or game health metrics by hiding the same coupling behind module attributes.
 - Add regression tests for meaningful failure modes or contracts, not for line-by-line
   implementation mirroring.
 - Prefer one parametrized behavioural test over many nearly identical tests.

@@ -3,6 +3,63 @@
 Baseline audit: `qlinks-current-d2e041e.zip` after the caging analysis/environment refactor.
 
 
+## T2 remediation status (2026-08-14)
+
+The ownership/decomposition pass is implemented against `qlinks-current-8af7893.zip`. The goal
+was to make the physical test layout follow the responsibility boundaries established in the
+source refactor without changing scientific assertions.
+
+Completed in T2:
+
+- split the former 1,702-line `caging/test_local_search.py` into
+  `tests/caging/local_search/` by core, QDM, proposal, scan, certification, factorized, and
+  workflow responsibilities;
+- split the former 1,078-line `caging/test_stability.py` into
+  `tests/caging/stability/` by core, topology, boundary, QDM, and Laurent responsibilities;
+- split the former `open_system/test_manifold_detectors.py` into dark, recycling, residual, and
+  readout contracts under `tests/open_system/manifold_detectors/`;
+- split the former 2,004-line stochastic-Schrödinger test into primitive, trajectory, ensemble,
+  storage/streaming, and optimized sparse-kernel contracts; the 27 intentional private numerical
+  kernel imports now live only in `test_sparse_kernels.py`;
+- split environment-reduction coverage into public scenarios, internal mechanism contracts,
+  collective-cancellation mechanisms, and support morphology; the 9 direct private environment
+  imports now live only in `test_environment_mechanisms.py`;
+- remove two duplicate `basis_configs_from_basis` tests from the environment suite because the
+  same contracts are already owned by `tests/basis/test_configs.py`.
+
+Test-body preservation check:
+
+- **220** targeted pre-T2 test functions were compared by AST against the reorganized tree;
+- **218** are AST-identical after the move;
+- the only two removed tests are the deliberately deduplicated basis-config cases above.
+
+Post-T2 snapshot:
+
+- Python files under `tests/`: **190**;
+- test LOC including fixtures/helpers: **37,959**;
+- AST test functions: **1,397**;
+- pytest collected cases: **1,450**;
+- default fast selection: **1,377** cases;
+- integration: **40** cases;
+- scientific: **7** cases;
+- manual: **29** cases;
+- direct private-symbol imports: **48**.
+
+The private-import count is intentionally not reduced by hiding attribute access. Instead, it is
+now concentrated in explicit internal-contract modules: 27 MCWF optimized-kernel imports in
+`stochastic_schrodinger/test_sparse_kernels.py`, 9 environment mechanism imports in
+`analysis/test_environment_mechanisms.py`, and 3 collective-environment mechanism imports in
+`test_environment_collective.py`; the remaining 9 are visualizer/distributed internal tests.
+
+T2 validation in the audit environment:
+
+- focused reorganized ownership suite: **218 passed, 7 deselected** in 8.10 s;
+- default lane: **1357 passed, 20 skipped, 73 deselected** in 22.23 s;
+- no targeted test body changed semantically according to the AST comparison described above.
+
+The next work is T3: fixture/helper hygiene, warning cleanup, and a lightweight automated
+test-health report so these ownership and taxonomy improvements remain visible in CI.
+
 ## T1 remediation status (2026-08-14)
 
 The first remediation pass is implemented. This cache is intentionally retained so later test

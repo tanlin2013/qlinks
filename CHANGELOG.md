@@ -17,6 +17,7 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Reorganize large caging/open-system tests by responsibility, isolate intentional MCWF/environment private-kernel contracts, deduplicate misplaced basis tests, and record T2 ownership metrics in the maintained test-health audit.
 - Reclassify the test suite by purpose, move manual visual checks out of the fast lane, shrink deprecated single-cage Lindblad coverage to black-box compatibility tests, cache architecture analysis, extend nested-caging API contracts, and add `tests/TEST_HEALTH_AUDIT.md` as the maintained test-health cache.
 - Replace the former caged-state `classification` layer with `qlinks.caging.analysis.environment`: environment reduction now asks only whether exterior degrees of freedom can be removed, distinguishes no-weight, projective-annihilation, and same-local-cancellation-pattern mechanisms, and requires support-aware weighted transition-pattern matching rather than mere closure onto another known interference zero. Move local structure/support, spectral, thermodynamic, and evidence diagnostics under `qlinks.caging.analysis` and eliminate the final static caging SCC.
 - Promote the stabilized caging local-search and stability families into nested `qlinks.caging.local_search` and `qlinks.caging.stability` subpackages, remove the temporary flat module paths, and contract the top-level caging API from 499 to 299 exports.
