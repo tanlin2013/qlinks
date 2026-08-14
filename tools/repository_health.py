@@ -364,13 +364,20 @@ def _guardrail_wiring_findings(root: Path) -> list[str]:
 
     precommit = (root / ".pre-commit-config.yaml").read_text(encoding="utf-8")
     active_hook_ids = _active_precommit_hook_ids(precommit)
+    active_precommit_text = "\n".join(
+        line for line in precommit.splitlines() if not line.lstrip().startswith("#")
+    )
+    if "scripts/test.sh fast" in active_precommit_text:
+        findings.append(
+            "guardrail wiring: full fast lane must remain CI-owned, not a local pre-push hook"
+        )
+
     required_hook_ids = {
         "black",
         "check-added-large-files",
         "commitizen",
         "commitizen-branch",
         "detect-private-key",
-        "fast-tests",
         "flake8",
         "isort",
         "nbstripout",
@@ -395,6 +402,8 @@ def _guardrail_wiring_findings(root: Path) -> list[str]:
     test_workflow = (root / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
     if "tools/test_health.py" not in test_workflow:
         findings.append("guardrail wiring: test CI no longer runs test-health check")
+    if "scripts/test.sh fast" not in test_workflow:
+        findings.append("guardrail wiring: test CI no longer runs fast lane")
     if "scripts/test.sh integration" not in test_workflow:
         findings.append("guardrail wiring: pull-request CI no longer runs integration lane")
 

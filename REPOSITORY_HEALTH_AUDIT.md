@@ -39,7 +39,7 @@ budget change. When debt shrinks, the corresponding limit should be ratcheted do
 ## Local and CI enforcement
 
 Commit-time pre-commit now runs repository health in addition to formatting/lint hygiene and
-private-key detection. Pre-push runs test health plus the fast test lane. Blocking lint CI also
+private-key detection. Pre-push runs the lightweight test-health guardrail; the full fast test lane is intentionally CI-owned to keep local laptop development responsive. Blocking lint CI also
 runs repository health, while the existing coverage-bearing fast job continues to run test health.
 
 Every GitHub workflow now declares a read-only token baseline. Documentation deployment was split

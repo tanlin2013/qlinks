@@ -82,9 +82,3 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
-    -   id: fast-tests
-        name: fast-tests
-        entry: scripts/test.sh fast
-        language: system
-        pass_filenames: false
-        stages: [pre-push]

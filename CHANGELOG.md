@@ -17,11 +17,14 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Keep the full fast pytest lane CI-owned rather than running it on local pre-push, while
+  retaining lightweight repository/test-health local gates; update the fake-CuPy backend test to
+  exercise the sparse `kron` contract and avoid SciPy dense/dense migration warnings.
 - Exclude local/generated workspace environments such as `.venv` from repository-health secret scanning without trusting arbitrary `.gitignore` entries, restore the local health hooks, and require guardrail-wiring checks to see active rather than commented pre-commit hooks.
 - Add blocking repository-health budgets for zero SCCs/boundary violations, reviewed package
   dependencies, source-module size ceilings, curated public APIs, package-internal import direction,
   workflow permissions, and high-confidence secret/private-key hygiene; wire them into pre-commit
-  and CI, and add pre-push test-health/fast-test gates.
+  and CI, with lightweight pre-push test-health gates and the full fast lane owned by CI.
 - Add the T3 test-health guardrail: prune/localize fixtures, eliminate known fast-lane warnings, enforce qlinks-originated warnings, and publish a budgeted test-health snapshot in CI.
 - Reorganize large caging/open-system tests by responsibility, isolate intentional MCWF/environment private-kernel contracts, deduplicate misplaced basis tests, and record T2 ownership metrics in the maintained test-health audit.
 - Reclassify the test suite by purpose, move manual visual checks out of the fast lane, shrink deprecated single-cage Lindblad coverage to black-box compatibility tests, cache architecture analysis, extend nested-caging API contracts, and add `tests/TEST_HEALTH_AUDIT.md` as the maintained test-health cache.
