@@ -1,9 +1,9 @@
 Repository refactor status
 ==========================
 
-This page tracks temporary architecture bridges introduced while the caging and open-system
-research layers are being decomposed.  The bridges are migration aids, not long-term API
-commitments.
+This page records the stabilized module boundaries that remain after the temporary refactor
+facades were removed. The focused modules below are now the supported import paths for active
+package code.
 
 Current decomposition
 ---------------------
@@ -21,8 +21,8 @@ The former monolithic ``qlinks.caging.stability`` implementation is split into:
 * ``stability_types`` for report/data contracts; and
 * ``stability_symmetry`` for small shared symmetry linear-algebra helpers.
 
-``qlinks.caging.stability`` currently re-exports these objects so historical imports continue
-to work during migration.  Active package code must use the focused modules directly.
+The temporary ``qlinks.caging.stability`` facade has been removed. Active package code and
+tests must import the focused modules directly.
 
 Local cage search
 ~~~~~~~~~~~~~~~~~
@@ -44,10 +44,8 @@ The former ``qlinks.caging.local_search`` implementation is now split into:
 * ``local_search_scan`` for proposal execution and block collection; and
 * ``local_search_workflows`` for robust multi-stage local-search orchestration.
 
-``qlinks.caging.local_search`` is now a temporary compatibility facade. Active first-party code
-uses the focused modules directly. Because qlinks is primarily group-internal software, this
-facade is intentionally minimal and should be removed during the later API-cleanup pass once the
-refactored interface has stabilized.
+The temporary ``qlinks.caging.local_search`` facade has been removed. Active first-party code,
+tests, and notebooks should import the focused local-search modules directly.
 
 The focused local-search graph is required to remain free of both eager import cycles and
 TYPE_CHECKING/function-local static cycles. Passive result containers therefore live in
@@ -64,8 +62,8 @@ The former ``qlinks.open_system.manifold_detectors`` implementation is split int
 * ``manifold_residual`` for residual-kernel diagnostics and targeted jump selection; and
 * ``manifold_detector_types`` for passive report/data contracts.
 
-``qlinks.open_system.manifold_detectors`` is a temporary re-export facade.  Active package
-code must import the focused modules instead.
+The temporary ``qlinks.open_system.manifold_detectors`` facade has been removed. Active package
+code and tests must import the focused modules instead.
 
 Neutral local-structure migration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,5 +82,5 @@ A compatibility bridge should be deleted when:
 #. supported public API tests target the replacement interface rather than the bridge; and
 #. the removal is recorded in the changelog or release/refactor milestone.
 
-No new implementation may depend on a temporary compatibility facade.  The architecture tests
-enforce this for the current local-search, stability, and manifold-detector facades.
+No new implementation may depend on the removed compatibility-module paths. The architecture
+tests enforce this for the former local-search, stability, and manifold-detector facades.

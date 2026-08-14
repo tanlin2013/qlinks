@@ -431,7 +431,7 @@ def test_regional_cage_quotient_isolates_collective_direction() -> None:
 
 
 def test_signed_boundary_holonomy_detects_z2_cycle_sign() -> None:
-    from qlinks.caging.stability import diagnose_signed_boundary_holonomy
+    from qlinks.caging.stability_topology import diagnose_signed_boundary_holonomy
 
     positive = np.asarray([[1.0, 1.0], [1.0, 1.0]])
     negative = np.asarray([[1.0, 1.0], [1.0, -1.0]])
@@ -447,7 +447,7 @@ def test_signed_boundary_holonomy_detects_z2_cycle_sign() -> None:
 
 
 def test_relative_mod2_cycle_quotients_regional_cycles() -> None:
-    from qlinks.caging.stability import diagnose_relative_mod2_cycles
+    from qlinks.caging.stability_topology import diagnose_relative_mod2_cycles
 
     boundary = np.asarray([[1.0, 1.0], [1.0, 1.0]])
 

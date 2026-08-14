@@ -1,7 +1,9 @@
 """Report and contract types for cage-stability diagnostics.
 
-Numerical algorithms live in :mod:`qlinks.caging.stability`; this module contains the
-immutable data returned by those algorithms. The separation is intentionally mechanical:
+Numerical algorithms live in the focused
+:mod:`qlinks.caging.stability_*` modules; this module contains the
+immutable data returned by those algorithms. The separation is intentionally
+mechanical:
 it changes ownership, not the scientific definitions.
 """
 

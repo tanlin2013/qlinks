@@ -5,7 +5,7 @@ from typing import Any, Sequence
 import numpy as np
 from numpy._typing import NDArray
 
-from qlinks.basis import basis_configs_from_build_result
+from qlinks.basis.configs import basis_configs_from_build_result
 
 
 def _sector_is_satisfied(

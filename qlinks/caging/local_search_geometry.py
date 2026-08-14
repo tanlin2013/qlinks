@@ -2,7 +2,7 @@
 
 These helpers manipulate plaquette/link regions, stripe and snake geometry, and local index
 layouts. They do not enumerate cage states or certify a cage and therefore form a lower-level
-dependency of :mod:`qlinks.caging.local_search`.
+dependency of the focused local-search modules.
 """
 
 from __future__ import annotations

@@ -4,7 +4,7 @@ import numpy as np
 import numpy.typing as npt
 
 from qlinks.basis import Basis
-from qlinks.encoded import BinaryEncodedBasis
+from qlinks.encoded.binary_basis import BinaryEncodedBasis
 from qlinks.variables import LocalSpace, VariableLayout
 
 

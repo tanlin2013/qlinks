@@ -758,10 +758,8 @@ def test_construction_selects_targeted_residual_kernel_jumps_and_rich_render():
 
 def test_targeted_selector_can_minimize_combined_common_kernel_beyond_reported_residual():
     from qlinks.open_system import select_targeted_residual_kernel_jumps
-    from qlinks.open_system.manifold_detectors import (
-        TargetedResidualKernelLinearCandidate,
-        TargetedResidualKernelLinearSearchReport,
-    )
+    from qlinks.open_system.manifold_detector_types import TargetedResidualKernelLinearCandidate
+    from qlinks.open_system.manifold_residual import TargetedResidualKernelLinearSearchReport
 
     target_state = np.asarray([1.0, 0.0, 0.0], dtype=np.complex128)
     residual_basis = np.asarray([[0.0], [1.0], [0.0]], dtype=np.complex128)

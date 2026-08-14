@@ -4,8 +4,8 @@ This file supplements the repository-root `AGENTS.md`.
 
 - Treat cage classification, local search, stability, tensor-network construction, and
   thermodynamic diagnostics as separate responsibilities even when they share data.
-- `local_search.py` is now a temporary compatibility facade and must not receive implementation
-  logic. First-party code must import the focused local-search modules directly.
+- The temporary `local_search.py` facade has been removed. Keep first-party imports on the
+  focused local-search modules directly; do not reintroduce a monolithic compatibility surface.
 - Preserve the local-search dependency DAG rather than a single monolithic chain.
   `local_search_types` is the passive contract leaf; `local_search_geometry` contains pure region
   geometry; `local_search_core` owns generic cage-search algebra; `local_search_qdm` adapts that
@@ -16,8 +16,8 @@ This file supplements the repository-root `AGENTS.md`.
   `local_search_proposals` generates regions; `local_search_scan` executes proposal streams; and
   `local_search_workflows` orchestrates the high-level robust search. Do not add reverse imports
   that recreate a static or eager dependency cycle.
-- `stability.py` is a temporary refactor facade. New implementation code must import the
-  focused `stability_core`, `stability_topology`, `stability_boundary`, `stability_qdm`,
+- The temporary `stability.py` facade has been removed. Import the focused
+  `stability_core`, `stability_topology`, `stability_boundary`, `stability_qdm`,
   `stability_laurent`, or `stability_types` module directly.
 - Local-search data/result contracts and pure region geometry live in `local_search_types.py` and
   `local_search_geometry.py`; generic search algebra/adapter registration lives in

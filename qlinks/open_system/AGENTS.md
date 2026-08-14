@@ -6,7 +6,7 @@ This file supplements the repository-root `AGENTS.md`.
   as separate responsibilities.
 - Prefer state/operator protocols and neutral local-structure primitives over concrete
   dependencies on caging search records.
-- `manifold_detectors.py` is a temporary refactor facade. New implementation code must import
+- The temporary `manifold_detectors.py` facade has been removed. Import
   `manifold_dark`, `manifold_recycling`, `manifold_residual`, or
   `manifold_detector_types` directly.
 - Do not add new responsibilities to the large cage-Lindblad construction modules. Extract

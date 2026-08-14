@@ -99,12 +99,8 @@ removal when all of the following are true:
 4. the removal is recorded in the changelog or the next release/refactor milestone.
 
 Compatibility modules must not become dependencies of active implementation code. Architecture
-tests should enforce this whenever a facade is introduced.
-- A lazy compatibility facade that implements module ``__getattr__`` must also be pyflakes-safe.
-  Do not put lazily resolved names directly in a literal ``__all__`` tuple/list, because
-  flake8/pyflakes reports F822 for names without eager module bindings. Use explicit bindings
-  or keep the export-name tuple in a private constant and assign ``__all__`` indirectly; test
-  both explicit legacy imports and ``from ... import *`` while the facade exists.
+tests should enforce this whenever a facade is introduced. Once the reviewed replacement API
+stabilizes, delete the facade rather than retaining it as a permanent public layer.
 
 ## Testing policy
 

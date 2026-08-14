@@ -1,7 +1,7 @@
 """Data contracts for dark-manifold detector workflows.
 
 The numerical detector, recycler, and residual-kernel algorithms remain in
-:mod:`qlinks.open_system.manifold_detectors`; this module owns passive result objects whose
+the focused manifold-detector modules; this module owns passive result objects whose
 role is to carry diagnostics across those stages.
 """
 
