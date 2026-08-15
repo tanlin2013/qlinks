@@ -11,24 +11,22 @@ from typing import Callable, Literal
 import numpy as np
 
 from qlinks.basis import basis_configs_from_build_result
-from qlinks.caging import (
-    CageClassificationConfig,
-    CageSearchConfig,
-    CageSearcher,
-    CageSearchResult,
-    classify_full_state,
+from qlinks.caging import CageSearchConfig, CageSearcher, CageSearchResult
+from qlinks.caging.analysis.environment import (
+    EnvironmentReductionConfig,
+    ReducedIZMonitorDecomposition,
+    diagnose_environment_reduction,
 )
-from qlinks.caging.open_system import (
+from qlinks.models import HoneycombQDMModel, SquareQDMModel, SquareQLMModel
+from qlinks.open_system import RecyclingJumpSource
+from qlinks.open_system.constructions.deprecated import (
     JumpOperatorDesign,
     JumpPlaquettePolicy,
     MonitorPlaquettePolicy,
     MonitorSource,
     ReducedIZMonitorContent,
-    ReducedIZMonitorDecomposition,
     build_type1_cage_lindblad_construction,
 )
-from qlinks.models import HoneycombQDMModel, SquareQDMModel, SquareQLMModel
-from qlinks.open_system import RecyclingJumpSource
 
 BuilderName = Literal["sparse", "optimized", "bitmask"]
 SearchTypeName = Literal["type1", "type2", "type1_and_type2", "custom"]
@@ -429,20 +427,22 @@ def run_cage_lindblad_benchmark(
     full_state = _full_state_for_record(search_result, record)
     basis_configs = basis_configs_from_build_result(build_result)
 
-    classification_config = CageClassificationConfig(
+    environment_config = EnvironmentReductionConfig(
         amplitude_tolerance=residual_tolerance,
         action_tolerance=max(residual_tolerance, 1e-9),
+        cancellation_tolerance=max(residual_tolerance, 1e-9),
         sector_policy=classification_sector_policy,  # type: ignore[arg-type]
     )
-    classification_report, classification_seconds = _time_call(
-        lambda: classify_full_state(
+    environment_report, classification_seconds = _time_call(
+        lambda: diagnose_environment_reduction(
             full_state,
             kinetic_matrix=build_result.kinetic,
             basis_configs=basis_configs,
-            config=classification_config,
+            config=environment_config,
             metadata={
                 "signature": record.signature,
                 "record_index": record_index,
+                "benchmark_role": "deprecated_cage_lindblad_baseline",
             },
         )
     )
@@ -453,7 +453,7 @@ def run_cage_lindblad_benchmark(
             model=case.model,
             build_result=build_result,
             cage_state=full_state,
-            classification_report=classification_report,
+            environment_report=environment_report,
             z_value=record.signature[1],
             builder=local_term_builder,
             backend=backend,
@@ -515,8 +515,12 @@ def run_cage_lindblad_benchmark(
         + construction_seconds,
         search_stage_seconds=dict(search_result.search_stage_seconds),
         construction_stage_seconds=dict(construction_stage_seconds),
-        n_nontrivial_zeros=classification_report.n_nontrivial_zeros,
-        classification_label=str(classification_report.label),
+        n_nontrivial_zeros=environment_report.n_nontrivial_zeros,
+        classification_label=(
+            "environment_reduction_safe"
+            if environment_report.is_safely_removable
+            else "environment_reduction_unsafe"
+        ),
         region_size=int(summary["region_size"]),
         n_monitor_components=int(summary["n_monitor_components"]),
         n_monitor_plaquettes=int(summary["n_monitor_plaquettes"]),

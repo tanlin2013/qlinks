@@ -9,6 +9,10 @@ from qlinks.open_system.diagnostics.absorbing import (
     AbsorbingProjectorSymmetryDiagnostics,
     diagnose_absorbing_projector_symmetry,
 )
+from qlinks.open_system.diagnostics.attractive import (
+    AttractiveSubspaceDiagnostics,
+    diagnose_attractive_subspace,
+)
 from qlinks.open_system.diagnostics.dark import (
     CommonKernelHamiltonianInvariantSectorReport,
     DarkManifoldDiagnostics,
@@ -53,6 +57,7 @@ from qlinks.open_system.diagnostics.verification import (
 __all__ = [
     "AbsorbingProjectorJumpDiagnostics",
     "AbsorbingProjectorSymmetryDiagnostics",
+    "AttractiveSubspaceDiagnostics",
     "CommonKernelHamiltonianInvariantSectorReport",
     "DarkManifoldDiagnostics",
     "DarkSubspaceDiagnostics",
@@ -64,6 +69,7 @@ __all__ = [
     "analyze_lindblad_evolution",
     "bad_h_invariant_common_kernel_basis",
     "diagnose_absorbing_projector_symmetry",
+    "diagnose_attractive_subspace",
     "diagnose_common_kernel_h_invariant_sector",
     "diagnose_dark_manifold",
     "diagnose_dark_subspace",

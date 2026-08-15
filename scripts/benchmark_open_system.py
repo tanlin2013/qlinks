@@ -324,14 +324,15 @@ def _make_qdm_cage_lindblad_mcwf_case(
 ) -> OpenSystemBenchmarkCase:
     """Build a QDM Cage-Lindblad problem used for real MCWF timing."""
     from qlinks.basis import basis_configs_from_build_result
-    from qlinks.caging import (
-        CageClassificationConfig,
-        CageSearchConfig,
-        CageSearcher,
-        classify_full_state,
+    from qlinks.caging import CageSearchConfig, CageSearcher
+    from qlinks.caging.analysis.environment import (
+        EnvironmentReductionConfig,
+        diagnose_environment_reduction,
     )
-    from qlinks.caging.open_system import build_type1_cage_lindblad_construction
     from qlinks.models import SquareQDMModel, TriangularQDMModel
+    from qlinks.open_system.constructions.deprecated import (
+        build_type1_cage_lindblad_construction,
+    )
 
     if cage_lindblad_case == "square_qdm_pbc_w00":
         model = SquareQDMModel(
@@ -415,21 +416,23 @@ def _make_qdm_cage_lindblad_mcwf_case(
     state_vector = _full_state_for_cage_record(search_result, record)
     basis_configs = basis_configs_from_build_result(build_result)
 
-    classification_config = CageClassificationConfig(
+    environment_config = EnvironmentReductionConfig(
         amplitude_tolerance=1.0e-10,
+        cancellation_tolerance=1.0e-9,
         action_tolerance=1.0e-9,
         sector_policy="infer_support_component",
     )
     report, classification_seconds = _time_call(
-        lambda: classify_full_state(
+        lambda: diagnose_environment_reduction(
             state_vector,
             kinetic_matrix=build_result.kinetic,
             basis_configs=basis_configs,
-            config=classification_config,
+            config=environment_config,
             metadata={
                 "signature": record.signature,
                 "record_index": record_index,
                 "benchmark_case": case_name,
+                "benchmark_role": "deprecated_cage_lindblad_baseline",
             },
         )
     )
@@ -440,7 +443,7 @@ def _make_qdm_cage_lindblad_mcwf_case(
             model=model,
             build_result=build_result,
             cage_state=state_vector,
-            classification_report=report,
+            environment_report=report,
             z_value=record.signature[1],
             builder="sparse",
             backend="scipy",

@@ -187,18 +187,15 @@ def _right_nullspace_from_constraint_matrix(
 ) -> tuple[npt.NDArray[np.float64], float, int, npt.NDArray[np.complex128]]:
     """Return singular values, cutoff, rank, and right nullspace.
 
-    The detector constraint matrix is usually tall in production cage runs:
-    ``(hilbert_dimension * manifold_dimension) x n_operators``.  Computing a
-    full/economy SVD of this tall matrix can dominate the dark-detector stage,
-    even though we only need the right nullspace in operator-coefficient space.
-    The Hermitian Gram matrix ``C^† C`` has size ``n_operators x n_operators``
-    and its eigenvectors are the right singular vectors of ``C``.  This path is
-    therefore substantially cheaper for ``coordinate_ipr`` and regional-unit
-    workflows with many basis states but modest local-operator families.
+    For the common tall-matrix case, first compute a reduced QR factorization and
+    then take the SVD of the small square ``R`` factor.  QR preserves the
+    singular values while avoiding the conditioning loss of the former
+    ``C^dagger C`` Gram-matrix path, whose eigenvalues square the condition
+    number and can make an exact nullspace spuriously basis dependent.
     """
     if constraint_matrix.ndim != 2:
         raise ValueError("constraint_matrix must be two-dimensional.")
-    n_operators = int(constraint_matrix.shape[1])
+    n_rows, n_operators = (int(value) for value in constraint_matrix.shape)
     if n_operators == 0:
         return (
             np.zeros(0, dtype=np.float64),
@@ -207,43 +204,26 @@ def _right_nullspace_from_constraint_matrix(
             np.zeros((0, 0), dtype=np.complex128),
         )
 
-    gram = np.asarray(
-        constraint_matrix.conj().T @ constraint_matrix,
-        dtype=np.complex128,
-    )
-    # Symmetrize away tiny BLAS roundoff so eigh sees an exactly Hermitian input.
-    gram = 0.5 * (gram + gram.conj().T)
-    try:
-        eigenvalues, eigenvectors = np.linalg.eigh(gram)
-    except np.linalg.LinAlgError:
-        full_matrices = constraint_matrix.shape[0] < constraint_matrix.shape[1]
+    if n_rows >= n_operators:
+        _q, reduced = np.linalg.qr(constraint_matrix, mode="reduced")
+        _, singular_values, vh = np.linalg.svd(
+            reduced,
+            full_matrices=True,
+        )
+    else:
         _, singular_values, vh = np.linalg.svd(
             constraint_matrix,
-            full_matrices=full_matrices,
-        )
-        if singular_values.size == 0:
-            cutoff = float(tolerance)
-            rank = 0
-        else:
-            cutoff = float(tolerance * max(float(singular_values[0]), 1.0))
-            rank = int(np.count_nonzero(singular_values > cutoff))
-        return (
-            np.asarray(singular_values, dtype=np.float64),
-            cutoff,
-            rank,
-            vh.conj().T[:, rank:].astype(np.complex128, copy=False),
+            full_matrices=True,
         )
 
-    eigenvalues = np.maximum(np.asarray(eigenvalues, dtype=np.float64), 0.0)
-    singular_values_ascending = np.sqrt(eigenvalues)
-    singular_values = singular_values_ascending[::-1].copy()
+    singular_values = np.asarray(singular_values, dtype=np.float64)
     if singular_values.size == 0:
         cutoff = float(tolerance)
+        rank = 0
     else:
         cutoff = float(tolerance * max(float(singular_values[0]), 1.0))
-    dark_mask = singular_values_ascending <= cutoff
-    rank = int(n_operators - np.count_nonzero(dark_mask))
-    nullspace = np.asarray(eigenvectors[:, dark_mask], dtype=np.complex128)
+        rank = int(np.count_nonzero(singular_values > cutoff))
+    nullspace = vh.conj().T[:, rank:].astype(np.complex128, copy=False)
     return singular_values, cutoff, rank, nullspace
 
 

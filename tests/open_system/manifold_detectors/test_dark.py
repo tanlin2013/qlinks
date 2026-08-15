@@ -142,3 +142,32 @@ def test_dark_operator_coordinate_ipr_candidate_prefers_single_local_operator():
     assert candidate.coefficient_ipr == 1.0
     assert candidate.effective_operator_count == 1.0
     assert candidate.action_residual < 1e-12
+
+
+def test_dark_operator_nullity_is_invariant_under_target_phase_with_large_nullspace():
+    target = np.asarray([1.0, 0.0, 0.0, 0.0], dtype=np.complex128)
+    base = sp.csr_array(
+        (
+            np.asarray([1.0], dtype=np.complex128),
+            (np.asarray([1], dtype=np.int64), np.asarray([0], dtype=np.int64)),
+        ),
+        shape=(4, 4),
+    )
+    phases = np.exp(1.0j * np.linspace(0.0, 1.7, 48))
+    operators = tuple(phase * base for phase in phases)
+
+    reference = diagnose_manifold_dark_operator_basis(
+        states=target,
+        operators=operators,
+        tolerance=1.0e-10,
+        max_candidates=0,
+    )
+    rotated = diagnose_manifold_dark_operator_basis(
+        states=np.exp(0.73j) * target,
+        operators=operators,
+        tolerance=1.0e-10,
+        max_candidates=0,
+    )
+
+    assert reference.detector_nullity == 47
+    assert rotated.detector_nullity == reference.detector_nullity
