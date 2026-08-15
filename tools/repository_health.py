@@ -12,7 +12,13 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
-from architecture_report import analyze_repository, discover_imports
+from architecture_report import (
+    ImportOccurrence,
+    RawImportOccurrence,
+    analyze_repository,
+    discover_imports,
+    discover_imports_with_raw,
+)
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 _DEFAULT_BUDGET = Path(__file__).with_name("repository_health_budget.json")
@@ -211,8 +217,16 @@ def _top_level_dependency_violations(
     return violations
 
 
-def _ancestor_api_import_violations(root: Path) -> list[str]:
-    module_paths, imports = discover_imports(root, "qlinks")
+def _ancestor_api_import_violations(
+    root: Path,
+    *,
+    module_paths: dict[str, Path] | None = None,
+    imports: tuple[ImportOccurrence, ...] | None = None,
+) -> list[str]:
+    if (module_paths is None) != (imports is None):
+        raise ValueError("module_paths and imports must be supplied together")
+    if module_paths is None or imports is None:
+        module_paths, imports = discover_imports(root, "qlinks")
     package_modules = {
         module for module, path in module_paths.items() if path.name == "__init__.py"
     }
@@ -229,22 +243,21 @@ def _ancestor_api_import_violations(root: Path) -> list[str]:
     return violations
 
 
-def _raw_forbidden_import_violations(root: Path) -> list[str]:
+def _raw_forbidden_import_violations(
+    root: Path,
+    *,
+    raw_imports: tuple[RawImportOccurrence, ...] | None = None,
+) -> list[str]:
+    if raw_imports is None:
+        _, _, raw_imports = discover_imports_with_raw(root, "qlinks")
+
     violations: list[str] = []
-    for path in sorted((root / "qlinks").rglob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            modules: list[str] = []
-            if isinstance(node, ast.Import):
-                modules.extend(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                modules.append(node.module)
-            for module in modules:
-                if module == "experimental" or module.startswith("experimental."):
-                    relative = path.relative_to(root)
-                    violations.append(
-                        f"promotion boundary: {relative}:{node.lineno} imports {module}"
-                    )
+    for occurrence in raw_imports:
+        module = occurrence.target
+        if module == "experimental" or module.startswith("experimental."):
+            violations.append(
+                "promotion boundary: " f"{occurrence.path}:{occurrence.line} imports {module}"
+            )
     return violations
 
 
@@ -359,6 +372,30 @@ def _active_precommit_hook_ids(text: str) -> set[str]:
     )
 
 
+def _active_precommit_hook_block(text: str, hook_id: str) -> str:
+    """Return one active hook block from the YAML-like pre-commit configuration."""
+
+    active_lines = [line for line in text.splitlines() if not line.lstrip().startswith("#")]
+    start: int | None = None
+    indent = 0
+    for index, line in enumerate(active_lines):
+        match = re.match(r"^(?P<indent>\s*)-\s+id:\s*(?P<id>[A-Za-z0-9_.-]+)\s*$", line)
+        if match and match.group("id") == hook_id:
+            start = index
+            indent = len(match.group("indent"))
+            break
+    if start is None:
+        return ""
+
+    block = [active_lines[start]]
+    for line in active_lines[start + 1 :]:
+        match = re.match(r"^(?P<indent>\s*)-\s+id:\s*[A-Za-z0-9_.-]+\s*$", line)
+        if match and len(match.group("indent")) <= indent:
+            break
+        block.append(line)
+    return "\n".join(block)
+
+
 def _guardrail_wiring_findings(root: Path) -> list[str]:
     findings: list[str] = []
 
@@ -388,6 +425,20 @@ def _guardrail_wiring_findings(root: Path) -> list[str]:
         if hook_id not in active_hook_ids:
             findings.append(f"guardrail wiring: pre-commit hook {hook_id!r} is missing")
 
+    repository_health_hook = _active_precommit_hook_block(precommit, "repository-health")
+    if repository_health_hook and "stages: [pre-commit]" not in repository_health_hook:
+        findings.append(
+            "guardrail wiring: repository-health local hook must remain pre-commit only"
+        )
+    test_health_hook = _active_precommit_hook_block(precommit, "test-health")
+    if test_health_hook:
+        if "stages: [pre-push]" not in test_health_hook:
+            findings.append("guardrail wiring: test-health local hook must remain pre-push only")
+        if "tools/test_health.py --check --local --quiet" not in test_health_hook:
+            findings.append(
+                "guardrail wiring: local test-health hook must use the static --local mode"
+            )
+
     pyproject = (root / "pyproject.toml").read_text(encoding="utf-8")
     fast_expression = "not integration and not scientific and not manual and not gpu"
     if fast_expression not in pyproject:
@@ -402,6 +453,8 @@ def _guardrail_wiring_findings(root: Path) -> list[str]:
     test_workflow = (root / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
     if "tools/test_health.py" not in test_workflow:
         findings.append("guardrail wiring: test CI no longer runs test-health check")
+    if "tools/test_health.py" in test_workflow and "--local" in test_workflow:
+        findings.append("guardrail wiring: CI test-health must retain full pytest collection")
     if "scripts/test.sh fast" not in test_workflow:
         findings.append("guardrail wiring: test CI no longer runs fast lane")
     if "scripts/test.sh integration" not in test_workflow:
@@ -417,7 +470,12 @@ def _guardrail_wiring_findings(root: Path) -> list[str]:
 
 
 def build_snapshot(root: Path, budget: dict[str, Any]) -> tuple[HealthSnapshot, list[str]]:
-    analysis = analyze_repository(root)
+    module_paths, imports, raw_imports = discover_imports_with_raw(root, "qlinks")
+    analysis = analyze_repository(
+        root,
+        module_paths=module_paths,
+        imports=imports,
+    )
     summary = analysis["summary"]
     assert isinstance(summary, dict)
 
@@ -437,8 +495,10 @@ def build_snapshot(root: Path, budget: dict[str, Any]) -> tuple[HealthSnapshot, 
     api_violations, api_count = _api_surface_violations(root, budget)
     violations.extend(api_violations)
     violations.extend(_top_level_dependency_violations(analysis, budget))
-    violations.extend(_ancestor_api_import_violations(root))
-    violations.extend(_raw_forbidden_import_violations(root))
+    violations.extend(
+        _ancestor_api_import_violations(root, module_paths=module_paths, imports=imports)
+    )
+    violations.extend(_raw_forbidden_import_violations(root, raw_imports=raw_imports))
     file_findings, secret_findings = _security_findings(root)
     workflow_permission_findings, action_findings = _workflow_findings(root)
     wiring_findings = _guardrail_wiring_findings(root)

@@ -98,3 +98,14 @@ to a new blocking dependency in this pass because the current `safety` CLI is un
 non-interactive CI in this repository. CodeQL remains enabled. If the project begins handling live
 service/broker credentials or private financial data, the next security step should be a pinned,
 non-interactive dependency scanner and stronger immutable pinning for security-sensitive Actions.
+
+## Local-hook performance follow-up (2026-08-15)
+
+The local health hooks were profiled after the structural-health work. Repository health was
+reparsing the entire qlinks import graph for architecture, ancestor-facade, and forbidden-import
+checks. Those checks now share one import-discovery pass. On a warm filesystem in the audit
+environment this reduced `repository_health.py --check --quiet` from about **3.25 s** to
+**1.85 s** without changing the checked invariants.
+
+Local hook stages are explicit: repository health runs at `pre-commit` only, while test health
+runs at `pre-push`. CI continues to rerun the full repository-health check.

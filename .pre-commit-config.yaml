@@ -76,9 +76,10 @@ repos:
         entry: poetry run python tools/repository_health.py --check --quiet
         language: system
         pass_filenames: false
+        stages: [pre-commit]
     -   id: test-health
         name: test-health
-        entry: poetry run python tools/test_health.py --check --quiet
+        entry: poetry run python tools/test_health.py --check --local --quiet
         language: system
         pass_filenames: false
         stages: [pre-push]

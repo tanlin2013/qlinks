@@ -78,6 +78,16 @@ class ImportOccurrence:
 
 
 @dataclass(frozen=True, slots=True)
+class RawImportOccurrence:
+    """One raw import target collected while parsing a package module."""
+
+    source: str
+    target: str
+    path: str
+    line: int
+
+
+@dataclass(frozen=True, slots=True)
 class BoundaryRule:
     """Static import boundary mirrored from the repository architecture guide."""
 
@@ -384,11 +394,11 @@ class _ImportCollector(ast.NodeVisitor):
         self._visit_function(node)
 
 
-def discover_imports(
+def _discover_import_data(
     repository_root: Path,
     package_name: str = "qlinks",
-) -> tuple[dict[str, Path], tuple[ImportOccurrence, ...]]:
-    """Discover Python modules and statically resolve internal imports."""
+) -> tuple[dict[str, Path], tuple[ImportOccurrence, ...], tuple[RawImportOccurrence, ...]]:
+    """Discover package modules plus resolved and raw import occurrences in one AST pass."""
 
     package_root = repository_root / package_name
     if not package_root.is_dir():
@@ -399,6 +409,7 @@ def discover_imports(
     }
     known_modules = set(module_paths)
     imports: list[ImportOccurrence] = []
+    raw_imports: list[RawImportOccurrence] = []
 
     for source, path in sorted(module_paths.items()):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -417,6 +428,19 @@ def discover_imports(
                     for alias in node.names:
                         if alias.name != "*":
                             raw_targets.append(f"{base}.{alias.name}")
+                elif node.module:
+                    # Absolute imports outside qlinks do not need relative resolution.
+                    raw_targets.append(node.module)
+
+            for raw_target in dict.fromkeys(raw_targets):
+                raw_imports.append(
+                    RawImportOccurrence(
+                        source=source,
+                        target=raw_target,
+                        path=relative_path,
+                        line=int(getattr(node, "lineno", 0)),
+                    )
+                )
 
             resolved_targets: set[str] = set()
             for raw_target in raw_targets:
@@ -438,7 +462,26 @@ def discover_imports(
                     )
                 )
 
-    return module_paths, tuple(imports)
+    return module_paths, tuple(imports), tuple(raw_imports)
+
+
+def discover_imports(
+    repository_root: Path,
+    package_name: str = "qlinks",
+) -> tuple[dict[str, Path], tuple[ImportOccurrence, ...]]:
+    """Discover Python modules and statically resolve internal imports."""
+
+    module_paths, imports, _ = _discover_import_data(repository_root, package_name)
+    return module_paths, imports
+
+
+def discover_imports_with_raw(
+    repository_root: Path,
+    package_name: str = "qlinks",
+) -> tuple[dict[str, Path], tuple[ImportOccurrence, ...], tuple[RawImportOccurrence, ...]]:
+    """Discover resolved imports and raw targets without reparsing package modules."""
+
+    return _discover_import_data(repository_root, package_name)
 
 
 def _graph_from_imports(
@@ -604,10 +647,23 @@ def _sum_edge_weights(graph: nx.DiGraph, node: str, *, incoming: bool) -> int:
     return sum(int(data.get("weight", 1)) for _, _, data in edges)
 
 
-def analyze_repository(repository_root: Path, package_name: str = "qlinks") -> dict[str, object]:
-    """Return a JSON-serializable architecture analysis."""
+def analyze_repository(
+    repository_root: Path,
+    package_name: str = "qlinks",
+    *,
+    module_paths: dict[str, Path] | None = None,
+    imports: tuple[ImportOccurrence, ...] | None = None,
+) -> dict[str, object]:
+    """Return a JSON-serializable architecture analysis.
 
-    module_paths, imports = discover_imports(repository_root, package_name)
+    ``module_paths`` and ``imports`` allow health checks to reuse a discovery pass instead of
+    reparsing the package for each independent guardrail.
+    """
+
+    if (module_paths is None) != (imports is None):
+        raise ValueError("module_paths and imports must be supplied together")
+    if module_paths is None or imports is None:
+        module_paths, imports = discover_imports(repository_root, package_name)
     module_graph = _graph_from_imports(module_paths, imports)
     import_time_graph = _import_time_graph(module_graph)
     package_graph = _package_graph(module_graph, package_name)

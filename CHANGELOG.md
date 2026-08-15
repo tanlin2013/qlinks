@@ -17,6 +17,7 @@ OR
 Changelog
 =========
 ## 1.0.0 - TBD
+- Speed up local health hooks without weakening CI coverage: share one qlinks import-discovery pass across repository-health architecture checks, parse each test file once for static health metrics, run repository health only at pre-commit, use a static `test-health --local` guard at pre-push, and retain exact pytest collection in CI.
 - Simplify stochastic-Schrödinger/MCWF execution by removing unsupported micro-optimizations
   (collinear jump compression, sparse row-rate evaluators, custom sparse Gram assembly, adaptive
   trajectory blocking, multiprocessing chunks, and the SciPy-only single-trajectory kernel); keep

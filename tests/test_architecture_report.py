@@ -68,3 +68,16 @@ def test_architecture_report_writes_self_contained_html_and_json(
     assert 'id="architecture-data"' in html_text
     assert "https://" not in html_text
     assert json_path.is_file()
+
+
+def test_import_discovery_reuses_raw_targets_without_changing_internal_edges(
+    architecture_report_module,
+) -> None:
+    module_paths, imports = architecture_report_module.discover_imports(_REPOSITORY_ROOT)
+    raw_module_paths, raw_imports, raw_targets = (
+        architecture_report_module.discover_imports_with_raw(_REPOSITORY_ROOT)
+    )
+
+    assert raw_module_paths == module_paths
+    assert raw_imports == imports
+    assert any(target.target.startswith("numpy") for target in raw_targets)

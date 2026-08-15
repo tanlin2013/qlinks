@@ -22,3 +22,5 @@ This file supplements the repository-root `AGENTS.md`.
   increasing a ceiling requires a deliberate test-architecture decision and an update to
   `tests/TEST_HEALTH_AUDIT.md`.
 - Run `python tools/test_health.py --check` after broad test changes and keep the fast lane clean.
+  The pre-push `--local` mode is a fast static guard; CI remains responsible for exact pytest
+  collection counts.

@@ -5,5 +5,8 @@
   "max_unmarked_manual_visual_cases": 0,
   "min_integration_cases": 40,
   "min_scientific_cases": 7,
-  "min_manual_cases": 29
+  "min_manual_cases": 29,
+  "min_integration_test_functions": 40,
+  "min_scientific_test_functions": 7,
+  "min_manual_test_functions": 23
 }

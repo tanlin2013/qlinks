@@ -1,5 +1,20 @@
 # qlinks test-suite health audit
 
+## Local-hook performance follow-up (2026-08-15)
+
+Profiling showed that full pytest collection/import dominated local test-health time. The test
+scanner now parses each test file once for LOC, private imports, fixture references, marker
+taxonomy, and manual-visual checks. The pre-push hook uses `python tools/test_health.py --check
+--local --quiet`, which performs static marker/function budget checks without importing the test
+suite. CI deliberately continues to run `python tools/test_health.py --check` with exact pytest
+collection, so parametrized case counts and import-time collection failures remain protected.
+
+On a warm filesystem in the audit environment, the local test-health path is about **1.3 s**
+versus **4.6--5.0 s** for the previous full-collection local hook. Static floors are frozen at
+40 integration functions, 7 scientific functions, and 23 manual functions in addition to the
+existing exact CI case-count floors.
+
+
 ## MCWF optimization-debt follow-up (2026-08-14)
 
 The stochastic-Schrödinger simplification removed the private contracts that existed only to

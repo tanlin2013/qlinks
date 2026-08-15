@@ -78,7 +78,8 @@ exception or use it as precedent for new code.
 
 Documentation alone is not sufficient for structural rules. The blocking repository-health check
 (`python tools/repository_health.py --check`) enforces the current reviewed architecture and must
-remain green in pre-commit/CI. In particular:
+remain green in pre-commit/CI. The local hook runs at pre-commit only; CI reruns the full check.
+In particular:
 
 - all static and import-time module/package SCC counts remain zero;
 - broad architecture boundaries and the reviewed caging sublayer DAGs remain satisfied;
@@ -199,9 +200,10 @@ See `docs/contributing/5.-testing.md` for lane details.
 
 The maintained test-suite health cache lives at `tests/TEST_HEALTH_AUDIT.md`. Update its
 remediation status after repository-wide test taxonomy or ownership changes so future
-refactors can distinguish known debt from regressions. Run `python tools/test_health.py --check`
-after broad test changes; `tests/test_health_budget.json` is a deliberate regression budget, not
-a target to game by hiding imports or markers.
+refactors can distinguish known debt from regressions. Run `python tools/test_health.py --check` after broad test changes; the local pre-push hook uses
+`--local` for static marker/function analysis, while CI retains full pytest collection.
+`tests/test_health_budget.json` is a deliberate regression budget, not a target to game by hiding
+imports or markers.
 
 ## Security and sensitive data
 
