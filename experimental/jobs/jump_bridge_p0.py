@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import csv
 import json
+import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,6 +25,7 @@ from qlinks.caging import CageSearchConfig, CageSearcher
 from qlinks.caging.analysis import (
     EnvironmentReductionConfig,
     diagnose_cage_environment_reduction,
+    local_structure_report_from_environment_report,
 )
 from qlinks.caging.analysis.thermodynamic import (
     directed_transition_witness_template,
@@ -43,6 +46,7 @@ from qlinks.open_system.constructions import (
 from qlinks.open_system.constructions.deprecated import (
     build_type1_cage_lindblad_construction,
 )
+from qlinks.operators.plaquette import alternating_binary_patterns
 
 TOLERANCE = 1.0e-9
 SEARCH_SEED = 1234
@@ -98,6 +102,25 @@ class RetargetedDirectedJump:
     variable_indices: tuple[int, ...]
     output_pattern: tuple[int, ...]
     operator: sp.csr_array
+
+
+@dataclass(frozen=True, slots=True)
+class ShiftedPotentialCagingOperator:
+    """One local QDM shifted-potential candidate ``Y=(F_1-1)+(F_2-1)``.
+
+    The companion square-QDM witness is defined on a reduced-IZ local singlet
+    whose two contained plaquettes are simultaneously flippable.  The same
+    structural probe is intentionally attempted on honeycomb targets, but a
+    candidate is admitted as an ICQMBS ``Y_R`` only when it actually
+    annihilates the originating caged eigenstate.
+    """
+
+    state_index: int
+    component_index: int
+    variable_indices: tuple[int, ...]
+    plaquette_ids: tuple[int, int]
+    operator: sp.csr_array
+    state_darkness_residual: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -309,6 +332,108 @@ def _unique_directed_rows(
         unique.append(row)
         representatives.append(representative)
     return tuple(unique)
+
+
+def _plaquette_flippability_diagonal(
+    *,
+    model: Any,
+    basis_configs: np.ndarray,
+    plaquette_id: int,
+) -> tuple[np.ndarray, tuple[int, ...]]:
+    """Return the constrained-basis diagonal of the QDM flippability projector."""
+    link_ids = tuple(int(value) for value in model.lattice.plaquette_links(plaquette_id))
+    variable_indices = tuple(int(model.layout.link_variable_index(link_id)) for link_id in link_ids)
+    pattern0, pattern1 = alternating_binary_patterns(len(variable_indices))
+    local_values = basis_configs[:, np.asarray(variable_indices, dtype=np.int64)]
+    flippable = np.all(local_values == pattern0, axis=1) | np.all(
+        local_values == pattern1,
+        axis=1,
+    )
+    return flippable.astype(np.complex128), variable_indices
+
+
+def _reconstruct_shifted_potential_candidates(
+    *,
+    records: Sequence[Any],
+    build_result: Any,
+    search_result: Any,
+    model: Any,
+) -> tuple[ShiftedPotentialCagingOperator, ...]:
+    """Reconstruct companion-style QDM ``Y_R`` candidates from local singlets.
+
+    We deliberately infer the two-plaquette motif from the reduced-IZ local
+    structure rather than hard-coding square-lattice coordinates.  A structural
+    candidate is returned even if it fails the state-darkness test; the caller
+    can therefore distinguish "not defined for this target" from "not searched".
+    """
+    basis_configs = np.asarray(basis_configs_from_build_result(build_result))
+    candidates: list[ShiftedPotentialCagingOperator] = []
+    for state_index, record in enumerate(records):
+        environment = diagnose_cage_environment_reduction(
+            record.cage_state,
+            kinetic_matrix=build_result.kinetic,
+            basis_configs=basis_configs,
+            hilbert_size=search_result.hilbert_size,
+            config=EnvironmentReductionConfig(sector_policy="infer_support_component"),
+        )
+        structure = local_structure_report_from_environment_report(
+            environment,
+            basis_configs=basis_configs,
+            state=record.full_state,
+            model=model,
+            decomposition="exact_support",
+            tolerance=TOLERANCE,
+            max_matrix_unit_terms=None,
+        )
+        for readout_report in structure.readout_reports:
+            plaquette_ids = tuple(int(value) for value in readout_report.flippable_plaquette_ids)
+            if len(plaquette_ids) != 2 or readout_report.n_singlet_like_pairs != 1:
+                continue
+            diagonal = -2.0 * np.ones(basis_configs.shape[0], dtype=np.complex128)
+            support: set[int] = set()
+            for plaquette_id in plaquette_ids:
+                contribution, variable_indices = _plaquette_flippability_diagonal(
+                    model=model,
+                    basis_configs=basis_configs,
+                    plaquette_id=plaquette_id,
+                )
+                diagonal += contribution
+                support.update(variable_indices)
+            operator = sp.csr_array(sp.diags(diagonal, format="csr"))
+            state = np.asarray(record.full_state, dtype=np.complex128)
+            candidates.append(
+                ShiftedPotentialCagingOperator(
+                    state_index=int(state_index),
+                    component_index=int(readout_report.readout.component_index),
+                    variable_indices=tuple(sorted(support)),
+                    plaquette_ids=(int(plaquette_ids[0]), int(plaquette_ids[1])),
+                    operator=operator,
+                    state_darkness_residual=float(np.linalg.norm(operator @ state)),
+                )
+            )
+    return tuple(candidates)
+
+
+def _common_dark_span_basis(
+    *,
+    operators: Sequence[Any],
+    target_basis: np.ndarray,
+    operator_prefix: str,
+) -> tuple[sp.csr_array, ...]:
+    """Return a basis for linear combinations dark on the full target."""
+    if not operators:
+        return ()
+    report = diagnose_manifold_dark_operator_basis(
+        states=target_basis,
+        operators=operators,
+        operator_names=tuple(f"{operator_prefix}_{index}" for index in range(len(operators))),
+        tolerance=TOLERANCE,
+        max_candidates=None,
+        candidate_strategy="svd_basis",
+    )
+    return _deduplicate_operators(
+        _combine_detector(candidate.coefficients, operators) for candidate in report.candidates
+    )
 
 
 def _combine_detector(
@@ -647,6 +772,232 @@ def _directed_action_rows(
                     row.operator,
                     target_basis,
                 ),
+            }
+        )
+    return output
+
+
+def _shifted_potential_action_rows(
+    *,
+    candidates: Sequence[ShiftedPotentialCagingOperator],
+    target_basis: np.ndarray,
+) -> list[dict[str, object]]:
+    """Report state-level versus full-target darkness for candidate ``Y_R``."""
+    rows: list[dict[str, object]] = []
+    for candidate_index, candidate in enumerate(candidates):
+        column_norms = np.linalg.norm(candidate.operator @ target_basis, axis=0)
+        rows.append(
+            {
+                "candidate_index": int(candidate_index),
+                "source_state_index": int(candidate.state_index),
+                "component_index": int(candidate.component_index),
+                "support": repr(candidate.variable_indices),
+                "support_size": len(candidate.variable_indices),
+                "plaquette_ids": repr(candidate.plaquette_ids),
+                "source_state_darkness_residual": float(candidate.state_darkness_residual),
+                "max_column_darkness_residual": float(max(column_norms, default=0.0)),
+                "total_target_darkness_residual": float(
+                    np.linalg.norm(candidate.operator @ target_basis)
+                ),
+                "companion_Y_defined_for_source_state": bool(
+                    candidate.state_darkness_residual <= TOLERANCE
+                ),
+            }
+        )
+    return rows
+
+
+def _unrestricted_left_ideal_projection(
+    operator: Any,
+    generators: Sequence[Any],
+) -> tuple[int, float, float]:
+    """Project onto the unrestricted left ideal generated by ``generators``.
+
+    For matrices ``L_a``, allowing arbitrary left multipliers produces exactly
+    the matrices whose rows lie in the joint row space of the ``L_a``.  This
+    space contains every bounded-local left ideal generated from the same
+    operators.  Therefore a nonzero residual here is a strong certificate that
+    a completion jump is genuinely outside the caging-generated local space;
+    no enumeration of a huge local multiplier basis is then necessary.
+    """
+    dense = np.asarray(_as_sparse_operator(operator).toarray(), dtype=np.complex128)
+    operator_norm = float(np.linalg.norm(dense))
+    if operator_norm <= 1.0e-14:
+        return 0, 0.0, 0.0
+    if not generators:
+        return 0, operator_norm, 1.0
+
+    joint_range = np.hstack(
+        [
+            np.asarray(_as_sparse_operator(generator).toarray(), dtype=np.complex128).conj().T
+            for generator in generators
+        ]
+    )
+    left_vectors, singular_values, _ = np.linalg.svd(joint_range, full_matrices=False)
+    if singular_values.size == 0:
+        return 0, operator_norm, 1.0
+    cutoff = 1.0e-10 * max(1.0, float(singular_values[0]))
+    rank = int(np.count_nonzero(singular_values > cutoff))
+    if rank == 0:
+        return 0, operator_norm, 1.0
+    row_space = left_vectors[:, :rank]
+    projected = dense @ row_space @ row_space.conj().T
+    residual = float(np.linalg.norm(dense - projected))
+    return rank, residual, residual / operator_norm
+
+
+def _completion_caging_span_rows(
+    *,
+    completion_operators: Sequence[Any],
+    directed_generators: Sequence[Any],
+    generic_l_generators: Sequence[Any],
+) -> list[dict[str, object]]:
+    """Test whether completion jumps can belong to either caging left ideal."""
+    rows: list[dict[str, object]] = []
+    for operator_index, operator in enumerate(completion_operators):
+        a_rank, a_residual, a_relative = _unrestricted_left_ideal_projection(
+            operator,
+            directed_generators,
+        )
+        l_rank, l_residual, l_relative = _unrestricted_left_ideal_projection(
+            operator,
+            generic_l_generators,
+        )
+        rows.append(
+            {
+                "completion_index": int(operator_index),
+                "A_left_ideal_row_space_dimension": int(a_rank),
+                "A_left_ideal_projection_residual": a_residual,
+                "A_left_ideal_relative_projection_residual": a_relative,
+                "outside_A_generated_left_ideal_certified": bool(a_relative > TOLERANCE),
+                "L_left_ideal_row_space_dimension": int(l_rank),
+                "L_left_ideal_projection_residual": l_residual,
+                "L_left_ideal_relative_projection_residual": l_relative,
+                "outside_selected_L_generated_left_ideal_certified": bool(l_relative > TOLERANCE),
+                "interpretation": (
+                    "nonzero unrestricted-left-ideal residual proves the completion "
+                    "is outside every bounded-local left ideal generated by the same caging rows"
+                ),
+            }
+        )
+    return rows
+
+
+def _operator_rank_kernel(operator: Any) -> tuple[int, int]:
+    dense = np.asarray(_as_sparse_operator(operator).toarray(), dtype=np.complex128)
+    rank = int(np.linalg.matrix_rank(dense))
+    return rank, int(dense.shape[1] - rank)
+
+
+def _caging_operator_map_rows(
+    *,
+    model: Any,
+    directed_rows: Sequence[DirectedCagingRow],
+    shifted_potential_candidates: Sequence[ShiftedPotentialCagingOperator],
+    target_basis: np.ndarray,
+    design: CageLindbladDesignResult,
+) -> list[dict[str, object]]:
+    """Export reconstructable provenance for the ICQMBS ``A/Z/Y/L`` hierarchy."""
+    output: list[dict[str, object]] = []
+    for row_index, row in enumerate(directed_rows):
+        for role, operator in (("A_R", row.operator), ("Z_R", row.hermitian_operator)):
+            rank, kernel_dim = _operator_rank_kernel(operator)
+            output.append(
+                {
+                    "operator_id": f"{role}_{row_index}",
+                    "operator_role": role,
+                    "provenance": "reduced_IZ_directed_kinetic_caging_relation",
+                    "source_state_index": int(row.state_index),
+                    "interference_zero_index": int(row.zero_index),
+                    "support_variables": row.variable_indices,
+                    "support_size": len(row.variable_indices),
+                    "support_constraint_graph_diameter": _constraint_graph_diameter(
+                        model,
+                        row.variable_indices,
+                    ),
+                    "target_pattern": row.target_pattern,
+                    "source_patterns": row.source_patterns,
+                    "directed_amplitudes": tuple(complex(value) for value in row.amplitudes),
+                    "target_darkness_residual": float(np.linalg.norm(operator @ target_basis)),
+                    "global_rank": rank,
+                    "global_kernel_dim": kernel_dim,
+                }
+            )
+
+    for candidate_index, candidate in enumerate(shifted_potential_candidates):
+        rank, kernel_dim = _operator_rank_kernel(candidate.operator)
+        output.append(
+            {
+                "operator_id": f"Y_R_candidate_{candidate_index}",
+                "operator_role": "Y_R",
+                "provenance": "two_flippable_plaquette_shifted_potential_local_singlet",
+                "source_state_index": int(candidate.state_index),
+                "component_index": int(candidate.component_index),
+                "support_variables": candidate.variable_indices,
+                "support_size": len(candidate.variable_indices),
+                "support_constraint_graph_diameter": _constraint_graph_diameter(
+                    model,
+                    candidate.variable_indices,
+                ),
+                "plaquette_ids": candidate.plaquette_ids,
+                "source_state_darkness_residual": candidate.state_darkness_residual,
+                "target_darkness_residual": float(
+                    np.linalg.norm(candidate.operator @ target_basis)
+                ),
+                "companion_Y_defined_for_source_state": bool(
+                    candidate.state_darkness_residual <= TOLERANCE
+                ),
+                "global_rank": rank,
+                "global_kernel_dim": kernel_dim,
+            }
+        )
+
+    selected_indices = tuple(
+        dict.fromkeys(design.workflow.recycled_selection.selected_detector_indices)
+    )
+    for output_index, detector_index in enumerate(selected_indices):
+        candidate = design.workflow.dark_operator_report.candidates[int(detector_index)]
+        operator = _combine_detector(candidate.coefficients, design.detector_operators)
+        rank, kernel_dim = _operator_rank_kernel(operator)
+        nonzero_terms = []
+        support: set[int] = set()
+        for term_index, coefficient in enumerate(candidate.coefficients):
+            if abs(coefficient) <= 1.0e-10:
+                continue
+            term_payload: dict[str, object] = {
+                "detector_operator_index": int(term_index),
+                "detector_operator_name": design.detector_operator_names[int(term_index)],
+                "coefficient": complex(coefficient),
+            }
+            if len(design.detector_terms) == len(design.detector_operators):
+                descriptor = design.detector_terms[int(term_index)]
+                variables = tuple(
+                    int(value)
+                    for value in (
+                        descriptor.support_variables
+                        if descriptor.support_variables
+                        else descriptor.support_links
+                    )
+                )
+                support.update(variables)
+                term_payload["support_variables"] = variables
+                term_payload["support_plaquettes"] = descriptor.support_plaquettes
+            nonzero_terms.append(term_payload)
+        output.append(
+            {
+                "operator_id": f"L_R_modern_{output_index}",
+                "operator_role": "L_R",
+                "provenance": "modern_common_dark_kinetic_detector",
+                "detector_candidate_index": int(detector_index),
+                "support_variables": tuple(sorted(support)),
+                "support_size": len(support),
+                "support_constraint_graph_diameter": (
+                    _constraint_graph_diameter(model, tuple(sorted(support))) if support else 0
+                ),
+                "nonzero_detector_terms": tuple(nonzero_terms),
+                "target_darkness_residual": float(np.linalg.norm(operator @ target_basis)),
+                "global_rank": rank,
+                "global_kernel_dim": kernel_dim,
             }
         )
     return output
@@ -1233,6 +1584,30 @@ def _write_json(path: Path, payload: object) -> None:
     )
 
 
+def _git_metadata() -> dict[str, str | None]:
+    repo_root = Path(__file__).resolve().parents[2]
+
+    def run(*args: str) -> str | None:
+        try:
+            result = subprocess.run(
+                ["git", *args],
+                cwd=repo_root,
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+            )
+        except Exception:
+            return None
+        return result.stdout.strip()
+
+    return {
+        "commit": run("rev-parse", "HEAD"),
+        "branch": run("rev-parse", "--abbrev-ref", "HEAD"),
+        "status_short": run("status", "--short"),
+    }
+
+
 def run_jump_bridge_case(
     case: JumpBridgeCase,
     *,
@@ -1288,6 +1663,22 @@ def run_jump_bridge_case(
     a_dagger_family = _deduplicate_operators(row.operator.conj().T for row in unique_directed)
     z_family = _deduplicate_operators(row.hermitian_operator for row in unique_directed)
     q_family = _deduplicate_operators(row.positive_operator for row in unique_directed)
+    shifted_potential_candidates = _reconstruct_shifted_potential_candidates(
+        records=records,
+        build_result=build_result,
+        search_result=search_result,
+        model=model,
+    )
+    valid_shifted_potential = tuple(
+        candidate.operator
+        for candidate in shifted_potential_candidates
+        if candidate.state_darkness_residual <= TOLERANCE
+    )
+    y_family = _common_dark_span_basis(
+        operators=valid_shifted_potential,
+        target_basis=problem.target_basis,
+        operator_prefix="Y_R",
+    )
     l_family = _selected_l_family(design)
     m_family = _selected_m_family(design)
     retargeted_candidates = _sort_retargeted_by_inflow(
@@ -1313,7 +1704,7 @@ def run_jump_bridge_case(
         target_basis=problem.target_basis,
     )
 
-    families = (
+    families = [
         (
             "A_only",
             "directed_reduced_IZ_caging_rows",
@@ -1335,55 +1726,69 @@ def run_jump_bridge_case(
             "local_operator_norm",
             0.0,
         ),
-        (
-            "Q_only",
-            "positive_A_dagger_A_local_witnesses",
-            q_family,
-            "local_operator_norm",
-            0.0,
-        ),
-        (
-            "A_retargeted_single",
-            "selected_direct_J_equals_ket_tau_bra_v_from_A",
-            selected_retargeted_family,
-            "inherited_local_A_operator_norm",
-            0.0,
-        ),
-        (
-            "A_retargeted_all",
-            "all_direct_J_equals_ket_tau_bra_v_from_A",
-            retargeted,
-            "inherited_local_A_operator_norm",
-            0.0,
-        ),
-        (
-            "L_only",
-            "selected_modern_common_dark_kinetic_detectors",
-            l_family,
-            "construction_native",
-            0.0,
-        ),
-        (
-            "M_only",
-            "selected_modern_left_multipliers",
-            m_family,
-            "construction_native",
-            0.0,
-        ),
-        (
-            "ML",
-            "modern_caging_generated_left_dressed_family",
-            design.recycled_jumps,
-            "construction_native",
-            design_timed.seconds,
-        ),
-        (
-            "final",
-            "modern_ML_plus_completion",
-            design.jumps,
-            "construction_native",
-            design_timed.seconds,
-        ),
+    ]
+    if y_family:
+        families.append(
+            (
+                "Y_only",
+                "full_target_dark_span_of_companion_shifted_potential_witnesses",
+                y_family,
+                "native_shifted_flippability_normalization",
+                0.0,
+            )
+        )
+    families.extend(
+        [
+            (
+                "Q_only",
+                "positive_A_dagger_A_local_witnesses",
+                q_family,
+                "local_operator_norm",
+                0.0,
+            ),
+            (
+                "A_retargeted_single",
+                "selected_direct_J_equals_ket_tau_bra_v_from_A",
+                selected_retargeted_family,
+                "inherited_local_A_operator_norm",
+                0.0,
+            ),
+            (
+                "A_retargeted_all",
+                "all_direct_J_equals_ket_tau_bra_v_from_A",
+                retargeted,
+                "inherited_local_A_operator_norm",
+                0.0,
+            ),
+            (
+                "L_only",
+                "selected_modern_common_dark_kinetic_detectors",
+                l_family,
+                "construction_native",
+                0.0,
+            ),
+            (
+                "M_only",
+                "selected_modern_left_multipliers",
+                m_family,
+                "construction_native",
+                0.0,
+            ),
+            (
+                "ML",
+                "modern_caging_generated_left_dressed_family",
+                design.recycled_jumps,
+                "construction_native",
+                design_timed.seconds,
+            ),
+            (
+                "final",
+                "modern_ML_plus_completion",
+                design.jumps,
+                "construction_native",
+                design_timed.seconds,
+            ),
+        ]
     )
 
     family_rows: list[dict[str, object]] = []
@@ -1444,6 +1849,31 @@ def run_jump_bridge_case(
         target_basis=problem.target_basis,
     )
     for row in directed_rows:
+        row.update({"case": case.name, "model": type(model).__name__})
+
+    shifted_potential_rows = _shifted_potential_action_rows(
+        candidates=shifted_potential_candidates,
+        target_basis=problem.target_basis,
+    )
+    for row in shifted_potential_rows:
+        row.update({"case": case.name, "model": type(model).__name__})
+
+    operator_map_rows = _caging_operator_map_rows(
+        model=model,
+        directed_rows=unique_directed,
+        shifted_potential_candidates=shifted_potential_candidates,
+        target_basis=problem.target_basis,
+        design=design,
+    )
+    for row in operator_map_rows:
+        row.update({"case": case.name, "model": type(model).__name__})
+
+    completion_span_rows = _completion_caging_span_rows(
+        completion_operators=design.targeted_jumps,
+        directed_generators=a_family,
+        generic_l_generators=l_family,
+    )
+    for row in completion_span_rows:
         row.update({"case": case.name, "model": type(model).__name__})
 
     provenance_rows = _operator_provenance_rows(
@@ -1523,7 +1953,10 @@ def run_jump_bridge_case(
     case_dir.mkdir(parents=True, exist_ok=True)
     _write_csv(case_dir / "jump_family_ablation.csv", family_rows)
     _write_csv(case_dir / "directed_caging_action.csv", directed_rows)
+    _write_csv(case_dir / "shifted_potential_caging_action.csv", shifted_potential_rows)
     _write_csv(case_dir / "operator_provenance_against_A_span.csv", provenance_rows)
+    _write_csv(case_dir / "completion_caging_span_scorecard.csv", completion_span_rows)
+    _write_jsonl(case_dir / "caging_to_lindblad_operator_map.jsonl", operator_map_rows)
     _write_csv(case_dir / "retargeted_A_prefix_scan.csv", retargeted_prefix_rows)
     _write_csv(
         case_dir / "retargeted_A_single_selection.csv",
@@ -1581,6 +2014,9 @@ def run_jump_bridge_case(
         "target_record_count": case.record_count,
         "n_reconstructed_directed_rows": len(directed_rows),
         "n_unique_directed_rows": len(a_family),
+        "n_shifted_potential_structural_candidates": len(shifted_potential_candidates),
+        "n_state_dark_shifted_potential_candidates": len(valid_shifted_potential),
+        "n_full_target_dark_Y_basis_operators": len(y_family),
         "n_retargeted_A_jumps": len(retargeted),
         "selected_retargeted_A_single": (
             None
@@ -1640,6 +2076,9 @@ def run_jump_bridge_case(
         "case_summary": case_summary,
         "family_rows": family_rows,
         "directed_rows": directed_rows,
+        "shifted_potential_rows": shifted_potential_rows,
+        "operator_map_rows": operator_map_rows,
+        "completion_span_rows": completion_span_rows,
         "provenance_rows": provenance_rows,
         "retargeted_prefix_rows": retargeted_prefix_rows,
         "retargeted_single_scan_rows": retargeted_single_scan_rows,
@@ -1667,6 +2106,9 @@ def run_jump_bridge_benchmark(
 
     all_family_rows: list[dict[str, object]] = []
     all_directed_rows: list[dict[str, object]] = []
+    all_shifted_potential_rows: list[dict[str, object]] = []
+    all_operator_map_rows: list[dict[str, object]] = []
+    all_completion_span_rows: list[dict[str, object]] = []
     all_provenance_rows: list[dict[str, object]] = []
     all_retargeted_prefix_rows: list[dict[str, object]] = []
     all_retargeted_single_scan_rows: list[dict[str, object]] = []
@@ -1682,6 +2124,9 @@ def run_jump_bridge_benchmark(
         )
         all_family_rows.extend(result["family_rows"])
         all_directed_rows.extend(result["directed_rows"])
+        all_shifted_potential_rows.extend(result["shifted_potential_rows"])
+        all_operator_map_rows.extend(result["operator_map_rows"])
+        all_completion_span_rows.extend(result["completion_span_rows"])
         all_provenance_rows.extend(result["provenance_rows"])
         all_retargeted_prefix_rows.extend(result["retargeted_prefix_rows"])
         all_retargeted_single_scan_rows.extend(result["retargeted_single_scan_rows"])
@@ -1694,6 +2139,18 @@ def run_jump_bridge_benchmark(
 
     _write_csv(output_dir / "jump_family_ablation.csv", all_family_rows)
     _write_csv(output_dir / "directed_caging_action.csv", all_directed_rows)
+    _write_csv(
+        output_dir / "shifted_potential_caging_action.csv",
+        all_shifted_potential_rows,
+    )
+    _write_jsonl(
+        output_dir / "caging_to_lindblad_operator_map.jsonl",
+        all_operator_map_rows,
+    )
+    _write_csv(
+        output_dir / "completion_caging_span_scorecard.csv",
+        all_completion_span_rows,
+    )
     _write_csv(
         output_dir / "operator_provenance_against_A_span.csv",
         all_provenance_rows,
@@ -1722,6 +2179,8 @@ def run_jump_bridge_benchmark(
         output_dir / "manifest.json",
         {
             "benchmark": "P0 ICQMBS directed-caging to Lindblad jump bridge",
+            "argv": sys.argv,
+            "git": _git_metadata(),
             "tolerance": TOLERANCE,
             "search_seed": SEARCH_SEED,
             "normalization_note": (
@@ -1735,6 +2194,9 @@ def run_jump_bridge_benchmark(
         "cases": summaries,
         "jump_family_ablation": all_family_rows,
         "directed_caging_action": all_directed_rows,
+        "shifted_potential_caging_action": all_shifted_potential_rows,
+        "caging_to_lindblad_operator_map": all_operator_map_rows,
+        "completion_caging_span_scorecard": all_completion_span_rows,
         "operator_provenance": all_provenance_rows,
         "retargeted_prefix_scan": all_retargeted_prefix_rows,
         "retargeted_single_selection": all_retargeted_single_scan_rows,

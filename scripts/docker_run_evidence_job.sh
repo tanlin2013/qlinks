@@ -8,7 +8,7 @@ IMAGE_NAME="${QLINKS_DOCKER_IMAGE:-tanlin2013/qlinks:notebook}"
 JOB_NAME="${1:-}"
 if [[ -z "${JOB_NAME}" ]]; then
     cat >&2 <<'USAGE'
-Usage: scripts/docker_run_evidence_job.sh spin1|qdm [job-script-args...]
+Usage: scripts/docker_run_evidence_job.sh spin1|qdm|jump_bridge_p0|jump_bridge_liouvillian [job-script-args...]
 
 Examples:
   scripts/docker_run_evidence_job.sh spin1 --profile known
@@ -41,6 +41,12 @@ Examples:
       --use-tex \
       --figure-formats pdf,svg \
       --export-dir output/spin1_production
+  QLINKS_NUM_THREADS=8 QLINKS_DOCKER_MEMORY_LIMIT=64g \
+    scripts/docker_run_evidence_job.sh jump_bridge_p0 --stage compute
+  QLINKS_NUM_THREADS=8 QLINKS_DOCKER_MEMORY_LIMIT=64g \
+    scripts/docker_run_evidence_job.sh jump_bridge_liouvillian \
+      --stage compute --method largest-real \
+      --family A_retargeted_single --family ML --family final
 
 Path options may be given as:
   * paths relative to the repository root,
@@ -66,9 +72,17 @@ case "${JOB_NAME}" in
         JOB_SLUG="square_qdm_draft_evidence"
         JOB_SCRIPT="experimental/jobs/run_square_qdm_draft_evidence.py"
         ;;
+    jump_bridge_p0|jump_p0)
+        JOB_SLUG="jump_bridge_p0"
+        JOB_SCRIPT="experimental/jobs/run_jump_bridge_p0.py"
+        ;;
+    jump_bridge_liouvillian|jump_bridge|jump_spectrum)
+        JOB_SLUG="jump_bridge_liouvillian"
+        JOB_SCRIPT="experimental/jobs/run_jump_bridge_liouvillian.py"
+        ;;
     *)
         echo "Unknown evidence job: ${JOB_NAME}" >&2
-        echo "Expected one of: spin1, qdm" >&2
+        echo "Expected one of: spin1, qdm, jump_bridge_p0, jump_bridge_liouvillian" >&2
         exit 2
         ;;
 esac
@@ -329,6 +343,13 @@ case "${STAGE}" in
         exit 2
         ;;
 esac
+
+if [[ "${JOB_NAME}" == jump_bridge* || "${JOB_NAME}" == "jump_p0" || "${JOB_NAME}" == "jump_spectrum" ]]; then
+    if [[ "${STAGE}" == "render" ]]; then
+        echo "jump_bridge is a numerical spectrum job and does not support --stage render" >&2
+        exit 2
+    fi
+fi
 
 if [[ "${JOB_NAME}" == "qdm" || "${JOB_NAME}" == "square_qdm" ]]; then
     if [[ -n "${QDM_MICRO_REPEATS}" && "${ALLOW_LARGE_DENSE_ED}" != "1" ]]; then
