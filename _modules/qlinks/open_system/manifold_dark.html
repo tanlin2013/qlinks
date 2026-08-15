@@ -522,18 +522,15 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return singular values, cutoff, rank, and right nullspace.</span>
 
-<span class="sd">    The detector constraint matrix is usually tall in production cage runs:</span>
-<span class="sd">    ``(hilbert_dimension * manifold_dimension) x n_operators``.  Computing a</span>
-<span class="sd">    full/economy SVD of this tall matrix can dominate the dark-detector stage,</span>
-<span class="sd">    even though we only need the right nullspace in operator-coefficient space.</span>
-<span class="sd">    The Hermitian Gram matrix ``C^† C`` has size ``n_operators x n_operators``</span>
-<span class="sd">    and its eigenvectors are the right singular vectors of ``C``.  This path is</span>
-<span class="sd">    therefore substantially cheaper for ``coordinate_ipr`` and regional-unit</span>
-<span class="sd">    workflows with many basis states but modest local-operator families.</span>
+<span class="sd">    For the common tall-matrix case, first compute a reduced QR factorization and</span>
+<span class="sd">    then take the SVD of the small square ``R`` factor.  QR preserves the</span>
+<span class="sd">    singular values while avoiding the conditioning loss of the former</span>
+<span class="sd">    ``C^dagger C`` Gram-matrix path, whose eigenvalues square the condition</span>
+<span class="sd">    number and can make an exact nullspace spuriously basis dependent.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;constraint_matrix must be two-dimensional.&quot;</span><span class="p">)</span>
-    <span class="n">n_operators</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">n_rows</span><span class="p">,</span> <span class="n">n_operators</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">n_operators</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
@@ -542,43 +539,26 @@
             <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span>
         <span class="p">)</span>
 
-    <span class="n">gram</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
-        <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">constraint_matrix</span><span class="p">,</span>
-        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="c1"># Symmetrize away tiny BLAS roundoff so eigh sees an exactly Hermitian input.</span>
-    <span class="n">gram</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">gram</span> <span class="o">+</span> <span class="n">gram</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">gram</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
-        <span class="n">full_matrices</span> <span class="o">=</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">constraint_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">n_rows</span> <span class="o">&gt;=</span> <span class="n">n_operators</span><span class="p">:</span>
+        <span class="n">_q</span><span class="p">,</span> <span class="n">reduced</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">constraint_matrix</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;reduced&quot;</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
+            <span class="n">reduced</span><span class="p">,</span>
+            <span class="n">full_matrices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
             <span class="n">constraint_matrix</span><span class="p">,</span>
-            <span class="n">full_matrices</span><span class="o">=</span><span class="n">full_matrices</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">singular_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span>
-            <span class="n">rank</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mf">1.0</span><span class="p">))</span>
-            <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">))</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">singular_values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
-            <span class="n">cutoff</span><span class="p">,</span>
-            <span class="n">rank</span><span class="p">,</span>
-            <span class="n">vh</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">rank</span><span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">full_matrices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
-    <span class="n">singular_values_ascending</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span>
-    <span class="n">singular_values</span> <span class="o">=</span> <span class="n">singular_values_ascending</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">singular_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">singular_values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">singular_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">singular_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mf">1.0</span><span class="p">))</span>
-    <span class="n">dark_mask</span> <span class="o">=</span> <span class="n">singular_values_ascending</span> <span class="o">&lt;=</span> <span class="n">cutoff</span>
-    <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_operators</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">dark_mask</span><span class="p">))</span>
-    <span class="n">nullspace</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">dark_mask</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">singular_values</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">))</span>
+    <span class="n">nullspace</span> <span class="o">=</span> <span class="n">vh</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">rank</span><span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">nullspace</span>
 
 
