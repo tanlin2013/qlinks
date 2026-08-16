@@ -61,7 +61,7 @@ can take several minutes.  Run it on the server with:
 QLINKS_EVIDENCE_RUN_ID=jump_bridge_p0 \
 QLINKS_NUM_THREADS=8 \
 QLINKS_DOCKER_MEMORY_LIMIT=64g \
-scripts/docker_run_evidence_job.sh jump_bridge_p0 \
+scripts/docker/docker_run_evidence_job.sh jump_bridge_p0 \
     --stage compute
 ```
 
@@ -83,7 +83,7 @@ budget:
 QLINKS_EVIDENCE_RUN_ID=jump_bridge_liouvillian_lr \
 QLINKS_NUM_THREADS=8 \
 QLINKS_DOCKER_MEMORY_LIMIT=64g \
-scripts/docker_run_evidence_job.sh jump_bridge_liouvillian \
+scripts/docker/docker_run_evidence_job.sh jump_bridge_liouvillian \
     --stage compute \
     --method largest-real \
     --maxiter 20000 \
@@ -105,7 +105,7 @@ potential sparse-LU memory cost explicit:
 QLINKS_EVIDENCE_RUN_ID=jump_bridge_liouvillian_si \
 QLINKS_NUM_THREADS=8 \
 QLINKS_DOCKER_MEMORY_LIMIT=128g \
-scripts/docker_run_evidence_job.sh jump_bridge_liouvillian \
+scripts/docker/docker_run_evidence_job.sh jump_bridge_liouvillian \
     --stage compute \
     --case square_qdm_4x4_single \
     --family A_retargeted_single \

@@ -8,7 +8,7 @@ import pathlib
 import shlex
 import sys
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
@@ -39,7 +39,7 @@ def _verify_tn_extra() -> None:
     for module_name in ("autograd", "llvmlite", "numba", "quimb"):
         _require_import(module_name, extra="tn")
 
-    from scripts.verify_tn_environment import main as verify_tn_environment
+    from verify_tn_environment import main as verify_tn_environment
 
     verify_tn_environment()
 

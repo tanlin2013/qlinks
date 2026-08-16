@@ -29,7 +29,7 @@ case "${lane}" in
     ;;
   *)
     cat >&2 <<USAGE
-Usage: scripts/test.sh [fast|integration|scientific|all|manual|gpu] [pytest arguments...]
+Usage: scripts/dev/test.sh [fast|integration|scientific|all|manual|gpu] [pytest arguments...]
 
 The default lane is 'fast'. Set QLINKS_TEST_COVERAGE=0 or 1 to override the
 lane's coverage default.

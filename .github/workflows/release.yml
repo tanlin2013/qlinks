@@ -35,7 +35,7 @@ jobs:
 
       - name: Read versions
         id: versions
-        run: python scripts/ci_versions.py
+        run: python .github/scripts/ci_versions.py
 
   package:
     name: Build and validate distributions
@@ -56,11 +56,11 @@ jobs:
           python-version: ${{ needs.versions.outputs.default-python }}
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: release-package
-          compile-paths: qlinks tests scripts
+          compile-paths: qlinks tests scripts .github/scripts
           install-command: uv sync --locked --no-default-groups
 
       - name: Validate release metadata
-        run: uv run --no-default-groups python scripts/validate_release.py
+        run: uv run --no-default-groups python .github/scripts/validate_release.py
 
       - name: Check uv lockfile
         run: uv lock --check

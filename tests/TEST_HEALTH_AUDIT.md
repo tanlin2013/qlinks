@@ -286,7 +286,7 @@ Not every scaling-named test should become scientific: toy-matrix algebraic unit
 
 ### P0 — Manual visual tests are skipped, not classified
 
-Two manual visualization modules use module-level `skipif(QLINKS_SHOW_PLOTS != 1)` but are not marked `manual`. This produces **22 manual visual skips inside the default lane**. They should carry both the `manual` marker and the environment guard, so `scripts/test.sh fast` deselects them rather than collecting/skipping them.
+Two manual visualization modules use module-level `skipif(QLINKS_SHOW_PLOTS != 1)` but are not marked `manual`. This produces **22 manual visual skips inside the default lane**. They should carry both the `manual` marker and the environment guard, so `scripts/dev/test.sh fast` deselects them rather than collecting/skipping them.
 
 ### P0 — Deprecated open-system code is over-tested white-box style
 

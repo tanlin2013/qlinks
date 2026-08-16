@@ -9,7 +9,7 @@ import tomllib
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
 def read_tool_versions() -> dict[str, str]:

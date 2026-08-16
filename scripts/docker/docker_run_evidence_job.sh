@@ -2,18 +2,18 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
+REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd -P)"
 
 IMAGE_NAME="${QLINKS_DOCKER_IMAGE:-tanlin2013/qlinks:notebook}"
 JOB_NAME="${1:-}"
 if [[ -z "${JOB_NAME}" ]]; then
     cat >&2 <<'USAGE'
-Usage: scripts/docker_run_evidence_job.sh spin1|qdm|jump_bridge_p0|jump_bridge_liouvillian [job-script-args...]
+Usage: scripts/docker/docker_run_evidence_job.sh spin1|qdm|jump_bridge_p0|jump_bridge_liouvillian [job-script-args...]
 
 Examples:
-  scripts/docker_run_evidence_job.sh spin1 --profile known
+  scripts/docker/docker_run_evidence_job.sh spin1 --profile known
   QLINKS_NUM_THREADS=16 QLINKS_DOCKER_MEMORY_LIMIT=400g \
-    scripts/docker_run_evidence_job.sh qdm --profile production --stage compute \
+    scripts/docker/docker_run_evidence_job.sh qdm --profile production --stage compute \
       --transport-repeats 1,2,3 --ed-repeats 1,2 \
       --phase-values 0,0.025,0.05,0.075,0.10 \
       --positive-phase-values 0.025,0.05,0.075,0.10 \
@@ -27,7 +27,7 @@ Examples:
       --finite-beta-samples 8 --finite-beta-beta-max 0.25 \
       --finite-beta-beta-points 41 --transfer-max-length 256 --timeout -1
   QLINKS_NUM_THREADS=16 QLINKS_DOCKER_MEMORY_LIMIT=400g \
-    scripts/docker_run_evidence_job.sh spin1 --profile production --stage compute \
+    scripts/docker/docker_run_evidence_job.sh spin1 --profile production --stage compute \
       --large-size-sizes 14 --large-size-eigenpair-budgets 10000 \
       --large-size-baseline-data-dir experimental/data/evidence_jobs/spin1_production_20260806T074051Z \
       --large-size-safe-fixed-widths 0.75,1.0 --large-size-quarter-window \
@@ -35,16 +35,16 @@ Examples:
       --large-size-family-kappa-values 0.20 --large-size-family-eigenpairs 8192 \
       --representative-kappa 0.1 \
       --principal-kappa-values 0.05,0.10,0.15,0.20 --timeout -1
-  scripts/docker_run_evidence_job.sh spin1 \
+  scripts/docker/docker_run_evidence_job.sh spin1 \
       --stage render \
       --source-data-dir experimental/data/evidence_jobs/spin1_production \
       --use-tex \
       --figure-formats pdf,svg \
       --export-dir output/spin1_production
   QLINKS_NUM_THREADS=8 QLINKS_DOCKER_MEMORY_LIMIT=64g \
-    scripts/docker_run_evidence_job.sh jump_bridge_p0 --stage compute
+    scripts/docker/docker_run_evidence_job.sh jump_bridge_p0 --stage compute
   QLINKS_NUM_THREADS=8 QLINKS_DOCKER_MEMORY_LIMIT=64g \
-    scripts/docker_run_evidence_job.sh jump_bridge_liouvillian \
+    scripts/docker/docker_run_evidence_job.sh jump_bridge_liouvillian \
       --stage compute --method largest-real \
       --family A_retargeted_single --family ML --family final
 

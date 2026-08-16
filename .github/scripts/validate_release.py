@@ -8,7 +8,7 @@ import re
 import tomllib
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 TAG_VERSION_RE = re.compile(r"^v(?P<version>[0-9]+(?:\.[0-9]+){1,2}(?:[a-zA-Z0-9_.!+-]+)?)$")
 
 

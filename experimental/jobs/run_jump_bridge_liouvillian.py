@@ -24,7 +24,7 @@ def main() -> None:
         "--stage",
         choices=("compute", "all"),
         default="compute",
-        help="Accepted for compatibility with scripts/docker_run_evidence_job.sh.",
+        help="Accepted for compatibility with scripts/docker/docker_run_evidence_job.sh.",
     )
     parser.add_argument(
         "--case",

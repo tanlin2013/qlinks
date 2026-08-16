@@ -68,7 +68,7 @@ RUN set -- --no-default-groups && \
         fi; \
     done && \
     uv sync --locked "$@" && \
-    .venv/bin/python scripts/verify_optional_environment.py --extras "${QLINKS_EXTRAS}"
+    .venv/bin/python scripts/docker/verify_optional_environment.py --extras "${QLINKS_EXTRAS}"
 
 # PyCharm can use the project virtual environment's Python directly.
 CMD ["python"]

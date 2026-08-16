@@ -190,10 +190,10 @@ Tests are classified by purpose, not by directory size or implementation object 
 Use:
 
 ```bash
-scripts/test.sh fast
-scripts/test.sh integration
-scripts/test.sh scientific
-scripts/test.sh all
+scripts/dev/test.sh fast
+scripts/dev/test.sh integration
+scripts/dev/test.sh scientific
+scripts/dev/test.sh all
 ```
 
 See `docs/contributing/5.-testing.md` for lane details.
@@ -261,7 +261,7 @@ Before presenting a change:
 3. Run `python tools/repository_health.py --check` for package, workflow, or repository-structure changes.
 4. Run `python tools/test_health.py --check` for broad test changes.
 5. Run the narrowest relevant test lane.
-6. Run `scripts/test.sh fast` for package changes unless the environment lacks a documented
+6. Run `scripts/dev/test.sh fast` for package changes unless the environment lacks a documented
    optional dependency.
 7. For scientific changes, report the exact command, seed, system size, tolerance, and
    whether the result is a smoke test or production validation.
