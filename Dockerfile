@@ -10,7 +10,6 @@ LABEL maintainer="TaoLin tanlin2013@gmail.com"
 
 ARG UV_VERSION=0.12.0
 ARG QLINKS_EXTRAS=
-ARG QLINKS_NOTEBOOK_PACKAGES="jupyterlab>=4,<5 ipykernel>=6,<7"
 ARG TARGETPLATFORM
 ARG TARGETARCH
 
@@ -18,8 +17,8 @@ ARG TARGETARCH
 # Tensor-network extras are supported on Python < 3.14 because quimb/autograd/numba
 # are currently constrained that way in pyproject.toml. Build a TN image explicitly with
 # --build-arg PYTHON_VERSION=3.13 --build-arg QLINKS_EXTRAS=tn.
-# The Docker-only ``notebook`` feature installs JupyterLab and ipykernel without
-# making notebook tools part of qlinks' normal runtime dependency graph.
+# ``notebook`` is a Docker feature backed by qlinks' non-default uv dependency group;
+# other feature names map to project extras.
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -46,22 +45,27 @@ COPY pyproject.toml uv.lock README.md ./
 RUN echo "Building qlinks for ${TARGETPLATFORM:-default} (${TARGETARCH:-default})" && \
     echo "Optional Docker features/extras: ${QLINKS_EXTRAS:-none}" && \
     uv lock --check && \
-    set -- && \
-    for extra in ${QLINKS_EXTRAS}; do \
-        if [ "${extra}" != "notebook" ]; then set -- "$@" --extra "${extra}"; fi; \
+    set -- --no-default-groups && \
+    for feature in ${QLINKS_EXTRAS}; do \
+        if [ "${feature}" = "notebook" ]; then \
+            set -- "$@" --group notebook; \
+        else \
+            set -- "$@" --extra "${feature}"; \
+        fi; \
     done && \
-    uv sync --locked --no-default-groups --no-install-project "$@" && \
-    if printf ' %s ' "${QLINKS_EXTRAS}" | grep -q ' notebook '; then \
-        uv pip install --python .venv/bin/python ${QLINKS_NOTEBOOK_PACKAGES}; \
-    fi
+    uv sync --locked --no-install-project "$@"
 
 COPY . .
-RUN set -- && \
-    for extra in ${QLINKS_EXTRAS}; do \
-        if [ "${extra}" != "notebook" ]; then set -- "$@" --extra "${extra}"; fi; \
+RUN set -- --no-default-groups && \
+    for feature in ${QLINKS_EXTRAS}; do \
+        if [ "${feature}" = "notebook" ]; then \
+            set -- "$@" --group notebook; \
+        else \
+            set -- "$@" --extra "${feature}"; \
+        fi; \
     done && \
-    uv sync --locked --no-default-groups "$@" && \
-    uv run --no-default-groups python scripts/verify_optional_environment.py --extras "${QLINKS_EXTRAS}"
+    uv sync --locked "$@" && \
+    .venv/bin/python scripts/verify_optional_environment.py --extras "${QLINKS_EXTRAS}"
 
 # PyCharm can use the project virtual environment's Python directly.
 CMD ["python"]
