@@ -49,7 +49,7 @@ jobs:
           system-packages: >-
             build-essential gfortran libblas-dev liblapack-dev pkg-config
             libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
-          install-command: uv sync --locked --extra distributed --extra storage --extra drawing
+          install-command: uv sync --locked --extra storage --extra drawing
 
       - name: Run fast test lane
         env:
@@ -118,13 +118,13 @@ jobs:
           system-packages: >-
             build-essential gfortran libblas-dev liblapack-dev pkg-config
             libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
-          install-command: uv sync --locked --extra distributed --extra storage --extra drawing
+          install-command: uv sync --locked --extra storage --extra drawing
 
       - name: Run integration test lane
         run: scripts/test.sh integration
 
   distributed:
-    name: Ray backend (Python 3.13)
+    name: Ray backend (Python ${{ needs.versions.outputs.default-python }})
     needs: versions
     runs-on: ubuntu-latest
 
@@ -134,13 +134,16 @@ jobs:
       - name: Set up Python and uv
         uses: ./.github/actions/setup-python-uv
         with:
-          python-version: "3.13"
+          python-version: ${{ needs.versions.outputs.default-python }}
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-distributed
           compile-paths: qlinks tests
           install-command: uv sync --locked --extra distributed
 
       - name: Run Ray integration test
+        env:
+          # Ray >=2.47 otherwise re-enters workers through `uv run`; see ray-project/ray#53848.
+          RAY_ENABLE_UV_RUN_RUNTIME_ENV: "0"
         run: scripts/test.sh integration tests/test_distributed.py
 
   tensor-network:
