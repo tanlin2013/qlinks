@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       default-python: ${{ steps.versions.outputs.default-python }}
-      poetry-version: ${{ steps.versions.outputs.poetry-version }}
+      uv-version: ${{ steps.versions.outputs.uv-version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,17 +30,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python and Poetry
-        uses: ./.github/actions/setup-python-poetry
+      - name: Set up Python and uv
+        uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ needs.versions.outputs.default-python }}
-          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: docs
           system-packages: build-essential pkg-config libxml2-dev libxslt1-dev zlib1g-dev pandoc
-          install-command: poetry install -vvv --with docs --sync
+          install-command: uv sync --locked --no-default-groups --group docs
 
       - name: Build Sphinx doc and architecture diagnosis
-        run: poetry run make -C docs html
+        run: uv run --no-default-groups --group docs make -C docs html
 
       - name: Upload documentation site
         uses: actions/upload-artifact@v4
