@@ -8,38 +8,33 @@ authors = [
 license = "MIT"
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
-dynamic = [ "dependencies" ]
-
-[tool.poetry.dependencies]
-tqdm = "^4.63.0"
-rich = "^15.0.0"
-numpy = ">=2.2,<2.4"
-scipy = "^1.15.0"
-pandas = "^3.0.0"
-networkx = "^3.0"
-matplotlib = "^3.6.3"
-pyvis = { version = "^0.3.0", optional = true }
-igraph = { version = "^1.0.0", optional = true }
-pycairo = { version = "^1.25.0", optional = true }  # for igraph plotting
-plotly = { version = "^6.0.0", optional = true }
-ortools = { version = "^9.11.0", optional = true }
-pynauty = { version = "^2.8.6", optional = true }
-ray = { version = "2.55.0", optional = true }
-h5py = { version = "^3.8.0", optional = true }
-pyarrow = { version = "^23.0.0", optional = true }  # for parquet IO
-quimb = { version = "^1.14.0", optional = true, python = ">=3.11,<3.14" }  # tensor-network backend
-autograd = { version = "^1.9.1", optional = true, python = ">=3.11,<3.14" }  # default TN autodiff backend
-numba = { version = ">=0.62,<0.63", optional = true, python = ">=3.11,<3.14" }  # Intel-mac-compatible JIT backend
-llvmlite = { version = ">=0.45,<0.46", optional = true, python = ">=3.11,<3.14" }  # Intel-mac-compatible LLVM runtime
-cupy-cuda12x = { version = "^14.0.0", optional = true, markers = "platform_system == 'Linux' and platform_machine == 'x86_64'" }
+dependencies = [
+    "tqdm>=4.63,<5",
+    "rich>=15,<16",
+    "numpy>=2.2,<2.4",
+    "scipy>=1.15,<2",
+    "pandas>=3,<4",
+    "networkx>=3,<4",
+    "matplotlib>=3.6.3,<4",
+]
 
 [project.optional-dependencies]
-automorphism = ["pynauty"]
-cpsat = ["ortools"]
-cupy = ["cupy-cuda12x"]
-distributed = ["ray"]
-drawing = ["pyvis", "plotly", "pycairo", "igraph"]
-storage = ["h5py", "pyarrow"]
+automorphism = ["pynauty>=2.8.6,<3"]
+cpsat = ["ortools>=9.11,<10"]
+cupy = [
+    "cupy-cuda12x>=14,<15; platform_system == 'Linux' and platform_machine == 'x86_64'",
+]
+distributed = ["ray==2.55.0"]
+drawing = [
+    "pyvis>=0.3,<0.4",
+    "plotly>=6,<7",
+    "pycairo>=1.25,<2",
+    "igraph>=1,<2",
+]
+storage = [
+    "h5py>=3.8,<4",
+    "pyarrow>=23,<24",
+]
 tn = [
     "quimb>=1.14,<2; python_version < '3.14'",
     "autograd>=1.9.1,<2; python_version < '3.14'",
@@ -47,44 +42,68 @@ tn = [
     "llvmlite>=0.45,<0.46; python_version < '3.14'",
 ]
 
-[tool.poetry.group.dev.dependencies]
-pre-commit = "^4.0.0"
-commitizen = "^4.0.0"
-vulture = "^2.4"
-bandit = "^1.7.4"
-safety = "^3.0.0"
-isort = "8.0.1"
-flake8-bugbear = "^25.0.0"
-Flake8-pyproject = "^1.2.2"
-black = { version = "26.5.1", extras = ["d", "jupyter"] }
-mypy = "^1.0.0"
-jupyter = "^1.0.0"
-jupyterlab = "^3.0.0"
-pytest = "^9.0.0"
-pytest-cov = "^7.0.0"
-pytest-mock = "^3.9.0"
-hypothesis = { version = "^6.68.2", extras = ["numpy"] }
-pep8-naming = "^0.14.0"
-cruft = "^2.12.0"
-pandas-stubs = "^3.0.0"
-scipy-stubs = "^1.16.0"
-
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-sphinx = "^7.0.0"
-sphinx-book-theme = "^1.0.0"
-nbsphinx = "^0.9.0"
-m2r2 = "^0.3.2"
-docutils = "0.20.1"
-lxml = { version = "^5.0.0", extras = ["html_clean"]}
-#portray = "^1.3.0"
+[dependency-groups]
+dev = [
+    "pre-commit>=4,<5",
+    "commitizen>=4,<5",
+    "vulture>=2.4,<3",
+    "bandit>=1.7.4,<2",
+    "safety>=3,<4",
+    "ruff==0.16.0",
+    "mypy>=1,<2",
+    "pytest>=9,<10",
+    "pytest-cov>=7,<8",
+    "pytest-mock>=3.9,<4",
+    "hypothesis[numpy]>=6.68.2,<7",
+    "cruft>=2.12,<3",
+    "pandas-stubs>=3,<4",
+    "scipy-stubs>=1.16,<2",
+]
+notebook = [
+    "jupyter>=1,<2",
+    "jupyterlab>=4,<5",
+]
+docs = [
+    "sphinx>=7,<8",
+    "sphinx-book-theme>=1,<2",
+    "nbsphinx>=0.9,<1",
+    "m2r2>=0.3.2,<0.4",
+    "docutils==0.20.1",
+    "lxml[html_clean]>=5,<6",
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=2.0,<3"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.uv]
+required-version = ">=0.12,<0.13"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = [
+    "docs/build",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "B",
+    "N",
+]
+ignore = [
+    "B018",
+    "B905",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["N806"]
+
+[tool.ruff.format]
+docstring-code-format = false
 
 [tool.pytest.ini_options]
 addopts = [
@@ -101,27 +120,6 @@ markers = [
     "scientific: expensive validation of a research claim; scheduled or explicitly dispatched",
     "manual: tests requiring explicit local activation or human inspection",
     "gpu: tests requiring a real CUDA-capable GPU runtime",
-]
-
-[tool.black]
-line-length = 100
-target-version = ["py311"]
-
-[tool.isort]
-profile = "black"
-line_length = 100
-py_version = 311
-
-[tool.flake8]
-count = true
-max-line-length = 100
-ignore = [
-    "E203",
-    "E704",
-    "W503",
-]
-per-file-ignores = [
-    "tests/*:N806",
 ]
 
 [tool.mypy]

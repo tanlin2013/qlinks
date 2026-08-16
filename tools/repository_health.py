@@ -256,7 +256,7 @@ def _raw_forbidden_import_violations(
         module = occurrence.target
         if module == "experimental" or module.startswith("experimental."):
             violations.append(
-                "promotion boundary: " f"{occurrence.path}:{occurrence.line} imports {module}"
+                f"promotion boundary: {occurrence.path}:{occurrence.line} imports {module}"
             )
     return violations
 
@@ -410,16 +410,16 @@ def _guardrail_wiring_findings(root: Path) -> list[str]:
         )
 
     required_hook_ids = {
-        "black",
         "check-added-large-files",
         "commitizen",
         "commitizen-branch",
         "detect-private-key",
-        "flake8",
-        "isort",
         "nbstripout",
         "repository-health",
+        "ruff-check",
+        "ruff-format",
         "test-health",
+        "uv-lock-check",
     }
     for hook_id in sorted(required_hook_ids):
         if hook_id not in active_hook_ids:

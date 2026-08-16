@@ -1,5 +1,5 @@
 #!/bin/bash
 set -euxo pipefail
 
-poetry run isort qlinks/ tests/
-poetry run black qlinks/ tests/
+uv run ruff check --fix qlinks/ tests/
+uv run ruff format qlinks/ tests/

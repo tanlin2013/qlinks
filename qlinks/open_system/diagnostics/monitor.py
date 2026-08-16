@@ -192,7 +192,7 @@ def diagnose_monitor_kernel_closure(
     for monitor in monitor_sparse:
         if monitor.shape != (dim, dim):
             raise ValueError(
-                "Every monitor must have shape " "(len(target_state), len(target_state))."
+                "Every monitor must have shape (len(target_state), len(target_state))."
             )
 
     target_monitor_vectors = tuple(monitor @ target for monitor in monitor_sparse)

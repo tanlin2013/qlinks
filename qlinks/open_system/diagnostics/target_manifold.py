@@ -28,7 +28,7 @@ def _orthonormal_target_basis(
                 matrix = matrix.T
             else:
                 raise ValueError(
-                    "target states must have shape (dim, n_states) or " "(n_states, dim)."
+                    "target states must have shape (dim, n_states) or (n_states, dim)."
                 )
         elif matrix.shape[0] < matrix.shape[1]:
             # Common notebook convention for a small manifold is one state per row.

@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       default-python: ${{ steps.versions.outputs.default-python }}
-      poetry-version: ${{ steps.versions.outputs.poetry-version }}
+      uv-version: ${{ steps.versions.outputs.uv-version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,14 +30,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python and Poetry
-        uses: ./.github/actions/setup-python-poetry
+      - name: Set up Python and uv
+        uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ needs.versions.outputs.default-python }}
-          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: lint-blocking
           system-packages: build-essential pkg-config libxml2-dev libxslt1-dev zlib1g-dev
-          install-command: poetry install -vvv --with dev --sync
+          install-command: uv sync --locked
 
       - name: Blocking lint
         run: ./scripts/lint_blocking.sh
@@ -52,14 +52,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python and Poetry
-        uses: ./.github/actions/setup-python-poetry
+      - name: Set up Python and uv
+        uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ needs.versions.outputs.default-python }}
-          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: lint-advisory
           system-packages: build-essential pkg-config libxml2-dev libxslt1-dev zlib1g-dev
-          install-command: poetry install -vvv --with dev --sync
+          install-command: uv sync --locked
 
       - name: Advisory lint
         run: ./scripts/lint_advisory.sh

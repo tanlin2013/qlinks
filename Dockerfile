@@ -8,9 +8,8 @@ FROM python:${PYTHON_VERSION}-slim-bookworm AS runtime
 
 LABEL maintainer="TaoLin tanlin2013@gmail.com"
 
-ARG POETRY_VERSION=2.3.4
+ARG UV_VERSION=0.12.0
 ARG QLINKS_EXTRAS=
-ARG QLINKS_NOTEBOOK_PACKAGES="jupyterlab>=4,<5 ipykernel>=6,<7"
 ARG TARGETPLATFORM
 ARG TARGETARCH
 
@@ -18,14 +17,13 @@ ARG TARGETARCH
 # Tensor-network extras are supported on Python < 3.14 because quimb/autograd/numba
 # are currently constrained that way in pyproject.toml. Build a TN image explicitly with
 # --build-arg PYTHON_VERSION=3.13 --build-arg QLINKS_EXTRAS=tn.
-# The Docker-only ``notebook`` feature installs JupyterLab and ipykernel without
-# making notebook tools part of qlinks' normal runtime dependency graph.
+# ``notebook`` is a Docker feature backed by qlinks' non-default uv dependency group;
+# other feature names map to project extras.
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_INSTALLER_ONLY_BINARY="numpy,llvmlite,numba"
+    UV_LINK_MODE=copy \
+    PATH="/workspace/qlinks/.venv/bin:${PATH}"
 
 WORKDIR /workspace/qlinks
 
@@ -36,39 +34,41 @@ RUN apt-get update && \
         libblas-dev \
         liblapack-dev \
         libcairo2-dev \
-        pkg-config && \
+        libxml2-dev \
+        libxslt1-dev \
+        pkg-config \
+        zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*
 
-RUN python -m pip install --upgrade pip wheel setuptools && \
-    python -m pip install "poetry==${POETRY_VERSION}"
+RUN python -m pip install --no-cache-dir "uv==${UV_VERSION}"
 
-# poetry.lock contains hashes for distributions on all supported platforms; it
-# does not copy a macOS wheel into Linux. Poetry evaluates the locked markers
-# and chooses the wheel matching TARGETPLATFORM/TARGETARCH at install time.
-COPY pyproject.toml poetry.lock README.md ./
+# uv.lock is cross-platform; uv evaluates markers and chooses distributions for
+# the active Python/platform when synchronizing the image environment.
+COPY pyproject.toml uv.lock README.md ./
 RUN echo "Building qlinks for ${TARGETPLATFORM:-default} (${TARGETARCH:-default})" && \
     echo "Optional Docker features/extras: ${QLINKS_EXTRAS:-none}" && \
-    poetry check --lock && \
-    QLINKS_POETRY_EXTRAS="$(QLINKS_EXTRAS="${QLINKS_EXTRAS}" python -c \
-        'import os, shlex; print(" ".join(x for x in shlex.split(os.environ.get("QLINKS_EXTRAS", "")) if x != "notebook"))')" && \
-    if [ -n "${QLINKS_POETRY_EXTRAS}" ]; then \
-        poetry install --only main --extras "${QLINKS_POETRY_EXTRAS}" --no-root --no-ansi; \
-    else \
-        poetry install --only main --no-root --no-ansi; \
-    fi && \
-    if printf ' %s ' "${QLINKS_EXTRAS}" | grep -q ' notebook '; then \
-        python -m pip install --no-cache-dir ${QLINKS_NOTEBOOK_PACKAGES}; \
-    fi
+    uv lock --check && \
+    set -- --no-default-groups && \
+    for feature in ${QLINKS_EXTRAS}; do \
+        if [ "${feature}" = "notebook" ]; then \
+            set -- "$@" --group notebook; \
+        else \
+            set -- "$@" --extra "${feature}"; \
+        fi; \
+    done && \
+    uv sync --locked --no-install-project "$@"
 
 COPY . .
-RUN QLINKS_POETRY_EXTRAS="$(QLINKS_EXTRAS="${QLINKS_EXTRAS}" python -c \
-        'import os, shlex; print(" ".join(x for x in shlex.split(os.environ.get("QLINKS_EXTRAS", "")) if x != "notebook"))')" && \
-    if [ -n "${QLINKS_POETRY_EXTRAS}" ]; then \
-        poetry install --only main --extras "${QLINKS_POETRY_EXTRAS}" --no-ansi; \
-    else \
-        poetry install --only main --no-ansi; \
-    fi && \
-    python scripts/verify_optional_environment.py --extras "${QLINKS_EXTRAS}"
+RUN set -- --no-default-groups && \
+    for feature in ${QLINKS_EXTRAS}; do \
+        if [ "${feature}" = "notebook" ]; then \
+            set -- "$@" --group notebook; \
+        else \
+            set -- "$@" --extra "${feature}"; \
+        fi; \
+    done && \
+    uv sync --locked "$@" && \
+    .venv/bin/python scripts/verify_optional_environment.py --extras "${QLINKS_EXTRAS}"
 
-# PyCharm can use /usr/local/bin/python directly as the Docker interpreter.
+# PyCharm can use the project virtual environment's Python directly.
 CMD ["python"]

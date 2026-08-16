@@ -401,7 +401,7 @@ class LatticeGraph:
 
         if ids != expected:
             raise ValueError(
-                "Plaquette ids must be consecutive and ordered as " "0, 1, ..., num_plaquettes - 1."
+                "Plaquette ids must be consecutive and ordered as 0, 1, ..., num_plaquettes - 1."
             )
 
         for plaq in self.plaquettes:

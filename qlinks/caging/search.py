@@ -85,7 +85,7 @@ class CageSearchConfig:
             "custom",
         }:
             raise ValueError(
-                "search_type must be 'type1', 'type2', " "'type1_and_type2', or 'custom'."
+                "search_type must be 'type1', 'type2', 'type1_and_type2', or 'custom'."
             )
 
 

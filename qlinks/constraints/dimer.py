@@ -112,8 +112,7 @@ class DimerCoveringConstraint(BaseConstraint):
             name=self.name,
             residual=actual,
             message=(
-                f"{self.name}(site={self.site_id}): "
-                f"count={actual}, required={self.required_count}"
+                f"{self.name}(site={self.site_id}): count={actual}, required={self.required_count}"
             ),
         )
 

@@ -184,8 +184,7 @@ def _validate_record_signatures(
     for record in records[1:]:
         if tuple(int(value) for value in record.signature) != signature:
             raise ValueError(
-                "all cage records must have the same signature when "
-                "validate_record_signature=True."
+                "all cage records must have the same signature when validate_record_signature=True."
             )
 
     return signature

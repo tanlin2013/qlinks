@@ -319,13 +319,13 @@ Generate the interactive import-architecture report without rebuilding the rest
 of the documentation:
 
 ```bash
-poetry run make -C docs architecture
+uv run make -C docs architecture
 ```
 
 Open it directly from Python:
 
 ```bash
-poetry run python tools/architecture_report.py --open
+uv run python tools/architecture_report.py --open
 ```
 
 The report is written to

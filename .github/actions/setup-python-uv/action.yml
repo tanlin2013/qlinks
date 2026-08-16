@@ -1,0 +1,60 @@
+name: Setup Python and uv
+description: Set up Python, uv, system dependencies, and the project environment.
+
+inputs:
+  python-version:
+    description: Python version to install.
+    required: true
+  uv-version:
+    description: uv version to install.
+    required: true
+  cache-prefix:
+    description: Cache suffix for this workflow/job.
+    required: true
+  system-packages:
+    description: Whitespace-separated apt packages to install before project dependencies.
+    required: false
+    default: ""
+  install-command:
+    description: Optional command used to sync project dependencies after setup.
+    required: false
+    default: ""
+  compile-paths:
+    description: Optional whitespace-separated paths to compile before dependency installation.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Compile source tree
+      if: inputs.compile-paths != ''
+      shell: bash
+      run: python -m compileall -q ${{ inputs.compile-paths }}
+
+    - name: Install system dependencies
+      if: inputs.system-packages != ''
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ${{ inputs.system-packages }}
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      with:
+        version: ${{ inputs.uv-version }}
+        enable-cache: true
+        cache-dependency-glob: |
+          pyproject.toml
+          uv.lock
+        cache-suffix: ${{ inputs.cache-prefix }}-py${{ inputs.python-version }}
+
+    - name: Install dependencies
+      if: inputs.install-command != ''
+      shell: bash
+      run: ${{ inputs.install-command }}

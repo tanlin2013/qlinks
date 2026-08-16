@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       default-python: ${{ steps.versions.outputs.default-python }}
-      poetry-version: ${{ steps.versions.outputs.poetry-version }}
+      uv-version: ${{ steps.versions.outputs.uv-version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -95,7 +95,7 @@ jobs:
           push: true
           build-args: |
             PYTHON_VERSION=${{ matrix.python-version }}
-            POETRY_VERSION=${{ needs.versions.outputs.poetry-version }}
+            UV_VERSION=${{ needs.versions.outputs.uv-version }}
             QLINKS_EXTRAS=${{ matrix.extras }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -110,7 +110,7 @@ jobs:
           load: true
           build-args: |
             PYTHON_VERSION=${{ matrix.python-version }}
-            POETRY_VERSION=${{ needs.versions.outputs.poetry-version }}
+            UV_VERSION=${{ needs.versions.outputs.uv-version }}
             QLINKS_EXTRAS=${{ matrix.extras }}
           tags: qlinks:ci-${{ matrix.variant }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -1054,7 +1054,7 @@ def diagnose_dark_subspace(
     for jump in jumps_sparse:
         if jump.shape != (dim, dim):
             raise ValueError(
-                "Every jump operator must have shape " "(len(target_state), len(target_state))."
+                "Every jump operator must have shape (len(target_state), len(target_state))."
             )
 
     target_jump_vectors = tuple(jump @ target for jump in jumps_sparse)

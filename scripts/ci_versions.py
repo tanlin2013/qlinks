@@ -27,7 +27,7 @@ def read_tool_versions() -> dict[str, str]:
 
         versions[parts[0]] = parts[1]
 
-    for required in ("python", "poetry"):
+    for required in ("python", "uv"):
         if required not in versions:
             raise SystemExit(f"Missing {required!r} in .tool-versions")
 
@@ -79,7 +79,7 @@ def main() -> None:
     requires_python = read_requires_python()
 
     default_python = tool_versions["python"]
-    poetry_version = tool_versions["poetry"]
+    uv_version = tool_versions["uv"]
     python_matrix = matrix_from_requires_python(requires_python)
     compatibility_python_matrix = [
         version for version in python_matrix if Version(version) != Version(default_python)
@@ -95,7 +95,7 @@ def main() -> None:
     write_github_output(
         {
             "default-python": default_python,
-            "poetry-version": poetry_version,
+            "uv-version": uv_version,
             "python-matrix": json.dumps(python_matrix),
             "compatibility-python-matrix": json.dumps(compatibility_python_matrix),
         }

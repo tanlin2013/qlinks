@@ -57,6 +57,7 @@ def square_for_distributed_test(value: int) -> int:
     return value * value
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(not ray_available, reason="Ray is not installed.")
 def test_map_tasks_ray_preserves_order() -> None:
     results = map_tasks(

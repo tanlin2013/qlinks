@@ -36,7 +36,7 @@ def _require_numpy_constraint() -> None:
     if np.lib.NumpyVersion(np.__version__) >= "2.4.0":
         raise RuntimeError(
             "The TN environment requires NumPy < 2.4 for Numba 0.62; "
-            f"found NumPy {np.__version__}. Regenerate poetry.lock with the "
+            f"found NumPy {np.__version__}. Regenerate uv.lock with the "
             "locked TN dependency constraints."
         )
 

@@ -36,7 +36,7 @@ def basis_configs_from_basis(basis: Any) -> NDArray[np.integer]:
         )
 
     if configs.ndim != 2:
-        raise ValueError("basis configurations must have shape " "(n_basis, n_variables).")
+        raise ValueError("basis configurations must have shape (n_basis, n_variables).")
 
     return configs
 

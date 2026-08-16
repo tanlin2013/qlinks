@@ -53,8 +53,8 @@ if [[ "${coverage_enabled}" == "1" ]]; then
   pytest_args+=(--cov=qlinks --cov-report=term-missing)
 fi
 
-poetry run pytest "${pytest_args[@]}" "$@"
+uv run pytest "${pytest_args[@]}" "$@"
 
 if [[ "${coverage_enabled}" == "1" && "${QLINKS_COVERAGE_XML:-0}" == "1" ]]; then
-  poetry run coverage xml
+  uv run coverage xml
 fi

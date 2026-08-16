@@ -205,7 +205,7 @@ def _annotate_collective_cancellations(
         groups = _group_reports_by_local_pattern(candidates)
     else:
         raise ValueError(
-            "Unknown collective_cancellation_mode: " f"{config.collective_cancellation_mode!r}"
+            f"Unknown collective_cancellation_mode: {config.collective_cancellation_mode!r}"
         )
 
     collective_reports: list[CollectiveCancellationReport] = []
@@ -246,7 +246,7 @@ def _annotate_collective_cancellations(
             )
         else:
             raise ValueError(
-                "Unknown collective_cancellation_mode: " f"{config.collective_cancellation_mode!r}"
+                f"Unknown collective_cancellation_mode: {config.collective_cancellation_mode!r}"
             )
 
         if collective is None:

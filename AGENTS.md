@@ -253,9 +253,9 @@ normalization, tolerance, and failure interpretation.
 
 Before presenting a change:
 
-1. Run `flake8` on every touched Python file, or the repository-wide flake8 command when the
-   change is broad. A Python patch is not lint-validated until flake8 passes with no errors.
-2. Run Black and isort when feasible. For a heavy scientific/refactor task they may be deferred
+1. Run `uv run ruff check` on every touched Python file, or repository-wide when the
+   change is broad. A Python change is not lint-validated until Ruff passes with no errors.
+2. Run `uv run ruff format` when feasible. For a heavy scientific/refactor task they may be deferred
    to the maintainer, but the handoff must say explicitly that they were not run. Do not defer
    flake8 for ordinary Python patches.
 3. Run `python tools/repository_health.py --check` for package, workflow, or repository-structure changes.

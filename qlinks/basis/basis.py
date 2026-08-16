@@ -101,8 +101,7 @@ class Basis:
 
         if states.shape[1] != self.layout.n_variables:
             raise ValueError(
-                f"Expected states with {self.layout.n_variables} variables, "
-                f"got {states.shape[1]}."
+                f"Expected states with {self.layout.n_variables} variables, got {states.shape[1]}."
             )
 
         self.layout.validate_batch(states)

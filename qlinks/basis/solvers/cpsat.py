@@ -171,7 +171,7 @@ class CPSATBasisSolver:
             return
 
         raise NotImplementedError(
-            f"CPSATBasisSolver does not support constraint type " f"{type(constraint).__name__}."
+            f"CPSATBasisSolver does not support constraint type {type(constraint).__name__}."
         )
 
     def _add_sector(self, model, variables, sector: SectorCondition) -> None:
@@ -204,7 +204,7 @@ class CPSATBasisSolver:
             return
 
         raise NotImplementedError(
-            f"CPSATBasisSolver does not support sector type " f"{type(sector).__name__}."
+            f"CPSATBasisSolver does not support sector type {type(sector).__name__}."
         )
 
 

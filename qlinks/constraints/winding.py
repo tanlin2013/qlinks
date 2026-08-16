@@ -176,7 +176,7 @@ def _signed_direction_links_annihilating_plaquettes(
                 if unknown_link_id in signs_by_link:
                     if signs_by_link[unknown_link_id] != inferred_sign:
                         raise ValueError(
-                            "Inconsistent winding-sign constraints for " f"direction={direction!r}."
+                            f"Inconsistent winding-sign constraints for direction={direction!r}."
                         )
                 else:
                     signs_by_link[unknown_link_id] = inferred_sign

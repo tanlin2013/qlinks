@@ -239,8 +239,7 @@ def materialize_square_qdm_periodic_product_support(
     support_size = int(instance.formal_support_size)
     if support_size > max_support_size:
         raise ValueError(
-            "formal product support exceeds max_support_size: "
-            f"{support_size} > {max_support_size}."
+            f"formal product support exceeds max_support_size: {support_size} > {max_support_size}."
         )
 
     blocks = tuple(instance.blocks)
