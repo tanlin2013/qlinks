@@ -91,7 +91,6 @@ select = [
     "I",
     "B",
     "N",
-    "RUF022",
 ]
 
 [tool.ruff.lint.per-file-ignores]
