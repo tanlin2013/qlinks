@@ -1,0 +1,140 @@
+# Temporary branch-only workflow; removed before the migration PR is opened.
+name: Retry uv and Ruff migration
+
+on:
+  push:
+    branches:
+      - agent/uv-ruff-migration
+    paths:
+      - .github/workflows/retry-uv-ruff-migration.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/uv-ruff-migration
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.0"
+
+      - name: Migrate remaining references
+        shell: python
+        run: |
+          from pathlib import Path
+
+          health = Path("tools/repository_health.py")
+          text = health.read_text()
+          old = '''    required_hook_ids = {
+                  "black",
+                  "check-added-large-files",
+                  "commitizen",
+                  "commitizen-branch",
+                  "detect-private-key",
+                  "flake8",
+                  "isort",
+                  "nbstripout",
+                  "repository-health",
+                  "test-health",
+              }'''
+          new = '''    required_hook_ids = {
+                  "check-added-large-files",
+                  "commitizen",
+                  "commitizen-branch",
+                  "detect-private-key",
+                  "nbstripout",
+                  "repository-health",
+                  "ruff-check",
+                  "ruff-format",
+                  "test-health",
+                  "uv-lock-check",
+              }'''
+          if old not in text:
+              raise SystemExit("repository-health hook policy block not found")
+          health.write_text(text.replace(old, new))
+
+          Path("scripts/clean.sh").write_text(
+              "#!/bin/bash\nset -euxo pipefail\n\n"
+              "uv run ruff check --fix qlinks/ tests/\n"
+              "uv run ruff format qlinks/ tests/\n"
+          )
+
+          files = [
+              "README.md", "AGENTS.md", "REPOSITORY_HEALTH_AUDIT.md",
+              ".github/PULL_REQUEST_TEMPLATE.md", "scripts/README.md",
+              "scripts/verify_tn_environment.py", "scripts/verify_optional_environment.py",
+              "docs/source/installation.rst", "docs/source/contributing.rst",
+              "docs/source/repository_health.rst", "docs/source/architecture_diagnostics.rst",
+              "docs/contributing/1.-contributing-guide.md",
+              "docs/contributing/2.-coding-standard.md", "docs/contributing/5.-testing.md",
+          ]
+          replacements = [
+              ("poetry.lock", "uv.lock"),
+              ("poetry run pre-commit", "uv run pre-commit"),
+              ("poetry run python", "uv run python"),
+              ("poetry run pytest", "uv run pytest"),
+              ("poetry run make", "uv run make"),
+              ("poetry install --all-extras --with docs", "uv sync --all-extras --group docs"),
+              ('poetry install --with dev --extras "storage drawing"', "uv sync --extra storage --extra drawing"),
+              ('poetry install --with dev --extras "tn"', "uv sync --extra tn"),
+              ("poetry install --with dev", "uv sync"),
+              ("poetry install --all-extras", "uv sync --all-extras"),
+              ("poetry install", "uv sync"),
+              ("Poetry environment", "uv environment"),
+              ("host Poetry environment", "host uv environment"),
+              ("local Poetry interpreter", "local uv interpreter"),
+              ("Black and isort", "Ruff"),
+              ("Black, isort, flake8", "Ruff"),
+              ("flake8 for blocking lint checks", "Ruff for blocking lint checks"),
+              ("- Poetry;", "- uv;"),
+          ]
+          for filename in files:
+              path = Path(filename)
+              if not path.exists():
+                  continue
+              text = path.read_text()
+              for source, target in replacements:
+                  text = text.replace(source, target)
+              path.write_text(text)
+
+          readme = Path("README.md")
+          text = readme.read_text()
+          text = text.replace(
+              "[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)\n"
+              "[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)\n",
+              "[![Lint and format: Ruff](https://img.shields.io/badge/lint%20%26%20format-Ruff-261230.svg)](https://docs.astral.sh/ruff/)\n",
+          )
+          readme.write_text(text)
+
+          agents = Path("AGENTS.md")
+          text = agents.read_text()
+          text = text.replace("Run `flake8` on every touched Python file, or the repository-wide flake8 command when the", "Run `uv run ruff check` on every touched Python file, or repository-wide when the")
+          text = text.replace("A Python patch is not lint-validated until flake8 passes with no errors.", "A Python change is not lint-validated until Ruff passes with no errors.")
+          text = text.replace("Run Ruff when feasible.", "Run `uv run ruff format` when feasible.")
+          text = text.replace("pass flake8 for ordinary Python patches.", "pass Ruff lint for ordinary Python changes.")
+          agents.write_text(text)
+
+      - name: Sync, Ruff, and health checks
+        run: |
+          uv sync --locked
+          uv run ruff check --fix qlinks/ tests/ scripts/ tools/
+          uv run ruff format qlinks/ tests/ scripts/ tools/
+          uv lock --check
+          uv run python tools/repository_health.py --check --quiet
+          uv run python tools/test_health.py --check --local --quiet
+
+      - name: Commit migration cleanup
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "build: finalize uv and Ruff migration"
+          git push origin HEAD:agent/uv-ruff-migration
