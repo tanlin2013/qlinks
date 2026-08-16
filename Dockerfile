@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.26
 
 # The official Python image is multi-architecture. Docker selects the image
 # matching --platform (or the Docker host by default), so the same Dockerfile
