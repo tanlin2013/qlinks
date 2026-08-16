@@ -1,4 +1,5 @@
 # Temporary branch-only workflow; removed before the migration PR is opened.
+# Triggered after the final Ruff-equivalence policy adjustment.
 name: Finalize uv and Ruff cleanly
 
 on:
