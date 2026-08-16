@@ -34,7 +34,10 @@ RUN apt-get update && \
         libblas-dev \
         liblapack-dev \
         libcairo2-dev \
-        pkg-config && \
+        libxml2-dev \
+        libxslt1-dev \
+        pkg-config \
+        zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN python -m pip install --no-cache-dir "uv==${UV_VERSION}"
