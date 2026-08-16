@@ -30,16 +30,16 @@ For development, clone the repository and install with Poetry:
 
    git clone https://github.com/tanlin2013/qlinks.git
    cd qlinks
-   poetry install --all-extras --with docs
-   poetry run pre-commit install
+   uv sync --all-extras --group docs
+   uv run pre-commit install
 
 Useful development commands are:
 
 .. code-block:: bash
 
-   poetry run pytest
-   poetry run pre-commit run --all-files
-   poetry run make -C docs html
+   uv run pytest
+   uv run pre-commit run --all-files
+   uv run make -C docs html
 
 
 Remote Jupyter notebook Docker image
@@ -88,17 +88,17 @@ Docker tensor-network interpreter
 ---------------------------------
 
 The tensor-network dependencies are intentionally optional.  A normal local
-Poetry environment therefore remains usable on Python 3.14 without installing
+uv environment therefore remains usable on Python 3.14 without installing
 ``quimb``, ``numba``, or ``llvmlite``:
 
 .. code-block:: bash
 
-   poetry install
+   uv sync
 
 The Docker image installs only the ``tn`` extra.  Its Linux runtime is isolated
 from the host macOS architecture and selects Linux wheels from the lock file.
 The lock file records versions, markers, and hashes for multiple platforms; it
-does not copy or reuse a wheel installed in the host Poetry environment.
+does not copy or reuse a wheel installed in the host uv environment.
 
 On an Intel Mac, build and load the image with:
 
@@ -146,7 +146,7 @@ Both Linux ``amd64`` and ``arm64`` are supported by the pinned TN stack.
 PyCharm setup
 ~~~~~~~~~~~~~
 
-Keep the existing local Poetry interpreter for the core package.  Add a second
+Keep the existing local uv interpreter for the core package.  Add a second
 interpreter from the prebuilt Docker image:
 
 #. Open **Settings | Project | Python Interpreter**.
