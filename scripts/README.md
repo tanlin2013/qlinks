@@ -1,14 +1,24 @@
-# Benchmark scripts
+# Repository scripts
 
-These scripts are for local performance profiling and are not part of the unit-test suite.
+Repository-level helpers are grouped by responsibility rather than kept in one flat directory:
+
+- `benchmarks/` — repeatable local performance probes.
+- `dev/` — developer quality, test, and cleanup entry points.
+- `docker/` — image/runtime helpers, evidence-job launchers, and environment verification.
+- `science/` — reproducible larger scientific workflows that are not unit tests.
+
+GitHub Actions-specific metadata and release helpers live under `.github/scripts/`; reusable
+developer and scientific commands remain here so they are not coupled to GitHub Actions.
+
+Benchmark and scientific scripts are not part of the fast unit-test suite.
 
 ## Basis generation
 
 ```bash
-python scripts/benchmark_basis.py
-python scripts/benchmark_basis.py --only spin_one
-python scripts/benchmark_basis.py --json basis_benchmark.json
-python scripts/benchmark_basis.py --markdown basis_benchmark.md
+python scripts/benchmarks/benchmark_basis.py
+python scripts/benchmarks/benchmark_basis.py --only spin_one
+python scripts/benchmarks/benchmark_basis.py --json basis_benchmark.json
+python scripts/benchmarks/benchmark_basis.py --markdown basis_benchmark.md
 ```
 
 Use `--markdown` to write a compact GitHub-ready timing table.
@@ -21,13 +31,13 @@ one builder where supported, and `--builder all` to compare all supported
 builders per case.
 
 ```bash
-python scripts/benchmark_hamiltonian.py
-python scripts/benchmark_hamiltonian.py --split-basis-timing
-python scripts/benchmark_hamiltonian.py --builder all --split-basis-timing
-python scripts/benchmark_hamiltonian.py --builder sparse --only qdm --split-basis-timing
-python scripts/benchmark_hamiltonian.py --list-cases
-python scripts/benchmark_hamiltonian.py --json hamiltonian_benchmark.json
-python scripts/benchmark_hamiltonian.py --builder all --split-basis-timing --markdown hamiltonian_benchmark.md
+python scripts/benchmarks/benchmark_hamiltonian.py
+python scripts/benchmarks/benchmark_hamiltonian.py --split-basis-timing
+python scripts/benchmarks/benchmark_hamiltonian.py --builder all --split-basis-timing
+python scripts/benchmarks/benchmark_hamiltonian.py --builder sparse --only qdm --split-basis-timing
+python scripts/benchmarks/benchmark_hamiltonian.py --list-cases
+python scripts/benchmarks/benchmark_hamiltonian.py --json hamiltonian_benchmark.json
+python scripts/benchmarks/benchmark_hamiltonian.py --builder all --split-basis-timing --markdown hamiltonian_benchmark.md
 ```
 
 Use `--markdown` to write a compact GitHub-ready report containing both the raw
@@ -38,14 +48,14 @@ parameter payload from `--json`.
 ## Cage search
 
 ```bash
-python scripts/benchmark_cage_search.py
-python scripts/benchmark_cage_search.py --only qdm --split-basis-timing
-python scripts/benchmark_cage_search.py \
+python scripts/benchmarks/benchmark_cage_search.py
+python scripts/benchmarks/benchmark_cage_search.py --only qdm --split-basis-timing
+python scripts/benchmarks/benchmark_cage_search.py \
   --only qlm \
   --degenerate-basis-strategy ipr \
   --ipr-n-restarts 32
-python scripts/benchmark_cage_search.py --json cage_search_benchmark.json
-python scripts/benchmark_cage_search.py --markdown cage_search_benchmark.md
+python scripts/benchmarks/benchmark_cage_search.py --json cage_search_benchmark.json
+python scripts/benchmarks/benchmark_cage_search.py --markdown cage_search_benchmark.md
 ```
 
 The cage-search benchmark reports separate timings for candidate generation,
@@ -55,15 +65,15 @@ to write a compact GitHub-ready stage-timing table.
 ## Cage-Lindblad construction
 
 ```bash
-python scripts/benchmark_cage_lindblad.py
-python scripts/benchmark_cage_lindblad.py --only qdm
-python scripts/benchmark_cage_lindblad.py --only qlm --builder bitmask
-python scripts/benchmark_cage_lindblad.py --monitor-source reduced_iz_operators
-python scripts/benchmark_cage_lindblad.py   --monitor-source reduced_iz_operators   --reduced-iz-monitor-decomposition connected_support
-python scripts/benchmark_cage_lindblad.py --check-liouvillian
-python scripts/benchmark_cage_lindblad.py --skip-jump-residuals
-python scripts/benchmark_cage_lindblad.py --json cage_lindblad_benchmark.json
-python scripts/benchmark_cage_lindblad.py --markdown cage_lindblad_benchmark.md
+python scripts/benchmarks/benchmark_cage_lindblad.py
+python scripts/benchmarks/benchmark_cage_lindblad.py --only qdm
+python scripts/benchmarks/benchmark_cage_lindblad.py --only qlm --builder bitmask
+python scripts/benchmarks/benchmark_cage_lindblad.py --monitor-source reduced_iz_operators
+python scripts/benchmarks/benchmark_cage_lindblad.py   --monitor-source reduced_iz_operators   --reduced-iz-monitor-decomposition connected_support
+python scripts/benchmarks/benchmark_cage_lindblad.py --check-liouvillian
+python scripts/benchmarks/benchmark_cage_lindblad.py --skip-jump-residuals
+python scripts/benchmarks/benchmark_cage_lindblad.py --json cage_lindblad_benchmark.json
+python scripts/benchmarks/benchmark_cage_lindblad.py --markdown cage_lindblad_benchmark.md
 ```
 
 The Cage-Lindblad benchmark separates model build, cage search, cage
@@ -77,13 +87,13 @@ bitmask local-term path internally, matching the construction API behavior.
 ## Open-system solvers and MCWF
 
 ```bash
-python scripts/benchmark_open_system.py
-python scripts/benchmark_open_system.py --operation single_trajectory --n-times 201
-python scripts/benchmark_open_system.py --operation mcwf --n-trajectories 512
-python scripts/benchmark_open_system.py --only qubit --operation all
-python scripts/benchmark_open_system.py --json open_system_benchmark.json
-python scripts/benchmark_open_system.py --markdown open_system_benchmark.md
-python scripts/benchmark_open_system.py \
+python scripts/benchmarks/benchmark_open_system.py
+python scripts/benchmarks/benchmark_open_system.py --operation single_trajectory --n-times 201
+python scripts/benchmarks/benchmark_open_system.py --operation mcwf --n-trajectories 512
+python scripts/benchmarks/benchmark_open_system.py --only qubit --operation all
+python scripts/benchmarks/benchmark_open_system.py --json open_system_benchmark.json
+python scripts/benchmarks/benchmark_open_system.py --markdown open_system_benchmark.md
+python scripts/benchmarks/benchmark_open_system.py \
   --operation all \
   --n-trajectories 512 \
   --json open_system_benchmark.json \
@@ -101,7 +111,7 @@ with a larger `--n-times` value to profile animation-oriented runs.
 
 Small dry run:
 ```bash
-python scripts/run_cage_sweep.py \
+python scripts/science/run_cage_sweep.py \
   --output-root ./data/qlinks_cage_sweep_test \
   --backend serial \
   --dry-run
@@ -109,7 +119,7 @@ python scripts/run_cage_sweep.py \
 
 Small real test:
 ```bash
-python scripts/run_cage_sweep.py \
+python scripts/science/run_cage_sweep.py \
   --output-root ./data/qlinks_cage_sweep_test \
   --backend serial \
   --models qdm \
@@ -120,7 +130,7 @@ python scripts/run_cage_sweep.py \
 
 Ray run:
 ```bash
-python scripts/run_cage_sweep.py \
+python scripts/science/run_cage_sweep.py \
   --output-root ./data/qlinks_cage_sweep_full \
   --backend ray \
   --num-cpus-per-task 1 \
@@ -176,8 +186,8 @@ find "$OUTPUT_ROOT/jobs" -name summary.json -print0 \
 The model-evidence notebooks can be run as detached Docker jobs through:
 
 ```bash
-scripts/docker_run_evidence_job.sh spin1 [job options]
-scripts/docker_run_evidence_job.sh qdm [job options]
+scripts/docker/docker_run_evidence_job.sh spin1 [job options]
+scripts/docker/docker_run_evidence_job.sh qdm [job options]
 ```
 
 The wrapper forwards model-specific flags unchanged and understands the common
@@ -193,7 +203,7 @@ Numerical pass:
 QLINKS_EVIDENCE_RUN_ID=spin1_production \
 QLINKS_NUM_THREADS=16 \
 QLINKS_DOCKER_MEMORY_LIMIT=400g \
-scripts/docker_run_evidence_job.sh spin1 \
+scripts/docker/docker_run_evidence_job.sh spin1 \
   --stage compute \
   --profile production \
   --microcanonical-sizes 6,8,10,12 \
@@ -228,7 +238,7 @@ Square-QDM checkerboard finite-temperature production pass:
 QLINKS_EVIDENCE_RUN_ID=qdm_checkerboard_finite_beta \
 QLINKS_NUM_THREADS=16 \
 QLINKS_DOCKER_MEMORY_LIMIT=400g \
-scripts/docker_run_evidence_job.sh qdm \
+scripts/docker/docker_run_evidence_job.sh qdm \
   --stage compute \
   --profile production \
   --transport-repeats 1,2,3 \
@@ -273,7 +283,7 @@ reported as a finite-size diagnostic.
 Render the completed timestamped folder with:
 
 ```bash
-scripts/docker_run_evidence_job.sh qdm \
+scripts/docker/docker_run_evidence_job.sh qdm \
   --stage render \
   --source-data-dir experimental/data/evidence_jobs/qdm_checkerboard_production_YYYYMMDDTHHMMSSZ \
   --use-tex \
@@ -284,7 +294,7 @@ scripts/docker_run_evidence_job.sh qdm \
 TeX-backed render pass using a repository-relative host path:
 
 ```bash
-scripts/docker_run_evidence_job.sh spin1 \
+scripts/docker/docker_run_evidence_job.sh spin1 \
   --stage render \
   --source-data-dir experimental/data/evidence_jobs/spin1_production \
   --use-tex \
@@ -297,7 +307,7 @@ Use custom host storage by setting the mount roots before invoking the wrapper:
 ```bash
 QLINKS_DATA_DIR=/large-volume/qlinks-data \
 QLINKS_OUTPUT_DIR=/large-volume/qlinks-output \
-scripts/docker_run_evidence_job.sh qdm \
+scripts/docker/docker_run_evidence_job.sh qdm \
   --stage compute \
   --data-dir /large-volume/qlinks-data/qdm-production \
   --profile production
@@ -308,7 +318,7 @@ container:
 
 ```bash
 QLINKS_DOCKER_DRY_RUN=1 \
-scripts/docker_run_evidence_job.sh spin1 --stage compute --profile smoke
+scripts/docker/docker_run_evidence_job.sh spin1 --stage compute --profile smoke
 ```
 
 ---

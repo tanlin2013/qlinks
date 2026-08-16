@@ -26,7 +26,7 @@ jobs:
 
       - name: Read versions
         id: versions
-        run: python scripts/ci_versions.py
+        run: python .github/scripts/ci_versions.py
 
       - name: Set up Python and uv
         uses: ./.github/actions/setup-python-uv
@@ -39,7 +39,7 @@ jobs:
           install-command: uv sync --locked --extra tn --extra storage
 
       - name: Verify tensor-network environment
-        run: uv run python scripts/verify_tn_environment.py
+        run: uv run python scripts/docker/verify_tn_environment.py
 
       - name: Run scientific test lane
-        run: scripts/test.sh scientific
+        run: scripts/dev/test.sh scientific

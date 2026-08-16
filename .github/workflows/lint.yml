@@ -27,7 +27,7 @@ jobs:
 
       - name: Read versions
         id: versions
-        run: python scripts/ci_versions.py
+        run: python .github/scripts/ci_versions.py
 
   blocking:
     needs: versions
@@ -48,7 +48,7 @@ jobs:
           install-command: uv sync --locked
 
       - name: Blocking lint
-        run: ./scripts/lint_blocking.sh
+        run: ./scripts/dev/lint_blocking.sh
 
   advisory:
     needs: versions
@@ -70,4 +70,4 @@ jobs:
           install-command: uv sync --locked
 
       - name: Advisory lint
-        run: ./scripts/lint_advisory.sh
+        run: ./scripts/dev/lint_advisory.sh

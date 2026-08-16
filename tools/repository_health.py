@@ -404,7 +404,7 @@ def _guardrail_wiring_findings(root: Path) -> list[str]:
     active_precommit_text = "\n".join(
         line for line in precommit.splitlines() if not line.lstrip().startswith("#")
     )
-    if "scripts/test.sh fast" in active_precommit_text:
+    if "scripts/dev/test.sh fast" in active_precommit_text:
         findings.append(
             "guardrail wiring: full fast lane must remain CI-owned, not a local pre-push hook"
         )
@@ -446,7 +446,7 @@ def _guardrail_wiring_findings(root: Path) -> list[str]:
     if "error::Warning:qlinks" not in pyproject:
         findings.append("guardrail wiring: qlinks-originated warnings are no longer errors")
 
-    blocking_lint = (root / "scripts" / "lint_blocking.sh").read_text(encoding="utf-8")
+    blocking_lint = (root / "scripts" / "dev" / "lint_blocking.sh").read_text(encoding="utf-8")
     if "tools/repository_health.py --check" not in blocking_lint:
         findings.append("guardrail wiring: blocking lint no longer runs repository health")
 
@@ -455,15 +455,15 @@ def _guardrail_wiring_findings(root: Path) -> list[str]:
         findings.append("guardrail wiring: test CI no longer runs test-health check")
     if "tools/test_health.py" in test_workflow and "--local" in test_workflow:
         findings.append("guardrail wiring: CI test-health must retain full pytest collection")
-    if "scripts/test.sh fast" not in test_workflow:
+    if "scripts/dev/test.sh fast" not in test_workflow:
         findings.append("guardrail wiring: test CI no longer runs fast lane")
-    if "scripts/test.sh integration" not in test_workflow:
+    if "scripts/dev/test.sh integration" not in test_workflow:
         findings.append("guardrail wiring: pull-request CI no longer runs integration lane")
 
     scientific_workflow = (root / ".github" / "workflows" / "scientific.yml").read_text(
         encoding="utf-8"
     )
-    if "scripts/test.sh scientific" not in scientific_workflow:
+    if "scripts/dev/test.sh scientific" not in scientific_workflow:
         findings.append("guardrail wiring: scientific workflow no longer runs scientific lane")
 
     return findings

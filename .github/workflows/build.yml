@@ -28,7 +28,7 @@ jobs:
 
       - name: Read versions
         id: versions
-        run: python scripts/ci_versions.py
+        run: python .github/scripts/ci_versions.py
 
   pr-smoke:
     if: github.event_name == 'pull_request'

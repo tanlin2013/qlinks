@@ -187,32 +187,32 @@ graph_visualizer.plot(
 The default developer lane contains tiny deterministic tests only:
 
 ```bash
-scripts/test.sh fast
+scripts/dev/test.sh fast
 ```
 
 Run small cross-module workflows separately:
 
 ```bash
-scripts/test.sh integration
+scripts/dev/test.sh integration
 ```
 
 Expensive finite-size, optimization, and scientific-regression checks are intentionally
 separated from pull-request unit tests:
 
 ```bash
-scripts/test.sh scientific
+scripts/dev/test.sh scientific
 ```
 
 Run all automatic CPU tests, including scientific tests, with:
 
 ```bash
-scripts/test.sh all
+scripts/dev/test.sh all
 ```
 
 Manual visual tests still require explicit activation, for example:
 
 ```bash
-QLINKS_SHOW_PLOTS=1 scripts/test.sh manual
+QLINKS_SHOW_PLOTS=1 scripts/dev/test.sh manual
 ```
 
 See `AGENTS.md` and `docs/contributing/5.-testing.md` for the classification policy. Run

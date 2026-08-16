@@ -24,7 +24,7 @@ jobs:
         id: versions
         run: |
           python -m pip install packaging
-          python scripts/ci_versions.py
+          python .github/scripts/ci_versions.py
 
       - name: Set up Python and uv
         uses: ./.github/actions/setup-python-uv

@@ -29,7 +29,7 @@ jobs:
 
       - name: Read versions
         id: versions
-        run: python scripts/ci_versions.py
+        run: python .github/scripts/ci_versions.py
 
   fast:
     name: Fast tests with coverage
@@ -56,7 +56,7 @@ jobs:
       - name: Run fast test lane
         env:
           QLINKS_COVERAGE_XML: "1"
-        run: scripts/test.sh fast
+        run: scripts/dev/test.sh fast
 
       - name: Check test-suite health
         run: |
@@ -100,7 +100,7 @@ jobs:
       - name: Run fast test lane without coverage
         env:
           QLINKS_TEST_COVERAGE: "0"
-        run: scripts/test.sh fast
+        run: scripts/dev/test.sh fast
 
   integration:
     name: Integration tests
@@ -123,7 +123,7 @@ jobs:
           install-command: uv sync --locked --extra storage --extra drawing
 
       - name: Run integration test lane
-        run: scripts/test.sh integration
+        run: scripts/dev/test.sh integration
 
   distributed:
     name: Ray backend (Python ${{ needs.versions.outputs.default-python }})
@@ -146,7 +146,7 @@ jobs:
         env:
           # Ray >=2.47 otherwise re-enters workers through `uv run`; see ray-project/ray#53848.
           RAY_ENABLE_UV_RUN_RUNTIME_ENV: "0"
-        run: scripts/test.sh integration tests/test_distributed.py
+        run: scripts/dev/test.sh integration tests/test_distributed.py
 
   tensor-network:
     name: Tensor-network backend (Python 3.13)
@@ -167,7 +167,7 @@ jobs:
           install-command: uv sync --locked --extra tn
 
       - name: Verify tensor-network environment
-        run: uv run python scripts/verify_tn_environment.py
+        run: uv run python scripts/docker/verify_tn_environment.py
 
       - name: Run tensor-network integration tests
-        run: scripts/test.sh integration tests/caging/test_tensor_network.py
+        run: scripts/dev/test.sh integration tests/caging/test_tensor_network.py
