@@ -1,0 +1,195 @@
+name: Finalize uv and Ruff migration
+
+on:
+  push:
+    branches:
+      - agent/uv-ruff-migration
+    paths:
+      - .github/workflows/finalize-uv-ruff-migration.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/uv-ruff-migration
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.0"
+
+      - name: Update migration references
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace(path: str, old: str, new: str) -> None:
+              target = Path(path)
+              text = target.read_text()
+              if old not in text:
+                  raise SystemExit(f"expected text not found in {path}: {old!r}")
+              target.write_text(text.replace(old, new))
+
+          replace(
+              "tools/repository_health.py",
+              '''    required_hook_ids = {
+                  "black",
+                  "check-added-large-files",
+                  "commitizen",
+                  "commitizen-branch",
+                  "detect-private-key",
+                  "flake8",
+                  "isort",
+                  "nbstripout",
+                  "repository-health",
+                  "test-health",
+              }''',
+              '''    required_hook_ids = {
+                  "check-added-large-files",
+                  "commitizen",
+                  "commitizen-branch",
+                  "detect-private-key",
+                  "nbstripout",
+                  "repository-health",
+                  "ruff-check",
+                  "ruff-format",
+                  "test-health",
+                  "uv-lock-check",
+              }''',
+          )
+
+          Path("scripts/clean.sh").write_text(
+              "#!/bin/bash\nset -euxo pipefail\n\n"
+              "uv run ruff check --fix qlinks/ tests/\n"
+              "uv run ruff format qlinks/ tests/\n"
+          )
+
+          replace(
+              "scripts/verify_tn_environment.py",
+              "Regenerate poetry.lock with the ",
+              "Regenerate uv.lock with the ",
+          )
+          replace(
+              "scripts/verify_optional_environment.py",
+              "Whitespace-separated optional extras passed to Poetry.",
+              "Whitespace-separated optional extras synchronized by uv.",
+          )
+
+          replace(
+              "README.md",
+              "[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)\n"
+              "[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)\n",
+              "[![Lint and format: Ruff](https://img.shields.io/badge/lint%20%26%20format-Ruff-261230.svg)](https://docs.astral.sh/ruff/)\n",
+          )
+          replace("README.md", "poetry install --all-extras", "uv sync --all-extras")
+
+          replace("docs/source/contributing.rst", "poetry install --with dev", "uv sync")
+          replace(
+              "docs/source/contributing.rst",
+              'poetry install --with dev --extras "storage drawing"',
+              'uv sync --extra storage --extra drawing',
+          )
+          replace("docs/source/contributing.rst", "poetry run pre-commit", "uv run pre-commit")
+          replace("docs/source/contributing.rst", "poetry run python", "uv run python")
+          replace(
+              "docs/source/contributing.rst",
+              "The project uses Black and isort for formatting, flake8 for blocking lint checks,",
+              "The project uses Ruff for formatting, import sorting, and blocking lint checks,",
+          )
+
+          replace("docs/source/repository_health.rst", "poetry run python", "uv run python")
+          replace("docs/source/repository_health.rst", "poetry run pre-commit", "uv run pre-commit")
+          replace(
+              "docs/source/repository_health.rst",
+              "run test health, Poetry/lock checks, and the fast test lane.",
+              "run test health, uv lock checks, and the fast test lane.",
+          )
+
+          replace("docs/source/architecture_diagnostics.rst", "poetry run ", "uv run ")
+          replace("scripts/README.md", "poetry run ", "uv run ")
+          replace("docs/contributing/5.-testing.md", "poetry run pre-commit", "uv run pre-commit")
+
+          replace("docs/contributing/1.-contributing-guide.md", "- Poetry;", "- uv;")
+          replace("docs/contributing/1.-contributing-guide.md", "poetry install --with dev", "uv sync")
+          replace(
+              "docs/contributing/1.-contributing-guide.md",
+              'poetry install --with dev --extras "storage drawing"',
+              'uv sync --extra storage --extra drawing',
+          )
+          replace(
+              "docs/contributing/1.-contributing-guide.md",
+              'poetry install --with dev --extras "tn"',
+              'uv sync --extra tn',
+          )
+
+          replace(
+              "docs/contributing/2.-coding-standard.md",
+              "This project follows PEP 8 and PEP 257, with Black and isort configured to a 100-character",
+              "This project follows PEP 8 and PEP 257, with Ruff configured to a 100-character",
+          )
+          replace(
+              "docs/contributing/2.-coding-standard.md",
+              "Blocking checks include Black, isort, flake8, repository-health budgets, and the fast pytest",
+              "Blocking checks include Ruff, repository-health budgets, and the fast pytest",
+          )
+          replace(
+              "docs/contributing/2.-coding-standard.md",
+              "poetry run python tools/repository_health.py --check",
+              "uv run python tools/repository_health.py --check",
+          )
+
+          replace(
+              "AGENTS.md",
+              "1. Run `flake8` on every touched Python file, or the repository-wide flake8 command when the\n"
+              "   change is broad. A Python patch is not lint-validated until flake8 passes with no errors.\n"
+              "2. Run Black and isort when feasible. For a heavy scientific/refactor task they may be deferred\n"
+              "   until the structural changes settle, but the final change should be formatted and pass\n"
+              "   flake8 for ordinary Python patches.",
+              "1. Run `uv run ruff check` on every touched Python file, or repository-wide when the change is\n"
+              "   broad. A Python change is not lint-validated until Ruff passes with no errors.\n"
+              "2. Run `uv run ruff format` before finalizing Python changes. For a heavy scientific/refactor\n"
+              "   task formatting may be deferred until structural changes settle, but the final change should\n"
+              "   be Ruff-formatted and lint-clean for ordinary Python changes.",
+          )
+
+          install = Path("docs/source/installation.rst")
+          text = install.read_text()
+          text = text.replace("For development, clone the repository and install with Poetry:",
+                              "For development, clone the repository and synchronize with uv:")
+          text = text.replace("poetry install --all-extras --with docs",
+                              "uv sync --all-extras --group docs")
+          text = text.replace("poetry run pre-commit", "uv run pre-commit")
+          text = text.replace("poetry run pytest", "uv run pytest")
+          text = text.replace("poetry run make", "uv run make")
+          text = text.replace("Poetry environment", "uv environment")
+          text = text.replace("poetry install", "uv sync")
+          text = text.replace("host Poetry environment", "host uv environment")
+          text = text.replace("local Poetry interpreter", "local uv interpreter")
+          install.write_text(text)
+
+      - name: Synchronize development environment
+        run: uv sync --locked
+
+      - name: Apply Ruff migration
+        run: |
+          uv run ruff check --fix qlinks/ tests/ scripts/ tools/
+          uv run ruff format qlinks/ tests/ scripts/ tools/
+
+      - name: Verify lockfile
+        run: uv lock --check
+
+      - name: Commit migration cleanup
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "build: finalize uv and Ruff migration"
+          git push origin HEAD:agent/uv-ruff-migration
