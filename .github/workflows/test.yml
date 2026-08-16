@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       default-python: ${{ steps.versions.outputs.default-python }}
-      poetry-version: ${{ steps.versions.outputs.poetry-version }}
+      uv-version: ${{ steps.versions.outputs.uv-version }}
       compatibility-python-matrix: ${{ steps.versions.outputs.compatibility-python-matrix }}
     steps:
       - uses: actions/checkout@v4
@@ -39,19 +39,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python and Poetry
-        uses: ./.github/actions/setup-python-poetry
-        env:
-          POETRY_INSTALLER_NO_BINARY: pynauty
+      - name: Set up Python and uv
+        uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ needs.versions.outputs.default-python }}
-          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-fast
           compile-paths: qlinks tests
           system-packages: >-
             build-essential gfortran libblas-dev liblapack-dev pkg-config
             libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
-          install-command: poetry install -vvv --with dev --extras "distributed storage drawing" --sync
+          install-command: uv sync --locked --extra distributed --extra storage --extra drawing
 
       - name: Run fast test lane
         env:
@@ -60,7 +58,7 @@ jobs:
 
       - name: Check test-suite health
         run: |
-          poetry run python tools/test_health.py \
+          uv run python tools/test_health.py \
             --check \
             --json "${RUNNER_TEMP}/test-health.json" \
             --markdown "${RUNNER_TEMP}/test-health.md" \
@@ -87,15 +85,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python and Poetry
-        uses: ./.github/actions/setup-python-poetry
+      - name: Set up Python and uv
+        uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ matrix.python-version }}
-          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-compatibility
           compile-paths: qlinks tests
           system-packages: build-essential gfortran libblas-dev liblapack-dev pkg-config
-          install-command: poetry install -vvv --with dev --extras "storage" --sync
+          install-command: uv sync --locked --extra storage
 
       - name: Run fast test lane without coverage
         env:
@@ -110,19 +108,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python and Poetry
-        uses: ./.github/actions/setup-python-poetry
-        env:
-          POETRY_INSTALLER_NO_BINARY: pynauty
+      - name: Set up Python and uv
+        uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ needs.versions.outputs.default-python }}
-          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-integration
           compile-paths: qlinks tests
           system-packages: >-
             build-essential gfortran libblas-dev liblapack-dev pkg-config
             libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
-          install-command: poetry install -vvv --with dev --extras "distributed storage drawing" --sync
+          install-command: uv sync --locked --extra distributed --extra storage --extra drawing
 
       - name: Run integration test lane
         run: scripts/test.sh integration
@@ -135,18 +131,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python and Poetry
-        uses: ./.github/actions/setup-python-poetry
+      - name: Set up Python and uv
+        uses: ./.github/actions/setup-python-uv
         with:
           python-version: "3.13"
-          poetry-version: ${{ needs.versions.outputs.poetry-version }}
+          uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-tn
           compile-paths: qlinks tests
           system-packages: build-essential gfortran libblas-dev liblapack-dev pkg-config
-          install-command: poetry install -vvv --with dev --extras "tn" --sync
+          install-command: uv sync --locked --extra tn
 
       - name: Verify tensor-network environment
-        run: poetry run python scripts/verify_tn_environment.py
+        run: uv run python scripts/verify_tn_environment.py
 
       - name: Run tensor-network integration tests
         run: scripts/test.sh integration tests/caging/test_tensor_network.py
