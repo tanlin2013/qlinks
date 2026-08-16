@@ -26,7 +26,37 @@ jobs:
             build-essential gfortran libblas-dev liblapack-dev pkg-config
             libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
           install-command: uv sync --locked --extra distributed --extra storage --extra drawing
-      - name: Run fast lane without coverage
+      - name: Capture first fast-lane failure
+        shell: bash
         env:
           QLINKS_TEST_COVERAGE: "0"
-        run: scripts/test.sh fast
+        run: |
+          set +e
+          scripts/test.sh fast -x -vv --tb=short 2>&1 | tee "${RUNNER_TEMP}/fast-314-nocov.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [[ ${status} -ne 0 ]]; then
+            python - <<'PY'
+          import os
+          from pathlib import Path
+
+          log = Path(os.environ["RUNNER_TEMP"]) / "fast-314-nocov.log"
+          lines = log.read_text(errors="replace").splitlines()
+          markers = (
+              "FAILURES",
+              "ERRORS",
+              "FAILED ",
+              "ERROR ",
+              "Traceback",
+              "E   ",
+              "short test summary info",
+          )
+          selected = [line for line in lines if any(marker in line for marker in markers)]
+          context = "\n".join(selected[-120:])
+          if not context:
+              context = "\n".join(lines[-120:])
+          escaped = context.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          print(f"::error title=Python 3.14 first fast-test failure::{escaped}")
+          PY
+            exit "${status}"
+          fi
