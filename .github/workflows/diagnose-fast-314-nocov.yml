@@ -1,0 +1,32 @@
+name: Diagnose fast Python 3.14 without coverage
+
+on:
+  push:
+    branches:
+      - agent/uv-ruff-migration
+    paths:
+      - .github/workflows/diagnose-fast-314-nocov.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python and uv
+        uses: ./.github/actions/setup-python-uv
+        with:
+          python-version: "3.14"
+          uv-version: "0.12.0"
+          cache-prefix: diagnose-fast-314-nocov
+          compile-paths: qlinks tests
+          system-packages: >-
+            build-essential gfortran libblas-dev liblapack-dev pkg-config
+            libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
+          install-command: uv sync --locked --extra distributed --extra storage --extra drawing
+      - name: Run fast lane without coverage
+        env:
+          QLINKS_TEST_COVERAGE: "0"
+        run: scripts/test.sh fast
