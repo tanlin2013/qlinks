@@ -115,20 +115,35 @@ jobs:
 
           agents = Path("AGENTS.md")
           text = agents.read_text()
-          text = text.replace("Run `flake8` on every touched Python file, or the repository-wide flake8 command when the", "Run `uv run ruff check` on every touched Python file, or repository-wide when the")
-          text = text.replace("A Python patch is not lint-validated until flake8 passes with no errors.", "A Python change is not lint-validated until Ruff passes with no errors.")
+          text = text.replace(
+              "Run `flake8` on every touched Python file, or the repository-wide flake8 command when the",
+              "Run `uv run ruff check` on every touched Python file, or repository-wide when the",
+          )
+          text = text.replace(
+              "A Python patch is not lint-validated until flake8 passes with no errors.",
+              "A Python change is not lint-validated until Ruff passes with no errors.",
+          )
           text = text.replace("Run Ruff when feasible.", "Run `uv run ruff format` when feasible.")
-          text = text.replace("pass flake8 for ordinary Python patches.", "pass Ruff lint for ordinary Python changes.")
+          text = text.replace(
+              "pass flake8 for ordinary Python patches.",
+              "pass Ruff lint for ordinary Python changes.",
+          )
           agents.write_text(text)
 
-      - name: Sync, Ruff, and health checks
+      - name: Synchronize environment
+        run: uv sync --locked
+
+      - name: Apply Ruff migration
         run: |
-          uv sync --locked
-          uv run ruff check --fix qlinks/ tests/ scripts/ tools/
-          uv run ruff format qlinks/ tests/ scripts/ tools/
+          uv run ruff check --fix qlinks/ tests/
+          uv run ruff format qlinks/ tests/
+          uv run ruff format tools/repository_health.py scripts/ci_versions.py scripts/verify_tn_environment.py scripts/verify_optional_environment.py
+
+      - name: Verify lockfile and local test health
+        run: |
           uv lock --check
-          uv run python tools/repository_health.py --check --quiet
           uv run python tools/test_health.py --check --local --quiet
+          python -m compileall -q qlinks tests scripts tools
 
       - name: Commit migration cleanup
         run: |
