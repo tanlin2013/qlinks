@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import os  # noqa: F401
+import os
 import sys
 from importlib import metadata
 from pathlib import Path
@@ -40,10 +40,15 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
-    "sphinx.ext.viewcode",
     "nbsphinx",
     "m2r2",
 ]
+
+# Viewcode spends most of its time highlighting every documented source module.
+# Keep it in deployed documentation, but let PR validation skip the generated
+# source pages because they do not affect autodoc/autosummary correctness.
+if os.environ.get("QLINKS_DOCS_VIEWCODE", "1") != "0":
+    extensions.append("sphinx.ext.viewcode")
 
 templates_path = ["_templates"]
 source_suffix = [".rst", ".md"]
