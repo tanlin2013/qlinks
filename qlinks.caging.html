@@ -6857,7 +6857,7 @@ do not affect the Fock-space morphology or any environment-removal claim.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cage_state</strong> (<a class="reference internal" href="#qlinks.caging.CageState" title="qlinks.caging.results.CageState"><em>CageState</em></a>) – Compact cage state returned by the caging solver.</p></li>
-<li><p><strong>kinetic_matrix</strong> (<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.spmatrix.html#scipy.sparse.spmatrix" title="(in SciPy v1.18.0)"><em>spmatrix</em></a><em> | </em><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.sparray.html#scipy.sparse.sparray" title="(in SciPy v1.18.0)"><em>sparray</em></a><em> | </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.5)"><em>dtype</em></a><em>[</em><em>_ScalarT</em><em>]</em><em>]</em>) – Off-diagonal Hamiltonian or kinetic matrix used to
+<li><p><strong>kinetic_matrix</strong> (<em>spmatrix</em><em> | </em><em>sparray</em><em> | </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.5)"><em>dtype</em></a><em>[</em><em>_ScalarT</em><em>]</em><em>]</em>) – Off-diagonal Hamiltonian or kinetic matrix used to
 identify interference zeros and local <code class="docutils literal notranslate"><span class="pre">Z_h</span></code> patterns.</p></li>
 <li><p><strong>basis_configs</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.5)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.5)"><em>integer</em></a><em>]</em><em>]</em>) – Integer array with shape <code class="docutils literal notranslate"><span class="pre">(n_basis,</span> <span class="pre">n_variables)</span></code>.
 Rows are product-state configurations in the global constrained
@@ -8072,7 +8072,7 @@ component monitor on the analyzed cage state.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cage_state</strong> (<a class="reference internal" href="#qlinks.caging.CageState" title="qlinks.caging.results.CageState"><em>CageState</em></a>) – Compact cage state returned by the caging solver.</p></li>
-<li><p><strong>kinetic_matrix</strong> (<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.spmatrix.html#scipy.sparse.spmatrix" title="(in SciPy v1.18.0)"><em>spmatrix</em></a><em> | </em><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.sparray.html#scipy.sparse.sparray" title="(in SciPy v1.18.0)"><em>sparray</em></a><em> | </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.5)"><em>dtype</em></a><em>[</em><em>_ScalarT</em><em>]</em><em>]</em>) – Off-diagonal Hamiltonian or kinetic matrix used to
+<li><p><strong>kinetic_matrix</strong> (<em>spmatrix</em><em> | </em><em>sparray</em><em> | </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.5)"><em>dtype</em></a><em>[</em><em>_ScalarT</em><em>]</em><em>]</em>) – Off-diagonal Hamiltonian or kinetic matrix used to
 identify interference zeros and local <code class="docutils literal notranslate"><span class="pre">Z_h</span></code> patterns.</p></li>
 <li><p><strong>basis_configs</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.5)"><em>dtype</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.5)"><em>integer</em></a><em>]</em><em>]</em>) – Integer array with shape <code class="docutils literal notranslate"><span class="pre">(n_basis,</span> <span class="pre">n_variables)</span></code>.
 Rows are product-state configurations in the global constrained
@@ -10278,7 +10278,7 @@ are the limited objects needed by visualizers/classifiers/adapters.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.caging.local_search.CertifiedLocalQDMCageSearchResult.kinetic_matrix">
-<span class="sig-name descname"><span class="pre">kinetic_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><span class="pre">csr_array</span></a></em><a class="headerlink" href="#qlinks.caging.local_search.CertifiedLocalQDMCageSearchResult.kinetic_matrix" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kinetic_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">csr_array</span></em><a class="headerlink" href="#qlinks.caging.local_search.CertifiedLocalQDMCageSearchResult.kinetic_matrix" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -11167,7 +11167,7 @@ local cage subspaces.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.caging.local_search.LocalQDMCageSearchResult.kinetic_matrix">
-<span class="sig-name descname"><span class="pre">kinetic_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><span class="pre">csr_array</span></a></em><a class="headerlink" href="#qlinks.caging.local_search.LocalQDMCageSearchResult.kinetic_matrix" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kinetic_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">csr_array</span></em><a class="headerlink" href="#qlinks.caging.local_search.LocalQDMCageSearchResult.kinetic_matrix" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -16508,7 +16508,7 @@ full constrained Hilbert space.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.caging.stability.QDMExplicitSupportBoundaryMap.boundary">
-<span class="sig-name descname"><span class="pre">boundary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html#scipy.sparse.csr_matrix" title="(in SciPy v1.18.0)"><span class="pre">csr_matrix</span></a></em><a class="headerlink" href="#qlinks.caging.stability.QDMExplicitSupportBoundaryMap.boundary" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">boundary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">csr_matrix</span></em><a class="headerlink" href="#qlinks.caging.stability.QDMExplicitSupportBoundaryMap.boundary" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -19179,12 +19179,12 @@ single workflow.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.caging.search.CageSearcher.hamiltonian_matrix">
-<span class="sig-name descname"><span class="pre">hamiltonian_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.spmatrix.html#scipy.sparse.spmatrix" title="(in SciPy v1.18.0)"><span class="pre">spmatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.sparray.html#scipy.sparse.sparray" title="(in SciPy v1.18.0)"><span class="pre">sparray</span></a></em><a class="headerlink" href="#qlinks.caging.search.CageSearcher.hamiltonian_matrix" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hamiltonian_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">spmatrix</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">sparray</span></em><a class="headerlink" href="#qlinks.caging.search.CageSearcher.hamiltonian_matrix" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.caging.search.CageSearcher.kinetic_matrix">
-<span class="sig-name descname"><span class="pre">kinetic_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.spmatrix.html#scipy.sparse.spmatrix" title="(in SciPy v1.18.0)"><span class="pre">spmatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.sparray.html#scipy.sparse.sparray" title="(in SciPy v1.18.0)"><span class="pre">sparray</span></a></em><a class="headerlink" href="#qlinks.caging.search.CageSearcher.kinetic_matrix" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kinetic_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">spmatrix</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">sparray</span></em><a class="headerlink" href="#qlinks.caging.search.CageSearcher.kinetic_matrix" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -19873,12 +19873,12 @@ single workflow.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.caging.CageSearcher.hamiltonian_matrix">
-<span class="sig-name descname"><span class="pre">hamiltonian_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.spmatrix.html#scipy.sparse.spmatrix" title="(in SciPy v1.18.0)"><span class="pre">spmatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.sparray.html#scipy.sparse.sparray" title="(in SciPy v1.18.0)"><span class="pre">sparray</span></a></em><a class="headerlink" href="#qlinks.caging.CageSearcher.hamiltonian_matrix" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hamiltonian_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">spmatrix</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">sparray</span></em><a class="headerlink" href="#qlinks.caging.CageSearcher.hamiltonian_matrix" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.caging.CageSearcher.kinetic_matrix">
-<span class="sig-name descname"><span class="pre">kinetic_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.spmatrix.html#scipy.sparse.spmatrix" title="(in SciPy v1.18.0)"><span class="pre">spmatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.sparray.html#scipy.sparse.sparray" title="(in SciPy v1.18.0)"><span class="pre">sparray</span></a></em><a class="headerlink" href="#qlinks.caging.CageSearcher.kinetic_matrix" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kinetic_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">spmatrix</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">sparray</span></em><a class="headerlink" href="#qlinks.caging.CageSearcher.kinetic_matrix" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -21578,7 +21578,7 @@ constrained tensor network.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.caging.QDMBoundaryResolvedTileBasis.local_hamiltonian">
-<span class="sig-name descname"><span class="pre">local_hamiltonian</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><span class="pre">csr_array</span></a></em><a class="headerlink" href="#qlinks.caging.QDMBoundaryResolvedTileBasis.local_hamiltonian" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">local_hamiltonian</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">csr_array</span></em><a class="headerlink" href="#qlinks.caging.QDMBoundaryResolvedTileBasis.local_hamiltonian" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -23395,7 +23395,7 @@ contain parallel bonds between the same coordinates, so use
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.caging.SquareQDMPEPSFiniteClusterProblem.hamiltonian">
-<span class="sig-name descname"><span class="pre">hamiltonian</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><span class="pre">csr_array</span></a></em><a class="headerlink" href="#qlinks.caging.SquareQDMPEPSFiniteClusterProblem.hamiltonian" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hamiltonian</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">csr_array</span></em><a class="headerlink" href="#qlinks.caging.SquareQDMPEPSFiniteClusterProblem.hamiltonian" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -24424,7 +24424,7 @@ links inside that column.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.caging.SquareQDMStripTransferMatrix.transfer_matrix">
-<span class="sig-name descname"><span class="pre">transfer_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><span class="pre">csr_array</span></a></em><a class="headerlink" href="#qlinks.caging.SquareQDMStripTransferMatrix.transfer_matrix" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">transfer_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">csr_array</span></em><a class="headerlink" href="#qlinks.caging.SquareQDMStripTransferMatrix.transfer_matrix" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -25236,7 +25236,7 @@ diagonal potential on the retained support.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qlinks.caging.SquareQDMType1PEPSFiniteClusterProblem.kinetic_matrix">
-<span class="sig-name descname"><span class="pre">kinetic_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><span class="pre">csr_array</span></a></em><a class="headerlink" href="#qlinks.caging.SquareQDMType1PEPSFiniteClusterProblem.kinetic_matrix" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kinetic_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">csr_array</span></em><a class="headerlink" href="#qlinks.caging.SquareQDMType1PEPSFiniteClusterProblem.kinetic_matrix" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -25325,7 +25325,7 @@ diagonal potential on the retained support.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="qlinks.caging.SquareQDMType1PEPSFiniteClusterProblem.kinetic_interference_matrix">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kinetic_interference_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_array.html#scipy.sparse.csr_array" title="(in SciPy v1.18.0)"><span class="pre">csr_array</span></a></em><a class="headerlink" href="#qlinks.caging.SquareQDMType1PEPSFiniteClusterProblem.kinetic_interference_matrix" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kinetic_interference_matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">csr_array</span></em><a class="headerlink" href="#qlinks.caging.SquareQDMType1PEPSFiniteClusterProblem.kinetic_interference_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Rectangular type-1 map <code class="docutils literal notranslate"><span class="pre">B:</span> <span class="pre">H_target</span> <span class="pre">-&gt;</span> <span class="pre">H_opposite</span></code>.</p>
 <p>This is the block that must annihilate the occupied-subset amplitude
 vector.  Storing and applying this rectangular block avoids forming a

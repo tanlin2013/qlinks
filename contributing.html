@@ -410,16 +410,16 @@ uv<span class="w"> </span>run<span class="w"> </span>pre-commit<span class="w"> 
 </pre></div>
 </div>
 <p>The standard pull-request checks are split by purpose:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>scripts/test.sh<span class="w"> </span>fast
-scripts/test.sh<span class="w"> </span>integration
-scripts/lint_blocking.sh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>scripts/dev/test.sh<span class="w"> </span>fast
+scripts/dev/test.sh<span class="w"> </span>integration
+scripts/dev/lint_blocking.sh
 uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/repository_health.py<span class="w"> </span>--check
 uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>tools/test_health.py<span class="w"> </span>--check
 </pre></div>
 </div>
 <p>Expensive finite-size, optimization, and research-claim validation belongs in
 the scientific lane:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>scripts/test.sh<span class="w"> </span>scientific
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>scripts/dev/test.sh<span class="w"> </span>scientific
 </pre></div>
 </div>
 <p>The scientific lane is scheduled or explicitly dispatched and is not part of

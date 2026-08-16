@@ -465,7 +465,7 @@ default Python version.  Use <code class="docutils literal notranslate"><span cl
 tensor-network stack is needed; that image is built with Python 3.13 because
 the <code class="docutils literal notranslate"><span class="pre">tn</span></code> extra is intentionally constrained to Python 3.11–3.13.</p>
 <p>On the remote machine, start a local-only Jupyter server with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/docker_run_jupyter.sh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/docker/docker_run_jupyter.sh
 </pre></div>
 </div>
 <p>The script binds Jupyter to <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> on the remote host, prints a random
@@ -477,7 +477,7 @@ the port through SSH:</p>
 </div>
 <p>Then open the URL printed by the script.  To use the tensor-network notebook
 image instead, set:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">QLINKS_DOCKER_IMAGE</span><span class="o">=</span>tanlin2013/qlinks:tn-notebook<span class="w"> </span>./scripts/docker_run_jupyter.sh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">QLINKS_DOCKER_IMAGE</span><span class="o">=</span>tanlin2013/qlinks:tn-notebook<span class="w"> </span>./scripts/docker/docker_run_jupyter.sh
 </pre></div>
 </div>
 <p>To change the host-side port or notebook directory, set
@@ -496,7 +496,7 @@ from the host macOS architecture and selects Linux wheels from the lock file.
 The lock file records versions, markers, and hashes for multiple platforms; it
 does not copy or reuse a wheel installed in the host uv environment.</p>
 <p>On an Intel Mac, build and load the image with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/docker_build_tn.sh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/docker/docker_build_tn.sh
 </pre></div>
 </div>
 <p>Docker uses the daemon’s native Linux architecture by default. To request a
@@ -515,12 +515,12 @@ specific target explicitly, set, for example,
 builder: it places the completed image in Docker’s local image store, where
 PyCharm can retrieve its image ID.</p>
 <p>To verify the image outside the IDE, run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>qlinks:tn<span class="w"> </span>python<span class="w"> </span>scripts/verify_tn_environment.py
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>qlinks:tn<span class="w"> </span>python<span class="w"> </span>scripts/docker/verify_tn_environment.py
 </pre></div>
 </div>
 <p>For an interactive shell with the repository mounted at the same path used by
 the image:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/docker_run.sh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/docker/docker_run.sh
 </pre></div>
 </div>
 <p>The image build enforces wheel-only installation for <code class="docutils literal notranslate"><span class="pre">numba</span></code> and

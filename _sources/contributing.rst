@@ -18,9 +18,9 @@ The standard pull-request checks are split by purpose:
 
 .. code-block:: bash
 
-   scripts/test.sh fast
-   scripts/test.sh integration
-   scripts/lint_blocking.sh
+   scripts/dev/test.sh fast
+   scripts/dev/test.sh integration
+   scripts/dev/lint_blocking.sh
    uv run python tools/repository_health.py --check
    uv run python tools/test_health.py --check
 
@@ -29,7 +29,7 @@ the scientific lane:
 
 .. code-block:: bash
 
-   scripts/test.sh scientific
+   scripts/dev/test.sh scientific
 
 The scientific lane is scheduled or explicitly dispatched and is not part of
 the fast compatibility matrix.  Tests protect behavioural contracts and

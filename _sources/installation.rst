@@ -63,7 +63,7 @@ On the remote machine, start a local-only Jupyter server with:
 
 .. code-block:: bash
 
-   ./scripts/docker_run_jupyter.sh
+   ./scripts/docker/docker_run_jupyter.sh
 
 The script binds Jupyter to ``127.0.0.1`` on the remote host, prints a random
 token, mounts the current repository at ``/workspace/qlinks``, and mounts
@@ -79,7 +79,7 @@ image instead, set:
 
 .. code-block:: bash
 
-   QLINKS_DOCKER_IMAGE=tanlin2013/qlinks:tn-notebook ./scripts/docker_run_jupyter.sh
+   QLINKS_DOCKER_IMAGE=tanlin2013/qlinks:tn-notebook ./scripts/docker/docker_run_jupyter.sh
 
 To change the host-side port or notebook directory, set
 ``QLINKS_JUPYTER_PORT`` or ``QLINKS_NOTEBOOK_DIR``.
@@ -104,7 +104,7 @@ On an Intel Mac, build and load the image with:
 
 .. code-block:: bash
 
-   ./scripts/docker_build_tn.sh
+   ./scripts/docker/docker_build_tn.sh
 
 Docker uses the daemon's native Linux architecture by default. To request a
 specific target explicitly, set, for example,
@@ -129,14 +129,14 @@ To verify the image outside the IDE, run:
 
 .. code-block:: bash
 
-   docker run --rm qlinks:tn python scripts/verify_tn_environment.py
+   docker run --rm qlinks:tn python scripts/docker/verify_tn_environment.py
 
 For an interactive shell with the repository mounted at the same path used by
 the image:
 
 .. code-block:: bash
 
-   ./scripts/docker_run.sh
+   ./scripts/docker/docker_run.sh
 
 The image build enforces wheel-only installation for ``numba`` and
 ``llvmlite``.  If a selected Python/Linux architecture has no compatible
