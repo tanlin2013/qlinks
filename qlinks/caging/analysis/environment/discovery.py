@@ -329,7 +329,7 @@ def _resolve_environment_domain_mask(
             raise ValueError("sector_mask must have shape (hilbert_size,).")
 
         if np.any(support_mask & ~domain_mask):
-            raise ValueError("The cage support is not contained in the provided " "sector_mask.")
+            raise ValueError("The cage support is not contained in the provided sector_mask.")
 
         return domain_mask
 

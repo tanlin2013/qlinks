@@ -250,7 +250,7 @@ class BaseSectorCondition:
 
         if int(target) not in allowed:
             raise ValueError(
-                f"Illegal {cls.__name__} target {target}. " f"Allowed targets are {allowed}."
+                f"Illegal {cls.__name__} target {target}. Allowed targets are {allowed}."
             )
 
 

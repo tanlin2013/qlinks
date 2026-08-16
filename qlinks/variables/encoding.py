@@ -77,8 +77,7 @@ class ConfigEncoder:
 
         if arr.shape[1] != self.layout.n_variables:
             raise ValueError(
-                f"Expected configs with {self.layout.n_variables} variables, "
-                f"got {arr.shape[1]}."
+                f"Expected configs with {self.layout.n_variables} variables, got {arr.shape[1]}."
             )
 
         if validate:

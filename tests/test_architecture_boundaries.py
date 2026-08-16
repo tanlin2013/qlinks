@@ -62,9 +62,9 @@ def test_current_open_system_does_not_import_caging_implementation() -> None:
                 relative_path = path.relative_to(_REPOSITORY_ROOT)
                 violations.append(f"{relative_path}: {imported_module}")
 
-    assert (
-        not violations
-    ), "Current open-system code depends on caging implementation:\n" + "\n".join(violations)
+    assert not violations, (
+        "Current open-system code depends on caging implementation:\n" + "\n".join(violations)
+    )
 
 
 def test_removed_refactor_facades_are_not_reintroduced() -> None:
@@ -436,6 +436,6 @@ def test_repository_does_not_import_legacy_flat_refactor_modules() -> None:
                     relative_path = path.relative_to(_REPOSITORY_ROOT)
                     violations.append(f"{relative_path}: {imported_module}")
 
-    assert (
-        not violations
-    ), "Legacy flat refactor-module imports remain in the repository:\n" + "\n".join(violations)
+    assert not violations, (
+        "Legacy flat refactor-module imports remain in the repository:\n" + "\n".join(violations)
+    )

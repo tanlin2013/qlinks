@@ -168,7 +168,7 @@ class UpdateSpinOneXYBondOperator(BaseLocalUpdateOperator):
             values = set(self.layout.local_space(int(variable_index)).values.tolist())
             if values != {-1, 0, 1}:
                 raise ValueError(
-                    "UpdateSpinOneXYBondOperator requires local-space values " "[-1, 0, 1]."
+                    "UpdateSpinOneXYBondOperator requires local-space values [-1, 0, 1]."
                 )
 
         object.__setattr__(

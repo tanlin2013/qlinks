@@ -2008,11 +2008,11 @@ def build_type1_cage_lindblad_construction(
 
     if bad_component_residuals:
         summary = ", ".join(
-            (f"id={component.component_id}: " f"||M_i psi||={component.monitor_residual:.3e}")
+            (f"id={component.component_id}: ||M_i psi||={component.monitor_residual:.3e}")
             for component in bad_component_residuals[:8]
         )
         raise ValueError(
-            "The reduced-IZ monitor decomposition is not frustration-free: " f"{summary}."
+            f"The reduced-IZ monitor decomposition is not frustration-free: {summary}."
         )
 
     if recycling_build_result is None:
@@ -2351,7 +2351,7 @@ def _build_component_decomposition_jump_operators(
         "local_rdm_parent_projector_block_reset",
     }:
         raise ValueError(
-            f"{jump_operator_design} component jumps are assembled directly from " "local RDM data."
+            f"{jump_operator_design} component jumps are assembled directly from local RDM data."
         )
 
     if jump_operator_design == "hamiltonian_outside_monitor_inside":
@@ -2934,7 +2934,7 @@ def _build_monitor_recycler_local_hamiltonian_closure_operators(
     """
     if hamiltonian_shift not in {"none", "local_expectation"}:
         raise ValueError(
-            "local Hamiltonian closure supports hamiltonian_shift='none' or " "'local_expectation'."
+            "local Hamiltonian closure supports hamiltonian_shift='none' or 'local_expectation'."
         )
 
     kinetic_term_supports = _term_support_sets(kinetic_terms)
@@ -3697,7 +3697,7 @@ def _build_reduced_iz_monitor(
     if reduced_iz_monitor_content == "offdiagonal_plus_potential":
         if model is None or build_result is None or state is None or identity is None:
             raise ValueError(
-                "offdiagonal_plus_potential requires model, build_result, " "state, and identity."
+                "offdiagonal_plus_potential requires model, build_result, state, and identity."
             )
 
         monitor, inferred_z_value = _add_potential_to_monitor(
@@ -3716,7 +3716,7 @@ def _build_reduced_iz_monitor(
         )
 
     elif reduced_iz_monitor_content != "offdiagonal_only":
-        raise ValueError(f"Unknown reduced-IZ monitor content: " f"{reduced_iz_monitor_content!r}")
+        raise ValueError(f"Unknown reduced-IZ monitor content: {reduced_iz_monitor_content!r}")
 
     return monitor.tocsr(), selected_reports, inferred_z_value
 
@@ -3886,9 +3886,7 @@ def _build_reduced_iz_monitor_components(
             )
             component_monitor_state = component_monitor @ state
         elif reduced_iz_monitor_content != "offdiagonal_only":
-            raise ValueError(
-                f"Unknown reduced-IZ monitor content: " f"{reduced_iz_monitor_content!r}"
-            )
+            raise ValueError(f"Unknown reduced-IZ monitor content: {reduced_iz_monitor_content!r}")
 
         if component_monitor_state is None:
             component_monitor_state = component_monitor @ state

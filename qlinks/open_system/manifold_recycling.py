@@ -811,7 +811,7 @@ def _local_operator_from_matrix_unit_terms(
         coefficient = complex(term.coefficient)
         if "<-" not in name:
             raise ValueError(
-                "Cannot build a matrix readout from non-matrix-unit term name " f"{name!r}."
+                f"Cannot build a matrix readout from non-matrix-unit term name {name!r}."
             )
         target_text, source_text = name.split("<-", 1)
         target_pattern = tuple(
@@ -1062,9 +1062,7 @@ def diagnose_recycled_manifold_dark_detectors(
 
     for operator in detector_matrices:
         if operator.shape != (dim, dim):
-            raise ValueError(
-                "operator has incompatible shape: " f"{operator.shape} != {(dim, dim)}."
-            )
+            raise ValueError(f"operator has incompatible shape: {operator.shape} != {(dim, dim)}.")
 
     if detector_coefficients is None:
         if dark_operator_report is None:
@@ -1163,7 +1161,7 @@ def diagnose_recycled_manifold_dark_detectors(
                     for source_index, source_pattern in enumerate(rdm.local_patterns):
                         recycler_index = target_index * rdm.local_dim + source_index
                         recycler_name = (
-                            f"{_pattern_name(target_pattern)}<-" f"{_pattern_name(source_pattern)}"
+                            f"{_pattern_name(target_pattern)}<-{_pattern_name(source_pattern)}"
                         )
                         n_tested_candidates += 1
                         fast_metrics = _embedded_matrix_unit_metrics_with_diagonal_right_factor(
@@ -1661,9 +1659,7 @@ def _recycled_jump_for_candidate(
 
     for operator in detector_matrices:
         if operator.shape != (dim, dim):
-            raise ValueError(
-                "operator has incompatible shape: " f"{operator.shape} != {(dim, dim)}."
-            )
+            raise ValueError(f"operator has incompatible shape: {operator.shape} != {(dim, dim)}.")
 
     if detector_coefficients is None:
         if dark_operator_report is None:
@@ -1805,9 +1801,7 @@ def _stream_recycled_family_kernel_diagnostics(
         raise ValueError("detector_operators must contain at least one matrix.")
     for operator in detector_matrices:
         if operator.shape != (dim, dim):
-            raise ValueError(
-                "operator has incompatible shape: " f"{operator.shape} != {(dim, dim)}."
-            )
+            raise ValueError(f"operator has incompatible shape: {operator.shape} != {(dim, dim)}.")
 
     coefficients = _detector_coefficients_from_report(
         detector_coefficients=detector_coefficients,
@@ -2222,7 +2216,7 @@ def select_recycled_manifold_dark_detector_jumps(
     manifold_dimension = int(state_basis.shape[1])
     if selection_strategy not in {"diagnostics", "kernel_projection", "ranked_inflow"}:
         raise ValueError(
-            'selection_strategy must be "diagnostics", "kernel_projection", or ' '"ranked_inflow".'
+            'selection_strategy must be "diagnostics", "kernel_projection", or "ranked_inflow".'
         )
     if compression_strategy not in {"none", "h_invariant"}:
         raise ValueError('compression_strategy must be "none" or "h_invariant".')

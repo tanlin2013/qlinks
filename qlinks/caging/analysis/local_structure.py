@@ -366,7 +366,7 @@ class LocalStructureReadoutReport:
             lines.append("  diagonal/frozen local sectors:")
             for sector in self.classical_sectors[:max_classical]:
                 lines.append(
-                    f"    - weight={sector.weight:.6g}: " f"|{sector.pattern}><{sector.pattern}|"
+                    f"    - weight={sector.weight:.6g}: |{sector.pattern}><{sector.pattern}|"
                 )
             if len(self.classical_sectors) > max_classical:
                 lines.append(
@@ -376,7 +376,7 @@ class LocalStructureReadoutReport:
             inactive = self.inactive_plaquette_ids
             active = self.flippable_plaquette_ids
             lines.append(
-                "  contained QDM plaquettes: " f"inactive={inactive}; non-inactive/mixed={active}"
+                f"  contained QDM plaquettes: inactive={inactive}; non-inactive/mixed={active}"
             )
         return "\n".join(lines)
 

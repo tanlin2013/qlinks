@@ -1408,8 +1408,7 @@ class SquareQDMStripTransferMatrix:
                 source_states = groups.get(int(source_sector), ())
                 target_states = groups.get(-int(source_sector), ())
                 blocks = {
-                    (int(charge) + 1)
-                    // 2: (
+                    (int(charge) + 1) // 2: (
                         matrix[np.ix_(source_states, target_states)].toarray().astype(np.complex128)
                         / transfer_scale
                     )

@@ -166,8 +166,7 @@ def analyze_lindblad_evolution(
 
     if hamiltonian is not None and jumps is not None:
         raise ValueError(
-            "Lindblad residuals require density_check_mode='full' when analyzing "
-            "state snapshots."
+            "Lindblad residuals require density_check_mode='full' when analyzing state snapshots."
         )
 
     return _analyze_state_snapshot_sequence_low_rank(

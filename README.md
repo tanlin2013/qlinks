@@ -3,8 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/qlinks.svg)](http://badge.fury.io/py/qlinks)
 [![Downloads](https://pepy.tech/badge/qlinks)](https://pepy.tech/project/qlinks)
 [![codecov](https://codecov.io/gh/tanlin2013/qlinks/branch/main/graph/badge.svg)](https://codecov.io/gh/tanlin2013/qlinks)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+[![Lint and format: Ruff](https://img.shields.io/badge/lint%20%26%20format-Ruff-261230.svg)](https://docs.astral.sh/ruff/)
 [![License](https://img.shields.io/github/license/tanlin2013/qlinks.svg)](https://github.com/tanlin2013/qlinks/blob/main/LICENSE)
 [![Docker build](https://github.com/tanlin2013/qlinks/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/tanlin2013/qlinks/actions/workflows/build.yml)
 [![Test Status](https://github.com/tanlin2013/qlinks/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/tanlin2013/qlinks/actions/workflows/test.yml)
@@ -45,7 +44,7 @@ pip install qlinks
 Install from source:
 
 ```bash
-poetry install --all-extras
+uv sync --all-extras
 ```
 
 Docker images:

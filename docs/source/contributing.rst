@@ -10,9 +10,9 @@ extras needed for the change:
 
 .. code-block:: bash
 
-   poetry install --with dev
-   poetry install --with dev --extras "storage drawing"
-   poetry run pre-commit install
+   uv sync
+   uv sync --extra storage --extra drawing
+   uv run pre-commit install
 
 The standard pull-request checks are split by purpose:
 
@@ -21,8 +21,8 @@ The standard pull-request checks are split by purpose:
    scripts/test.sh fast
    scripts/test.sh integration
    scripts/lint_blocking.sh
-   poetry run python tools/repository_health.py --check
-   poetry run python tools/test_health.py --check
+   uv run python tools/repository_health.py --check
+   uv run python tools/test_health.py --check
 
 Expensive finite-size, optimization, and research-claim validation belongs in
 the scientific lane:
@@ -36,7 +36,7 @@ the fast compatibility matrix.  Tests protect behavioural contracts and
 mathematical invariants; the project does not require one test object per code
 object or direct tests of every private helper.
 
-The project uses Black and isort for formatting, flake8 for blocking lint checks,
+The project uses Ruff for formatting, Ruff for blocking lint checks,
 and mypy as advisory typing feedback.  Optional dependencies are grouped by
 feature so core model-building workflows do not require every visualization,
 storage, distributed, CP-SAT, or tensor-network dependency.

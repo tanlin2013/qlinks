@@ -39,9 +39,7 @@ def invariant_boundary_nullspace(
         raise ValueError("internal_matrix must be square.")
 
     if boundary_matrix.shape[1] != support_size:
-        raise ValueError(
-            "boundary_matrix must have the same number of columns as " "internal_matrix."
-        )
+        raise ValueError("boundary_matrix must have the same number of columns as internal_matrix.")
 
     if stabilization_rounds < 1:
         raise ValueError("stabilization_rounds must be at least 1.")

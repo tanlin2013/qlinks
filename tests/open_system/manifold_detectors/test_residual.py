@@ -255,11 +255,13 @@ def test_targeted_selector_can_minimize_combined_common_kernel_beyond_reported_r
         selection_target="combined_common_kernel",
     )
     targeted_summary = targeted.to_summary_dict()
-    assert targeted_summary["reported_candidate_family_residual_kernel_dimension"] == (
-        targeted_summary["reported_candidate_residual_kernel_dimension"]
+    assert (
+        targeted_summary["reported_candidate_family_residual_kernel_dimension"]
+        == (targeted_summary["reported_candidate_residual_kernel_dimension"])
     )
-    assert targeted_summary["reported_candidates_remove_family_residual_kernel"] is (
-        targeted_summary["reported_candidates_remove_residual_kernel"]
+    assert (
+        targeted_summary["reported_candidates_remove_family_residual_kernel"]
+        is (targeted_summary["reported_candidates_remove_residual_kernel"])
     )
 
     summary = combined_selection.to_summary_dict()

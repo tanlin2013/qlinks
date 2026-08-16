@@ -634,7 +634,7 @@ class QuantumDiskBasisGridVisualizer:
                 suptitle = f"Quantum disk interference zeros ({zero_indices.size} states)"
             else:
                 suptitle = (
-                    f"Quantum disk interference zeros: {mechanism} " f"({zero_indices.size} states)"
+                    f"Quantum disk interference zeros: {mechanism} ({zero_indices.size} states)"
                 )
 
         return self.plot(states, labels=labels, suptitle=suptitle, **plot_kwargs)

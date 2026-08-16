@@ -12,7 +12,7 @@ Run:
 
 .. code-block:: bash
 
-   poetry run python tools/repository_health.py --check
+   uv run python tools/repository_health.py --check
 
 The budget in ``tools/repository_health_budget.json`` enforces:
 
@@ -37,7 +37,7 @@ Run:
 
 .. code-block:: bash
 
-   poetry run python tools/test_health.py --check
+   uv run python tools/test_health.py --check
 
 ``tests/test_health_budget.json`` prevents known test debt from growing silently. The qualitative
 history is maintained in ``tests/TEST_HEALTH_AUDIT.md``.
@@ -49,8 +49,8 @@ Install both commit and push hooks:
 
 .. code-block:: bash
 
-   poetry run pre-commit install
-   poetry run pre-commit install --hook-type pre-push
+   uv run pre-commit install
+   uv run pre-commit install --hook-type pre-push
 
 Commit-time hooks run formatting/lint hygiene plus repository health. Pre-push hooks additionally
 run test health, Poetry/lock checks, and the fast test lane. Integration remains a pull-request CI

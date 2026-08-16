@@ -93,7 +93,7 @@ class SquareDiskDiagonalLineSumSector(BaseSectorCondition):
         target = tuple(int(v) for v in self.target)
         if len(target) != len(labels):
             raise ValueError(
-                f"target for {self.family!r} must have length {len(labels)}, " f"got {len(target)}."
+                f"target for {self.family!r} must have length {len(labels)}, got {len(target)}."
             )
 
         label_to_offset = {label: offset for offset, label in enumerate(labels)}

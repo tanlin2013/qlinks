@@ -523,9 +523,7 @@ def _run_quantum_jump_trajectory_prepared(
 
             if normalize_each_step:
                 if state_norm == 0.0:
-                    raise RuntimeError(
-                        "The MCWF state reached zero norm. " "Try a smaller time step."
-                    )
+                    raise RuntimeError("The MCWF state reached zero norm. Try a smaller time step.")
                 state = state / state_norm
 
             current_time += step_size
@@ -849,7 +847,7 @@ def _sample_lindblad_mcwf_vectorized_scipy(
             ).real
             if np.any(norm_squares == 0.0):
                 raise RuntimeError(
-                    "At least one MCWF state reached zero norm. " "Try a smaller time step."
+                    "At least one MCWF state reached zero norm. Try a smaller time step."
                 )
 
             next_states /= np.sqrt(norm_squares).reshape(1, -1)

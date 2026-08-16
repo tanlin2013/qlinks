@@ -272,9 +272,7 @@ def diagnose_manifold_dark_operator_basis(
 
     for operator in operator_matrices:
         if operator.shape != (dim, dim):
-            raise ValueError(
-                "operator has incompatible shape: " f"{operator.shape} != {(dim, dim)}."
-            )
+            raise ValueError(f"operator has incompatible shape: {operator.shape} != {(dim, dim)}.")
 
     if operator_names is None:
         names = tuple(f"O_{index}" for index in range(len(operator_matrices)))
@@ -776,9 +774,7 @@ def diagnose_dressed_manifold_dark_detectors(
 
     for operator in detector_matrices + multiplier_matrices:
         if operator.shape != (dim, dim):
-            raise ValueError(
-                "operator has incompatible shape: " f"{operator.shape} != {(dim, dim)}."
-            )
+            raise ValueError(f"operator has incompatible shape: {operator.shape} != {(dim, dim)}.")
 
     if detector_coefficients is None:
         if dark_operator_report is None:

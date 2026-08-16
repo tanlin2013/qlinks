@@ -40,7 +40,7 @@ Generate the same HTML without rebuilding all Sphinx pages:
 
 .. code-block:: bash
 
-   poetry run make -C docs architecture
+   uv run make -C docs architecture
 
 The output is written to
 ``docs/build/html/_static/architecture/qlinks-architecture.html``.  To generate
@@ -48,13 +48,13 @@ and open it directly:
 
 .. code-block:: bash
 
-   poetry run python tools/architecture_report.py --open
+   uv run python tools/architecture_report.py --open
 
 A normal documentation build also refreshes the report:
 
 .. code-block:: bash
 
-   poetry run make -C docs html
+   uv run make -C docs html
 
 CI and architecture enforcement
 -------------------------------

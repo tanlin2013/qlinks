@@ -178,7 +178,7 @@ class BitmaskSparseHamiltonianBuilder:
 
                     if self.on_missing == "raise":
                         raise KeyError(
-                            "Bitmask operator produced a code outside the basis: " f"{new_code}"
+                            f"Bitmask operator produced a code outside the basis: {new_code}"
                         )
 
                     continue
@@ -203,8 +203,7 @@ class BitmaskSparseHamiltonianBuilder:
 
                         if self.on_missing == "raise":
                             raise KeyError(
-                                "Bitmask operator produced a code outside the basis: "
-                                f"{action.code}"
+                                f"Bitmask operator produced a code outside the basis: {action.code}"
                             )
 
                         continue
