@@ -32,6 +32,7 @@ jobs:
           python-version: ${{ steps.versions.outputs.default-python }}
           uv-version: ${{ steps.versions.outputs.uv-version }}
           cache-prefix: docs
+          system-packages: libxml2-dev libxslt1-dev
           install-command: uv sync --locked --no-default-groups --group docs
 
       - name: Build Sphinx doc and architecture diagnosis
