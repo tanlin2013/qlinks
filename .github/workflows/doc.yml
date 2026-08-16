@@ -19,8 +19,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Read versions
         id: versions
@@ -34,7 +32,6 @@ jobs:
           python-version: ${{ steps.versions.outputs.default-python }}
           uv-version: ${{ steps.versions.outputs.uv-version }}
           cache-prefix: docs
-          system-packages: build-essential pkg-config libxml2-dev libxslt1-dev zlib1g-dev pandoc
           install-command: uv sync --locked --no-default-groups --group docs
 
       - name: Build Sphinx doc and architecture diagnosis
