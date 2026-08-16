@@ -93,10 +93,6 @@ select = [
     "N",
     "RUF022",
 ]
-ignore = [
-    "E203",
-    "E704",
-]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["N806"]
