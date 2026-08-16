@@ -1,3 +1,4 @@
+# Temporary branch-only workflow; removed before the migration PR is opened.
 name: Finalize uv and Ruff migration
 
 on:
