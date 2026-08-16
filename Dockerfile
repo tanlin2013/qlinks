@@ -8,7 +8,7 @@ FROM python:${PYTHON_VERSION}-slim-bookworm AS runtime
 
 LABEL maintainer="TaoLin tanlin2013@gmail.com"
 
-ARG POETRY_VERSION=2.3.4
+ARG UV_VERSION=0.12.0
 ARG QLINKS_EXTRAS=
 ARG QLINKS_NOTEBOOK_PACKAGES="jupyterlab>=4,<5 ipykernel>=6,<7"
 ARG TARGETPLATFORM
@@ -23,9 +23,8 @@ ARG TARGETARCH
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_INSTALLER_ONLY_BINARY="numpy,llvmlite,numba"
+    UV_LINK_MODE=copy \
+    PATH="/workspace/qlinks/.venv/bin:${PATH}"
 
 WORKDIR /workspace/qlinks
 
@@ -39,36 +38,30 @@ RUN apt-get update && \
         pkg-config && \
     rm -rf /var/lib/apt/lists/*
 
-RUN python -m pip install --upgrade pip wheel setuptools && \
-    python -m pip install "poetry==${POETRY_VERSION}"
+RUN python -m pip install --no-cache-dir "uv==${UV_VERSION}"
 
-# poetry.lock contains hashes for distributions on all supported platforms; it
-# does not copy a macOS wheel into Linux. Poetry evaluates the locked markers
-# and chooses the wheel matching TARGETPLATFORM/TARGETARCH at install time.
-COPY pyproject.toml poetry.lock README.md ./
+# uv.lock is cross-platform; uv evaluates markers and chooses distributions for
+# the active Python/platform when synchronizing the image environment.
+COPY pyproject.toml uv.lock README.md ./
 RUN echo "Building qlinks for ${TARGETPLATFORM:-default} (${TARGETARCH:-default})" && \
     echo "Optional Docker features/extras: ${QLINKS_EXTRAS:-none}" && \
-    poetry check --lock && \
-    QLINKS_POETRY_EXTRAS="$(QLINKS_EXTRAS="${QLINKS_EXTRAS}" python -c \
-        'import os, shlex; print(" ".join(x for x in shlex.split(os.environ.get("QLINKS_EXTRAS", "")) if x != "notebook"))')" && \
-    if [ -n "${QLINKS_POETRY_EXTRAS}" ]; then \
-        poetry install --only main --extras "${QLINKS_POETRY_EXTRAS}" --no-root --no-ansi; \
-    else \
-        poetry install --only main --no-root --no-ansi; \
-    fi && \
+    uv lock --check && \
+    set -- && \
+    for extra in ${QLINKS_EXTRAS}; do \
+        if [ "${extra}" != "notebook" ]; then set -- "$@" --extra "${extra}"; fi; \
+    done && \
+    uv sync --locked --no-default-groups --no-install-project "$@" && \
     if printf ' %s ' "${QLINKS_EXTRAS}" | grep -q ' notebook '; then \
-        python -m pip install --no-cache-dir ${QLINKS_NOTEBOOK_PACKAGES}; \
+        uv pip install --python .venv/bin/python ${QLINKS_NOTEBOOK_PACKAGES}; \
     fi
 
 COPY . .
-RUN QLINKS_POETRY_EXTRAS="$(QLINKS_EXTRAS="${QLINKS_EXTRAS}" python -c \
-        'import os, shlex; print(" ".join(x for x in shlex.split(os.environ.get("QLINKS_EXTRAS", "")) if x != "notebook"))')" && \
-    if [ -n "${QLINKS_POETRY_EXTRAS}" ]; then \
-        poetry install --only main --extras "${QLINKS_POETRY_EXTRAS}" --no-ansi; \
-    else \
-        poetry install --only main --no-ansi; \
-    fi && \
-    python scripts/verify_optional_environment.py --extras "${QLINKS_EXTRAS}"
+RUN set -- && \
+    for extra in ${QLINKS_EXTRAS}; do \
+        if [ "${extra}" != "notebook" ]; then set -- "$@" --extra "${extra}"; fi; \
+    done && \
+    uv sync --locked --no-default-groups "$@" && \
+    uv run --no-default-groups python scripts/verify_optional_environment.py --extras "${QLINKS_EXTRAS}"
 
-# PyCharm can use /usr/local/bin/python directly as the Docker interpreter.
+# PyCharm can use the project virtual environment's Python directly.
 CMD ["python"]
