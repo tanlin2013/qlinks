@@ -51,8 +51,6 @@ dev = [
     "safety>=3,<4",
     "ruff==0.16.0",
     "mypy>=1,<2",
-    "jupyter>=1,<2",
-    "jupyterlab>=3,<4",
     "pytest>=9,<10",
     "pytest-cov>=7,<8",
     "pytest-mock>=3.9,<4",
@@ -60,6 +58,10 @@ dev = [
     "cruft>=2.12,<3",
     "pandas-stubs>=3,<4",
     "scipy-stubs>=1.16,<2",
+]
+notebook = [
+    "jupyter>=1,<2",
+    "jupyterlab>=4,<5",
 ]
 docs = [
     "sphinx>=7,<8",
