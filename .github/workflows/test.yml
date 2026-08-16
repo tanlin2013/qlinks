@@ -123,6 +123,26 @@ jobs:
       - name: Run integration test lane
         run: scripts/test.sh integration
 
+  distributed:
+    name: Ray backend (Python 3.13)
+    needs: versions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python and uv
+        uses: ./.github/actions/setup-python-uv
+        with:
+          python-version: "3.13"
+          uv-version: ${{ needs.versions.outputs.uv-version }}
+          cache-prefix: test-distributed
+          compile-paths: qlinks tests
+          install-command: uv sync --locked --extra distributed
+
+      - name: Run Ray integration test
+        run: scripts/test.sh integration tests/test_distributed.py
+
   tensor-network:
     name: Tensor-network backend (Python 3.13)
     needs: versions
