@@ -24,7 +24,7 @@ cpsat = ["ortools>=9.11,<10"]
 cupy = [
     "cupy-cuda12x>=14,<15; platform_system == 'Linux' and platform_machine == 'x86_64'",
 ]
-distributed = ["ray==2.55.0"]
+distributed = ["ray==2.57.0"]
 drawing = [
     "pyvis>=0.3,<0.4",
     "plotly>=6,<7",
