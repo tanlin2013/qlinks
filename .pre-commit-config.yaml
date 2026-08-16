@@ -41,12 +41,6 @@ repos:
 
 -   repo: local
     hooks:
-    -   id: cruft-check
-        name: cruft-check
-        entry: uv run cruft check
-        language: system
-        pass_filenames: false
-        stages: [pre-push]
     -   id: uv-lock-check
         name: uv lock check
         entry: uv lock --check

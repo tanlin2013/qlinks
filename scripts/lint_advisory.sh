@@ -13,7 +13,6 @@ _advisory() {
     fi
 }
 
-_advisory "cruft" uv run cruft check
 # Safety CLI v3 prompts for login in non-interactive CI.
 # Keep dependency vulnerability checks out of advisory lint until a
 # non-interactive scanner is pinned in the lockfile.

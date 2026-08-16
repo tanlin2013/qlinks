@@ -1,6 +1,15 @@
 name: Docker build
 
-on: [push, pull_request]
+on:
+  push:
+    branches: ["main"]
+    tags: ["*"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: docker-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -21,7 +30,37 @@ jobs:
         id: versions
         run: python scripts/ci_versions.py
 
-  build:
+  pr-smoke:
+    if: github.event_name == 'pull_request'
+    needs: versions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build runtime image for PR smoke test
+        uses: docker/build-push-action@v6
+        with:
+          cache-from: type=gha,scope=docker-runtime
+          cache-to: type=gha,mode=max,scope=docker-runtime
+          push: false
+          load: true
+          build-args: |
+            PYTHON_VERSION=${{ needs.versions.outputs.default-python }}
+            UV_VERSION=${{ needs.versions.outputs.uv-version }}
+            QLINKS_EXTRAS=
+          tags: qlinks:ci-runtime
+
+      - name: Smoke test runtime image
+        run: >-
+          docker run --rm qlinks:ci-runtime
+          python -c "import qlinks; print('qlinks import OK')"
+
+  publish:
+    if: github.event_name == 'push'
     needs: versions
     runs-on: ubuntu-latest
 
@@ -34,28 +73,16 @@ jobs:
             floating-tag: latest
             python-version: ${{ needs.versions.outputs.default-python }}
             extras: ""
-            pr-smoke: true
-            smoke-command: >-
-              import qlinks;
-              print('qlinks import OK')
           - variant: notebook
             tag-suffix: -notebook
             floating-tag: notebook
             python-version: ${{ needs.versions.outputs.default-python }}
             extras: notebook drawing storage
-            pr-smoke: false
-            smoke-command: >-
-              import ipykernel, jupyterlab, qlinks;
-              print('qlinks notebook image OK')
           - variant: tn-notebook
             tag-suffix: -tn-notebook
             floating-tag: tn-notebook
             python-version: "3.13"
             extras: notebook tn drawing storage
-            pr-smoke: false
-            smoke-command: >-
-              import autograd, ipykernel, jupyterlab, qlinks, quimb;
-              print('qlinks TN notebook image OK')
 
     steps:
       - uses: actions/checkout@v4
@@ -74,20 +101,17 @@ jobs:
           tags: |
             type=ref,event=branch,suffix=${{ matrix.tag-suffix }}
             type=ref,event=tag,suffix=${{ matrix.tag-suffix }}
-            type=ref,event=pr,suffix=${{ matrix.tag-suffix }}
             type=sha,format=long,suffix=${{ matrix.tag-suffix }}
-            type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Asia/Taipei'}}${{ matrix.tag-suffix }},enable=${{ github.event_name == 'push' }}
+            type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Asia/Taipei'}}${{ matrix.tag-suffix }}
             type=raw,value=${{ matrix.floating-tag }},enable={{is_default_branch}}
 
       - name: Login to DockerHub
-        if: github.event_name == 'push'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
-        if: github.event_name == 'push'
         uses: docker/build-push-action@v6
         with:
           cache-from: type=gha,scope=docker-${{ matrix.variant }}
@@ -99,24 +123,3 @@ jobs:
             QLINKS_EXTRAS=${{ matrix.extras }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build Docker image for PR smoke test
-        if: github.event_name == 'pull_request' && matrix.pr-smoke
-        uses: docker/build-push-action@v6
-        with:
-          cache-from: type=gha,scope=docker-${{ matrix.variant }}
-          cache-to: type=gha,mode=max,scope=docker-${{ matrix.variant }}
-          push: false
-          load: true
-          build-args: |
-            PYTHON_VERSION=${{ matrix.python-version }}
-            UV_VERSION=${{ needs.versions.outputs.uv-version }}
-            QLINKS_EXTRAS=${{ matrix.extras }}
-          tags: qlinks:ci-${{ matrix.variant }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Smoke test Docker image
-        if: github.event_name == 'pull_request' && matrix.pr-smoke
-        run: >-
-          docker run --rm qlinks:ci-${{ matrix.variant }}
-          python -c "${{ matrix.smoke-command }}"
