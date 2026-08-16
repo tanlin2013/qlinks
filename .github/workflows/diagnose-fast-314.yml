@@ -1,0 +1,52 @@
+name: Diagnose fast Python 3.14
+
+on:
+  push:
+    branches:
+      - agent/uv-ruff-migration
+    paths:
+      - .github/workflows/diagnose-fast-314.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python and uv
+        uses: ./.github/actions/setup-python-uv
+        with:
+          python-version: "3.14"
+          uv-version: "0.12.0"
+          cache-prefix: diagnose-fast-314
+          compile-paths: qlinks tests
+          system-packages: >-
+            build-essential gfortran libblas-dev liblapack-dev pkg-config
+            libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
+          install-command: uv sync --locked --extra distributed --extra storage --extra drawing
+
+      - name: Capture fast-test failure
+        shell: bash
+        env:
+          QLINKS_COVERAGE_XML: "1"
+        run: |
+          set +e
+          scripts/test.sh fast 2>&1 | tee "${RUNNER_TEMP}/fast-314.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [[ ${status} -ne 0 ]]; then
+            python - <<'PY'
+          import os
+          from pathlib import Path
+
+          log = Path(os.environ["RUNNER_TEMP"]) / "fast-314.log"
+          lines = log.read_text(errors="replace").splitlines()
+          tail = "\n".join(lines[-180:])
+          escaped = tail.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          print(f"::error title=Python 3.14 fast-test diagnostic::{escaped}")
+          PY
+            exit "${status}"
+          fi
