@@ -1,6 +1,14 @@
 name: Lint
 
-on: [push, pull_request]
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: lint-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -45,7 +53,7 @@ jobs:
   advisory:
     needs: versions
     runs-on: ubuntu-latest
-    continue-on-error: true  # mypy/security/cruft reports are advisory for now.
+    continue-on-error: true  # mypy/security reports are advisory for now.
 
     steps:
       - uses: actions/checkout@v4
