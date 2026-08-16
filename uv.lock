@@ -3712,7 +3712,7 @@ cupy = [
     { name = "cupy-cuda12x", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
 ]
 distributed = [
-    { name = "ray" },
+    { name = "ray", marker = "python_full_version < '3.14'" },
 ]
 drawing = [
     { name = "igraph" },
@@ -3781,7 +3781,7 @@ requires-dist = [
     { name = "pynauty", marker = "extra == 'automorphism'", specifier = ">=2.8.6,<3" },
     { name = "pyvis", marker = "extra == 'drawing'", specifier = ">=0.3,<0.4" },
     { name = "quimb", marker = "python_full_version < '3.14' and extra == 'tn'", specifier = ">=1.14,<2" },
-    { name = "ray", marker = "extra == 'distributed'", specifier = "==2.55.0" },
+    { name = "ray", marker = "python_full_version < '3.14' and extra == 'distributed'", specifier = "==2.55.0" },
     { name = "rich", specifier = ">=15,<16" },
     { name = "scipy", specifier = ">=1.15,<2" },
     { name = "tqdm", specifier = ">=4.63,<5" },
