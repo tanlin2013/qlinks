@@ -1,0 +1,66 @@
+name: Pre-commit
+
+on:
+  push:
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: pre-commit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    # Same-repository PRs are already covered by the push run for the exact head
+    # SHA. Fork PRs do not produce a push event in this repository, so validate
+    # them from the pull_request event instead.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install CI helper dependency
+        run: python -m pip install packaging
+
+      - name: Read versions
+        id: versions
+        run: python .github/scripts/ci_versions.py
+
+      - name: Set up Python and uv
+        uses: ./.github/actions/setup-python-uv
+        with:
+          python-version: ${{ steps.versions.outputs.default-python }}
+          uv-version: ${{ steps.versions.outputs.uv-version }}
+          cache-prefix: pre-commit
+          system-packages: build-essential pkg-config libxml2-dev libxslt1-dev zlib1g-dev
+          install-command: uv sync --locked
+
+      - name: Determine validation range
+        id: range
+        shell: bash
+        env:
+          EVENT_BEFORE: ${{ github.event.before }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          zero=0000000000000000000000000000000000000000
+
+          if [[ "${GITHUB_EVENT_NAME}" == "push" \
+                && "${GITHUB_REF}" == "refs/heads/${DEFAULT_BRANCH}" \
+                && "${EVENT_BEFORE:-${zero}}" != "${zero}" ]]; then
+            base="${EVENT_BEFORE}"
+          else
+            git fetch --no-tags origin "${DEFAULT_BRANCH}"
+            base="$(git merge-base "origin/${DEFAULT_BRANCH}" HEAD)"
+          fi
+
+          echo "base=${base}" >> "${GITHUB_OUTPUT}"
+
+      - name: Enforce pre-commit policy
+        run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD
