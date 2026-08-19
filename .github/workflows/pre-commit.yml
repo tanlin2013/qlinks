@@ -38,7 +38,6 @@ jobs:
           python-version: ${{ steps.versions.outputs.default-python }}
           uv-version: ${{ steps.versions.outputs.uv-version }}
           cache-prefix: pre-commit
-          system-packages: build-essential pkg-config libxml2-dev libxslt1-dev zlib1g-dev
           install-command: uv sync --locked
 
       - name: Determine validation range

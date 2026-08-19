@@ -44,7 +44,6 @@ jobs:
           python-version: ${{ needs.versions.outputs.default-python }}
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: lint-blocking
-          system-packages: build-essential pkg-config libxml2-dev libxslt1-dev zlib1g-dev
           install-command: uv sync --locked
 
       - name: Blocking lint
@@ -66,7 +65,6 @@ jobs:
           python-version: ${{ needs.versions.outputs.default-python }}
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: lint-advisory
-          system-packages: build-essential pkg-config libxml2-dev libxslt1-dev zlib1g-dev
           install-command: uv sync --locked
 
       - name: Advisory lint

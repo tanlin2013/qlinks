@@ -48,9 +48,8 @@ jobs:
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-fast
           compile-paths: qlinks tests
-          system-packages: >-
-            build-essential gfortran libblas-dev liblapack-dev pkg-config
-            libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
+          # Pycairo is built from source on Linux and needs Cairo headers.
+          system-packages: pkg-config libcairo2-dev
           install-command: uv sync --locked --extra storage --extra drawing
 
       - name: Run fast test lane
@@ -94,7 +93,6 @@ jobs:
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-compatibility
           compile-paths: qlinks tests
-          system-packages: build-essential gfortran libblas-dev liblapack-dev pkg-config
           install-command: uv sync --locked --extra storage
 
       - name: Run fast test lane without coverage
@@ -117,9 +115,8 @@ jobs:
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-integration
           compile-paths: qlinks tests
-          system-packages: >-
-            build-essential gfortran libblas-dev liblapack-dev pkg-config
-            libcairo2-dev libxml2-dev libxslt1-dev zlib1g-dev
+          # Pycairo is built from source on Linux and needs Cairo headers.
+          system-packages: pkg-config libcairo2-dev
           install-command: uv sync --locked --extra storage --extra drawing
 
       - name: Run integration test lane
@@ -163,7 +160,6 @@ jobs:
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-tn
           compile-paths: qlinks tests
-          system-packages: build-essential gfortran libblas-dev liblapack-dev pkg-config
           install-command: uv sync --locked --extra tn
 
       - name: Verify tensor-network environment

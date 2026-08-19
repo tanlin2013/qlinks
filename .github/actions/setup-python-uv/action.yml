@@ -41,8 +41,18 @@ runs:
       if: inputs.system-packages != ''
       shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install -y ${{ inputs.system-packages }}
+        sudo env DEBIAN_FRONTEND=noninteractive timeout 180s \
+          apt-get \
+            -o Acquire::Retries=3 \
+            -o Acquire::http::Timeout=20 \
+            -o Acquire::https::Timeout=20 \
+            update
+        sudo env DEBIAN_FRONTEND=noninteractive timeout 180s \
+          apt-get \
+            -o Acquire::Retries=3 \
+            -o Acquire::http::Timeout=20 \
+            -o Acquire::https::Timeout=20 \
+            install -y --no-install-recommends ${{ inputs.system-packages }}
 
     - name: Set up uv
       uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
