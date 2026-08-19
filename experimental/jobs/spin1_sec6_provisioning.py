@@ -14,6 +14,13 @@ import pandas as pd
 import scipy.linalg as la
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
+from helpers import (
+    charge_conserving_two_site_hermitian_basis,
+    orthonormalize_columns,
+    projector_deleted_basis,
+    projector_deleted_block_covariance,
+    projector_deleted_observable_moments,
+)
 
 from qlinks.basis.configs import basis_configs_from_build_result
 from qlinks.caging.analysis.spectral import (
@@ -33,15 +40,6 @@ from qlinks.models import (
     spin_one_xy_hxy_h3_imaginary_j2_model,
     spin_one_xy_scar_tower_states,
 )
-
-from helpers import (
-    charge_conserving_two_site_hermitian_basis,
-    orthonormalize_columns,
-    projector_deleted_basis,
-    projector_deleted_block_covariance,
-    projector_deleted_observable_moments,
-)
-
 
 TOL = 1.0e-10
 DARK_TOL = 1.0e-9
@@ -1423,7 +1421,7 @@ def run_sec6_provisioning(config: Sec6ProvisioningConfig) -> dict[str, pd.DataFr
     family_concentration_variants_df = pd.DataFrame(family_concentration_rows)
     family_concentration_records = []
     if not family_concentration_variants_df.empty:
-        for (length, kappa), frame in family_concentration_variants_df.groupby(
+        for (_length, _kappa), frame in family_concentration_variants_df.groupby(
             ["L", "kappa_over_J"], sort=True
         ):
             raw = frame[frame["variant"] == "raw"]
