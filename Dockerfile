@@ -19,11 +19,16 @@ ARG TARGETARCH
 # --build-arg PYTHON_VERSION=3.13 --build-arg QLINKS_EXTRAS=tn.
 # ``notebook`` is a Docker feature backed by qlinks' non-default uv dependency group;
 # other feature names map to project extras.
+#
+# The project source is bind-mounted over /workspace/qlinks by the evidence-job
+# launcher. Keep the uv environment outside that mount so the image-installed
+# dependencies remain visible when local source replaces the image source tree.
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     UV_LINK_MODE=copy \
-    PATH="/workspace/qlinks/.venv/bin:${PATH}"
+    UV_PROJECT_ENVIRONMENT=/opt/qlinks-venv \
+    PATH="/opt/qlinks-venv/bin:${PATH}"
 
 WORKDIR /workspace/qlinks
 
@@ -68,7 +73,7 @@ RUN set -- --no-default-groups && \
         fi; \
     done && \
     uv sync --locked "$@" && \
-    .venv/bin/python scripts/docker/verify_optional_environment.py --extras "${QLINKS_EXTRAS}"
+    python scripts/docker/verify_optional_environment.py --extras "${QLINKS_EXTRAS}"
 
-# PyCharm can use the project virtual environment's Python directly.
+# PyCharm can use /opt/qlinks-venv/bin/python directly.
 CMD ["python"]
