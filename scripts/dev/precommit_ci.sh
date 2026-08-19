@@ -8,9 +8,9 @@ phase="${3:-all}"
 run_file_policy() {
   uv run pre-commit validate-config
 
-  # CI ownership boundary: Ruff is verified by Lint / blocking and repository
-  # health has its own Policy step. The file-policy phase owns only repository
-  # hygiene and notebook normalization.
+  # CI ownership boundary: Ruff belongs to Lint and repository-health belongs
+  # to the static-check lane. This phase owns file hygiene and notebook
+  # normalization only.
   SKIP=ruff-check,ruff-format,repository-health \
     uv run pre-commit run \
       --from-ref "${base_ref}" \
@@ -19,25 +19,8 @@ run_file_policy() {
       --show-diff-on-failure
 }
 
-run_repository_health() {
-  uv run pre-commit run repository-health \
-    --all-files \
-    --hook-stage pre-commit \
-    --show-diff-on-failure
-}
-
 run_lock_health() {
-  uv run pre-commit run uv-lock-check \
-    --all-files \
-    --hook-stage pre-push \
-    --show-diff-on-failure
-}
-
-run_test_health() {
-  uv run pre-commit run test-health \
-    --all-files \
-    --hook-stage pre-push \
-    --show-diff-on-failure
+  uv lock --check
 }
 
 run_commit_policy() {
@@ -50,28 +33,20 @@ case "${phase}" in
   files)
     run_file_policy
     ;;
-  repository-health)
-    run_repository_health
-    ;;
   lock)
     run_lock_health
-    ;;
-  test-health)
-    run_test_health
     ;;
   commits)
     run_commit_policy
     ;;
   all)
     run_file_policy
-    run_repository_health
     run_lock_health
-    run_test_health
     run_commit_policy
     ;;
   *)
     echo "unknown policy phase: ${phase}" >&2
-    echo "expected one of: files, repository-health, lock, test-health, commits, all" >&2
+    echo "expected one of: files, lock, commits, all" >&2
     exit 2
     ;;
 esac

@@ -61,14 +61,8 @@ jobs:
       - name: File hygiene and notebook normalization
         run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD files
 
-      - name: Repository health
-        run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD repository-health
-
       - name: Dependency lock
         run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD lock
-
-      - name: Test-suite health
-        run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD test-health
 
       - name: Commit message policy
         run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD commits

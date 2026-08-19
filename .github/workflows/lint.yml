@@ -46,8 +46,11 @@ jobs:
           cache-prefix: lint-blocking
           install-command: uv sync --locked
 
-      - name: Blocking lint
-        run: ./scripts/dev/lint_blocking.sh
+      - name: Ruff
+        run: ./scripts/dev/lint_blocking.sh ruff
+
+      - name: Repository health
+        run: ./scripts/dev/lint_blocking.sh repository-health
 
   advisory:
     needs: versions
