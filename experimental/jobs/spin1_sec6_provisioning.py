@@ -173,9 +173,7 @@ def _normalized_witness_q_ops(configs: np.ndarray, sector) -> dict[str, sp.csr_a
 def _cleaned_trace_average(operator, exceptional_vectors: np.ndarray) -> dict[str, float | int]:
     dimension = int(operator.shape[0])
     raw_trace = (
-        complex(operator.diagonal().sum())
-        if sp.issparse(operator)
-        else complex(np.trace(operator))
+        complex(operator.diagonal().sum()) if sp.issparse(operator) else complex(np.trace(operator))
     )
     exceptional = np.asarray(exceptional_vectors, dtype=np.complex128)
     if exceptional.ndim == 1:
@@ -519,9 +517,7 @@ def _local_witness_matrices(
     for key, witness in RAW_WITNESSES.items():
         local = witness.embed(local_configs)
         q = np.asarray(
-            (local.conj().T @ local).toarray()
-            if sp.issparse(local)
-            else local.conj().T @ local
+            (local.conj().T @ local).toarray() if sp.issparse(local) else local.conj().T @ local
         )
         if key in {"A", "Z"}:
             q = q / witness.template.q_operator_norm
@@ -594,12 +590,9 @@ def _bridge_diagnostics(
             [np.trace(matrix.conj().T @ helstrom) for matrix in basis_matrices],
             dtype=np.complex128,
         )
-        leading_index = (
-            int(np.argmax(np.abs(worst_coefficients))) if worst_coefficients.size else 0
-        )
+        leading_index = int(np.argmax(np.abs(worst_coefficients))) if worst_coefficients.size else 0
         witness_differences = {
-            key: float(np.trace(delta_rho @ q).real)
-            for key, q in witness_matrices.items()
+            key: float(np.trace(delta_rho @ q).real) for key, q in witness_matrices.items()
         }
         overlaps = {
             key: float(
@@ -749,9 +742,7 @@ def _derive_convergence_flags(frame: pd.DataFrame, tolerance: float) -> pd.DataF
     if not metrics:
         return derived
     groups = (
-        [((), derived)]
-        if not grouping
-        else derived.groupby(grouping, dropna=False, sort=False)
+        [((), derived)] if not grouping else derived.groupby(grouping, dropna=False, sort=False)
     )
     for _, group in groups:
         ordered = group.sort_values("requested_eigenpairs")
@@ -886,9 +877,7 @@ def _concentration_at_point(
                 "window_median_eigenpair_residual": median_residual,
                 "joint_dark_rank": int(exceptional.shape[1]),
                 "tower_residual": float(
-                    diagnose_eigenpair(
-                        context["h_sector"], context["tower"]
-                    ).residual_norm
+                    diagnose_eigenpair(context["h_sector"], context["tower"]).residual_norm
                 ),
                 "requested_eigenpairs": int(sparse_metadata["requested_eigenpairs"]),
                 "checkpoint_reused": bool(sparse_metadata.get("checkpoint_reused", False)),
@@ -982,8 +971,7 @@ def _matching_at_point(
     }
     raw_deltas = {name: abs(float(raw[name]) - float(resolved_beta0[name]["raw"])) for name in raw}
     clean_deltas = {
-        name: abs(float(clean[name]) - float(resolved_beta0[name]["clean"]))
-        for name in clean
+        name: abs(float(clean[name]) - float(resolved_beta0[name]["clean"])) for name in clean
     }
     max_residual, median_residual = _window_residuals(
         context["h_sector"], energies, vectors, indices, chunk_size=config.residual_chunk_size
@@ -1170,18 +1158,13 @@ def _update_concentration_sequence(config: Sec6ProvisioningConfig, l14_rows: pd.
     if not frames:
         return
     combined = pd.concat(frames, ignore_index=True, sort=False)
-    sort_columns = [
-        column for column in ("L", "window_half_width") if column in combined
-    ]
+    sort_columns = [column for column in ("L", "window_half_width") if column in combined]
     dedup_columns = [column for column in ("L", "kappa_over_J") if column in combined]
-    combined = combined.sort_values(sort_columns).drop_duplicates(
-        dedup_columns, keep="last"
-    )
+    combined = combined.sort_values(sort_columns).drop_duplicates(dedup_columns, keep="last")
     combined.to_csv(config.output_dir / "spin1_xy_kappa0p1_concentration.csv", index=False)
     if "largest_covariance_width" in combined:
         fit_frame = combined[
-            (combined["L"] >= 8)
-            & np.isfinite(combined["largest_covariance_width"])
+            (combined["L"] >= 8) & np.isfinite(combined["largest_covariance_width"])
         ].copy()
         if len(fit_frame) >= 2:
             lengths = fit_frame["L"].to_numpy(dtype=float)
@@ -1196,9 +1179,7 @@ def _update_concentration_sequence(config: Sec6ProvisioningConfig, l14_rows: pd.
                         "a": float(np.exp(params[0])),
                         "p": float(params[1]),
                         "rmse_log": float(
-                            np.sqrt(
-                                np.mean((np.log(widths) - log_design @ params) ** 2)
-                            )
+                            np.sqrt(np.mean((np.log(widths) - log_design @ params) ** 2))
                         ),
                     }
                 ]
@@ -1339,13 +1320,9 @@ def run_sec6_provisioning(config: Sec6ProvisioningConfig) -> dict[str, pd.DataFr
     worst_df = pd.DataFrame(representative_worst_rows)
     tolerance_df = pd.DataFrame(representative_tolerance_rows)
     if not concentration_df.empty:
-        concentration_df.to_csv(
-            output / "spin1_xy_kappa0p1_concentration_L14.csv", index=False
-        )
+        concentration_df.to_csv(output / "spin1_xy_kappa0p1_concentration_L14.csv", index=False)
     if not worst_df.empty:
-        worst_df.to_csv(
-            output / "spin1_xy_kappa0p1_worst_eigenoperator_L14.csv", index=False
-        )
+        worst_df.to_csv(output / "spin1_xy_kappa0p1_worst_eigenoperator_L14.csv", index=False)
     if not tolerance_df.empty:
         tolerance_df.to_csv(
             output / "spin1_xy_kappa0p1_concentration_L14_tolerance_audit.csv",
@@ -1444,9 +1421,7 @@ def run_sec6_provisioning(config: Sec6ProvisioningConfig) -> dict[str, pd.DataFr
             family_concentration_records.append(record)
     family_concentration_df = pd.DataFrame(family_concentration_records)
     if not large_size_matching_df.empty:
-        large_size_matching_df.to_csv(
-            output / "spin1_xy_large_size_family_check.csv", index=False
-        )
+        large_size_matching_df.to_csv(output / "spin1_xy_large_size_family_check.csv", index=False)
         large_size_matching_df.to_csv(
             output / "spin1_xy_kappa_matching_large_size_safe_window.csv", index=False
         )
@@ -1530,9 +1505,7 @@ def run_sec6_provisioning(config: Sec6ProvisioningConfig) -> dict[str, pd.DataFr
             fit["bridge"] = bridge
             bridge_fit_frames.append(fit)
     bridge_fit_df = (
-        pd.concat(bridge_fit_frames, ignore_index=True)
-        if bridge_fit_frames
-        else pd.DataFrame()
+        pd.concat(bridge_fit_frames, ignore_index=True) if bridge_fit_frames else pd.DataFrame()
     )
     bridge_fit_df.to_csv(output / "spin1_xy_kappa0p1_two_bridge_rdm_distance_fit.csv", index=False)
 
