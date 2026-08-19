@@ -63,7 +63,7 @@ jobs:
             --volume "${GITHUB_WORKSPACE}:/workspace/qlinks" \
             --workdir /workspace/qlinks \
             qlinks:ci-runtime \
-            bash -lc '
+            bash -c '
               set -euo pipefail
               python -c "import sys, cairo, igraph, matplotlib, qlinks; assert sys.executable == '\''/opt/qlinks-venv/bin/python'\'', sys.executable; print('\''bind-mounted drawing environment OK:'\'', sys.executable)"
               uv sync --locked --extra storage --extra drawing
