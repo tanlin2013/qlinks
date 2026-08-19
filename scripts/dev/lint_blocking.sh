@@ -1,13 +1,13 @@
 #!/bin/bash
 set -euxo pipefail
 
+# CI ownership boundary: this lane owns Ruff only. Repository/test/lock health
+# and notebook normalization belong to the Policy workflow.
 uv run ruff check qlinks/ tests/
 uv run ruff format --check qlinks/ tests/
 
-# The pre-commit policy applies Ruff to every changed Python/Jupyter file, not
-# only package/tests. Mirror that contract in the ordinary PR lint lane so
-# experimental jobs and notebooks cannot make the PR look green while the
-# required push-only policy check is failing.
+# Keep maintained Python/Jupyter outside qlinks/tests covered without forcing a
+# repository-wide cleanup of historical/archive material in the same PR.
 if [[ -n "${GITHUB_BASE_REF:-}" ]]; then
     git fetch --no-tags origin "${GITHUB_BASE_REF}"
     base="$(git merge-base "origin/${GITHUB_BASE_REF}" HEAD)"
@@ -19,5 +19,3 @@ if [[ -n "${GITHUB_BASE_REF:-}" ]]; then
         uv run ruff format --check "${changed_python[@]}"
     fi
 fi
-
-uv run python tools/repository_health.py --check --quiet

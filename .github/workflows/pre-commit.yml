@@ -1,12 +1,13 @@
-name: Pre-commit
+name: Policy
 
 on:
   push:
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 
 concurrency:
-  group: pre-commit-${{ github.event.pull_request.number || github.ref }}
+  group: policy-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -14,10 +15,6 @@ permissions:
 
 jobs:
   policy:
-    # Same-repository PRs are already covered by the push run for the exact head
-    # SHA. Fork PRs do not produce a push event in this repository, so validate
-    # them from the pull_request event instead.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
 
     steps:
@@ -37,7 +34,7 @@ jobs:
         with:
           python-version: ${{ steps.versions.outputs.default-python }}
           uv-version: ${{ steps.versions.outputs.uv-version }}
-          cache-prefix: pre-commit
+          cache-prefix: policy
           install-command: uv sync --locked
 
       - name: Determine validation range
@@ -61,5 +58,17 @@ jobs:
 
           echo "base=${base}" >> "${GITHUB_OUTPUT}"
 
-      - name: Enforce pre-commit policy
-        run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD
+      - name: File hygiene and notebook normalization
+        run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD files
+
+      - name: Repository health
+        run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD repository-health
+
+      - name: Dependency lock
+        run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD lock
+
+      - name: Test-suite health
+        run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD test-health
+
+      - name: Commit message policy
+        run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD commits

@@ -48,23 +48,15 @@ jobs:
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-fast
           compile-paths: qlinks tests
-          # Pycairo is built from source on Linux and needs Cairo headers.
-          system-packages: pkg-config libcairo2-dev
+          # Pycairo is built from source on Linux. pkg-config is preinstalled on
+          # GitHub's Ubuntu image; only the missing Cairo headers are requested.
+          system-packages: libcairo2-dev
           install-command: uv sync --locked --extra storage --extra drawing
 
       - name: Run fast test lane
         env:
           QLINKS_COVERAGE_XML: "1"
         run: scripts/dev/test.sh fast
-
-      - name: Check test-suite health
-        run: |
-          uv run python tools/test_health.py \
-            --check \
-            --json "${RUNNER_TEMP}/test-health.json" \
-            --markdown "${RUNNER_TEMP}/test-health.md" \
-            --quiet
-          cat "${RUNNER_TEMP}/test-health.md" >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Report coverage
         if: github.ref_name == 'main'
@@ -115,8 +107,9 @@ jobs:
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-integration
           compile-paths: qlinks tests
-          # Pycairo is built from source on Linux and needs Cairo headers.
-          system-packages: pkg-config libcairo2-dev
+          # Pycairo is built from source on Linux. pkg-config is preinstalled on
+          # GitHub's Ubuntu image; only the missing Cairo headers are requested.
+          system-packages: libcairo2-dev
           install-command: uv sync --locked --extra storage --extra drawing
 
       - name: Run integration test lane
