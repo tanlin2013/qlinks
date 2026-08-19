@@ -41,7 +41,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build runtime image for PR smoke test
+      # Native Cairo belongs to the container boundary. The Dockerfile's
+      # libcairo development layer is stable/cacheable, unlike fresh apt setup
+      # on every GitHub-hosted Fast and Integration runner.
+      - name: Build drawing runtime image for PR smoke test
         uses: docker/build-push-action@v6
         with:
           cache-from: type=gha,scope=docker-runtime
@@ -51,16 +54,21 @@ jobs:
           build-args: |
             PYTHON_VERSION=${{ needs.versions.outputs.default-python }}
             UV_VERSION=${{ needs.versions.outputs.uv-version }}
-            QLINKS_EXTRAS=
+            QLINKS_EXTRAS=drawing storage
           tags: qlinks:ci-runtime
 
-      - name: Smoke test runtime image with repository bind mount
+      - name: Smoke test bind mount and Cairo drawing backend
         run: |
           docker run --rm \
             --volume "${GITHUB_WORKSPACE}:/workspace/qlinks" \
             --workdir /workspace/qlinks \
             qlinks:ci-runtime \
-            python -c "import sys, matplotlib, qlinks; assert sys.executable == '/opt/qlinks-venv/bin/python', sys.executable; print('bind-mounted qlinks environment OK:', sys.executable)"
+            bash -lc '
+              set -euo pipefail
+              python -c "import sys, cairo, igraph, matplotlib, qlinks; assert sys.executable == '\''/opt/qlinks-venv/bin/python'\'', sys.executable; print('\''bind-mounted drawing environment OK:'\'', sys.executable)"
+              uv sync --locked --extra storage --extra drawing
+              QLINKS_TEST_COVERAGE=0 scripts/dev/test.sh fast tests/visualizer/test_hamiltonian_graph.py
+            '
 
   publish:
     if: github.event_name == 'push'
