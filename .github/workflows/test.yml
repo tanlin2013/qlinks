@@ -40,6 +40,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          filter: blob:none
 
       - name: Set up Python and uv
         uses: ./.github/actions/setup-python-uv
@@ -48,10 +49,11 @@ jobs:
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-fast
           compile-paths: qlinks tests
-          # Pycairo is built from source on Linux. pkg-config is preinstalled on
-          # GitHub's Ubuntu image; only the missing Cairo headers are requested.
-          system-packages: libcairo2-dev
-          install-command: uv sync --locked --extra storage --extra drawing
+          # Native drawing/Cairo validation belongs to the required Docker build
+          # gate, where the system toolchain is part of a cacheable image layer.
+          # Keep the ordinary fast lane pure-Python/uv so Ubuntu apt mirrors
+          # cannot block unrelated package and unit-test validation.
+          install-command: uv sync --locked --extra storage
 
       - name: Run fast test lane
         env:
@@ -116,10 +118,9 @@ jobs:
           uv-version: ${{ needs.versions.outputs.uv-version }}
           cache-prefix: test-integration
           compile-paths: qlinks tests
-          # Pycairo is built from source on Linux. pkg-config is preinstalled on
-          # GitHub's Ubuntu image; only the missing Cairo headers are requested.
-          system-packages: libcairo2-dev
-          install-command: uv sync --locked --extra storage --extra drawing
+          # Optional native drawing tests run in Docker; this lane owns the
+          # cross-module integration suite without host system-package setup.
+          install-command: uv sync --locked --extra storage
 
       - name: Run integration test lane
         run: scripts/dev/test.sh integration
