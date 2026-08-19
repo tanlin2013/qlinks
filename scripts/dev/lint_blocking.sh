@@ -18,6 +18,11 @@ if [[ -n "${GITHUB_BASE_REF:-}" ]]; then
         uv run ruff check "${changed_python[@]}"
         uv run ruff format --check "${changed_python[@]}"
     fi
+
+    # Temporary visibility for the required push-only policy gate. Remove this
+    # once the hidden failing hook has been identified and fixed; the dedicated
+    # Pre-commit workflow remains the authoritative required status check.
+    ./scripts/dev/precommit_ci.sh "${base}" HEAD
 fi
 
 uv run python tools/repository_health.py --check --quiet
