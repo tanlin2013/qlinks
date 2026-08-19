@@ -21,7 +21,6 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-
 import spin1_sec6_provisioning as core
 
 MANUSCRIPT_WINDOW_PREFACTORS = (0.75, 1.0, 1.25)
