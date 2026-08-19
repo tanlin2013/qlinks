@@ -15,7 +15,6 @@ from evidence_job_utils import (
     run_evidence_renderer,
 )
 
-
 DEFAULT_BASELINE = "experimental/data/evidence_jobs/spin1_production_20260806T074051Z"
 DEFAULT_SPARSE_ADDENDUM = "experimental/data/evidence_jobs/spin1_production_20260810T082123Z"
 
