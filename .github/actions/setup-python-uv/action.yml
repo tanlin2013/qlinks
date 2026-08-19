@@ -37,22 +37,54 @@ runs:
       shell: bash
       run: python -m compileall -q ${{ inputs.compile-paths }}
 
-    - name: Install system dependencies
+    - name: Install missing system dependencies
       if: inputs.system-packages != ''
       shell: bash
       run: |
-        sudo env DEBIAN_FRONTEND=noninteractive timeout 180s \
+        set -euo pipefail
+
+        read -r -a requested <<< "${{ inputs.system-packages }}"
+        missing=()
+        for package in "${requested[@]}"; do
+          if ! dpkg-query -W -f='${db:Status-Abbrev}' "${package}" 2>/dev/null | grep -q '^ii'; then
+            missing+=("${package}")
+          fi
+        done
+
+        if ((${#missing[@]} == 0)); then
+          echo "All requested system packages are already installed."
+          exit 0
+        fi
+
+        echo "Missing system packages: ${missing[*]}"
+
+        install_missing() {
+          sudo env DEBIAN_FRONTEND=noninteractive timeout 60s \
+            apt-get \
+              -o Acquire::Retries=2 \
+              -o Acquire::http::Timeout=15 \
+              -o Acquire::https::Timeout=15 \
+              -o DPkg::Lock::Timeout=20 \
+              -o Dpkg::Use-Pty=0 \
+              install -y --no-install-recommends "${missing[@]}"
+        }
+
+        # GitHub-hosted runners already carry usable apt indexes. Avoid a fresh
+        # mirror-wide `apt-get update` on the normal path; it has been our main
+        # source of intermittent setup stalls. Refresh indexes only if the
+        # direct installation fails, then retry once.
+        if install_missing; then
+          exit 0
+        fi
+
+        echo "::warning::Direct apt install failed; refreshing package indexes once before retrying."
+        sudo env DEBIAN_FRONTEND=noninteractive timeout 60s \
           apt-get \
-            -o Acquire::Retries=3 \
-            -o Acquire::http::Timeout=20 \
-            -o Acquire::https::Timeout=20 \
+            -o Acquire::Retries=2 \
+            -o Acquire::http::Timeout=15 \
+            -o Acquire::https::Timeout=15 \
             update
-        sudo env DEBIAN_FRONTEND=noninteractive timeout 180s \
-          apt-get \
-            -o Acquire::Retries=3 \
-            -o Acquire::http::Timeout=20 \
-            -o Acquire::https::Timeout=20 \
-            install -y --no-install-recommends ${{ inputs.system-packages }}
+        install_missing
 
     - name: Set up uv
       uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0

@@ -37,6 +37,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          filter: blob:none
 
       - name: Set up Python and uv
         uses: ./.github/actions/setup-python-uv
@@ -46,8 +47,11 @@ jobs:
           cache-prefix: lint-blocking
           install-command: uv sync --locked
 
-      - name: Blocking lint
-        run: ./scripts/dev/lint_blocking.sh
+      - name: Ruff
+        run: ./scripts/dev/lint_blocking.sh ruff
+
+      - name: Repository health
+        run: ./scripts/dev/lint_blocking.sh repository-health
 
   advisory:
     needs: versions
@@ -58,6 +62,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          filter: blob:none
 
       - name: Set up Python and uv
         uses: ./.github/actions/setup-python-uv
