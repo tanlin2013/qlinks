@@ -460,6 +460,10 @@ local Docker build:</p>
 docker<span class="w"> </span>pull<span class="w"> </span>tanlin2013/qlinks:tn-notebook
 </pre></div>
 </div>
+<p>The repository Docker run launchers use Docker’s <code class="docutils literal notranslate"><span class="pre">--pull</span> <span class="pre">always</span></code> policy, so
+those manual pull commands are optional when starting containers through the
+scripts.  A launcher therefore refreshes the selected published tag before it
+creates a container instead of silently reusing a stale local copy.</p>
 <p>Use <code class="docutils literal notranslate"><span class="pre">tanlin2013/qlinks:notebook</span></code> for ordinary qlinks notebooks on the
 default Python version.  Use <code class="docutils literal notranslate"><span class="pre">tanlin2013/qlinks:tn-notebook</span></code> only when the
 tensor-network stack is needed; that image is built with Python 3.13 because
@@ -504,6 +508,7 @@ specific target explicitly, set, for example,
 <code class="docutils literal notranslate"><span class="pre">QLINKS_DOCKER_PLATFORM=linux/amd64</span></code> or <code class="docutils literal notranslate"><span class="pre">linux/arm64</span></code>.</p>
 <p>On an Intel Mac, the default is normally <code class="docutils literal notranslate"><span class="pre">linux/amd64</span></code>. This is equivalent to:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>buildx<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--pull<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--load<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--platform<span class="w"> </span>linux/amd64<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--build-arg<span class="w"> </span><span class="nv">QLINKS_EXTRAS</span><span class="o">=</span>tn<span class="w"> </span><span class="se">\</span>
@@ -515,12 +520,20 @@ specific target explicitly, set, for example,
 builder: it places the completed image in Docker’s local image store, where
 PyCharm can retrieve its image ID.</p>
 <p>To verify the image outside the IDE, run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>qlinks:tn<span class="w"> </span>python<span class="w"> </span>scripts/docker/verify_tn_environment.py
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--pull<span class="w"> </span>never<span class="w"> </span>--rm<span class="w"> </span>qlinks:tn<span class="w"> </span>python<span class="w"> </span>scripts/docker/verify_tn_environment.py
 </pre></div>
 </div>
-<p>For an interactive shell with the repository mounted at the same path used by
-the image:</p>
+<p>The generic repository runner intentionally targets the published TN notebook
+image and refreshes it before use:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/docker/docker_run.sh
+</pre></div>
+</div>
+<p>When you specifically want the locally built <code class="docutils literal notranslate"><span class="pre">qlinks:tn</span></code> image instead, use a
+direct run with <code class="docutils literal notranslate"><span class="pre">--pull</span> <span class="pre">never</span></code> so Docker does not replace that local artifact:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--pull<span class="w"> </span>never<span class="w"> </span>--rm<span class="w"> </span>--interactive<span class="w"> </span>--tty<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--volume<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/workspace/qlinks&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--workdir<span class="w"> </span>/workspace/qlinks<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>qlinks:tn<span class="w"> </span>bash
 </pre></div>
 </div>
 <p>The image build enforces wheel-only installation for <code class="docutils literal notranslate"><span class="pre">numba</span></code> and
