@@ -41,10 +41,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Native Cairo belongs to the container boundary. The Dockerfile's
-      # libcairo development layer is stable/cacheable, unlike fresh apt setup
-      # on every GitHub-hosted Fast and Integration runner.
-      - name: Build drawing runtime image for PR smoke test
+      # Native Cairo and notebook runtime dependencies belong to the container
+      # boundary. Build the same feature set used by the published notebook image
+      # so nbconvert/runtime regressions are caught before merge.
+      - name: Build notebook drawing runtime image for PR smoke test
         uses: docker/build-push-action@v6
         with:
           cache-from: type=gha,scope=docker-runtime
@@ -54,10 +54,10 @@ jobs:
           build-args: |
             PYTHON_VERSION=${{ needs.versions.outputs.default-python }}
             UV_VERSION=${{ needs.versions.outputs.uv-version }}
-            QLINKS_EXTRAS=drawing storage
+            QLINKS_EXTRAS=notebook drawing storage
           tags: qlinks:ci-runtime
 
-      - name: Smoke test bind mount and Cairo drawing backend
+      - name: Smoke test bind mount, notebook runtime, and Cairo drawing backend
         run: |
           docker run --rm \
             --volume "${GITHUB_WORKSPACE}:/workspace/qlinks" \
@@ -65,8 +65,9 @@ jobs:
             qlinks:ci-runtime \
             bash -c '
               set -euo pipefail
-              python -c "import sys, cairo, igraph, matplotlib, qlinks; assert sys.executable == '\''/opt/qlinks-venv/bin/python'\'', sys.executable; print('\''bind-mounted drawing environment OK:'\'', sys.executable)"
-              uv sync --locked --extra storage --extra drawing
+              python -c "import sys, cairo, igraph, matplotlib, nbconvert, lxml.html.clean, qlinks; assert sys.executable == '\''/opt/qlinks-venv/bin/python'\'', sys.executable; print('\''bind-mounted notebook/drawing environment OK:'\'', sys.executable)"
+              uv sync --locked --group notebook --group docs --extra storage --extra drawing
+              python scripts/docker/verify_optional_environment.py --extras "notebook drawing storage"
               QLINKS_TEST_COVERAGE=0 scripts/dev/test.sh fast tests/visualizer/test_hamiltonian_graph.py
             '
 

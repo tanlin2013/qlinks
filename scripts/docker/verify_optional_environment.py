@@ -20,7 +20,7 @@ def _parse_extras(raw: str) -> set[str]:
 def _require_import(module_name: str, *, extra: str) -> None:
     try:
         importlib.import_module(module_name)
-    except ModuleNotFoundError as exc:
+    except ImportError as exc:
         raise RuntimeError(
             f"Docker optional extra {extra!r} was requested, but module "
             f"{module_name!r} is not importable. Check pyproject optional "
@@ -45,7 +45,10 @@ def _verify_tn_extra() -> None:
 
 
 def _verify_notebook_feature() -> None:
-    for module_name in ("ipykernel", "jupyterlab"):
+    # Import nbconvert itself, not just the Jupyter front ends. The current
+    # nbconvert/lxml combination imports lxml.html.clean eagerly, so this catches
+    # a missing lxml-html-clean package before a notebook image is published.
+    for module_name in ("ipykernel", "jupyterlab", "nbconvert", "lxml.html.clean"):
         _require_import(module_name, extra="notebook")
 
 
