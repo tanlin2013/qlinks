@@ -439,6 +439,7 @@ done
 
 DOCKER_COMMAND=(
     docker run -d
+    --pull always
     --init
     --name "${CONTAINER_NAME}"
     --label "qlinks.evidence.run_id=${RUN_ID}"

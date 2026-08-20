@@ -7,6 +7,7 @@ PLATFORM="${QLINKS_DOCKER_PLATFORM:-}"
 
 build_args=(
     buildx build
+    --pull
     --load
     --build-arg "PYTHON_VERSION=${PYTHON_VERSION}"
     --build-arg "QLINKS_EXTRAS=tn"

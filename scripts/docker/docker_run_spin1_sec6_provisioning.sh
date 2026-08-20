@@ -113,6 +113,7 @@ DOCKER_LIMIT_ARGS=(--shm-size "${SHM_SIZE}")
 
 DOCKER_COMMAND=(
     docker run -d
+    --pull always
     --init
     --name "${CONTAINER_NAME}"
     --label "qlinks.evidence.run_id=${RUN_ID}"
@@ -157,6 +158,7 @@ Run id: ${RUN_ID}
 Stage: ${STAGE}
 Container: ${CONTAINER_NAME}
 Image: ${IMAGE_NAME}
+Pull policy: always
 Data mount: ${HOST_DATA_DIR} -> ${CONTAINER_DATA_DIR}
 Thread limit: ${THREADS}
 Memory limit: ${MEMORY_LIMIT:-unlimited}

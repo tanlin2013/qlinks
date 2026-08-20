@@ -18,7 +18,10 @@ ARG TARGETARCH
 # are currently constrained that way in pyproject.toml. Build a TN image explicitly with
 # --build-arg PYTHON_VERSION=3.13 --build-arg QLINKS_EXTRAS=tn.
 # ``notebook`` is a Docker feature backed by qlinks' non-default uv dependency group;
-# other feature names map to project extras.
+# other feature names map to project extras. The current locked nbconvert stack imports
+# lxml.html.clean at runtime. That dependency is already locked through the docs group,
+# so notebook images include docs as well until the dependency can be split into a
+# dedicated notebook-runtime group during a future lock refresh.
 #
 # The project source is bind-mounted over /workspace/qlinks by the evidence-job
 # launcher. Keep the uv environment outside that mount so the image-installed
@@ -56,7 +59,7 @@ RUN echo "Building qlinks for ${TARGETPLATFORM:-default} (${TARGETARCH:-default}
     set -- --no-default-groups && \
     for feature in ${QLINKS_EXTRAS}; do \
         if [ "${feature}" = "notebook" ]; then \
-            set -- "$@" --group notebook; \
+            set -- "$@" --group notebook --group docs; \
         else \
             set -- "$@" --extra "${feature}"; \
         fi; \
@@ -67,7 +70,7 @@ COPY . .
 RUN set -- --no-default-groups && \
     for feature in ${QLINKS_EXTRAS}; do \
         if [ "${feature}" = "notebook" ]; then \
-            set -- "$@" --group notebook; \
+            set -- "$@" --group notebook --group docs; \
         else \
             set -- "$@" --extra "${feature}"; \
         fi; \

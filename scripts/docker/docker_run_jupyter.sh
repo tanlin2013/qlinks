@@ -25,6 +25,7 @@ fi
 docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
 
 docker run -d \
+    --pull always \
     --name "${CONTAINER_NAME}" \
     --restart unless-stopped \
     --publish "127.0.0.1:${HOST_PORT}:8888" \

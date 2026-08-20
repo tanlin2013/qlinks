@@ -54,6 +54,11 @@ local Docker build:
    docker pull tanlin2013/qlinks:notebook
    docker pull tanlin2013/qlinks:tn-notebook
 
+The repository Docker run launchers use Docker's ``--pull always`` policy, so
+those manual pull commands are optional when starting containers through the
+scripts.  A launcher therefore refreshes the selected published tag before it
+creates a container instead of silently reusing a stale local copy.
+
 Use ``tanlin2013/qlinks:notebook`` for ordinary qlinks notebooks on the
 default Python version.  Use ``tanlin2013/qlinks:tn-notebook`` only when the
 tensor-network stack is needed; that image is built with Python 3.13 because
@@ -115,6 +120,7 @@ On an Intel Mac, the default is normally ``linux/amd64``. This is equivalent to:
 .. code-block:: bash
 
    docker buildx build \
+       --pull \
        --load \
        --platform linux/amd64 \
        --build-arg QLINKS_EXTRAS=tn \
@@ -129,14 +135,24 @@ To verify the image outside the IDE, run:
 
 .. code-block:: bash
 
-   docker run --rm qlinks:tn python scripts/docker/verify_tn_environment.py
+   docker run --pull never --rm qlinks:tn python scripts/docker/verify_tn_environment.py
 
-For an interactive shell with the repository mounted at the same path used by
-the image:
+The generic repository runner intentionally targets the published TN notebook
+image and refreshes it before use:
 
 .. code-block:: bash
 
    ./scripts/docker/docker_run.sh
+
+When you specifically want the locally built ``qlinks:tn`` image instead, use a
+direct run with ``--pull never`` so Docker does not replace that local artifact:
+
+.. code-block:: bash
+
+   docker run --pull never --rm --interactive --tty \
+       --volume "$(pwd):/workspace/qlinks" \
+       --workdir /workspace/qlinks \
+       qlinks:tn bash
 
 The image build enforces wheel-only installation for ``numba`` and
 ``llvmlite``.  If a selected Python/Linux architecture has no compatible
