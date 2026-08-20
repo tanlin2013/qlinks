@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -46,3 +47,8 @@ def test_sec6_provisioning_runner_patches_smoke_notebook(tmp_path: Path) -> None
     assert "DENSE_SIZES = (8,)" in source
     assert "SAFE_FIXED_HALF_WIDTHS = (1.0,)" in source
     assert "RUN_LARGE_REPRESENTATIVE = False" in source
+
+    notebook = json.loads(source)
+    for cell in notebook["cells"]:
+        if cell["cell_type"] == "code":
+            compile("".join(cell["source"]), f"{patched}:{cell['id']}", "exec")
