@@ -111,8 +111,8 @@ def main() -> None:
         default=None,
         help=(
             "Interior-spectrum method. Production default is factorization-free folded spectrum; "
-            "the folded eigensolver backend is selected separately. shift-invert is diagnostic-only "
-            "and requires --allow-direct-lu-shift-invert."
+            "the folded eigensolver backend is selected separately. "
+            "shift-invert is diagnostic-only and requires --allow-direct-lu-shift-invert."
         ),
     )
     parser.add_argument(
@@ -143,7 +143,10 @@ def main() -> None:
         "--write-cache",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="Persist every completed folded-spectrum budget immediately after validation data exist.",
+        help=(
+            "Persist every completed folded-spectrum budget immediately after validation data "
+            "exist."
+        ),
     )
     parser.add_argument(
         "--force-recompute-cache",
@@ -154,7 +157,9 @@ def main() -> None:
         "--primme-warm-start-vectors",
         type=int,
         default=256,
-        help="Maximum vectors reused from the largest compatible lower-budget checkpoint by PRIMME.",
+        help=(
+            "Maximum vectors reused from the largest compatible lower-budget checkpoint by PRIMME."
+        ),
     )
     parser.add_argument(
         "--primme-method",
@@ -172,7 +177,8 @@ def main() -> None:
         default=None,
         help=(
             "Comma-separated folded-spectrum requested eigenpair budgets. The workflow escalates "
-            "until all requested windows are covered and then performs one extra budget when requested."
+            "until all requested windows are covered and then performs one extra budget when "
+            "requested."
         ),
     )
     parser.add_argument("--large-strip-folded-tolerance", type=float, default=None)
