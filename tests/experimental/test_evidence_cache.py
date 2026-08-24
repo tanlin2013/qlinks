@@ -12,6 +12,7 @@ JOBS = ROOT / "experimental" / "jobs"
 if str(JOBS) not in sys.path:
     sys.path.insert(0, str(JOBS))
 
+import evidence_cache as evidence_cache_module  # noqa: E402
 from evidence_cache import (  # noqa: E402
     CacheValidationStatus,
     load_spectral_checkpoint,
@@ -108,6 +109,54 @@ def test_spectral_checkpoint_can_be_warm_start_only(tmp_path: Path) -> None:
     )
     assert loaded is not None
     assert loaded.status is CacheValidationStatus.VALID_WARM_START
+
+
+def test_checkpoint_overwrite_invalidates_completion_marker_first(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    matrix = sp.csr_array(np.diag(np.arange(4.0)))
+    problem = _diagonal_problem(matrix, 1.5)
+    directory = spectral_checkpoint_directory(
+        namespace="test/spectrum",
+        problem=problem,
+        budget=2,
+        backend="unit",
+        cache_root=tmp_path,
+    )
+    vectors = np.eye(4, dtype=np.complex128)[:, [1, 2]]
+    save_spectral_checkpoint(
+        directory,
+        energies=np.array([1.0, 2.0]),
+        eigenvectors=vectors,
+        residuals=np.zeros(2),
+        transformed_residuals=None,
+        problem=problem,
+        backend="unit",
+        requested_budget=2,
+        solver_tolerance=1.0e-9,
+    )
+    assert (directory / "metadata.json").is_file()
+
+    def fail_write(path: Path, array: np.ndarray) -> None:
+        del path, array
+        raise RuntimeError("simulated interrupted overwrite")
+
+    monkeypatch.setattr(evidence_cache_module, "_atomic_save_npy", fail_write)
+    with pytest.raises(RuntimeError, match="simulated interrupted overwrite"):
+        save_spectral_checkpoint(
+            directory,
+            energies=np.array([1.0, 2.0]),
+            eigenvectors=vectors,
+            residuals=np.zeros(2),
+            transformed_residuals=None,
+            problem=problem,
+            backend="unit",
+            requested_budget=2,
+            solver_tolerance=1.0e-9,
+        )
+
+    assert not (directory / "metadata.json").exists()
+    assert load_spectral_checkpoint(directory, expected_problem=problem) is None
 
 
 def test_qdm_wrapper_reuses_completed_arpack_budget(
