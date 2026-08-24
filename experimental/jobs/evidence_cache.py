@@ -209,6 +209,10 @@ def save_spectral_checkpoint(
         raise ValueError("spectral checkpoint contains non-finite values")
 
     directory.mkdir(parents=True, exist_ok=True)
+    # Invalidate an older completed checkpoint before replacing any payload
+    # array. Otherwise an interrupted force-recompute could leave old metadata
+    # pointing at a mixture of old and new arrays and falsely look complete.
+    (directory / "metadata.json").unlink(missing_ok=True)
     _atomic_save_npy(directory / "energies.npy", values)
     _atomic_save_npy(directory / "eigenvectors.npy", vectors)
     _atomic_save_npy(directory / "residuals.npy", residual_values)
