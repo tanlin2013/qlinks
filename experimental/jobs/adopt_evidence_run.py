@@ -33,7 +33,7 @@ def _resolve(raw: Path) -> Path:
 def _link_or_copy(source: Path, destination: Path, *, mode: str) -> str:
     destination.parent.mkdir(parents=True, exist_ok=True)
     if destination.exists():
-        return "existing"
+        raise FileExistsError(destination)
     if mode in {"auto", "hardlink"}:
         try:
             os.link(source, destination)
@@ -85,6 +85,21 @@ def _validate_spin_checkpoint(directory: Path) -> dict[str, Any]:
     }
 
 
+def _spin_metadata_compatible(source: dict[str, Any], destination: dict[str, Any]) -> bool:
+    keys = (
+        "schema_version",
+        "L",
+        "M",
+        "J3_over_J",
+        "kappa_over_J",
+        "requested_eigenpairs",
+        "sector_dimension",
+        "shift",
+        "arpack_tolerance",
+    )
+    return all(source.get(key) == destination.get(key) for key in keys)
+
+
 def _adopt_spin_checkpoints(
     run_dir: Path,
     *,
@@ -107,12 +122,34 @@ def _adopt_spin_checkpoints(
             "validation": validation,
             "files": {},
         }
+        if destination.exists():
+            destination_validation = _validate_spin_checkpoint(destination)
+            if not _spin_metadata_compatible(
+                validation["metadata"], destination_validation["metadata"]
+            ):
+                raise RuntimeError(
+                    "refusing to overwrite an incompatible stable Spin-1 checkpoint: "
+                    f"{destination}"
+                )
+            if (
+                validation["returned_eigenpairs"]
+                != destination_validation["returned_eigenpairs"]
+                or validation["sector_dimension"] != destination_validation["sector_dimension"]
+            ):
+                raise RuntimeError(
+                    "stable Spin-1 checkpoint has incompatible array dimensions: "
+                    f"{destination}"
+                )
+            row["mode"] = "existing_validated"
+            row["destination_validation"] = destination_validation
+            adopted.append(row)
+            continue
         if dry_run:
             row["mode"] = "dry-run"
             adopted.append(row)
             continue
-        destination.mkdir(parents=True, exist_ok=True)
-        # Metadata is copied last so it remains the completion marker.
+        destination.mkdir(parents=True, exist_ok=False)
+        # Metadata is placed last so it remains the completion marker.
         for name in ("energies.npy", "vectors.npy"):
             row["files"][name] = _link_or_copy(
                 source_dir / name,
@@ -171,15 +208,17 @@ def main() -> None:
             f"run return_code={return_code}; use --allow-incomplete-run only when independently "
             "validated checkpoints from this attempt are worth adopting"
         )
-    if return_code is None and "finished_at_utc" not in run_metadata and not args.allow_incomplete_run:
+    if (
+        return_code is None
+        and "finished_at_utc" not in run_metadata
+        and not args.allow_incomplete_run
+    ):
         raise RuntimeError(
             "run has no completion marker; use --allow-incomplete-run to adopt completed "
             "checkpoint stages from a still-running attempt"
         )
 
-    cache_root = (
-        default_cache_root() if args.cache_root is None else _resolve(args.cache_root)
-    )
+    cache_root = default_cache_root() if args.cache_root is None else _resolve(args.cache_root)
     registry_root = (
         default_registry_root() if args.registry_root is None else _resolve(args.registry_root)
     )
