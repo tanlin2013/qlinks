@@ -83,8 +83,6 @@ def _run_backend(
         "--finite-beta-beta-points",
         "9",
         "--skip-checkerboard-thermal-scan",
-        "--skip-checkerboard-concentration",
-        "--skip-dark-manifold-classification",
         "--no-resume-cache",
         "--evidence-cache-root",
         str(cache_root),
