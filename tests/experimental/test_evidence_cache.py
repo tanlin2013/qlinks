@@ -21,7 +21,12 @@ from evidence_cache import (  # noqa: E402
     spectral_checkpoint_directory,
 )
 from qdm_checkerboard_large_strip import PartialSpectrum  # noqa: E402
-from qdm_resumable_spectrum import make_resumable_folded_solver  # noqa: E402
+from qdm_resumable_spectrum import (  # noqa: E402
+    CACHE_NAMESPACE,
+    _load_exact_checkpoint,
+    folded_problem_description,
+    make_resumable_folded_solver,
+)
 
 
 def _diagonal_problem(matrix: sp.csr_array, target: float) -> dict[str, object]:
@@ -157,6 +162,53 @@ def test_checkpoint_overwrite_invalidates_completion_marker_first(
 
     assert not (directory / "metadata.json").exists()
     assert load_spectral_checkpoint(directory, expected_problem=problem) is None
+
+
+def test_explicit_backend_does_not_reuse_other_backend(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("QLINKS_EVIDENCE_CACHE_ROOT", str(tmp_path))
+    matrix = sp.csr_array(np.diag(np.arange(8.0)), dtype=np.complex128)
+    problem = folded_problem_description(matrix, target_energy=3.5)
+    directory = spectral_checkpoint_directory(
+        namespace=CACHE_NAMESPACE,
+        problem=problem,
+        budget=2,
+        backend="arpack",
+        cache_root=tmp_path,
+    )
+    vectors = np.eye(8, dtype=np.complex128)[:, [3, 4]]
+    save_spectral_checkpoint(
+        directory,
+        energies=np.array([3.0, 4.0]),
+        eigenvectors=vectors,
+        residuals=np.zeros(2),
+        transformed_residuals=np.zeros(2),
+        problem=problem,
+        backend="arpack",
+        requested_budget=2,
+        solver_tolerance=1.0e-9,
+    )
+
+    explicit = _load_exact_checkpoint(
+        problem=problem,
+        budget=2,
+        tolerance=1.0e-8,
+        hamiltonian=matrix,
+        preferred_backend="primme",
+        allow_cross_backend=False,
+    )
+    automatic = _load_exact_checkpoint(
+        problem=problem,
+        budget=2,
+        tolerance=1.0e-8,
+        hamiltonian=matrix,
+        preferred_backend="primme",
+        allow_cross_backend=True,
+    )
+    assert explicit is None
+    assert automatic is not None
+    assert automatic.metadata["backend"] == "arpack"
 
 
 def test_qdm_wrapper_reuses_completed_arpack_budget(
