@@ -138,9 +138,7 @@ def test_qdm_wrapper_reuses_completed_arpack_budget(
         order = np.argsort(np.abs(values - float(target_energy)))[: int(subspace_size)]
         values = values[order]
         vectors = vectors[:, order]
-        residuals = np.linalg.norm(
-            dense @ vectors - vectors * values[None, :], axis=0
-        )
+        residuals = np.linalg.norm(dense @ vectors - vectors * values[None, :], axis=0)
         return PartialSpectrum(
             energies=values,
             eigenvectors=vectors,
