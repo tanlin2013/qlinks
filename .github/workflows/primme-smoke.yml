@@ -6,6 +6,7 @@ on:
     paths:
       - "Dockerfile"
       - ".github/workflows/primme-smoke.yml"
+      - "experimental/jobs/qdm_folded_backend_comparison.py"
       - "experimental/jobs/qdm_resumable_spectrum.py"
       - "experimental/jobs/qdm_resume_site/**"
       - "scripts/docker/build_primme_evidence_image.sh"
@@ -17,6 +18,7 @@ on:
     paths:
       - "Dockerfile"
       - ".github/workflows/primme-smoke.yml"
+      - "experimental/jobs/qdm_folded_backend_comparison.py"
       - "experimental/jobs/qdm_resumable_spectrum.py"
       - "experimental/jobs/qdm_resume_site/**"
       - "scripts/docker/build_primme_evidence_image.sh"
@@ -36,6 +38,7 @@ jobs:
   primme:
     name: Python 3.13 PRIMME evidence runtime
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@v7
@@ -67,3 +70,28 @@ jobs:
               python scripts/docker/verify_optional_environment.py --extras "notebook primme"
               python scripts/docker/verify_primme_evidence_runtime.py
             '
+
+      - name: Compare ARPACK and PRIMME on physical 4x4 and 8x4 QDM
+        run: |
+          rm -rf output/primme-qdm-compare
+          docker run --rm \
+            --volume "${GITHUB_WORKSPACE}:/workspace/qlinks" \
+            --workdir /workspace/qlinks \
+            qlinks:ci-primme \
+            python experimental/jobs/qdm_folded_backend_comparison.py \
+              --output-root /workspace/qlinks/output/primme-qdm-compare \
+              --repeats 1,2 \
+              --budgets 16,32 \
+              --timeout 600
+
+      - name: Upload physical comparison summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qdm-arpack-primme-small-physical
+          if-no-files-found: warn
+          path: |
+            output/primme-qdm-compare/summary.json
+            output/primme-qdm-compare/qdm_folded_backend_comparison.csv
+            output/primme-qdm-compare/arpack/qdm_checkerboard_L12_spectral_convergence.csv
+            output/primme-qdm-compare/primme/qdm_checkerboard_L12_spectral_convergence.csv
