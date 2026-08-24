@@ -1,0 +1,69 @@
+name: PRIMME smoke
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "Dockerfile"
+      - ".github/workflows/primme-smoke.yml"
+      - "experimental/jobs/qdm_resumable_spectrum.py"
+      - "experimental/jobs/qdm_resume_site/**"
+      - "scripts/docker/build_primme_evidence_image.sh"
+      - "scripts/docker/verify_optional_environment.py"
+      - "scripts/docker/verify_primme_evidence_runtime.py"
+      - "tests/experimental/test_evidence_cache.py"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "Dockerfile"
+      - ".github/workflows/primme-smoke.yml"
+      - "experimental/jobs/qdm_resumable_spectrum.py"
+      - "experimental/jobs/qdm_resume_site/**"
+      - "scripts/docker/build_primme_evidence_image.sh"
+      - "scripts/docker/verify_optional_environment.py"
+      - "scripts/docker/verify_primme_evidence_runtime.py"
+      - "tests/experimental/test_evidence_cache.py"
+  workflow_dispatch:
+
+concurrency:
+  group: primme-smoke-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  primme:
+    name: Python 3.13 PRIMME evidence runtime
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build PRIMME evidence image
+        uses: docker/build-push-action@v6
+        with:
+          cache-from: type=gha,scope=docker-primme-smoke
+          cache-to: type=gha,mode=max,scope=docker-primme-smoke
+          push: false
+          load: true
+          build-args: |
+            PYTHON_VERSION=3.13
+            QLINKS_EXTRAS=notebook primme
+            PRIMME_VERSION=3.2.3
+          tags: qlinks:ci-primme
+
+      - name: Verify PRIMME import, solve, warm start, and cache reuse
+        run: |
+          docker run --rm \
+            --volume "${GITHUB_WORKSPACE}:/workspace/qlinks" \
+            --workdir /workspace/qlinks \
+            qlinks:ci-primme \
+            bash -c '
+              set -euo pipefail
+              python scripts/docker/verify_optional_environment.py --extras "notebook primme"
+              python scripts/docker/verify_primme_evidence_runtime.py
+            '
