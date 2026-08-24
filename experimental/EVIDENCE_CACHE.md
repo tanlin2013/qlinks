@@ -65,14 +65,15 @@ Build the dedicated Python-3.13 evidence image with:
 bash scripts/docker/build_primme_evidence_image.sh
 ```
 
-Then run the QDM production job with, for example:
+The ordinary evidence launcher currently pulls its image tag unconditionally. For a locally built
+PRIMME image, use the dedicated launcher below; it defaults to Docker pull policy `never`, so the
+local image cannot be replaced by a registry pull.
 
 ```bash
-QLINKS_DOCKER_IMAGE=tanlin2013/qlinks:notebook-primme \
 QLINKS_EVIDENCE_RUN_ID=qdm_checkerboard_primme \
 QLINKS_NUM_THREADS=16 \
 QLINKS_DOCKER_MEMORY_LIMIT=400g \
-scripts/docker/docker_run_evidence_job.sh qdm \
+bash scripts/docker/docker_run_qdm_primme_evidence.sh \
   --stage compute \
   --profile production \
   --transport-repeats 1,2,3 \
@@ -82,7 +83,6 @@ scripts/docker/docker_run_evidence_job.sh qdm \
   --run-large-strip \
   --large-strip-repeats 3 \
   --large-strip-spectral-method folded \
-  --large-strip-folded-backend primme \
   --large-strip-subspace-budgets 512,1024,2048,4096,8192 \
   --large-strip-extra-convergence-step \
   --finite-beta-samples 8 \
