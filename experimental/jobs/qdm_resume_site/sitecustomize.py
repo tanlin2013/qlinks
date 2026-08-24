@@ -11,9 +11,10 @@ from __future__ import annotations
 import os
 
 if os.environ.get("QLINKS_QDM_RESUMABLE_SPECTRUM", "0") == "1":
-    import qlinks.caging as _caging
     import qdm_checkerboard_large_strip as _large_strip
     from qdm_resumable_spectrum import make_resumable_folded_solver
+
+    import qlinks.caging as _caging
     from qlinks.caging.local_search import (
         LocalQDMCageSearchConfig,
         RobustQDMLocalCageSearchConfig,
