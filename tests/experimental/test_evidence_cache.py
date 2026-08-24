@@ -211,6 +211,14 @@ def test_explicit_backend_does_not_reuse_other_backend(
     assert automatic.metadata["backend"] == "arpack"
 
 
+def test_folded_problem_fingerprint_tracks_in_place_mutation() -> None:
+    matrix = sp.csr_array(np.diag(np.arange(4.0)), dtype=np.complex128)
+    first = folded_problem_description(matrix, target_energy=1.5)
+    matrix.data[0] += 0.125
+    second = folded_problem_description(matrix, target_energy=1.5)
+    assert first["hamiltonian_fingerprint"] != second["hamiltonian_fingerprint"]
+
+
 def test_qdm_wrapper_reuses_completed_arpack_budget(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
