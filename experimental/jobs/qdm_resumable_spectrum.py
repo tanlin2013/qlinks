@@ -48,8 +48,7 @@ def _backend() -> str:
     requested = os.environ.get("QLINKS_QDM_FOLDED_BACKEND", "auto").strip().lower()
     if requested not in {"auto", "arpack", "primme"}:
         raise ValueError(
-            "QLINKS_QDM_FOLDED_BACKEND must be one of auto, arpack, primme; "
-            f"got {requested!r}"
+            f"QLINKS_QDM_FOLDED_BACKEND must be one of auto, arpack, primme; got {requested!r}"
         )
     if requested == "auto":
         return "primme" if importlib.util.find_spec("primme") is not None else "arpack"
@@ -188,9 +187,7 @@ def _load_warm_start(
     target = float(problem["target_energy"])
     order = np.argsort(np.abs(np.asarray(checkpoint.energies) - target))
     take = order[: min(max_vectors, order.size)]
-    source_budget = int(
-        checkpoint.metadata.get("requested_budget", checkpoint.energies.size)
-    )
+    source_budget = int(checkpoint.metadata.get("requested_budget", checkpoint.energies.size))
     print(
         {
             "evidence_cache": "warm_start",
@@ -241,8 +238,7 @@ def _postprocess_folded_vectors(
         scale = max(1.0, abs(reference))
         while (
             end < k
-            and abs(float(folded_values[end]) - reference)
-            <= float(cluster_tolerance) * scale
+            and abs(float(folded_values[end]) - reference) <= float(cluster_tolerance) * scale
         ):
             end += 1
         block = vectors[:, begin:end]
