@@ -17,7 +17,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 from evidence_job_utils import find_repo_root
 
 KEY_COLUMNS = ("repeats", "requested_subspace_size", "window_prefactor")
@@ -170,7 +169,8 @@ def compare_frames(arpack: pd.DataFrame, primme: pd.DataFrame) -> pd.DataFrame:
     for name in ("partial_min_energy", "partial_max_energy"):
         column = f"abs_diff_{name}"
         if column in result and float(result[column].max()) > 1.0e-6:
-            raise AssertionError(f"backend spectral-bound mismatch in {name}: {result[column].max():.3e}")
+            maximum = float(result[column].max())
+            raise AssertionError(f"backend spectral-bound mismatch in {name}: {maximum:.3e}")
     for backend in ("arpack", "primme"):
         column = f"partial_maximum_residual_{backend}"
         if column in result and float(result[column].max()) > 1.0e-6:
