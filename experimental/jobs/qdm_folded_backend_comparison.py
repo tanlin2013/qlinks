@@ -3,13 +3,19 @@
 
 This is a solver-validation job, not production evidence. It executes the
 canonical square-QDM notebook twice on 4x4 and 8x4 strips with identical folded
-operators, targets, tolerances, and subspace budgets. Cache reuse is disabled
-for the timed solves and each backend receives a separate cache root.
+operators, targets, and subspace budgets. Cache reuse is disabled for the timed
+solves and each backend receives a separate cache root.
 
 The notebook's normal P0 preflight is intentionally left enabled. In
 particular, the small-system thermal/concentration and dark-manifold checks must
 complete before the notebook enters its folded-spectrum lane; the comparison
 must not bypass a scientific safety gate just to exercise an eigensolver.
+
+The raw eigensolver tolerances are backend-specific because the Python PRIMME
+wrapper interprets ``tol`` relative to an estimate of the folded-operator norm,
+whereas SciPy/ARPACK uses different convergence semantics. Backend comparison
+is therefore gated on the same *physical* postprocessed residual threshold,
+not on numerically identical raw tolerance parameters.
 """
 
 from __future__ import annotations
@@ -31,6 +37,7 @@ COMPARISON_COLUMNS = (
     "partial_max_energy",
     "partial_maximum_residual",
     "transformed_maximum_residual",
+    "joint_dark_rank",
     "peak_rss_gib",
     "runtime_seconds",
     "window_coverage_complete",
@@ -38,6 +45,16 @@ COMPARISON_COLUMNS = (
     "tau_Z_mc_raw",
     "Delta_physical_target",
 )
+
+PHYSICAL_RESIDUAL_TOLERANCE = 1.0e-6
+RAW_FOLDED_TOLERANCE = {
+    "arpack": 1.0e-8,
+    # PRIMME marks a folded eigenpair converged when its residual is smaller
+    # than roughly ||A_folded|| * tol. The 8x4 pilot showed that 1e-8 therefore
+    # permits ~1e-5 physical-H residuals. Tighten the raw criterion while
+    # keeping the scientifically meaningful postprocessed residual gate common.
+    "primme": 1.0e-11,
+}
 
 
 def _run_backend(
@@ -51,6 +68,7 @@ def _run_backend(
     repo_root = find_repo_root()
     data_dir = output_root / backend
     cache_root = output_root / "cache" / backend
+    folded_tolerance = RAW_FOLDED_TOLERANCE[backend]
     command = [
         sys.executable,
         str(repo_root / "experimental" / "jobs" / "run_square_qdm_draft_evidence.py"),
@@ -82,7 +100,7 @@ def _run_backend(
         "--large-strip-subspace-budgets",
         budgets,
         "--large-strip-folded-tolerance",
-        "1e-8",
+        f"{folded_tolerance:.1e}",
         "--large-strip-convergence-tolerance",
         "1e-4",
         "--finite-beta-samples",
@@ -95,7 +113,15 @@ def _run_backend(
         "--timeout",
         str(timeout),
     ]
-    print({"backend": backend, "command": command}, flush=True)
+    print(
+        {
+            "backend": backend,
+            "raw_folded_tolerance": folded_tolerance,
+            "physical_residual_tolerance": PHYSICAL_RESIDUAL_TOLERANCE,
+            "command": command,
+        },
+        flush=True,
+    )
     subprocess.run(command, cwd=repo_root, check=True)
     return data_dir
 
@@ -110,12 +136,20 @@ def _load_convergence(data_dir: Path, backend: str) -> pd.DataFrame:
     failures = frame.loc[frame["solver_status"] != "completed"]
     if not failures.empty:
         raise RuntimeError(f"{backend} has failed solver rows:\n{failures.to_string(index=False)}")
-    methods = frame["spectral_method"].astype(str)
-    token = "primme" if backend == "primme" else "arpack"
-    if not methods.str.contains(token, case=False, regex=False).all():
+
+    allowed_methods = {
+        "arpack": {
+            "folded_spectrum_lanczos",
+            "folded_spectrum_lanczos_partial_arpack",
+        },
+        "primme": {"folded_spectrum_primme"},
+    }
+    methods = set(frame["spectral_method"].astype(str))
+    unexpected = methods - allowed_methods[backend]
+    if unexpected:
         raise RuntimeError(
             f"explicit {backend} comparison was not executed by that backend: "
-            f"{sorted(methods.unique())}"
+            f"{sorted(methods)}"
         )
     return frame
 
@@ -170,6 +204,12 @@ def compare_frames(arpack: pd.DataFrame, primme: pd.DataFrame) -> pd.DataFrame:
             result["returned_eigenpairs_primme"].to_numpy(),
         ):
             raise AssertionError("ARPACK and PRIMME returned different eigenpair counts")
+    if "joint_dark_rank_arpack" in result:
+        if not np.array_equal(
+            result["joint_dark_rank_arpack"].to_numpy(),
+            result["joint_dark_rank_primme"].to_numpy(),
+        ):
+            raise AssertionError("ARPACK and PRIMME returned different joint-dark ranks")
     for name in ("partial_min_energy", "partial_max_energy"):
         column = f"abs_diff_{name}"
         if column in result and float(result[column].max()) > 1.0e-6:
@@ -177,8 +217,12 @@ def compare_frames(arpack: pd.DataFrame, primme: pd.DataFrame) -> pd.DataFrame:
             raise AssertionError(f"backend spectral-bound mismatch in {name}: {maximum:.3e}")
     for backend in ("arpack", "primme"):
         column = f"partial_maximum_residual_{backend}"
-        if column in result and float(result[column].max()) > 1.0e-6:
-            raise AssertionError(f"{backend} physical residual exceeds 1e-6")
+        if column in result and float(result[column].max()) > PHYSICAL_RESIDUAL_TOLERANCE:
+            maximum = float(result[column].max())
+            raise AssertionError(
+                f"{backend} physical residual exceeds "
+                f"{PHYSICAL_RESIDUAL_TOLERANCE:.1e}: {maximum:.3e}"
+            )
     for name in ("tau_A_mc_raw", "tau_Z_mc_raw", "Delta_physical_target"):
         column = f"abs_diff_{name}"
         if column in result:
@@ -223,6 +267,8 @@ def main() -> None:
         "repeats": args.repeats,
         "budgets": args.budgets,
         "rows": int(len(comparison)),
+        "raw_folded_tolerances": RAW_FOLDED_TOLERANCE,
+        "physical_residual_tolerance": PHYSICAL_RESIDUAL_TOLERANCE,
         "arpack_max_residual": float(arpack["partial_maximum_residual"].max()),
         "primme_max_residual": float(primme["partial_maximum_residual"].max()),
         "max_spectral_bound_difference": float(
