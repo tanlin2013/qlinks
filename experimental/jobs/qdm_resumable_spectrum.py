@@ -22,7 +22,6 @@ from typing import Any
 import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
-
 from evidence_cache import (
     CacheValidationStatus,
     default_cache_root,
@@ -189,10 +188,13 @@ def _load_warm_start(
     target = float(problem["target_energy"])
     order = np.argsort(np.abs(np.asarray(checkpoint.energies) - target))
     take = order[: min(max_vectors, order.size)]
+    source_budget = int(
+        checkpoint.metadata.get("requested_budget", checkpoint.energies.size)
+    )
     print(
         {
             "evidence_cache": "warm_start",
-            "source_budget": int(checkpoint.metadata.get("requested_budget", checkpoint.energies.size)),
+            "source_budget": source_budget,
             "vectors": int(take.size),
             "source_backend": checkpoint.metadata.get("backend"),
             "path": str(checkpoint.directory),
