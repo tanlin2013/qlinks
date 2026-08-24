@@ -34,7 +34,6 @@ from evidence_cache import (
 from qdm_checkerboard_large_strip import PartialSpectrum, process_peak_rss_gib
 
 CACHE_NAMESPACE = "qdm/checkerboard_large_strip"
-_FINGERPRINT_CACHE: dict[tuple[int, tuple[int, int], int], str] = {}
 
 
 def _bool_env(name: str, default: bool) -> bool:
@@ -67,13 +66,9 @@ def _backend() -> str:
 
 
 def _matrix_fingerprint(matrix: sp.spmatrix | sp.sparray) -> str:
-    csr = sp.csr_array(matrix)
-    key = (id(matrix), tuple(int(v) for v in csr.shape), int(csr.nnz))
-    cached = _FINGERPRINT_CACHE.get(key)
-    if cached is None:
-        cached = sparse_matrix_fingerprint(csr)
-        _FINGERPRINT_CACHE[key] = cached
-    return cached
+    # Sparse matrices are mutable. Re-hash the numerical payload whenever a
+    # problem description is requested rather than caching by object identity.
+    return sparse_matrix_fingerprint(sp.csr_array(matrix))
 
 
 def folded_problem_description(
