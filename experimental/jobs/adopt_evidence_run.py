@@ -127,17 +127,14 @@ def _adopt_spin_checkpoints(
                 validation["metadata"], destination_validation["metadata"]
             ):
                 raise RuntimeError(
-                    "refusing to overwrite an incompatible stable Spin-1 checkpoint: "
-                    f"{destination}"
+                    f"refusing to overwrite an incompatible stable Spin-1 checkpoint: {destination}"
                 )
             if (
-                validation["returned_eigenpairs"]
-                != destination_validation["returned_eigenpairs"]
+                validation["returned_eigenpairs"] != destination_validation["returned_eigenpairs"]
                 or validation["sector_dimension"] != destination_validation["sector_dimension"]
             ):
                 raise RuntimeError(
-                    "stable Spin-1 checkpoint has incompatible array dimensions: "
-                    f"{destination}"
+                    f"stable Spin-1 checkpoint has incompatible array dimensions: {destination}"
                 )
             row["mode"] = "existing_validated"
             row["destination_validation"] = destination_validation
