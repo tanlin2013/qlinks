@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 
 from evidence_job_utils import (
@@ -28,6 +29,10 @@ def _repo_path(raw: str | Path | None) -> Path | None:
     return path.resolve(strict=False)
 
 
+def _stable_checkpoint_dir(cache_root: Path) -> Path:
+    return cache_root / "spin1" / "sec6_sparse"
+
+
 def main() -> None:
     parser = build_parser(description=__doc__ or "Run Sec. VI provisioning.")
     parser.add_argument(
@@ -41,14 +46,28 @@ def main() -> None:
         help="Sparse-convergence addendum containing the completed 8192->10000 audit.",
     )
     parser.add_argument(
+        "--evidence-cache-root",
+        default=None,
+        help=(
+            "Stable reusable cache root. Defaults to experimental/data/evidence_cache. "
+            "New Sec. VI spectra are written under spin1/sec6_sparse."
+        ),
+    )
+    parser.add_argument(
         "--checkpoint-source-dir",
         default=None,
-        help="Optional existing spectral-checkpoint root to reuse before solving.",
+        help=(
+            "Optional legacy/external spectral-checkpoint root to consult before the stable cache. "
+            "Use adopt_evidence_run.py to migrate old timestamped checkpoints permanently."
+        ),
     )
     parser.add_argument(
         "--checkpoint-dir",
         default=None,
-        help="Checkpoint root for newly solved spectra. Defaults to <data-dir>/checkpoints.",
+        help=(
+            "Checkpoint root for newly solved spectra. Defaults to the stable evidence cache, not "
+            "the timestamped run directory."
+        ),
     )
     parser.add_argument(
         "--dense-sizes",
@@ -141,10 +160,30 @@ def main() -> None:
     if args.residual_chunk_size < 1:
         raise ValueError("--residual-chunk-size must be >=1")
 
+    repo_root = find_repo_root()
+    cache_root = _repo_path(args.evidence_cache_root)
+    if cache_root is None:
+        cache_root = (repo_root / "experimental" / "data" / "evidence_cache").resolve()
+    cache_root.mkdir(parents=True, exist_ok=True)
+    os.environ["QLINKS_EVIDENCE_CACHE_ROOT"] = str(cache_root)
+
     baseline = _repo_path(args.baseline_data_dir)
     convergence = _repo_path(args.sparse_convergence_data_dir)
     checkpoint_source = _repo_path(args.checkpoint_source_dir)
     checkpoint_dir = _repo_path(args.checkpoint_dir)
+    if checkpoint_dir is None:
+        checkpoint_dir = _stable_checkpoint_dir(cache_root)
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    print(
+        {
+            "stable_evidence_cache": str(cache_root),
+            "spin1_checkpoint_dir": str(checkpoint_dir),
+            "legacy_checkpoint_source": (
+                None if checkpoint_source is None else str(checkpoint_source)
+            ),
+        },
+        flush=True,
+    )
 
     overrides = {
         "BASELINE_DATA_DIR": baseline,
