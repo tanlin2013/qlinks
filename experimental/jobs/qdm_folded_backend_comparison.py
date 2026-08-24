@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 """Compare ARPACK and PRIMME on the same small physical square-QDM problems.
 
-This is a solver-validation job, not production evidence.  It executes the
+This is a solver-validation job, not production evidence. It executes the
 canonical square-QDM notebook twice on 4x4 and 8x4 strips with identical folded
-operators, targets, tolerances, and subspace budgets.  Cache reuse is disabled
+operators, targets, tolerances, and subspace budgets. Cache reuse is disabled
 for the timed solves and each backend receives a separate cache root.
+
+The notebook's normal P0 preflight is intentionally left enabled. In
+particular, the small-system thermal/concentration and dark-manifold checks must
+complete before the notebook enters its folded-spectrum lane; the comparison
+must not bypass a scientific safety gate just to exercise an eigensolver.
 """
 
 from __future__ import annotations
@@ -59,6 +64,8 @@ def _run_backend(
         "1",
         "--ed-repeats",
         "1",
+        "--dark-classification-repeats",
+        "1",
         "--thermal-protocol",
         "finite-beta",
         "--window-prefactors",
@@ -82,7 +89,6 @@ def _run_backend(
         "2",
         "--finite-beta-beta-points",
         "9",
-        "--skip-checkerboard-thermal-scan",
         "--no-resume-cache",
         "--evidence-cache-root",
         str(cache_root),
