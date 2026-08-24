@@ -148,8 +148,7 @@ def _load_convergence(data_dir: Path, backend: str) -> pd.DataFrame:
     unexpected = methods - allowed_methods[backend]
     if unexpected:
         raise RuntimeError(
-            f"explicit {backend} comparison was not executed by that backend: "
-            f"{sorted(methods)}"
+            f"explicit {backend} comparison was not executed by that backend: {sorted(methods)}"
         )
     return frame
 
