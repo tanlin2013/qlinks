@@ -3,10 +3,10 @@
 The production notebook still owns the scientific budget-convergence logic.
 This module wraps each *individual* folded-spectrum solve so that a completed
 budget is validated and persisted immediately, before later dark-space,
-covariance, pandas, or plotting work can fail.  Subsequent timestamped jobs
+covariance, pandas, or plotting work can fail. Subsequent timestamped jobs
 reuse compatible checkpoints from the stable evidence cache.
 
-PRIMME is optional and imported lazily.  The standard notebook image therefore
+PRIMME is optional and imported lazily. The standard notebook image therefore
 continues to work with SciPy/ARPACK, while a PRIMME-enabled evidence image can
 select the PRIMME backend without changing the notebook.
 """
@@ -17,7 +17,6 @@ import importlib.util
 import os
 import time
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -58,7 +57,8 @@ def _backend() -> str:
     if requested == "primme" and importlib.util.find_spec("primme") is None:
         raise RuntimeError(
             "The PRIMME folded-spectrum backend was requested, but 'primme' is not importable. "
-            "Build/use the PRIMME evidence image (Python 3.13) or select --large-strip-folded-backend arpack."
+            "Build/use the PRIMME evidence image (Python 3.13) or select "
+            "--large-strip-folded-backend arpack."
         )
     return requested
 
@@ -308,10 +308,20 @@ def _primme_folded_spectrum(
     )
     if warm_start is None:
         rng = np.random.default_rng(int(random_seed))
-        v0 = rng.normal(size=n) + 1.0j * rng.normal(size=n)
-        v0 = np.asarray(v0 / np.linalg.norm(v0), dtype=np.complex128)
+        random_vector = rng.normal(size=n) + 1.0j * rng.normal(size=n)
+        random_vector = random_vector / np.linalg.norm(random_vector)
+        # PRIMME's Python wrapper expects ``v0`` to be an N x i initial
+        # subspace, including the single-vector case.
+        v0 = np.asarray(random_vector[:, None], dtype=np.complex128)
     else:
         v0 = np.asarray(warm_start, dtype=np.complex128)
+        if v0.ndim == 1:
+            v0 = v0[:, None]
+        if v0.ndim != 2 or v0.shape[0] != n:
+            raise ValueError(
+                "PRIMME warm start must have shape (sector_dimension, n_vectors); "
+                f"got {v0.shape} for sector dimension {n}"
+            )
 
     kwargs: dict[str, Any] = {
         "k": k,
@@ -361,7 +371,7 @@ def _primme_folded_spectrum(
         "num_outer_iterations": scalar_stat("numOuterIterations"),
         "primme_elapsed_time": scalar_stat("elapsedTime"),
         "method": kwargs["method"],
-        "warm_start_vectors": int(v0.shape[1]) if v0.ndim == 2 else 1,
+        "warm_start_vectors": int(v0.shape[1]),
         "returned_eigenpairs": int(partial.energies.size),
     }
     return partial, solver_metadata
