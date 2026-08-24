@@ -44,12 +44,17 @@ def _bool_env(name: str, default: bool) -> bool:
     return raw.strip().lower() not in {"0", "false", "no", "off", ""}
 
 
-def _backend() -> str:
+def _requested_backend() -> str:
     requested = os.environ.get("QLINKS_QDM_FOLDED_BACKEND", "auto").strip().lower()
     if requested not in {"auto", "arpack", "primme"}:
         raise ValueError(
             f"QLINKS_QDM_FOLDED_BACKEND must be one of auto, arpack, primme; got {requested!r}"
         )
+    return requested
+
+
+def _backend() -> str:
+    requested = _requested_backend()
     if requested == "auto":
         return "primme" if importlib.util.find_spec("primme") is not None else "arpack"
     if requested == "primme" and importlib.util.find_spec("primme") is None:
@@ -117,9 +122,12 @@ def _load_exact_checkpoint(
     tolerance: float,
     hamiltonian: sp.spmatrix | sp.sparray,
     preferred_backend: str,
+    allow_cross_backend: bool,
 ):
     candidates = iter_spectral_checkpoints(namespace=CACHE_NAMESPACE, problem=problem)
     exact = [path for path in candidates if path.name == f"budget_{int(budget):08d}"]
+    if not allow_cross_backend:
+        exact = [path for path in exact if path.parent.name == preferred_backend]
     exact.sort(key=lambda path: (path.parent.name != preferred_backend, str(path)))
     for path in exact:
         checkpoint = load_spectral_checkpoint(
@@ -389,6 +397,7 @@ def make_resumable_folded_solver(original_solver: Callable[..., PartialSpectrum]
         random_seed: int = 20260811,
         cluster_tolerance: float | None = None,
     ) -> PartialSpectrum:
+        requested_backend = _requested_backend()
         backend = _backend()
         h = sp.csr_array(hamiltonian, dtype=np.complex128)
         n = int(h.shape[0])
@@ -416,6 +425,7 @@ def make_resumable_folded_solver(original_solver: Callable[..., PartialSpectrum]
                 tolerance=tolerance,
                 hamiltonian=h,
                 preferred_backend=backend,
+                allow_cross_backend=requested_backend == "auto",
             )
             if checkpoint is not None:
                 return _checkpoint_to_partial(checkpoint)
