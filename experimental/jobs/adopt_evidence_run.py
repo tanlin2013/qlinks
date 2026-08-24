@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-
 from evidence_cache import default_cache_root, default_registry_root
 from evidence_job_utils import collect_file_manifest, find_repo_root, write_json
 
