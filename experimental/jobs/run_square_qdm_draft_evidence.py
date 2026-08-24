@@ -37,14 +37,10 @@ def _configure_resumable_spectrum(args: argparse.Namespace) -> Path:
     os.environ["QLINKS_EVIDENCE_CACHE_ROOT"] = str(cache_root)
     os.environ["QLINKS_EVIDENCE_CACHE_RESUME"] = "1" if args.resume_cache else "0"
     os.environ["QLINKS_EVIDENCE_CACHE_WRITE"] = "1" if args.write_cache else "0"
-    os.environ["QLINKS_EVIDENCE_CACHE_FORCE_RECOMPUTE"] = (
-        "1" if args.force_recompute_cache else "0"
-    )
+    os.environ["QLINKS_EVIDENCE_CACHE_FORCE_RECOMPUTE"] = "1" if args.force_recompute_cache else "0"
     os.environ["QLINKS_QDM_FOLDED_BACKEND"] = str(args.large_strip_folded_backend)
     os.environ["QLINKS_QDM_RESUMABLE_SPECTRUM"] = "1"
-    os.environ["QLINKS_QDM_PRIMME_WARM_START_VECTORS"] = str(
-        int(args.primme_warm_start_vectors)
-    )
+    os.environ["QLINKS_QDM_PRIMME_WARM_START_VECTORS"] = str(int(args.primme_warm_start_vectors))
     os.environ["QLINKS_QDM_PRIMME_METHOD"] = str(args.primme_method)
     os.environ["QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE"] = str(int(args.primme_max_block_size))
 
@@ -344,9 +340,7 @@ def main() -> None:
         overrides["LARGE_STRIP_METHOD_CONVERGENCE_TOL"] = float(
             args.large_strip_convergence_tolerance
         )
-    overrides["LARGE_STRIP_EXTRA_CONVERGENCE_STEP"] = bool(
-        args.large_strip_extra_convergence_step
-    )
+    overrides["LARGE_STRIP_EXTRA_CONVERGENCE_STEP"] = bool(args.large_strip_extra_convergence_step)
     if dark_classification is not None:
         overrides["DARK_CLASSIFICATION_REPEATS"] = dark_classification
     if large_phase_check is not None:
