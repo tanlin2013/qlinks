@@ -3,13 +3,64 @@
 
 from __future__ import annotations
 
+import argparse
+import importlib.util
+import os
+from pathlib import Path
+
 from evidence_job_utils import (
     build_parser,
+    find_repo_root,
     parse_float_tuple,
     parse_int_tuple,
     run_evidence_notebook,
     run_evidence_renderer,
 )
+
+
+def _repo_path(raw: str | Path | None, *, default: Path) -> Path:
+    path = default if raw is None else Path(raw).expanduser()
+    if not path.is_absolute():
+        path = find_repo_root() / path
+    return path.resolve(strict=False)
+
+
+def _configure_resumable_spectrum(args: argparse.Namespace) -> Path:
+    """Configure the opt-in stable cache and folded-spectrum backend."""
+
+    repo_root = find_repo_root()
+    cache_root = _repo_path(
+        args.evidence_cache_root,
+        default=repo_root / "experimental" / "data" / "evidence_cache",
+    )
+    cache_root.mkdir(parents=True, exist_ok=True)
+    os.environ["QLINKS_EVIDENCE_CACHE_ROOT"] = str(cache_root)
+    os.environ["QLINKS_EVIDENCE_CACHE_RESUME"] = "1" if args.resume_cache else "0"
+    os.environ["QLINKS_EVIDENCE_CACHE_WRITE"] = "1" if args.write_cache else "0"
+    os.environ["QLINKS_EVIDENCE_CACHE_FORCE_RECOMPUTE"] = "1" if args.force_recompute_cache else "0"
+    os.environ["QLINKS_QDM_FOLDED_BACKEND"] = str(args.large_strip_folded_backend)
+    os.environ["QLINKS_QDM_RESUMABLE_SPECTRUM"] = "1"
+    os.environ["QLINKS_QDM_PRIMME_WARM_START_VECTORS"] = str(int(args.primme_warm_start_vectors))
+    os.environ["QLINKS_QDM_PRIMME_METHOD"] = str(args.primme_method)
+    os.environ["QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE"] = str(int(args.primme_max_block_size))
+
+    # ``sitecustomize`` must be importable when the notebook kernel starts, not
+    # only after the notebook later inserts experimental/jobs into sys.path.
+    jobs_dir = repo_root / "experimental" / "jobs"
+    resume_site = jobs_dir / "qdm_resume_site"
+    inherited = os.environ.get("PYTHONPATH")
+    parts = [str(resume_site), str(jobs_dir)]
+    if inherited:
+        parts.append(inherited)
+    os.environ["PYTHONPATH"] = os.pathsep.join(parts)
+
+    if args.large_strip_folded_backend == "primme" and importlib.util.find_spec("primme") is None:
+        raise RuntimeError(
+            "--large-strip-folded-backend primme requires the PRIMME evidence image. "
+            "Build it with scripts/docker/build_primme_evidence_image.sh and set "
+            "QLINKS_DOCKER_IMAGE=tanlin2013/qlinks:notebook-primme."
+        )
+    return cache_root
 
 
 def main() -> None:
@@ -55,18 +106,75 @@ def main() -> None:
         choices=("folded", "shift-invert"),
         default=None,
         help=(
-            "Interior-spectrum backend. Production default is folded-spectrum Lanczos, "
-            "which avoids direct sparse LU. shift-invert is diagnostic-only and requires "
-            "--allow-direct-lu-shift-invert."
+            "Interior-spectrum method. Production default is factorization-free folded spectrum; "
+            "the folded eigensolver backend is selected separately. "
+            "shift-invert is diagnostic-only and requires --allow-direct-lu-shift-invert."
         ),
+    )
+    parser.add_argument(
+        "--large-strip-folded-backend",
+        choices=("auto", "arpack", "primme"),
+        default="auto",
+        help=(
+            "Eigensolver used for the folded operator. auto selects PRIMME when installed and "
+            "otherwise SciPy/ARPACK. Every completed budget is cached independently."
+        ),
+    )
+    parser.add_argument(
+        "--evidence-cache-root",
+        type=Path,
+        default=None,
+        help=(
+            "Stable reusable cache root. Defaults to experimental/data/evidence_cache, separate "
+            "from timestamped evidence-job attempt directories."
+        ),
+    )
+    parser.add_argument(
+        "--resume-cache",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Validate and reuse compatible completed spectral budgets before solving.",
+    )
+    parser.add_argument(
+        "--write-cache",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Persist every completed folded-spectrum budget immediately after validation data "
+            "exist."
+        ),
+    )
+    parser.add_argument(
+        "--force-recompute-cache",
+        action="store_true",
+        help="Ignore compatible final checkpoints for this run but keep writing new checkpoints.",
+    )
+    parser.add_argument(
+        "--primme-warm-start-vectors",
+        type=int,
+        default=256,
+        help=(
+            "Maximum vectors reused from the largest compatible lower-budget checkpoint by PRIMME."
+        ),
+    )
+    parser.add_argument(
+        "--primme-method",
+        default="PRIMME_DYNAMIC",
+        help="PRIMME eigensolver method name used by the optional folded-spectrum backend.",
+    )
+    parser.add_argument(
+        "--primme-max-block-size",
+        type=int,
+        default=0,
+        help="Optional PRIMME maxBlockSize override. Zero keeps PRIMME's own default.",
     )
     parser.add_argument(
         "--large-strip-subspace-budgets",
         default=None,
         help=(
-            "Comma-separated folded-spectrum Lanczos subspace sizes. The workflow escalates "
-            "until all requested windows are covered and then performs one extra budget "
-            "when requested."
+            "Comma-separated folded-spectrum requested eigenpair budgets. The workflow escalates "
+            "until all requested windows are covered and then performs one extra budget when "
+            "requested."
         ),
     )
     parser.add_argument("--large-strip-folded-tolerance", type=float, default=None)
@@ -88,7 +196,7 @@ def main() -> None:
         "--large-strip-eigenpair-budgets",
         default=None,
         help=(
-            "Legacy comma-separated budget ladder. With the folded backend these values are "
+            "Legacy comma-separated budget ladder. With the folded method these values are "
             "treated as subspace sizes; with shift-invert they remain requested eigenpair counts."
         ),
     )
@@ -126,6 +234,11 @@ def main() -> None:
         help="Acknowledge the repeat>=3 dense-ED memory risk.",
     )
     args = parser.parse_args()
+    if args.primme_warm_start_vectors < 0:
+        raise ValueError("--primme-warm-start-vectors must be >=0")
+    if args.primme_max_block_size < 0:
+        raise ValueError("--primme-max-block-size must be >=0")
+
     if args.stage == "render":
         run_evidence_renderer(
             job_name="square_qdm_draft_evidence",
@@ -133,6 +246,18 @@ def main() -> None:
             args=args,
         )
         return
+
+    cache_root = _configure_resumable_spectrum(args)
+    print(
+        {
+            "stable_evidence_cache": str(cache_root),
+            "resume_cache": bool(args.resume_cache),
+            "write_cache": bool(args.write_cache),
+            "force_recompute_cache": bool(args.force_recompute_cache),
+            "folded_backend": args.large_strip_folded_backend,
+        },
+        flush=True,
+    )
 
     ed = parse_int_tuple(args.ed_repeats)
     if ed is not None and max(ed) >= 3 and not args.allow_large_dense_ed:
@@ -183,9 +308,6 @@ def main() -> None:
             raise ValueError("--large-strip-eigenpair-budgets entries must be at least four")
         legacy_budgets = tuple(sorted(set(large_budgets)))
         overrides["LARGE_STRIP_EIGENPAIR_BUDGETS"] = legacy_budgets
-        # Backward compatibility: older production commands used this flag.
-        # With the new default folded backend, interpret it as a subspace budget
-        # unless the dedicated subspace flag is also supplied.
         if large_subspace_budgets is None:
             overrides["LARGE_STRIP_SUBSPACE_BUDGETS"] = legacy_budgets
     if large_subspace_budgets is not None:

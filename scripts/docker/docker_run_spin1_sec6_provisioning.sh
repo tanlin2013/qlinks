@@ -27,17 +27,19 @@ DRY_RUN="${QLINKS_DOCKER_DRY_RUN:-0}"
 
 mkdir -p "${HOST_DATA_DIR}" "${HOST_OUTPUT_DIR}"
 
-# This wrapper intentionally pins the two authoritative draft handoff roots.
-# Override them through the job CLI only when testing another archived evidence set.
+# These are lightweight/derived authoritative handoff roots.  Heavy spectral
+# payloads no longer default to a timestamped attempt directory: the Python job
+# writes them to experimental/data/evidence_cache/spin1/sec6_sparse.
 DEFAULT_BASELINE="${CONTAINER_DATA_DIR}/evidence_jobs/spin1_production_20260806T074051Z"
 DEFAULT_SPARSE_ADDENDUM="${CONTAINER_DATA_DIR}/evidence_jobs/spin1_production_20260810T082123Z"
-DEFAULT_CHECKPOINT_SOURCE="${DEFAULT_SPARSE_ADDENDUM}/checkpoints"
+DEFAULT_CACHE_ROOT="${CONTAINER_DATA_DIR}/evidence_cache"
 
 STAGE="compute"
 HAS_STAGE=0
 HAS_BASELINE=0
 HAS_SPARSE_ADDENDUM=0
 HAS_CHECKPOINT_SOURCE=0
+HAS_CACHE_ROOT=0
 FORWARDED_ARGS=()
 while (($#)); do
     case "$1" in
@@ -87,6 +89,17 @@ while (($#)); do
                 shift 2
             fi
             ;;
+        --evidence-cache-root|--evidence-cache-root=*)
+            HAS_CACHE_ROOT=1
+            if [[ "$1" == *=* ]]; then
+                FORWARDED_ARGS+=("$1")
+                shift
+            else
+                [[ $# -ge 2 ]] || { echo "--evidence-cache-root requires a value" >&2; exit 2; }
+                FORWARDED_ARGS+=("$1" "$2")
+                shift 2
+            fi
+            ;;
         *)
             FORWARDED_ARGS+=("$1")
             shift
@@ -102,9 +115,9 @@ if [[ "${STAGE}" != "render" ]]; then
     [[ "${HAS_SPARSE_ADDENDUM}" == "1" ]] || FORWARDED_ARGS+=(
         "--sparse-convergence-data-dir" "${DEFAULT_SPARSE_ADDENDUM}"
     )
-    if [[ "${HAS_CHECKPOINT_SOURCE}" == "0" ]]; then
-        FORWARDED_ARGS+=("--checkpoint-source-dir" "${DEFAULT_CHECKPOINT_SOURCE}")
-    fi
+    [[ "${HAS_CACHE_ROOT}" == "1" ]] || FORWARDED_ARGS+=(
+        "--evidence-cache-root" "${DEFAULT_CACHE_ROOT}"
+    )
 fi
 
 DOCKER_LIMIT_ARGS=(--shm-size "${SHM_SIZE}")
@@ -122,6 +135,7 @@ DOCKER_COMMAND=(
     --restart no
     "${DOCKER_LIMIT_ARGS[@]}"
     --env PYTHONUNBUFFERED=1
+    --env QLINKS_EVIDENCE_RUN_ID="${RUN_ID}"
     --env QLINKS_EVIDENCE_RUN_TIMESTAMP="${RUN_TIMESTAMP}"
     --env QLINKS_DOCKER_MEMORY_LIMIT="${MEMORY_LIMIT}"
     --env MPLBACKEND=Agg
@@ -160,10 +174,16 @@ Container: ${CONTAINER_NAME}
 Image: ${IMAGE_NAME}
 Pull policy: always
 Data mount: ${HOST_DATA_DIR} -> ${CONTAINER_DATA_DIR}
+Stable cache: ${HOST_DATA_DIR}/evidence_cache
 Thread limit: ${THREADS}
 Memory limit: ${MEMORY_LIMIT:-unlimited}
 CPU limit: ${CPUS_LIMIT:-unlimited}
 Shared memory: ${SHM_SIZE}
+
+Before the next production attempt, old spectral checkpoints can be adopted once:
+  python experimental/jobs/adopt_evidence_run.py \
+    experimental/data/evidence_jobs/spin1_production_20260810T082123Z \
+    --allow-incomplete-run
 
 P0.0--P0.2 production command (representative L=14 + bridges; no 10000-eigenpair rerun):
   QLINKS_NUM_THREADS=16 QLINKS_DOCKER_MEMORY_LIMIT=400g \

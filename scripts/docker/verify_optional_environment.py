@@ -23,8 +23,8 @@ def _require_import(module_name: str, *, extra: str) -> None:
     except ImportError as exc:
         raise RuntimeError(
             f"Docker optional extra {extra!r} was requested, but module "
-            f"{module_name!r} is not importable. Check pyproject optional "
-            "dependency markers and the selected Python version."
+            f"{module_name!r} is not importable. Check the selected Docker "
+            "feature, Python version, and build dependencies."
         ) from exc
 
 
@@ -42,6 +42,16 @@ def _verify_tn_extra() -> None:
     from verify_tn_environment import main as verify_tn_environment
 
     verify_tn_environment()
+
+
+def _verify_primme_feature() -> None:
+    if sys.version_info >= (3, 14):
+        raise RuntimeError(
+            "The PRIMME evidence image is currently certified only on Python < 3.14. "
+            "Build it with --build-arg PYTHON_VERSION=3.13 and "
+            "--build-arg QLINKS_EXTRAS='notebook primme'."
+        )
+    _require_import("primme", extra="primme")
 
 
 def _verify_notebook_feature() -> None:
@@ -62,7 +72,7 @@ def main() -> None:
     parser.add_argument(
         "--extras",
         default="",
-        help="Whitespace-separated optional extras passed to Poetry.",
+        help="Whitespace-separated optional Docker features/project extras.",
     )
     args = parser.parse_args()
 
@@ -89,6 +99,8 @@ def main() -> None:
         _verify_import_extra("drawing", ("cairo", "igraph", "plotly", "pyvis"))
     if "notebook" in extras:
         _verify_notebook_feature()
+    if "primme" in extras:
+        _verify_primme_feature()
     if "storage" in extras:
         _verify_import_extra("storage", ("h5py", "pyarrow"))
     if "tn" in extras:
