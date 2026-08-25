@@ -35,6 +35,12 @@ def test_runner_exposes_only_reviewed_integration_stages() -> None:
     assert "run_spin1_xy_sec6_provisioning.py" not in script
 
 
+def test_common_windows_uses_established_sparse_certification() -> None:
+    script = RUNNER.read_text(encoding="utf-8")
+    assert "spin1_sec6_common_windows_certified.py" in script
+    assert '--source-data-dir "${SOURCE_DATA_DIR}"' in script
+
+
 def test_dense_cache_seed_is_strictly_small_size_only() -> None:
     script = SEEDER.read_text(encoding="utf-8")
     assert "TARGET_LENGTHS = (8, 10, 12)" in script
