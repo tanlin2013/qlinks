@@ -68,7 +68,8 @@ case "${STAGE}" in
         ;;
     common-windows)
         JOB_COMMAND=(
-            python experimental/jobs/spin1_sec6_common_windows.py
+            python experimental/jobs/spin1_sec6_common_windows_certified.py
+            --source-data-dir "${SOURCE_DATA_DIR}"
             --checkpoint-root "${DEFAULT_CACHE_ROOT}"
             --checkpoint-root "${SOURCE_DATA_DIR}"
             --existing-data-dir "${OUTPUT_DATA_DIR}"
@@ -133,7 +134,7 @@ else
 fi
 
 cat <<EOF
-Job: spin1_xy_sec6_integration
+Job: spin1_sec6_integration
 Run id: ${RUN_ID}
 Stage: ${STAGE}
 Source evidence: ${SOURCE_RUN_ID}

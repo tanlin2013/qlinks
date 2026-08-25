@@ -28,6 +28,6 @@ def test_spin1_sec6_integration_launcher_has_no_heavy_solver_entry_point() -> No
     )
     assert "spin1_sec6_integration.py" in script
     assert "spin1_sec6_seed_dense_cache.py" in script
-    assert "spin1_sec6_common_windows.py" in script
+    assert "spin1_sec6_common_windows_certified.py" in script
     assert "render_spin1_xy_sec6_integration_figures.py" in script
     assert "run_spin1_xy_sec6_provisioning.py" not in script
