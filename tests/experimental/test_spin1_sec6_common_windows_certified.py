@@ -49,9 +49,7 @@ def test_certified_lane_temporarily_disables_only_absolute_residual_veto(
 
     def fake_compute(**_kwargs):
         seen["tolerance"] = common.PHYSICAL_RESIDUAL_TOLERANCE
-        return pd.DataFrame(
-            [{"L": 14, "window_max_eigenpair_residual": 2.0e-6}]
-        )
+        return pd.DataFrame([{"L": 14, "window_max_eigenpair_residual": 2.0e-6}])
 
     monkeypatch.setattr(common, "compute_common_windows_from_cache", fake_compute)
     frame = certified.compute_certified_common_windows(
@@ -71,9 +69,9 @@ def test_certified_lane_rejects_nonfinite_existing_residuals(tmp_path: Path) -> 
     output = tmp_path / "output"
     output.mkdir()
     _write_certification(source)
-    pd.DataFrame(
-        [{"L": 14, "window_max_eigenpair_residual": float("nan")}]
-    ).to_csv(output / common.COMMON_NAME, index=False)
+    pd.DataFrame([{"L": 14, "window_max_eigenpair_residual": float("nan")}]).to_csv(
+        output / common.COMMON_NAME, index=False
+    )
 
     with pytest.raises(common.CachedSpectrumUnavailableError, match="non-finite"):
         certified.compute_certified_common_windows(
