@@ -9,6 +9,7 @@ The expensive L=14 sparse spectrum is never recomputed here.
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import os
 import shutil
@@ -33,8 +34,8 @@ for path in (JOBS, NOTEBOOKS, ROOT):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-import spin1_sec6_common_windows as common
-import spin1_sec6_provisioning as core
+common = importlib.import_module("spin1_sec6_common_windows")
+core = importlib.import_module("spin1_sec6_provisioning")
 
 TARGET_LENGTHS = (8, 10, 12)
 KAPPA_OVER_J = 0.10
