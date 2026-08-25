@@ -92,9 +92,7 @@ def _column(frame: pd.DataFrame, *names: str) -> str:
     for name in names:
         if name in frame.columns:
             return name
-    raise EvidenceValidationError(
-        f"none of the required columns are present: {', '.join(names)}"
-    )
+    raise EvidenceValidationError(f"none of the required columns are present: {', '.join(names)}")
 
 
 def _primary_window_mask(frame: pd.DataFrame) -> np.ndarray:
@@ -103,9 +101,7 @@ def _primary_window_mask(frame: pd.DataFrame) -> np.ndarray:
     mask = np.ones(len(frame), dtype=bool)
     matched = False
     if "window_exponent" in frame.columns:
-        mask &= np.isclose(
-            frame["window_exponent"].to_numpy(dtype=float), PRIMARY_WINDOW_EXPONENT
-        )
+        mask &= np.isclose(frame["window_exponent"].to_numpy(dtype=float), PRIMARY_WINDOW_EXPONENT)
         matched = True
     if "window_prefactor" in frame.columns:
         mask &= np.isclose(
@@ -133,9 +129,7 @@ def _primary_window_mask(frame: pd.DataFrame) -> np.ndarray:
 def _representative_mask(frame: pd.DataFrame) -> np.ndarray:
     if "kappa_over_J" not in frame.columns:
         return np.ones(len(frame), dtype=bool)
-    return np.isclose(
-        frame["kappa_over_J"].to_numpy(dtype=float), REPRESENTATIVE_KAPPA_OVER_J
-    )
+    return np.isclose(frame["kappa_over_J"].to_numpy(dtype=float), REPRESENTATIVE_KAPPA_OVER_J)
 
 
 def _validate_l14_concentration(source: Path) -> bool:
@@ -179,9 +173,7 @@ def _validate_l14_concentration(source: Path) -> bool:
         rel_tol=5.0e-4,
         abs_tol=5.0e-8,
     ):
-        raise EvidenceValidationError(
-            f"unexpected L=14 removed fraction: {removed_fraction:.10g}"
-        )
+        raise EvidenceValidationError(f"unexpected L=14 removed fraction: {removed_fraction:.10g}")
     if "sparse_convergence_passed" in frame.columns and not bool(
         frame["sparse_convergence_passed"].fillna(False).astype(bool).all()
     ):
@@ -206,7 +198,7 @@ def _validate_beta0_bridges(source: Path) -> float:
     frame = _read_csv(source / "spin1_xy_kappa0p1_two_bridge_rdm_distance.csv")
     if "L" not in frame.columns or "bridge" not in frame.columns:
         raise EvidenceValidationError("two-bridge table is missing L or bridge")
-    mask = (frame["L"].astype(int) == 14).to_numpy()
+    mask = (frame["L"].astype(int) == 14).to_numpy(copy=True)
     mask &= _representative_mask(frame)
     primary = frame[mask & _primary_window_mask(frame)]
     first = primary[primary["bridge"] == "mc_to_beta0_resolved"]
@@ -270,8 +262,7 @@ def _standardize_panel_a(source: Path) -> pd.DataFrame:
     missing = required.difference(scatter.columns)
     if scatter.empty or missing:
         raise EvidenceValidationError(
-            "representative L=12 scatter is missing data or columns: "
-            + ", ".join(sorted(missing))
+            "representative L=12 scatter is missing data or columns: " + ", ".join(sorted(missing))
         )
     if "is_tower_state" not in scatter.columns:
         if "tower_overlap" in scatter.columns:
@@ -306,8 +297,7 @@ def _standardize_primary_microcanonical(source: Path) -> pd.DataFrame:
                     "witness": key,
                     "tau_mc_raw": float(row[_column(frame, f"tau_{key}_mc_raw")]),
                     "window_half_width": float(row["window_half_width"]),
-                    "window_energy_density_half_width": float(row["window_half_width"])
-                    / length,
+                    "window_energy_density_half_width": float(row["window_half_width"]) / length,
                     "window_state_count": int(row["window_state_count"]),
                 }
             )
@@ -363,9 +353,7 @@ def _standardize_family_concentration_band(source: Path) -> pd.DataFrame:
             "family concentration grid does not certify the primary L^(1/4), c=1 window; "
             "do not reuse it for the Fig. 6(d) band"
         ) from exc
-    width_column = _column(
-        frame, "w_L", "largest_covariance_width", "largest_covariance_width_raw"
-    )
+    width_column = _column(frame, "w_L", "largest_covariance_width", "largest_covariance_width_raw")
     mask = protocol_mask
     mask &= frame["L"].astype(int).isin((8, 10, 12)).to_numpy()
     mask &= frame["kappa_over_J"].to_numpy(dtype=float) > 0.0
@@ -414,9 +402,7 @@ def _standardize_beta0_appendix(source: Path) -> pd.DataFrame:
         "window_state_count",
         "raw_window_state_count",
     ]
-    return frame[[name for name in keep if name in frame.columns]].sort_values(
-        ["bridge", "L"]
-    )
+    return frame[[name for name in keep if name in frame.columns]].sort_values(["bridge", "L"])
 
 
 def _standardize_obstruction(source: Path) -> pd.DataFrame:
@@ -443,8 +429,7 @@ def _validate_common_window_table(path: Path) -> pd.DataFrame:
     missing = required.difference(frame.columns)
     if missing:
         raise EvidenceValidationError(
-            "common-window concentration table is missing columns: "
-            + ", ".join(sorted(missing))
+            "common-window concentration table is missing columns: " + ", ".join(sorted(missing))
         )
     if not np.all(np.isfinite(frame["w_L"].to_numpy(dtype=float))):
         raise EvidenceValidationError("common-window concentration contains non-finite widths")
@@ -549,9 +534,7 @@ def run_integration(source_data_dir: Path, output_dir: Path) -> IntegrationAudit
         representative_l14_validated=bool(validation["representative_l14_validated"]),
         sparse_budget_certified=bool(validation["sparse_budget_certified"]),
         exact_energy_tolerance_stable=bool(validation["exact_energy_tolerance_stable"]),
-        beta0_second_bridge_trace_distance=float(
-            validation["beta0_second_bridge_trace_distance"]
-        ),
+        beta0_second_bridge_trace_distance=float(validation["beta0_second_bridge_trace_distance"]),
         primary_window_available_sizes=available,
         missing_primary_concentration_sizes=missing,
         common_window_status="READY" if not missing else "CACHE_ONLY_P0_A_PENDING",
