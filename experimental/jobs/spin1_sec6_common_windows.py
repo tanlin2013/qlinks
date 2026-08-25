@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 """Compute homogeneous Spin-1 Sec. VI concentration windows from cached spectra only.
 
-No eigensolver is reachable from this module. It validates a previously completed
-common-window export first; otherwise it discovers compatible reusable eigensystems,
-checks a deterministic physical-residual sample, and derives only the missing covariance
-products. Missing reusable spectra are reported rather than silently recomputed.
+The validation/reuse path is deliberately lightweight. The heavy Sec. VI numerical
+kernel is imported only after no completed derived product can be reused. This module
+never calls the eigensolver entry point: missing reusable spectra are provisioning gaps.
 """
 
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import math
 import shutil
@@ -32,9 +32,9 @@ for path in (JOBS, NOTEBOOKS, ROOT):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-import spin1_sec6_provisioning as core  # noqa: E402
-
 REPRESENTATIVE_KAPPA_OVER_J = 0.10
+TOTAL_SZ = -2
+J3_OVER_J = 0.10
 PRIMARY_WINDOW_EXPONENT = 0.25
 FIXED_CONTROL_HALF_WIDTH = 1.0
 TARGET_LENGTHS = (8, 10, 12, 14)
@@ -54,6 +54,17 @@ class CachedSpectrumUnavailable(RuntimeError):
     """Raised when a required reusable eigensystem cannot be validated."""
 
 
+def _load_core():
+    """Load the heavy numerical kernel only after derived-data reuse has failed."""
+
+    core = importlib.import_module("spin1_sec6_provisioning")
+    if int(core.TOTAL_SZ) != TOTAL_SZ or not math.isclose(
+        float(core.J3_OVER_J), J3_OVER_J, rel_tol=0.0, abs_tol=1.0e-15
+    ):
+        raise RuntimeError("Spin-1 Sec. VI cache contract disagrees with numerical kernel")
+    return core
+
+
 def _metadata(path: Path) -> dict[str, Any] | None:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
@@ -67,8 +78,8 @@ def _compatible_metadata(
 ) -> bool:
     expected = {
         "L": int(length),
-        "M": int(core.TOTAL_SZ),
-        "J3_over_J": float(core.J3_OVER_J),
+        "M": TOTAL_SZ,
+        "J3_over_J": J3_OVER_J,
         "kappa_over_J": float(kappa_over_j),
     }
     return all(metadata.get(key) == value for key, value in expected.items())
@@ -96,10 +107,10 @@ def discover_checkpoint_directories(
             ):
                 continue
             energies_path = directory / "energies.npy"
-            vector_path = directory / "vectors.npy"
-            if not vector_path.is_file():
-                vector_path = directory / "eigenvectors.npy"
-            if not energies_path.is_file() or not vector_path.is_file():
+            vectors_path = directory / "vectors.npy"
+            if not vectors_path.is_file():
+                vectors_path = directory / "eigenvectors.npy"
+            if not energies_path.is_file() or not vectors_path.is_file():
                 continue
             returned = metadata.get("returned_eigenpairs")
             if returned is None:
@@ -118,12 +129,12 @@ def _load_arrays(directory: Path) -> tuple[np.ndarray, np.ndarray, dict[str, Any
     metadata = _metadata(directory / "metadata.json")
     if metadata is None:
         raise CachedSpectrumUnavailable(f"invalid checkpoint metadata: {directory}")
-    vector_path = directory / "vectors.npy"
-    if not vector_path.is_file():
-        vector_path = directory / "eigenvectors.npy"
+    vectors_path = directory / "vectors.npy"
+    if not vectors_path.is_file():
+        vectors_path = directory / "eigenvectors.npy"
     try:
         energies = np.load(directory / "energies.npy", mmap_mode="r", allow_pickle=False)
-        vectors = np.load(vector_path, mmap_mode="r", allow_pickle=False)
+        vectors = np.load(vectors_path, mmap_mode="r", allow_pickle=False)
     except (OSError, ValueError) as exc:
         raise CachedSpectrumUnavailable(f"unreadable checkpoint arrays: {directory}") from exc
     if energies.ndim != 1 or vectors.ndim != 2 or vectors.shape[1] != energies.size:
@@ -222,12 +233,7 @@ def validate_completed_common_window_export(
     lengths: Iterable[int] = TARGET_LENGTHS,
     kappa_over_j: float = REPRESENTATIVE_KAPPA_OVER_J,
 ) -> pd.DataFrame | None:
-    """Validate/reuse a completed P0-A export before numerical setup.
-
-    ``None`` means the product is absent or incomplete and checkpoint reduction may
-    proceed. A complete-looking but scientifically inconsistent export raises rather than
-    being overwritten.
-    """
+    """Validate/reuse a completed P0-A export before numerical setup."""
 
     data = Path(data_dir).resolve(strict=False)
     concentration_path = data / COMMON_NAME
@@ -299,12 +305,12 @@ def validate_completed_common_window_export(
             abs_tol=1.0e-10,
         ):
             raise CachedSpectrumUnavailable(
-                f"completed common-window export has an invalid half-width at "
+                "completed common-window export has an invalid half-width at "
                 f"L={int(row.L)}, protocol={row.window_protocol}"
             )
         if float(row.covered_spectral_half_width) + 1.0e-10 < expected_half_width:
             raise CachedSpectrumUnavailable(
-                f"completed common-window export exceeds cached spectral coverage at "
+                "completed common-window export exceeds cached spectral coverage at "
                 f"L={int(row.L)}"
             )
         residual = float(row.window_max_eigenpair_residual)
@@ -399,19 +405,16 @@ def compute_common_windows_from_cache(
         _copy_completed_products(reuse_source, output)
         return completed
 
-    concentration_rows: list[dict[str, Any]] = []
-    worst_rows: list[dict[str, Any]] = []
-    tolerance_rows: list[dict[str, Any]] = []
-    checkpoint_rows: list[dict[str, Any]] = []
-    missing: list[int] = []
-
-    for length in target_lengths:
-        candidates = discover_checkpoint_directories(
+    candidates_by_length = {
+        length: discover_checkpoint_directories(
             checkpoint_roots, length=length, kappa_over_j=kappa_over_j
         )
-        if not candidates:
-            missing.append(length)
-            checkpoint_rows.append(
+        for length in target_lengths
+    }
+    missing = [length for length, candidates in candidates_by_length.items() if not candidates]
+    if missing:
+        pd.DataFrame(
+            [
                 {
                     "L": length,
                     "kappa_over_J": kappa_over_j,
@@ -419,12 +422,27 @@ def compute_common_windows_from_cache(
                     "candidate_count": 0,
                     "validation_errors": "",
                 }
-            )
-            continue
+                for length in missing
+            ]
+        ).to_csv(output / CHECKPOINT_AUDIT_NAME, index=False)
+        raise CachedSpectrumUnavailable(
+            "missing validated reusable spectra for L="
+            + ",".join(str(value) for value in missing)
+            + "; no eigensolve was started"
+        )
+
+    core = _load_core()
+    concentration_rows: list[dict[str, Any]] = []
+    worst_rows: list[dict[str, Any]] = []
+    tolerance_rows: list[dict[str, Any]] = []
+    checkpoint_rows: list[dict[str, Any]] = []
+    invalid: list[int] = []
+
+    for length in target_lengths:
         context = core._point_context(length=length, kappa_over_j=kappa_over_j)
         validated = None
         errors: list[str] = []
-        for candidate in candidates:
+        for candidate in candidates_by_length[length]:
             try:
                 validated = validate_cached_spectrum(
                     candidate,
@@ -436,17 +454,18 @@ def compute_common_windows_from_cache(
             except CachedSpectrumUnavailable as exc:
                 errors.append(str(exc))
         if validated is None:
-            missing.append(length)
+            invalid.append(length)
             checkpoint_rows.append(
                 {
                     "L": length,
                     "kappa_over_J": kappa_over_j,
                     "status": "MISSING_REUSABLE_SPECTRUM",
-                    "candidate_count": len(candidates),
+                    "candidate_count": len(candidates_by_length[length]),
                     "validation_errors": " | ".join(errors),
                 }
             )
             continue
+
         energies, vectors, metadata = validated
         coverage = float(min(abs(float(np.min(energies))), abs(float(np.max(energies)))))
         checkpoint_rows.append(
@@ -527,11 +546,10 @@ def compute_common_windows_from_cache(
 
     checkpoint_frame = pd.DataFrame(checkpoint_rows)
     checkpoint_frame.to_csv(output / CHECKPOINT_AUDIT_NAME, index=False)
-    if missing:
-        missing_text = ",".join(str(value) for value in missing)
+    if invalid:
         raise CachedSpectrumUnavailable(
-            "missing validated reusable spectra for L="
-            + missing_text
+            "no validated reusable spectrum remained for L="
+            + ",".join(str(value) for value in invalid)
             + "; common-window P0-A was not completed and no eigensolve was started"
         )
 
@@ -542,7 +560,7 @@ def compute_common_windows_from_cache(
     pd.DataFrame(worst_rows).to_csv(output / WORST_NAME, index=False)
     pd.DataFrame(tolerance_rows).to_csv(output / TOLERANCE_NAME, index=False)
     summary: dict[str, Any] = {
-        "solve_policy": "cache-only; no eigensolver is reachable from this module",
+        "solve_policy": "cache-only; no eigensolver fallback",
         "lengths": sorted(set(frame["L"].astype(int))),
         "window_protocols": sorted(set(frame["window_protocol"].astype(str))),
         "representative_kappa_over_J": float(kappa_over_j),
