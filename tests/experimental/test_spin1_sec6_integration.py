@@ -130,9 +130,7 @@ def _write_reference_evidence(root: Path, *, deformation_protocol: bool = True) 
         if deformation_protocol:
             row.update({"window_exponent": 0.25, "window_prefactor": 1.0})
         deformation_rows.append(row)
-    pd.DataFrame(deformation_rows).to_csv(
-        root / "spin1_xy_kappa_matching_grid.csv", index=False
-    )
+    pd.DataFrame(deformation_rows).to_csv(root / "spin1_xy_kappa_matching_grid.csv", index=False)
 
     concentration_rows = []
     for length in (8, 10, 12):
