@@ -73,9 +73,7 @@ def _metadata(path: Path) -> dict[str, Any] | None:
     return value if isinstance(value, dict) else None
 
 
-def _compatible_metadata(
-    metadata: dict[str, Any], *, length: int, kappa_over_j: float
-) -> bool:
+def _compatible_metadata(metadata: dict[str, Any], *, length: int, kappa_over_j: float) -> bool:
     expected = {
         "L": int(length),
         "M": TOTAL_SZ,
@@ -115,9 +113,7 @@ def discover_checkpoint_directories(
             returned = metadata.get("returned_eigenpairs")
             if returned is None:
                 try:
-                    returned = int(
-                        np.load(energies_path, mmap_mode="r", allow_pickle=False).size
-                    )
+                    returned = int(np.load(energies_path, mmap_mode="r", allow_pickle=False).size)
                 except (OSError, ValueError):
                     continue
             candidates.append((int(returned), directory))
@@ -158,9 +154,7 @@ def validate_cached_spectrum(
 
     energies, vectors, metadata = _load_arrays(directory)
     if not _compatible_metadata(metadata, length=length, kappa_over_j=kappa_over_j):
-        raise CachedSpectrumUnavailableError(
-            f"scientifically incompatible checkpoint: {directory}"
-        )
+        raise CachedSpectrumUnavailableError(f"scientifically incompatible checkpoint: {directory}")
     if vectors.shape[0] != int(context["h_sector"].shape[0]):
         raise CachedSpectrumUnavailableError(
             f"resolved-sector dimension changed for cached checkpoint: {directory}"
@@ -180,9 +174,7 @@ def validate_cached_spectrum(
         gram = block.conj().T @ block
         orthogonality = float(np.linalg.norm(gram - np.eye(sample.size), ord=2))
         action = context["h_sector"] @ block
-        residuals = np.linalg.norm(
-            action - block * np.asarray(energies[sample])[None, :], axis=0
-        )
+        residuals = np.linalg.norm(action - block * np.asarray(energies[sample])[None, :], axis=0)
         maximum_residual = float(np.max(residuals, initial=0.0))
     else:
         orthogonality = 0.0
@@ -205,9 +197,7 @@ def validate_cached_spectrum(
             "sample_orthogonality_residual": orthogonality,
             "sample_maximum_physical_residual": maximum_residual,
             "returned_eigenpairs": int(energies.size),
-            "requested_eigenpairs": int(
-                metadata.get("requested_eigenpairs", energies.size)
-            ),
+            "requested_eigenpairs": int(metadata.get("requested_eigenpairs", energies.size)),
         }
     )
     return energies, vectors, checked
@@ -283,13 +273,9 @@ def validate_completed_common_window_export(
     if actual_keys != expected_keys or len(selected) != len(expected_keys):
         return None
     if not np.all(np.isfinite(selected["w_L"].to_numpy(dtype=float))):
-        raise CachedSpectrumUnavailableError(
-            "completed common-window export has non-finite widths"
-        )
+        raise CachedSpectrumUnavailableError("completed common-window export has non-finite widths")
     if np.any(selected["w_L"].to_numpy(dtype=float) < 0.0):
-        raise CachedSpectrumUnavailableError(
-            "completed common-window export has negative widths"
-        )
+        raise CachedSpectrumUnavailableError("completed common-window export has negative widths")
     if np.any(selected["removed_fraction"].to_numpy(dtype=float) < 0.0):
         raise CachedSpectrumUnavailableError(
             "completed common-window export has negative removed fraction"
@@ -316,14 +302,12 @@ def validate_completed_common_window_export(
             )
         if float(row.covered_spectral_half_width) + 1.0e-10 < expected_half_width:
             raise CachedSpectrumUnavailableError(
-                "completed common-window export exceeds cached spectral coverage at "
-                f"L={int(row.L)}"
+                f"completed common-window export exceeds cached spectral coverage at L={int(row.L)}"
             )
         residual = float(row.window_max_eigenpair_residual)
         if math.isfinite(residual) and residual > PHYSICAL_RESIDUAL_TOLERANCE:
             raise CachedSpectrumUnavailableError(
-                f"completed common-window export has residual {residual:.3e} at "
-                f"L={int(row.L)}"
+                f"completed common-window export has residual {residual:.3e} at L={int(row.L)}"
             )
     l14 = selected[
         (selected["L"].astype(int) == 14)
@@ -342,9 +326,7 @@ def validate_completed_common_window_export(
                 "completed common-window export does not reproduce the established "
                 f"L=14 fixed-width {variant} width"
             )
-    return selected.sort_values(["window_protocol", "L", "variant"]).reset_index(
-        drop=True
-    )
+    return selected.sort_values(["window_protocol", "L", "variant"]).reset_index(drop=True)
 
 
 def _copy_completed_products(source: Path, output: Path) -> None:
@@ -400,9 +382,7 @@ def compute_common_windows_from_cache(
     output.mkdir(parents=True, exist_ok=True)
     target_lengths = tuple(int(value) for value in lengths)
     reuse_source = (
-        output
-        if existing_data_dir is None
-        else Path(existing_data_dir).resolve(strict=False)
+        output if existing_data_dir is None else Path(existing_data_dir).resolve(strict=False)
     )
     completed = validate_completed_common_window_export(
         reuse_source, lengths=target_lengths, kappa_over_j=kappa_over_j
@@ -482,12 +462,8 @@ def compute_common_windows_from_cache(
                 "checkpoint_path": metadata["checkpoint_path"],
                 "returned_eigenpairs": int(energies.size),
                 "covered_spectral_half_width": coverage,
-                "sample_orthogonality_residual": metadata[
-                    "sample_orthogonality_residual"
-                ],
-                "sample_maximum_physical_residual": metadata[
-                    "sample_maximum_physical_residual"
-                ],
+                "sample_orthogonality_residual": metadata["sample_orthogonality_residual"],
+                "sample_maximum_physical_residual": metadata["sample_maximum_physical_residual"],
             }
         )
         for protocol, half_width in _window_protocols(length):
@@ -559,9 +535,7 @@ def compute_common_windows_from_cache(
             + "; common-window P0-A was not completed and no eigensolve was started"
         )
 
-    frame = pd.DataFrame(concentration_rows).sort_values(
-        ["window_protocol", "L", "variant"]
-    )
+    frame = pd.DataFrame(concentration_rows).sort_values(["window_protocol", "L", "variant"])
     frame.to_csv(output / COMMON_NAME, index=False)
     pd.DataFrame(worst_rows).to_csv(output / WORST_NAME, index=False)
     pd.DataFrame(tolerance_rows).to_csv(output / TOLERANCE_NAME, index=False)
@@ -573,9 +547,7 @@ def compute_common_windows_from_cache(
         "qualitative_narrowing": {},
         "power_law_fit_computed": False,
     }
-    for protocol, group in frame[frame["variant"] == "raw"].groupby(
-        "window_protocol"
-    ):
+    for protocol, group in frame[frame["variant"] == "raw"].groupby("window_protocol"):
         ordered = group.sort_values("L")
         widths = ordered["w_L"].to_numpy(dtype=float)
         summary["qualitative_narrowing"][str(protocol)] = {
@@ -613,9 +585,7 @@ def main() -> None:
     roots = list(args.checkpoint_root)
     if not roots:
         roots = [ROOT / "experimental" / "data" / "evidence_cache" / "spin1"]
-    lengths = tuple(
-        int(token.strip()) for token in args.lengths.split(",") if token.strip()
-    )
+    lengths = tuple(int(token.strip()) for token in args.lengths.split(",") if token.strip())
     if not lengths:
         raise ValueError("--lengths must contain at least one size")
     frame = compute_common_windows_from_cache(
