@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -84,3 +85,68 @@ def test_completed_common_window_export_checks_established_l14_anchor(
 
     with pytest.raises(common.CachedSpectrumUnavailableError, match="established L=14"):
         common.validate_completed_common_window_export(tmp_path)
+
+
+def test_cache_validation_ignores_inaccurate_outer_shift_invert_vectors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    energies = np.asarray([-10.0, -1.0, 0.0, 1.0, 10.0])
+    vectors = np.eye(5, dtype=np.complex128)
+    metadata = {
+        "L": 14,
+        "M": common.TOTAL_SZ,
+        "J3_over_J": common.J3_OVER_J,
+        "kappa_over_J": 0.1,
+        "sector_dimension": 5,
+        "requested_eigenpairs": 5,
+    }
+    # The outer two returned vectors deliberately have O(1) residuals, while every
+    # vector that can enter either common-window protocol is an exact eigenvector.
+    h_sector = np.diag([-9.0, -1.0, 0.0, 1.0, 9.0]).astype(np.complex128)
+    monkeypatch.setattr(
+        common,
+        "_load_arrays",
+        lambda _directory: (energies, vectors, metadata),
+    )
+
+    _, _, checked = common.validate_cached_spectrum(
+        Path("unused"),
+        length=14,
+        kappa_over_j=0.1,
+        context={"h_sector": h_sector},
+    )
+
+    assert checked["sample_maximum_physical_residual"] == pytest.approx(0.0)
+    assert checked["sampled_energy_abs_max"] <= common._required_validation_half_width(14)
+
+
+def test_cache_validation_still_rejects_bad_vectors_inside_common_window(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    energies = np.asarray([-2.0, -1.0, 0.0, 1.0, 2.0])
+    vectors = np.eye(5, dtype=np.complex128)
+    metadata = {
+        "L": 14,
+        "M": common.TOTAL_SZ,
+        "J3_over_J": common.J3_OVER_J,
+        "kappa_over_J": 0.1,
+        "sector_dimension": 5,
+        "requested_eigenpairs": 5,
+    }
+    h_sector = np.diag([-2.0, -0.5, 0.0, 1.0, 2.0]).astype(np.complex128)
+    monkeypatch.setattr(
+        common,
+        "_load_arrays",
+        lambda _directory: (energies, vectors, metadata),
+    )
+
+    with pytest.raises(
+        common.CachedSpectrumUnavailableError,
+        match="inside required common window",
+    ):
+        common.validate_cached_spectrum(
+            Path("unused"),
+            length=14,
+            kappa_over_j=0.1,
+            context={"h_sector": h_sector},
+        )

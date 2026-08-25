@@ -142,6 +142,33 @@ def _load_arrays(directory: Path) -> tuple[np.ndarray, np.ndarray, dict[str, Any
     return energies, vectors, metadata
 
 
+def _required_validation_half_width(length: int) -> float:
+    return max(float(length) ** PRIMARY_WINDOW_EXPONENT, FIXED_CONTROL_HALF_WIDTH)
+
+
+def _validation_sample_indices(
+    energies: np.ndarray,
+    *,
+    length: int,
+    sample_vectors: int,
+) -> np.ndarray:
+    """Sample only eigenvectors that can enter the requested common-window evidence."""
+
+    values = np.asarray(energies, dtype=float)
+    half_width = _required_validation_half_width(length)
+    eligible = np.flatnonzero(np.abs(values) <= half_width + 1.0e-10)
+    if eligible.size == 0:
+        raise CachedSpectrumUnavailableError(
+            f"cached L={length} spectrum contains no states inside required validation "
+            f"half-width {half_width:.6g}"
+        )
+    count = min(int(sample_vectors), int(eligible.size))
+    if count <= 0:
+        return np.zeros(0, dtype=np.int64)
+    positions = np.linspace(0, eligible.size - 1, count, dtype=np.int64)
+    return np.unique(eligible[positions])
+
+
 def validate_cached_spectrum(
     directory: Path,
     *,
@@ -150,7 +177,13 @@ def validate_cached_spectrum(
     context: dict[str, Any],
     sample_vectors: int = 8,
 ) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
-    """Validate one reusable spectrum without solving or mutating it."""
+    """Validate one reusable spectrum without solving or mutating it.
+
+    The cheap sanity sample is restricted to the largest common window that will
+    actually be reused. Outer shift-invert vectors are irrelevant to P0-A and may be
+    less accurate than the central spectral block. Every state used by each final
+    window is checked later through the kernel's chunked window-residual audit.
+    """
 
     energies, vectors, metadata = _load_arrays(directory)
     if not _compatible_metadata(metadata, length=length, kappa_over_j=kappa_over_j):
@@ -159,35 +192,36 @@ def validate_cached_spectrum(
         raise CachedSpectrumUnavailableError(
             f"resolved-sector dimension changed for cached checkpoint: {directory}"
         )
-    count = min(int(sample_vectors), energies.size)
-    sample = (
-        np.unique(np.linspace(0, energies.size - 1, count, dtype=np.int64))
-        if count
-        else np.zeros(0, dtype=np.int64)
+    sample = _validation_sample_indices(
+        energies,
+        length=length,
+        sample_vectors=sample_vectors,
     )
     if sample.size:
         block = np.asarray(vectors[:, sample])
         if not np.all(np.isfinite(block)):
             raise CachedSpectrumUnavailableError(
-                f"checkpoint has non-finite eigenvectors: {directory}"
+                f"checkpoint has non-finite eigenvectors in validation window: {directory}"
             )
         gram = block.conj().T @ block
         orthogonality = float(np.linalg.norm(gram - np.eye(sample.size), ord=2))
         action = context["h_sector"] @ block
         residuals = np.linalg.norm(action - block * np.asarray(energies[sample])[None, :], axis=0)
         maximum_residual = float(np.max(residuals, initial=0.0))
+        sampled_energy_abs_max = float(np.max(np.abs(np.asarray(energies[sample])), initial=0.0))
     else:
         orthogonality = 0.0
         maximum_residual = 0.0
+        sampled_energy_abs_max = 0.0
     if orthogonality > ORTHOGONALITY_TOLERANCE:
         raise CachedSpectrumUnavailableError(
             f"sample orthogonality residual {orthogonality:.3e} exceeds "
-            f"{ORTHOGONALITY_TOLERANCE:.1e}: {directory}"
+            f"{ORTHOGONALITY_TOLERANCE:.1e} inside required common window: {directory}"
         )
     if maximum_residual > PHYSICAL_RESIDUAL_TOLERANCE:
         raise CachedSpectrumUnavailableError(
             f"sample physical eigenpair residual {maximum_residual:.3e} exceeds "
-            f"{PHYSICAL_RESIDUAL_TOLERANCE:.1e}: {directory}"
+            f"{PHYSICAL_RESIDUAL_TOLERANCE:.1e} inside required common window: {directory}"
         )
     checked = dict(metadata)
     checked.update(
@@ -196,6 +230,8 @@ def validate_cached_spectrum(
             "checkpoint_reused": True,
             "sample_orthogonality_residual": orthogonality,
             "sample_maximum_physical_residual": maximum_residual,
+            "validation_window_half_width": _required_validation_half_width(length),
+            "sampled_energy_abs_max": sampled_energy_abs_max,
             "returned_eigenpairs": int(energies.size),
             "requested_eigenpairs": int(metadata.get("requested_eigenpairs", energies.size)),
         }
@@ -462,6 +498,8 @@ def compute_common_windows_from_cache(
                 "checkpoint_path": metadata["checkpoint_path"],
                 "returned_eigenpairs": int(energies.size),
                 "covered_spectral_half_width": coverage,
+                "validation_window_half_width": metadata["validation_window_half_width"],
+                "sampled_energy_abs_max": metadata["sampled_energy_abs_max"],
                 "sample_orthogonality_residual": metadata["sample_orthogonality_residual"],
                 "sample_maximum_physical_residual": metadata["sample_maximum_physical_residual"],
             }
@@ -500,6 +538,21 @@ def compute_common_windows_from_cache(
                 sparse_convergence_passed=True,
                 budget_certification_source="validated_reusable_spectrum",
             )
+            window_residuals = [
+                float(row["window_max_eigenpair_residual"])
+                for row in rows
+                if "window_max_eigenpair_residual" in row
+            ]
+            maximum_window_residual = max(window_residuals, default=0.0)
+            if (
+                not math.isfinite(maximum_window_residual)
+                or maximum_window_residual > PHYSICAL_RESIDUAL_TOLERANCE
+            ):
+                raise CachedSpectrumUnavailableError(
+                    f"cached L={length} {protocol} window has maximum physical eigenpair "
+                    f"residual {maximum_window_residual:.3e}, above required "
+                    f"{PHYSICAL_RESIDUAL_TOLERANCE:.1e}; no solve was started"
+                )
             concentration_rows.extend(
                 _raw_clean_records(
                     length=length,
