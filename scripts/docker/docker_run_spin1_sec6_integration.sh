@@ -28,6 +28,7 @@ SHM_SIZE="${QLINKS_DOCKER_SHM_SIZE:-16g}"
 DRY_RUN="${QLINKS_DOCKER_DRY_RUN:-0}"
 USE_TEX="${QLINKS_SEC6_USE_TEX:-1}"
 STAGE="audit"
+SOLVE_POLICY="disabled; no eigensolver entry point is invoked"
 
 while (($#)); do
     case "$1" in
@@ -47,7 +48,7 @@ while (($#)); do
     esac
 done
 
-CONTAINER_NAME="${QLINKS_CONTAINER_NAME:-qlinks-${RUN_ID//_/-}-${STAGE}}"
+CONTAINER_NAME="${QLINKS_CONTAINER_NAME:-qlinks-${RUN_ID//_/-}-${STAGE}-${RUN_TIMESTAMP}-$$}"
 
 case "${STAGE}" in
     audit)
@@ -56,6 +57,14 @@ case "${STAGE}" in
             --source-data-dir "${SOURCE_DATA_DIR}"
             --output-dir "${OUTPUT_DATA_DIR}"
         )
+        ;;
+    seed-dense-cache)
+        JOB_COMMAND=(
+            python experimental/jobs/spin1_sec6_seed_dense_cache.py
+            --cache-root "${DEFAULT_CACHE_ROOT}"
+            --output-dir "${OUTPUT_DATA_DIR}"
+        )
+        SOLVE_POLICY="dense-only L=8,10,12 at kappa/J=0.1; sparse/L=14 solves are forbidden"
         ;;
     common-windows)
         JOB_COMMAND=(
@@ -76,7 +85,7 @@ case "${STAGE}" in
         ;;
     *)
         echo "unknown stage: ${STAGE}" >&2
-        echo "expected one of: audit, common-windows, render-preview, render-final" >&2
+        echo "expected one of: audit, seed-dense-cache, common-windows, render-preview, render-final" >&2
         exit 2
         ;;
 esac
@@ -138,12 +147,17 @@ Thread limit: ${THREADS}
 Memory limit: ${MEMORY_LIMIT:-unlimited}
 CPU limit: ${CPUS_LIMIT:-unlimited}
 Shared memory: ${SHM_SIZE}
-Solve policy: disabled by this launcher; no heavy provisioning entry point is invoked.
+Solve policy: ${SOLVE_POLICY}
 
 Recommended sequence, reusing the same run id:
   QLINKS_EVIDENCE_RUN_ID=${RUN_ID} \
     scripts/docker/docker_run_spin1_sec6_integration.sh --stage audit
 
+If the audit/common-window reducer reports missing L=8,10,12 spectra, seed only those dense caches:
+  QLINKS_EVIDENCE_RUN_ID=${RUN_ID} \
+    scripts/docker/docker_run_spin1_sec6_integration.sh --stage seed-dense-cache
+
+Then rerun the cache-only reducer:
   QLINKS_EVIDENCE_RUN_ID=${RUN_ID} \
     scripts/docker/docker_run_spin1_sec6_integration.sh --stage common-windows
 
