@@ -22,11 +22,12 @@ def test_docker_run_launchers_always_pull(relative_path: str) -> None:
 
 
 def test_spin1_sec6_integration_launcher_has_no_heavy_solver_entry_point() -> None:
-    """The manuscript-integration launcher must stay cache/post-processing only."""
+    """The integration launcher must never dispatch the heavy provisioning job."""
     script = (ROOT / "scripts/docker/docker_run_spin1_sec6_integration.sh").read_text(
         encoding="utf-8"
     )
     assert "spin1_sec6_integration.py" in script
+    assert "spin1_sec6_seed_dense_cache.py" in script
     assert "spin1_sec6_common_windows.py" in script
     assert "render_spin1_xy_sec6_integration_figures.py" in script
     assert "run_spin1_xy_sec6_provisioning.py" not in script
