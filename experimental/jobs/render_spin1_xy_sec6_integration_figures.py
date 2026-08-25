@@ -56,9 +56,7 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _save(
-    fig: plt.Figure, directory: Path, stem: str, *, preview: bool = False
-) -> list[str]:
+def _save(fig: plt.Figure, directory: Path, stem: str, *, preview: bool = False) -> list[str]:
     directory.mkdir(parents=True, exist_ok=True)
     written: list[str] = []
     for suffix in ("svg", "pdf"):
@@ -101,9 +99,7 @@ def _figure6(data: Path, figures: Path, *, allow_incomplete: bool) -> list[str]:
     if set(primary["L"].astype(int)) != {8, 10, 12, 14}:
         raise ValueError("Fig. 6(d) requires primary-window L=8,10,12,14")
     if band.empty and not allow_incomplete:
-        raise ValueError(
-            "Fig. 6(d) family band is missing; --allow-incomplete is preview-only"
-        )
+        raise ValueError("Fig. 6(d) family band is missing; --allow-incomplete is preview-only")
 
     fig = plt.figure(figsize=(FULL_WIDTH_IN, 5.75))
     outer = fig.add_gridspec(
@@ -167,9 +163,7 @@ def _figure6(data: Path, figures: Path, *, allow_incomplete: bool) -> list[str]:
             linewidth=LINE_WIDTH,
             label=spec["label"],
         )[0]
-        ax_b.axhline(
-            spec["target"], ls="--", lw=0.75, color=line.get_color(), alpha=0.55
-        )
+        ax_b.axhline(spec["target"], ls="--", lw=0.75, color=line.get_color(), alpha=0.55)
     ax_b.set_xlabel(r"System size $L$")
     ax_b.set_ylabel("Raw microcanonical activity")
     use_integer_ticks(ax_b, axis="x")
@@ -271,12 +265,8 @@ def _appendix_beta0(data: Path, figures: Path) -> list[str]:
     frame = _read(data / "spin1_xy_appendix_beta0_bridges_data.csv")
     fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(FULL_WIDTH_IN, 2.65))
     bridge_labels = {
-        "mc_to_beta0_resolved": (
-            r"$\rho_{\rm mc}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{(M,k)}$"
-        ),
-        "beta0_resolved_to_fixedM": (
-            r"$\rho_{\beta=0}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{M}$"
-        ),
+        "mc_to_beta0_resolved": (r"$\rho_{\rm mc}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{(M,k)}$"),
+        "beta0_resolved_to_fixedM": (r"$\rho_{\beta=0}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{M}$"),
     }
     for bridge, group in frame.groupby("bridge", sort=True):
         group = group.sort_values("L")
@@ -341,11 +331,7 @@ def _appendix_obstruction(data: Path, figures: Path) -> list[str]:
     y = pivot.index.to_numpy(dtype=float)
     residual = pivot.to_numpy(dtype=float)
     finite_positive = residual[np.isfinite(residual) & (residual > 0.0)]
-    floor = (
-        max(1.0e-16, float(np.min(finite_positive)) * 0.1)
-        if finite_positive.size
-        else 1.0e-16
-    )
+    floor = max(1.0e-16, float(np.min(finite_positive)) * 0.1) if finite_positive.size else 1.0e-16
     fig, ax = plt.subplots(figsize=(3.45, 2.85))
     mesh = ax.pcolormesh(
         _centered_edges(x),
@@ -373,9 +359,7 @@ def _write_audit(data: Path, figures: Path, written: list[str]) -> None:
         "spin1_xy_appendix_beta0_bridges_data.csv",
         "spin1_xy_appendix_complex_t2_obstruction_data.csv",
     )
-    sources = {
-        name: _sha256(data / name) for name in source_names if (data / name).is_file()
-    }
+    sources = {name: _sha256(data / name) for name in source_names if (data / name).is_file()}
     audit: dict[str, Any] = {
         "physical_width_inches": FULL_WIDTH_IN,
         "base_font_size_pt": BASE_FONT_SIZE,
@@ -431,9 +415,7 @@ def main() -> None:
         help="Allow a preview without the positive-kappa family concentration band.",
     )
     args = parser.parse_args()
-    written = render(
-        args.data_dir, use_tex=args.use_tex, allow_incomplete=args.allow_incomplete
-    )
+    written = render(args.data_dir, use_tex=args.use_tex, allow_incomplete=args.allow_incomplete)
     print(json.dumps({"written": written}, indent=2), flush=True)
 
 
