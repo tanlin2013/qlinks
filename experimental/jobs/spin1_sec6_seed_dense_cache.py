@@ -138,9 +138,7 @@ def _audit_row(
         "covered_spectral_half_width": _covered_half_width(energies),
         "required_spectral_half_width": _required_half_width(length),
         "sample_orthogonality_residual": float(metadata["sample_orthogonality_residual"]),
-        "sample_maximum_physical_residual": float(
-            metadata["sample_maximum_physical_residual"]
-        ),
+        "sample_maximum_physical_residual": float(metadata["sample_maximum_physical_residual"]),
         "solve_seconds": float(solve_seconds),
     }
 
