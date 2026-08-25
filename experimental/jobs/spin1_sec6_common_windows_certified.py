@@ -22,6 +22,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 for candidate in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
@@ -58,6 +59,37 @@ def _read_source_certification(source_data_dir: Path) -> dict[str, Any]:
     return summary
 
 
+def _assert_finite_residual_diagnostics(data_dir: Path | None) -> None:
+    if data_dir is None:
+        return
+    path = Path(data_dir) / common.COMMON_NAME
+    if not path.is_file():
+        return
+    try:
+        frame = pd.read_csv(path)
+    except (OSError, pd.errors.ParserError) as exc:
+        raise common.CachedSpectrumUnavailableError(
+            f"invalid existing common-window export: {path}"
+        ) from exc
+    if "window_max_eigenpair_residual" not in frame.columns:
+        return
+    residuals = frame["window_max_eigenpair_residual"].to_numpy(dtype=float)
+    if residuals.size and not np.all(np.isfinite(residuals)):
+        raise common.CachedSpectrumUnavailableError(
+            "existing common-window export has non-finite eigenpair residual diagnostics"
+        )
+
+
+def _assert_frame_residuals_finite(frame: pd.DataFrame) -> None:
+    if "window_max_eigenpair_residual" not in frame.columns:
+        return
+    residuals = frame["window_max_eigenpair_residual"].to_numpy(dtype=float)
+    if residuals.size and not np.all(np.isfinite(residuals)):
+        raise common.CachedSpectrumUnavailableError(
+            "computed common-window export has non-finite eigenpair residual diagnostics"
+        )
+
+
 def _raise_with_checkpoint_detail(output_dir: Path, exc: Exception) -> None:
     audit_path = Path(output_dir) / common.CHECKPOINT_AUDIT_NAME
     details: list[str] = []
@@ -86,18 +118,21 @@ def compute_certified_common_windows(
     """Reuse certified legacy sparse evidence without adding a new residual cutoff."""
 
     _read_source_certification(source_data_dir)
+    _assert_finite_residual_diagnostics(existing_data_dir)
     original_tolerance = common.PHYSICAL_RESIDUAL_TOLERANCE
     # The production contract records finite window residuals but certifies accuracy
     # through cross-budget observable convergence. ``inf`` disables only the later,
     # newly-added absolute veto; non-finite residuals still fail in the common reducer.
     common.PHYSICAL_RESIDUAL_TOLERANCE = math.inf
     try:
-        return common.compute_common_windows_from_cache(
+        frame = common.compute_common_windows_from_cache(
             checkpoint_roots=checkpoint_roots,
             output_dir=output_dir,
             lengths=lengths,
             existing_data_dir=existing_data_dir,
         )
+        _assert_frame_residuals_finite(frame)
+        return frame
     except common.CachedSpectrumUnavailableError as exc:
         _raise_with_checkpoint_detail(output_dir, exc)
     finally:
