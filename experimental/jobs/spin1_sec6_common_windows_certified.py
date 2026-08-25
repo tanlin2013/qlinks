@@ -102,7 +102,7 @@ def _raise_with_checkpoint_detail(output_dir: Path, exc: Exception) -> None:
             for row in frame.itertuples(index=False):
                 value = str(getattr(row, "validation_errors", "")).strip()
                 if value and value.lower() != "nan":
-                    details.append(f"L={int(getattr(row, 'L'))}: {value}")
+                    details.append(f"L={int(row.L)}: {value}")
     suffix = "" if not details else "; details: " + " | ".join(details)
     raise common.CachedSpectrumUnavailableError(f"{exc}{suffix}") from exc
 
