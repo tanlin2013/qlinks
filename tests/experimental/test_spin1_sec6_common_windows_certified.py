@@ -102,7 +102,9 @@ def test_certified_lane_surfaces_checkpoint_validation_detail(
     ).to_csv(output / common.CHECKPOINT_AUDIT_NAME, index=False)
 
     def fake_compute(**_kwargs):
-        raise common.CachedSpectrumUnavailableError("no validated reusable spectrum remained for L=14")
+        raise common.CachedSpectrumUnavailableError(
+            "no validated reusable spectrum remained for L=14"
+        )
 
     monkeypatch.setattr(common, "compute_common_windows_from_cache", fake_compute)
     with pytest.raises(common.CachedSpectrumUnavailableError, match="L=14: sample orthogonality"):
