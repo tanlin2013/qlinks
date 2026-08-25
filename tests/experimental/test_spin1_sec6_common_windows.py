@@ -46,7 +46,7 @@ def _write_complete_export(root: Path) -> None:
         pd.DataFrame([{"validated": True}]).to_csv(root / name, index=False)
 
 
-def test_completed_common_window_export_is_reused_before_context_build(
+def test_completed_common_window_export_is_reused_before_heavy_kernel_import(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     source = tmp_path / "source"
@@ -54,11 +54,10 @@ def test_completed_common_window_export_is_reused_before_context_build(
     source.mkdir()
     _write_complete_export(source)
 
-    def should_not_build_context(*args, **kwargs):
-        del args, kwargs
+    def should_not_load_core():
         raise AssertionError("completed derived evidence must be reused before numerical setup")
 
-    monkeypatch.setattr(common.core, "_point_context", should_not_build_context)
+    monkeypatch.setattr(common, "_load_core", should_not_load_core)
     frame = common.compute_common_windows_from_cache(
         checkpoint_roots=(),
         output_dir=output,
