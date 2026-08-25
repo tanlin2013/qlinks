@@ -82,5 +82,5 @@ def test_completed_common_window_export_checks_established_l14_anchor(
     frame.loc[mask, "w_L"] = 0.5
     frame.to_csv(path, index=False)
 
-    with pytest.raises(common.CachedSpectrumUnavailable, match="established L=14"):
+    with pytest.raises(common.CachedSpectrumUnavailableError, match="established L=14"):
         common.validate_completed_common_window_export(tmp_path)
