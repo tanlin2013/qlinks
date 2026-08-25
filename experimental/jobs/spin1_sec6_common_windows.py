@@ -50,7 +50,7 @@ TOLERANCE_NAME = "spin1_xy_kappa0p1_common_window_tolerance_audit.csv"
 SUMMARY_NAME = "spin1_xy_kappa0p1_common_window_summary.json"
 
 
-class CachedSpectrumUnavailable(RuntimeError):
+class CachedSpectrumUnavailableError(RuntimeError):
     """Raised when a required reusable eigensystem cannot be validated."""
 
 
@@ -128,7 +128,7 @@ def discover_checkpoint_directories(
 def _load_arrays(directory: Path) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
     metadata = _metadata(directory / "metadata.json")
     if metadata is None:
-        raise CachedSpectrumUnavailable(f"invalid checkpoint metadata: {directory}")
+        raise CachedSpectrumUnavailableError(f"invalid checkpoint metadata: {directory}")
     vectors_path = directory / "vectors.npy"
     if not vectors_path.is_file():
         vectors_path = directory / "eigenvectors.npy"
@@ -136,13 +136,13 @@ def _load_arrays(directory: Path) -> tuple[np.ndarray, np.ndarray, dict[str, Any
         energies = np.load(directory / "energies.npy", mmap_mode="r", allow_pickle=False)
         vectors = np.load(vectors_path, mmap_mode="r", allow_pickle=False)
     except (OSError, ValueError) as exc:
-        raise CachedSpectrumUnavailable(f"unreadable checkpoint arrays: {directory}") from exc
+        raise CachedSpectrumUnavailableError(f"unreadable checkpoint arrays: {directory}") from exc
     if energies.ndim != 1 or vectors.ndim != 2 or vectors.shape[1] != energies.size:
-        raise CachedSpectrumUnavailable(f"checkpoint shape mismatch: {directory}")
+        raise CachedSpectrumUnavailableError(f"checkpoint shape mismatch: {directory}")
     if int(metadata.get("sector_dimension", vectors.shape[0])) != int(vectors.shape[0]):
-        raise CachedSpectrumUnavailable(f"checkpoint sector dimension mismatch: {directory}")
+        raise CachedSpectrumUnavailableError(f"checkpoint sector dimension mismatch: {directory}")
     if not np.all(np.isfinite(energies)):
-        raise CachedSpectrumUnavailable(f"checkpoint has non-finite energies: {directory}")
+        raise CachedSpectrumUnavailableError(f"checkpoint has non-finite energies: {directory}")
     return energies, vectors, metadata
 
 
@@ -158,9 +158,11 @@ def validate_cached_spectrum(
 
     energies, vectors, metadata = _load_arrays(directory)
     if not _compatible_metadata(metadata, length=length, kappa_over_j=kappa_over_j):
-        raise CachedSpectrumUnavailable(f"scientifically incompatible checkpoint: {directory}")
+        raise CachedSpectrumUnavailableError(
+            f"scientifically incompatible checkpoint: {directory}"
+        )
     if vectors.shape[0] != int(context["h_sector"].shape[0]):
-        raise CachedSpectrumUnavailable(
+        raise CachedSpectrumUnavailableError(
             f"resolved-sector dimension changed for cached checkpoint: {directory}"
         )
     count = min(int(sample_vectors), energies.size)
@@ -172,7 +174,7 @@ def validate_cached_spectrum(
     if sample.size:
         block = np.asarray(vectors[:, sample])
         if not np.all(np.isfinite(block)):
-            raise CachedSpectrumUnavailable(
+            raise CachedSpectrumUnavailableError(
                 f"checkpoint has non-finite eigenvectors: {directory}"
             )
         gram = block.conj().T @ block
@@ -186,12 +188,12 @@ def validate_cached_spectrum(
         orthogonality = 0.0
         maximum_residual = 0.0
     if orthogonality > ORTHOGONALITY_TOLERANCE:
-        raise CachedSpectrumUnavailable(
+        raise CachedSpectrumUnavailableError(
             f"sample orthogonality residual {orthogonality:.3e} exceeds "
             f"{ORTHOGONALITY_TOLERANCE:.1e}: {directory}"
         )
     if maximum_residual > PHYSICAL_RESIDUAL_TOLERANCE:
-        raise CachedSpectrumUnavailable(
+        raise CachedSpectrumUnavailableError(
             f"sample physical eigenpair residual {maximum_residual:.3e} exceeds "
             f"{PHYSICAL_RESIDUAL_TOLERANCE:.1e}: {directory}"
         )
@@ -245,7 +247,7 @@ def validate_completed_common_window_export(
     try:
         frame = pd.read_csv(concentration_path)
     except (OSError, pd.errors.ParserError) as exc:
-        raise CachedSpectrumUnavailable(
+        raise CachedSpectrumUnavailableError(
             f"invalid completed common-window export: {concentration_path}"
         ) from exc
     required = {
@@ -264,7 +266,7 @@ def validate_completed_common_window_export(
     }
     missing = required.difference(frame.columns)
     if missing:
-        raise CachedSpectrumUnavailable(
+        raise CachedSpectrumUnavailableError(
             "completed common-window export is missing required columns: "
             + ", ".join(sorted(missing))
         )
@@ -281,15 +283,19 @@ def validate_completed_common_window_export(
     if actual_keys != expected_keys or len(selected) != len(expected_keys):
         return None
     if not np.all(np.isfinite(selected["w_L"].to_numpy(dtype=float))):
-        raise CachedSpectrumUnavailable("completed common-window export has non-finite widths")
+        raise CachedSpectrumUnavailableError(
+            "completed common-window export has non-finite widths"
+        )
     if np.any(selected["w_L"].to_numpy(dtype=float) < 0.0):
-        raise CachedSpectrumUnavailable("completed common-window export has negative widths")
+        raise CachedSpectrumUnavailableError(
+            "completed common-window export has negative widths"
+        )
     if np.any(selected["removed_fraction"].to_numpy(dtype=float) < 0.0):
-        raise CachedSpectrumUnavailable(
+        raise CachedSpectrumUnavailableError(
             "completed common-window export has negative removed fraction"
         )
     if np.any(selected["energy_block_count"].to_numpy(dtype=int) <= 0):
-        raise CachedSpectrumUnavailable(
+        raise CachedSpectrumUnavailableError(
             "completed common-window export has invalid energy blocks"
         )
     for row in selected.itertuples(index=False):
@@ -304,18 +310,18 @@ def validate_completed_common_window_export(
             rel_tol=0.0,
             abs_tol=1.0e-10,
         ):
-            raise CachedSpectrumUnavailable(
+            raise CachedSpectrumUnavailableError(
                 "completed common-window export has an invalid half-width at "
                 f"L={int(row.L)}, protocol={row.window_protocol}"
             )
         if float(row.covered_spectral_half_width) + 1.0e-10 < expected_half_width:
-            raise CachedSpectrumUnavailable(
+            raise CachedSpectrumUnavailableError(
                 "completed common-window export exceeds cached spectral coverage at "
                 f"L={int(row.L)}"
             )
         residual = float(row.window_max_eigenpair_residual)
         if math.isfinite(residual) and residual > PHYSICAL_RESIDUAL_TOLERANCE:
-            raise CachedSpectrumUnavailable(
+            raise CachedSpectrumUnavailableError(
                 f"completed common-window export has residual {residual:.3e} at "
                 f"L={int(row.L)}"
             )
@@ -332,7 +338,7 @@ def validate_completed_common_window_export(
         if len(row) != 1 or not math.isclose(
             float(row.iloc[0]["w_L"]), expected, rel_tol=0.0, abs_tol=5.0e-8
         ):
-            raise CachedSpectrumUnavailable(
+            raise CachedSpectrumUnavailableError(
                 "completed common-window export does not reproduce the established "
                 f"L=14 fixed-width {variant} width"
             )
@@ -425,7 +431,7 @@ def compute_common_windows_from_cache(
                 for length in missing
             ]
         ).to_csv(output / CHECKPOINT_AUDIT_NAME, index=False)
-        raise CachedSpectrumUnavailable(
+        raise CachedSpectrumUnavailableError(
             "missing validated reusable spectra for L="
             + ",".join(str(value) for value in missing)
             + "; no eigensolve was started"
@@ -451,7 +457,7 @@ def compute_common_windows_from_cache(
                     context=context,
                 )
                 break
-            except CachedSpectrumUnavailable as exc:
+            except CachedSpectrumUnavailableError as exc:
                 errors.append(str(exc))
         if validated is None:
             invalid.append(length)
@@ -486,7 +492,7 @@ def compute_common_windows_from_cache(
         )
         for protocol, half_width in _window_protocols(length):
             if half_width > coverage + energy_block_tolerance:
-                raise CachedSpectrumUnavailable(
+                raise CachedSpectrumUnavailableError(
                     f"cached L={length} spectrum covers |E|<={coverage:.6g}, below required "
                     f"{protocol} half-width {half_width:.6g}; no solve was started"
                 )
@@ -547,7 +553,7 @@ def compute_common_windows_from_cache(
     checkpoint_frame = pd.DataFrame(checkpoint_rows)
     checkpoint_frame.to_csv(output / CHECKPOINT_AUDIT_NAME, index=False)
     if invalid:
-        raise CachedSpectrumUnavailable(
+        raise CachedSpectrumUnavailableError(
             "no validated reusable spectrum remained for L="
             + ",".join(str(value) for value in invalid)
             + "; common-window P0-A was not completed and no eigensolve was started"
