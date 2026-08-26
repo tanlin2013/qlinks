@@ -15,8 +15,10 @@ if str(JOBS) not in sys.path:
 
 # The production evidence image contains IPython, while the fast CI lane intentionally
 # omits notebook dependencies. Only the imported helper's display symbol is needed at
-# module import time; no display functionality is exercised by these resume tests.
-if "IPython.display" not in sys.modules:
+# module import time; remove the temporary shim immediately after importing the grid so
+# unrelated tests continue to see the normal no-IPython environment.
+_created_ipython_stub = "IPython.display" not in sys.modules
+if _created_ipython_stub:
     ipython = types.ModuleType("IPython")
     ipython_display = types.ModuleType("IPython.display")
     ipython_display.display = lambda *_args, **_kwargs: None
@@ -25,6 +27,10 @@ if "IPython.display" not in sys.modules:
     sys.modules["IPython.display"] = ipython_display
 
 import spin1_sec6_deformation_grid as grid  # noqa: E402
+
+if _created_ipython_stub:
+    sys.modules.pop("IPython.display", None)
+    sys.modules.pop("IPython", None)
 
 
 def _write_representative_products(root: Path) -> None:
