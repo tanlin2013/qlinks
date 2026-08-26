@@ -129,12 +129,8 @@ def _validate_common_windows(data_dir: Path) -> pd.DataFrame:
         rtol=0.0,
         atol=1.0e-10,
     ):
-        raise IntegrationAuditRefreshError(
-            "primary common-window half-widths do not equal L^(1/4)"
-        )
-    fixed = selected[
-        selected["window_protocol"].astype(str) == FIXED_WINDOW_PROTOCOL
-    ]
+        raise IntegrationAuditRefreshError("primary common-window half-widths do not equal L^(1/4)")
+    fixed = selected[selected["window_protocol"].astype(str) == FIXED_WINDOW_PROTOCOL]
     if not np.allclose(
         fixed["window_half_width"].to_numpy(dtype=float),
         1.0,
@@ -156,9 +152,7 @@ def _validate_common_windows(data_dir: Path) -> pd.DataFrame:
         )
     if not np.all(np.isfinite(selected["w_L"].to_numpy(dtype=float))):
         raise IntegrationAuditRefreshError("common-window widths contain non-finite values")
-    return selected.sort_values(["window_protocol", "L", "variant"]).reset_index(
-        drop=True
-    )
+    return selected.sort_values(["window_protocol", "L", "variant"]).reset_index(drop=True)
 
 
 def _validate_common_summary(data_dir: Path) -> dict[str, Any]:
@@ -169,9 +163,7 @@ def _validate_common_summary(data_dir: Path) -> dict[str, Any]:
         )
     lengths = tuple(int(value) for value in summary.get("lengths", ()))
     if set(lengths) != set(TARGET_LENGTHS):
-        raise IntegrationAuditRefreshError(
-            "common-window summary does not cover L=8,10,12,14"
-        )
+        raise IntegrationAuditRefreshError("common-window summary does not cover L=8,10,12,14")
     protocols = set(str(value) for value in summary.get("window_protocols", ()))
     required = {PRIMARY_WINDOW_PROTOCOL, FIXED_WINDOW_PROTOCOL}
     if not required.issubset(protocols):
@@ -272,13 +264,9 @@ def refresh_audit(
         "schema_version": 2,
         "source_data_dir": str(source),
         "integration_data_dir": str(data),
-        "representative_l14_validated": bool(
-            validation["representative_l14_validated"]
-        ),
+        "representative_l14_validated": bool(validation["representative_l14_validated"]),
         "sparse_budget_certified": bool(validation["sparse_budget_certified"]),
-        "exact_energy_tolerance_stable": bool(
-            validation["exact_energy_tolerance_stable"]
-        ),
+        "exact_energy_tolerance_stable": bool(validation["exact_energy_tolerance_stable"]),
         "beta0_second_bridge_trace_distance": float(
             validation["beta0_second_bridge_trace_distance"]
         ),
@@ -287,12 +275,10 @@ def refresh_audit(
         "common_window_status": "READY",
         "representative_common_window_closed": True,
         "primary_raw_widths": {
-            str(int(row.L)): float(row.w_L)
-            for row in primary_raw.itertuples(index=False)
+            str(int(row.L)): float(row.w_L) for row in primary_raw.itertuples(index=False)
         },
         "fixed_width_raw_widths": {
-            str(int(row.L)): float(row.w_L)
-            for row in fixed_raw.itertuples(index=False)
+            str(int(row.L)): float(row.w_L) for row in fixed_raw.itertuples(index=False)
         },
         "common_window_power_law_fit_computed": bool(
             common_summary.get("power_law_fit_computed", False)
