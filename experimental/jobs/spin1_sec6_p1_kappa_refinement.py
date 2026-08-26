@@ -102,7 +102,9 @@ def _load_checkpoint(
     if not any(present):
         return None
     if not all(present):
-        raise KappaRefinementError(f"partial checkpoint must be inspected, not overwritten: {directory}")
+        raise KappaRefinementError(
+            f"partial checkpoint must be inspected, not overwritten: {directory}"
+        )
     try:
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         row = json.loads(row_path.read_text(encoding="utf-8"))
@@ -158,7 +160,9 @@ def _load_p0_rows(p0_data_dir: Path) -> pd.DataFrame:
     }
     normalized_expected = {(length, round(kappa, 12)) for length, kappa in expected}
     if actual != normalized_expected:
-        raise KappaRefinementError("frozen P0 deformation grid is incomplete for the principal points")
+        raise KappaRefinementError(
+            "frozen P0 deformation grid is incomplete for the principal points"
+        )
     return selected
 
 
