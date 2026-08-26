@@ -53,9 +53,9 @@ CONTAINER_NAME="${QLINKS_CONTAINER_NAME:-qlinks-${RUN_ID//_/-}-${STAGE}-${RUN_TI
 case "${STAGE}" in
     audit)
         JOB_COMMAND=(
-            python experimental/jobs/spin1_sec6_integration.py
+            python experimental/jobs/spin1_sec6_refresh_integration_audit.py
             --source-data-dir "${SOURCE_DATA_DIR}"
-            --output-dir "${OUTPUT_DATA_DIR}"
+            --integration-data-dir "${OUTPUT_DATA_DIR}"
         )
         ;;
     seed-dense-cache)
@@ -64,7 +64,7 @@ case "${STAGE}" in
             --cache-root "${DEFAULT_CACHE_ROOT}"
             --output-dir "${OUTPUT_DATA_DIR}"
         )
-        SOLVE_POLICY="dense-only L=8,10,12 at kappa/J=0.1; sparse/L=14 solves are forbidden"
+        SOLVE_POLICY="legacy repair only: dense L=8,10,12 at kappa/J=0.1; L14 forbidden"
         ;;
     common-windows)
         JOB_COMMAND=(
@@ -76,6 +76,24 @@ case "${STAGE}" in
             --output-dir "${OUTPUT_DATA_DIR}"
         )
         ;;
+    deformation-grid-status)
+        JOB_COMMAND=(
+            python experimental/jobs/spin1_sec6_deformation_grid.py
+            --integration-data-dir "${OUTPUT_DATA_DIR}"
+            --cache-root "${DEFAULT_CACHE_ROOT}"
+            --output-dir "${OUTPUT_DATA_DIR}"
+        )
+        ;;
+    deformation-grid)
+        JOB_COMMAND=(
+            python experimental/jobs/spin1_sec6_deformation_grid.py
+            --integration-data-dir "${OUTPUT_DATA_DIR}"
+            --cache-root "${DEFAULT_CACHE_ROOT}"
+            --output-dir "${OUTPUT_DATA_DIR}"
+            --compute-missing
+        )
+        SOLVE_POLICY="explicit full-dense L=8,10,12 only; kappa/J=0.1 reused; sparse/L14 forbidden"
+        ;;
     render-preview|render-final)
         JOB_COMMAND=(
             python experimental/jobs/render_spin1_xy_sec6_integration_figures.py
@@ -86,7 +104,7 @@ case "${STAGE}" in
         ;;
     *)
         echo "unknown stage: ${STAGE}" >&2
-        echo "expected one of: audit, seed-dense-cache, common-windows, render-preview, render-final" >&2
+        echo "expected one of: audit, seed-dense-cache, common-windows, deformation-grid-status, deformation-grid, render-preview, render-final" >&2
         exit 2
         ;;
 esac
@@ -150,22 +168,28 @@ CPU limit: ${CPUS_LIMIT:-unlimited}
 Shared memory: ${SHM_SIZE}
 Solve policy: ${SOLVE_POLICY}
 
-Recommended sequence, reusing the same run id:
+Recommended remaining-P0 sequence, reusing the successful integration run id:
   QLINKS_EVIDENCE_RUN_ID=${RUN_ID} \
     scripts/docker/docker_run_spin1_sec6_integration.sh --stage audit
 
-If the audit/common-window reducer reports missing L=8,10,12 spectra, seed only those dense caches:
+Optional no-solve inventory of the positive-kappa grid:
   QLINKS_EVIDENCE_RUN_ID=${RUN_ID} \
-    scripts/docker/docker_run_spin1_sec6_integration.sh --stage seed-dense-cache
+    scripts/docker/docker_run_spin1_sec6_integration.sh --stage deformation-grid-status
 
-Then rerun the cache-only reducer:
+Compute only missing nonrepresentative L<=12 positive-kappa points:
   QLINKS_EVIDENCE_RUN_ID=${RUN_ID} \
-    scripts/docker/docker_run_spin1_sec6_integration.sh --stage common-windows
+    scripts/docker/docker_run_spin1_sec6_integration.sh --stage deformation-grid
 
+Refresh the audit after all point checkpoints are complete:
   QLINKS_EVIDENCE_RUN_ID=${RUN_ID} \
-    scripts/docker/docker_run_spin1_sec6_integration.sh --stage render-preview
+    scripts/docker/docker_run_spin1_sec6_integration.sh --stage audit
 
-Use --stage render-final only after the integration audit confirms all strict Fig. 6 inputs are present.
+Then render from frozen CSVs only:
+  QLINKS_EVIDENCE_RUN_ID=${RUN_ID} \
+    scripts/docker/docker_run_spin1_sec6_integration.sh --stage render-final
+
+The representative seed-dense-cache/common-windows stages are closed historical
+repair lanes. Do not rerun them for the successful 20260825 integration cache.
 EOF
 
 if [[ "${DRY_RUN}" != "1" ]]; then
