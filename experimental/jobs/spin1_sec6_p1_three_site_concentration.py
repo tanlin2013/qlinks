@@ -140,9 +140,7 @@ def _embed_local_matrix(
 
 def _checkpoint_dir(cache_root: Path, length: int) -> Path:
     return (
-        Path(cache_root)
-        / "sec6_p1_three_site"
-        / f"spin1_L{int(length)}_kappa_p0p100000_three_site"
+        Path(cache_root) / "sec6_p1_three_site" / f"spin1_L{int(length)}_kappa_p0p100000_three_site"
     )
 
 
