@@ -154,9 +154,7 @@ def _representative_points(
                 f"representative worst-eigenoperator metadata is missing at L={length}"
             )
         coefficient_column = (
-            "coefficient"
-            if "coefficient" in point_worst.columns
-            else "coefficient_real"
+            "coefficient" if "coefficient" in point_worst.columns else "coefficient_real"
         )
         coefficients = point_worst[coefficient_column].to_numpy(dtype=float)
         dominant_index = int(np.argmax(np.abs(coefficients)))
@@ -190,9 +188,7 @@ def _representative_points(
                 ),
                 "tower_residual": float(row["tower_residual"]),
                 "w_L_raw": float(row["w_L"]),
-                "median_nonidentity_width_raw": float(
-                    row.get("median_nonidentity_width", np.nan)
-                ),
+                "median_nonidentity_width_raw": float(row.get("median_nonidentity_width", np.nan)),
                 "tau_A_mc_raw": witness_values["A"],
                 "tau_Z_mc_raw": witness_values["Z"],
                 "tau_Y_mc_raw": witness_values["Y"],
@@ -520,9 +516,7 @@ def _panel_c(rows: pd.DataFrame) -> pd.DataFrame:
                     "joint_dark_rank": int(row["joint_dark_rank"]),
                     "tower_residual": float(row["tower_residual"]),
                     "covered_spectral_half_width": float(row["covered_spectral_half_width"]),
-                    "window_max_eigenpair_residual": float(
-                        row["window_max_eigenpair_residual"]
-                    ),
+                    "window_max_eigenpair_residual": float(row["window_max_eigenpair_residual"]),
                     "source_role": str(row["source_role"]),
                 }
             )
@@ -568,16 +562,13 @@ def _refresh_aggregates(
         _atomic_write_csv(_panel_c(rows), output / PANEL_C_NAME)
         _atomic_write_csv(_panel_d(rows), output / PANEL_D_NAME)
     if worst_rows:
-        worst = pd.DataFrame(worst_rows).sort_values(
-            ["L", "kappa_over_J", "basis_operator"]
-        )
+        worst = pd.DataFrame(worst_rows).sort_values(["L", "kappa_over_J", "basis_operator"])
         _atomic_write_csv(worst, output / WORST_NAME)
 
     completed = [name for name, status in statuses.items() if status in {"computed", "reused"}]
     pending = [name for name, status in statuses.items() if status == "pending"]
     panel_c_complete = all(
-        statuses.get(_point_slug(12, kappa)) in {"computed", "reused"}
-        for kappa in KAPPA_GRID
+        statuses.get(_point_slug(12, kappa)) in {"computed", "reused"} for kappa in KAPPA_GRID
     )
     panel_d_complete = all(
         statuses.get(_point_slug(length, kappa)) in {"computed", "reused"}
@@ -618,17 +609,11 @@ def run_grid(
     output.mkdir(parents=True, exist_ok=True)
     cache.mkdir(parents=True, exist_ok=True)
 
-    representative_records, representative_worst = _representative_points(
-        integration_data_dir
-    )
+    representative_records, representative_worst = _representative_points(integration_data_dir)
     representative_by_length = {
         int(record["L"]): (
             record,
-            [
-                row
-                for row in representative_worst
-                if int(row["L"]) == int(record["L"])
-            ],
+            [row for row in representative_worst if int(row["L"]) == int(record["L"])],
         )
         for record in representative_records
     }
