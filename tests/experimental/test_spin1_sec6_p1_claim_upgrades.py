@@ -29,9 +29,7 @@ def test_three_site_charge_algebra_has_locked_dimension_and_is_orthonormal() -> 
     assert patterns.shape == (27, 3)
     assert len(names) == 141
     assert len(basis) == 141
-    gram = np.asarray(
-        [[np.trace(left.conj().T @ right) for right in basis] for left in basis]
-    )
+    gram = np.asarray([[np.trace(left.conj().T @ right) for right in basis] for left in basis])
     np.testing.assert_allclose(gram, np.eye(141), atol=1.0e-10)
 
 
@@ -60,10 +58,7 @@ def test_p1_solver_boundaries_are_mechanical() -> None:
 
 def test_p1_runner_keeps_status_and_three_site_no_solve() -> None:
     script = RUNNER.read_text(encoding="utf-8")
-    assert (
-        'P0_RUN_ID="${QLINKS_SEC6_P0_RUN_ID:-spin1_sec6_integration_20260825T073925Z}"'
-        in script
-    )
+    assert 'P0_RUN_ID="${QLINKS_SEC6_P0_RUN_ID:-spin1_sec6_integration_20260825T073925Z}"' in script
     assert '--volume "${REPO_ROOT}:${CONTAINER_REPO_DIR}:ro"' in script
     assert '--volume "${HOST_DATA_DIR}:${CONTAINER_DATA_DIR}"' in script
     assert "sparse/L14 forbidden" in script
@@ -77,9 +72,7 @@ def test_p1_runner_keeps_status_and_three_site_no_solve() -> None:
     three_site_status = script.split("three-site-status)", maxsplit=1)[1].split(
         "three-site)", maxsplit=1
     )[0]
-    three_site_compute = script.split("three-site)", maxsplit=1)[1].split(
-        "status)", maxsplit=1
-    )[0]
+    three_site_compute = script.split("three-site)", maxsplit=1)[1].split("status)", maxsplit=1)[0]
 
     assert "--compute-missing" not in refinement_status
     assert "--compute-missing" in refinement_compute
