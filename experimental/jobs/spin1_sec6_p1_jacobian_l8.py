@@ -12,6 +12,11 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from qlinks.caging.stability import (
+    cage_jacobian_conditioning_from_hamiltonian,
+    diagnose_cage_stability,
+)
+
 TOLERANCE = 1.0e-10
 LENGTH = 8
 TOTAL_SZ = -2
@@ -38,7 +43,6 @@ def _atomic_write_csv(path: Path, frame: pd.DataFrame) -> None:
 
 def run(*, output_dir: Path) -> dict[str, Any]:
     from qlinks.basis.configs import basis_configs_from_build_result
-    from qlinks.caging import cage_jacobian_conditioning_from_hamiltonian, diagnose_cage_stability
     from qlinks.caging.analysis.spectral import diagnose_eigenpair
     from qlinks.models import (
         spin_one_xy_hxy_h3_imaginary_j2_model,
