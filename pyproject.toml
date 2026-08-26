@@ -53,7 +53,7 @@ dev = [
     "mypy>=1,<2",
     "pytest>=9,<10",
     "pytest-cov>=7,<8",
-    "pytest-mock>=3.9,<4",
+    "pytest-mock>=3.15,<4",
     "hypothesis[numpy]>=6.68.2,<7",
     "cruft>=2.12,<3",
     "pandas-stubs>=3,<4",
@@ -97,6 +97,12 @@ select = [
 ignore = [
     "B018",
     "B905",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "spin1_sec6_integration",
+    "spin1_sec6_provisioning",
 ]
 
 [tool.ruff.lint.per-file-ignores]
