@@ -56,6 +56,12 @@ def test_p1_solver_boundaries_are_mechanical() -> None:
     assert "eigh(" not in jacobian
 
 
+def test_jacobian_job_imports_public_stability_api() -> None:
+    module = _load(JACOBIAN, "spin1_sec6_p1_jacobian_import_test")
+    assert callable(module.cage_jacobian_conditioning_from_hamiltonian)
+    assert callable(module.diagnose_cage_stability)
+
+
 def test_p1_runner_keeps_status_and_three_site_no_solve() -> None:
     script = RUNNER.read_text(encoding="utf-8")
     assert 'P0_RUN_ID="${QLINKS_SEC6_P0_RUN_ID:-spin1_sec6_integration_20260825T073925Z}"' in script
