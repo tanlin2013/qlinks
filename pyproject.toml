@@ -99,6 +99,12 @@ ignore = [
     "B905",
 ]
 
+[tool.ruff.lint.isort]
+known-first-party = [
+    "spin1_sec6_integration",
+    "spin1_sec6_provisioning",
+]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["N806"]
 

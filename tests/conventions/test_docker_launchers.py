@@ -21,13 +21,14 @@ def test_docker_run_launchers_always_pull(relative_path: str) -> None:
     assert "--pull always" in script
 
 
-def test_spin1_sec6_integration_launcher_has_no_heavy_solver_entry_point() -> None:
-    """The integration launcher must never dispatch the heavy provisioning job."""
+def test_spin1_sec6_integration_launcher_has_no_unreviewed_heavy_solver_entry_point() -> None:
+    """The integration launcher may dispatch only the reviewed small dense P0 lane."""
     script = (ROOT / "scripts/docker/docker_run_spin1_sec6_integration.sh").read_text(
         encoding="utf-8"
     )
-    assert "spin1_sec6_integration.py" in script
+    assert "spin1_sec6_refresh_integration_audit.py" in script
     assert "spin1_sec6_seed_dense_cache.py" in script
     assert "spin1_sec6_common_windows_certified.py" in script
+    assert "spin1_sec6_deformation_grid.py" in script
     assert "render_spin1_xy_sec6_integration_figures.py" in script
     assert "run_spin1_xy_sec6_provisioning.py" not in script
