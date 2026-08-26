@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+import types
 from pathlib import Path
 
 import pandas as pd
@@ -11,6 +12,17 @@ ROOT = Path(__file__).resolve().parents[2]
 JOBS = ROOT / "experimental" / "jobs"
 if str(JOBS) not in sys.path:
     sys.path.insert(0, str(JOBS))
+
+# The production evidence image contains IPython, while the fast CI lane intentionally
+# omits notebook dependencies. Only the imported helper's display symbol is needed at
+# module import time; no display functionality is exercised by these resume tests.
+if "IPython.display" not in sys.modules:
+    ipython = types.ModuleType("IPython")
+    ipython_display = types.ModuleType("IPython.display")
+    ipython_display.display = lambda *_args, **_kwargs: None
+    ipython.display = ipython_display
+    sys.modules["IPython"] = ipython
+    sys.modules["IPython.display"] = ipython_display
 
 import spin1_sec6_deformation_grid as grid  # noqa: E402
 
