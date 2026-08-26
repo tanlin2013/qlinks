@@ -128,7 +128,8 @@ def _embed_local_matrix(
             target_basis = config_lookup.get(tuple(int(value) for value in target_config))
             if target_basis is None:
                 raise ThreeSiteConcentrationError(
-                    "charge-preserving local action left the fixed-M basis; cache/model contract changed"
+                    "charge-preserving local action left the fixed-M basis; "
+                    "cache/model contract changed"
                 )
             rows.append(int(target_basis))
             columns.append(int(source_basis))
