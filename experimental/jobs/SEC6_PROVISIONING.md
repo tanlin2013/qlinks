@@ -1,82 +1,126 @@
-# Spin-1 XY Sec. VI P0 provisioning
+# Spin-1 XY Sec. VI remaining P0 provisioning
 
-This companion workflow implements the 2026-08-19 Sec. VI handoff without
-repeating the completed 10000-eigenpair convergence solve.
+This companion runbook implements the 2026-08-26 Sec. VI handoff. The
+representative `kappa/J=0.1` common-window evidence is already complete in
+`data/evidence_jobs/spin1_sec6_integration_20260825T073925Z/`; do not rerun it.
 
-## Scientific roles
+## Closed evidence
 
-- **P0.0** repairs the exported sparse-convergence bookkeeping and writes a
-  spectral checkpoint immediately after each newly required shift-invert solve.
-- **P0.1** computes the complete block-invariant 19-operator covariance at
-  `L=14`, `kappa/J=0.1`, using the contained `Delta E=1` window. Raw covariance
-  is primary; the joint-dark-cleaned covariance and removed fraction are
-  exported as finite-size diagnostics.
-- **P0.2** keeps raw microcanonical expectation values primary and resolves the
-  two local ensemble bridges
-  `rho_mc^(M,k) <-> rho_beta0^(M,k) <-> rho_beta0^M`. The reduced-density-matrix
-  residual is expanded in the same Hilbert--Schmidt-orthonormal 19-operator
-  basis used by the covariance test.
-- **P0.3** is an explicit follow-up at `L=14`, `kappa/J=0.20`. It is not enabled
-  by default, so the family solve cannot be started accidentally before the
-  representative concentration output has been inspected.
+The integration cache already contains and validates:
 
-No workflow in this companion schedules `L=16`.
+- representative `W_L(gamma=1/4,c=1)` and fixed `Delta E=1` complete two-site
+  covariance for `L=8,10,12,14`;
+- Fig. 6(a) representative raw ETH scatter;
+- Fig. 6(b) representative raw witness sequence;
+- Appendix-D beta-zero bridge data;
+- Appendix-D complex-`t2` obstruction data;
+- the certified `L=14` sparse-budget and exact-energy tolerance audits.
 
-## Production run
+The old integration-audit JSON predates the successful common-window pass. The
+first remaining action is therefore bookkeeping, not another eigensolve.
 
-The Docker wrapper pins the authoritative dense baseline and sparse-convergence
-addendum by default:
+## Remaining P0 numerical scope
+
+The only new numerical grid is
+
+- `L in {8,10,12}`;
+- `kappa/J in {0.05,0.10,0.15,0.20}`;
+- primary window `W_L(gamma=1/4,c=1)`.
+
+The `kappa/J=0.1` rows are reused from the completed representative cache. Thus
+at most nine nonrepresentative dense points remain. Each new point uses one
+full dense diagonalization and derives both the raw `A/Z/Y` microcanonical row
+and the complete 19-operator raw covariance from the same eigensystem.
+
+This P0 lane contains no sparse solver and no `L=14` solve. A nonrepresentative
+`L=14` point remains P1.
+
+## Resume discipline
+
+The deformation-grid job writes a validated checkpoint after every `(L,kappa)`
+point under
+
+`experimental/data/evidence_cache/spin1/sec6_deformation_grid/`.
+
+It also rewrites the aggregate row cache, Fig. 6(c) source table, Fig. 6(d)
+family-band table, worst-eigenoperator table, and progress manifest atomically
+after every completed point. A rendering failure cannot invalidate numerical
+checkpoints.
+
+The status stage never starts an eigensolver. The compute stage is the only
+explicit opt-in to the nine possible `L<=12` dense solves.
+
+## Server sequence
+
+Reuse the successful integration run id throughout:
 
 ```bash
-QLINKS_NUM_THREADS=16 QLINKS_DOCKER_MEMORY_LIMIT=400g \
-  scripts/docker/docker_run_spin1_sec6_provisioning.sh \
-    --stage compute --timeout -1
+export QLINKS_EVIDENCE_RUN_ID=spin1_sec6_integration_20260825T073925Z
 ```
 
-Follow the printed `docker logs -f ...` command. Newly computed `L=14`
-eigenvectors are stored uncompressed under the run's `checkpoints/` directory
-before covariance, fitting, or rendering starts. A matching checkpoint is
-reused automatically on a rerun.
-
-After P0.1 is secure, rerun the **same data directory** with the family flag:
+Refresh the stale audit without solving:
 
 ```bash
-QLINKS_NUM_THREADS=16 QLINKS_DOCKER_MEMORY_LIMIT=400g \
-  scripts/docker/docker_run_spin1_sec6_provisioning.sh \
-    --stage compute \
-    --data-dir experimental/data/evidence_jobs/<P0_RUN_ID> \
-    --run-family-l14 --timeout -1
+QLINKS_NUM_THREADS=16 \
+  scripts/docker/docker_run_spin1_sec6_integration.sh --stage audit
 ```
 
-Because the data directory is unchanged, the representative 8192-eigenpair
-checkpoint is reused; only the new `kappa/J=0.20` sparse solve is required.
-
-Render only after the numerical products are complete:
+Optionally inventory reusable/pending grid points without solving:
 
 ```bash
-scripts/docker/docker_run_spin1_sec6_provisioning.sh \
-  --stage render \
-  --source-data-dir experimental/data/evidence_jobs/<P0_RUN_ID> \
-  --use-tex --figure-formats pdf,svg
+QLINKS_NUM_THREADS=16 \
+  scripts/docker/docker_run_spin1_sec6_integration.sh \
+  --stage deformation-grid-status
 ```
 
-## Main exports
+Compute only the missing nonrepresentative dense `L<=12` points:
 
-The workflow writes, among other provenance tables:
+```bash
+QLINKS_NUM_THREADS=16 \
+  scripts/docker/docker_run_spin1_sec6_integration.sh \
+  --stage deformation-grid
+```
 
-- `spin1_xy_kappa0p1_L14_sparse_convergence.csv` (repaired/normalized copy);
-- `spin1_xy_kappa0p1_concentration_L14.csv`;
-- `spin1_xy_kappa0p1_concentration_L14_tolerance_audit.csv`;
-- `spin1_xy_kappa0p1_worst_eigenoperator_L14.csv`;
-- `spin1_xy_kappa0p1_concentration.csv` and its fit file;
-- `spin1_xy_kappa0p1_microcanonical_windows_sec6.csv` and raw-MC fit table;
-- `spin1_xy_kappa0p1_two_bridge_rdm_distance.csv`;
-- `spin1_xy_kappa0p1_residual_operator_spectrum.csv`;
-- `spin1_xy_kappa0p1_residual_operator_coefficients.csv`;
-- `spin1_xy_kappa_matching_large_size_safe_window.csv`;
-- `spin1_xy_large_size_family_concentration.csv` after the P0.3 follow-up.
+The same command is resumable: validated point checkpoints are reused on a
+rerun. After it completes, refresh the audit again:
 
-The existing shared Spin-1 renderer consumes these tables together with the
-copied baseline products. It can therefore add the solver-certified `L=14`
-point to panel (b), and only adds it to panel (d) when the concentration table
-is present and the sparse-budget certification passes.
+```bash
+QLINKS_NUM_THREADS=16 \
+  scripts/docker/docker_run_spin1_sec6_integration.sh --stage audit
+```
+
+Then render the final main and Appendix-D figures from frozen CSVs only:
+
+```bash
+QLINKS_NUM_THREADS=16 \
+  scripts/docker/docker_run_spin1_sec6_integration.sh --stage render-final
+```
+
+## Expected remaining-P0 exports
+
+Numerical/grid products:
+
+- `spin1_xy_sec6_deformation_grid_rows.csv`;
+- `spin1_xy_sec6_deformation_grid_worst_eigenoperators.csv`;
+- `spin1_xy_figure6_panel_c_deformation.csv`;
+- `spin1_xy_figure6_panel_d_family_band.csv`;
+- `spin1_xy_sec6_deformation_grid_progress.json`;
+- refreshed `spin1_xy_sec6_integration_audit.json`.
+
+Figure products:
+
+- `spin1_xy_figure6_prx.svg`;
+- `spin1_xy_figure6_prx.pdf`;
+- `spin1_xy_figure6_prx_preview.png`;
+- `spin1_xy_figure6_prx_audit.json` and `.md`;
+- `spin1_xy_appendix_concentration_windows.svg/pdf`;
+- `spin1_xy_appendix_beta0_bridges.svg/pdf`;
+- `spin1_xy_appendix_complex_t2_obstruction.svg/pdf`.
+
+## Claim discipline
+
+P0 supports representative complete two-site concentration through `L=14` and
+the sampled positive-`kappa` family band through `L=12`. It does not establish a
+concentration exponent, a full `L=14` deformation-wide envelope, concentration
+for every bounded region, or an open `kappa` interval without further
+continuity/grid control.
