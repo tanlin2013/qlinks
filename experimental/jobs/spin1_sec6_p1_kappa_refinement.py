@@ -155,8 +155,7 @@ def _load_p0_rows(p0_data_dir: Path) -> pd.DataFrame:
     ].copy()
     expected = {(length, kappa) for length in TARGET_LENGTHS for kappa in P0_KAPPA}
     actual = {
-        (int(row.L), round(float(row.kappa_over_J), 12))
-        for row in selected.itertuples(index=False)
+        (int(row.L), round(float(row.kappa_over_J), 12)) for row in selected.itertuples(index=False)
     }
     normalized_expected = {(length, round(kappa, 12)) for length, kappa in expected}
     if actual != normalized_expected:
