@@ -48,7 +48,7 @@ def test_runner_keeps_target_and_thermal_lanes_separate() -> None:
     assert "fixed-O1-pilot)" in script
     assert "qdm_checkerboard_fullsym_finite_beta_20260810T164206Z" in script
     assert "qdm_checkerboard_primme_staged_20260825T164226Z" in script
-    assert 'QLINKS_QDM_PRIMME_WARM_START_VECTORS:-512' in script
+    assert "QLINKS_QDM_PRIMME_WARM_START_VECTORS:-512" in script
 
     pilot = script.split("fixed-O1-pilot)", maxsplit=1)[1].split("status)", maxsplit=1)[0]
     assert "qdm_sec7_fixed_o1_pilot.py" in pilot
