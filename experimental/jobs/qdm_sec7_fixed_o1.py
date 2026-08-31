@@ -485,11 +485,7 @@ def compact_type1_orbit(context: Sec7Context) -> tuple[np.ndarray, list[dict[str
             else:
                 q_dark = math.nan
                 energy_residual = math.nan
-            include = bool(
-                projection_norm > TOL
-                and q_dark <= 1.0e-8
-                and energy_residual <= 1.0e-8
-            )
+            include = bool(projection_norm > TOL and q_dark <= 1.0e-8 and energy_residual <= 1.0e-8)
             if include:
                 columns.append(coordinates)
             rows.append(
@@ -680,9 +676,7 @@ def stripe_algebra(
         "projected_map_min_nonzero_gram_eigenvalue": float(
             np.min(quotient_eigenvalues, initial=np.nan)
         ),
-        "projected_map_max_gram_eigenvalue": float(
-            np.max(quotient_eigenvalues, initial=np.nan)
-        ),
+        "projected_map_max_gram_eigenvalue": float(np.max(quotient_eigenvalues, initial=np.nan)),
         "operator_normalization": "local_HS_quotient_kernel_of_P_O_P",
     }
     return (
@@ -706,9 +700,7 @@ def validate_authoritative_small_ed(base_data_dir: Path) -> dict[str, Any]:
     }
     missing = [str(path) for path in required.values() if not path.is_file()]
     if missing:
-        raise RuntimeError(
-            "missing authoritative Lx=4,8 prerequisite files: " + ", ".join(missing)
-        )
+        raise RuntimeError("missing authoritative Lx=4,8 prerequisite files: " + ", ".join(missing))
     common = pd.read_csv(required["common_sector"])
     checks: dict[str, Any] = {"files": {name: str(path) for name, path in required.items()}}
     for lx, expected in ((4, 15), (8, 1125)):
@@ -820,9 +812,7 @@ def recommend_fixed_width(
 
     preference = (0.20, 0.25, 0.10, 0.50)
     passing = {
-        float(row["window_half_width"])
-        for row in rows
-        if bool(row["passes_all_heuristics"])
+        float(row["window_half_width"]) for row in rows if bool(row["passes_all_heuristics"])
     }
     recommended = next((value for value in preference if value in passing), None)
     return {
