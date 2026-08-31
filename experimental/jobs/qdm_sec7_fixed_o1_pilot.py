@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import time
 from pathlib import Path
 from typing import Any
@@ -13,7 +12,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import scipy.linalg as la
-
 from helpers import (
     projector_deleted_block_covariance,
     projector_resolved_energy_basis,
@@ -33,6 +31,7 @@ from qdm_sec7_fixed_o1 import (
     stripe_algebra,
     target_dark_kernel,
 )
+
 from qlinks.caging.analysis.spectral import select_microcanonical_window_by_width
 
 SYSTEMATICS_NAME = "qdm_checkerboard_fixed_O1_window_systematics.csv"
