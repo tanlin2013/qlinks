@@ -17,8 +17,6 @@ import numpy as np
 import pandas as pd
 import scipy.linalg as la
 import scipy.sparse as sp
-from scipy.optimize import brentq
-
 from qdm_checkerboard_large_strip import (
     binary_basis_configs_uint8,
     materialize_periodic_product_state_from_basis,
@@ -28,21 +26,25 @@ from qdm_checkerboard_large_strip import (
     translation_permutation_from_binary_basis,
 )
 from qdm_checkerboard_symmetry import checkerboard_fully_resolved_sector
+from scipy.optimize import brentq
+
 from qlinks.basis.configs import basis_configs_from_build_result
 from qlinks.caging import (
-    LocalQDMCageSearchConfig,
-    RobustQDMLocalCageSearchConfig,
     SquareQDMPeriodicProductUnitCell,
     SquareQDMWitnessPlacement,
     certify_square_qdm_periodic_product_sequence,
     evaluate_square_qdm_environment_witnesses_on_strips,
-    robust_qdm_local_cage_search,
 )
 from qlinks.caging.analysis import EnvironmentReductionConfig, diagnose_cage_environment_reduction
 from qlinks.caging.analysis.spectral import project_state_to_sector
 from qlinks.caging.analysis.thermodynamic import (
     LocalWitnessTemplate,
     directed_transition_witness_template,
+)
+from qlinks.caging.local_search import (
+    LocalQDMCageSearchConfig,
+    RobustQDMLocalCageSearchConfig,
+    robust_qdm_local_cage_search,
 )
 from qlinks.models import SquareQDMModel
 from qlinks.models.couplings import peierls_plaquette_coupling
