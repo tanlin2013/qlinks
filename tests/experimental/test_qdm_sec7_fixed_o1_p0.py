@@ -3,19 +3,44 @@
 from __future__ import annotations
 
 import ast
+import importlib.util
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 JOBS = ROOT / "experimental" / "jobs"
+NOTEBOOKS = ROOT / "experimental" / "notebooks"
 COMMON = JOBS / "qdm_sec7_fixed_o1.py"
 TARGET = JOBS / "qdm_sec7_target_block.py"
 PILOT = JOBS / "qdm_sec7_fixed_o1_pilot.py"
 RUNNER = ROOT / "scripts" / "docker" / "docker_run_qdm_sec7_p0.sh"
 
 
+def _load(path: Path, name: str):
+    for directory in (JOBS, NOTEBOOKS):
+        value = str(directory)
+        if value not in sys.path:
+            sys.path.insert(0, value)
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_sec7_p0_python_jobs_are_syntactically_valid() -> None:
     for path in (COMMON, TARGET, PILOT):
         ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+
+
+def test_sec7_p0_python_jobs_import_against_real_public_apis() -> None:
+    common = _load(COMMON, "qdm_sec7_fixed_o1")
+    target = _load(TARGET, "qdm_sec7_target_block_test")
+    pilot = _load(PILOT, "qdm_sec7_fixed_o1_pilot_test")
+    assert common.PILOT_HALF_WIDTHS == (0.10, 0.20, 0.25, 0.50)
+    assert target.BASELINE_BUDGET == 512
+    assert pilot.SYSTEMATICS_NAME == "qdm_checkerboard_fixed_O1_window_systematics.csv"
 
 
 def test_target_block_lane_starts_from_persisted_512_checkpoint() -> None:
