@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import os
 import time
 from pathlib import Path
@@ -13,7 +12,6 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-
 from evidence_cache import (
     CacheValidationStatus,
     iter_spectral_checkpoints,
@@ -192,6 +190,7 @@ def _stage_rows(
             int(target["joint_dark_rank"]) - int(comparison["type1_projected_rank"]),
         ),
     }
+    q_scale = max(1.0, float(np.max(np.abs(target["q_values"]))))
     dark_rows = [
         {
             "Lx": context.lx,
@@ -202,7 +201,7 @@ def _stage_rows(
             "joint_dark_rank": target["joint_dark_rank"],
             "q_all_eigenvalue_index": int(index),
             "q_all_eigenvalue": float(value),
-            "is_joint_dark": bool(value <= 1.0e-9 * max(1.0, float(np.max(np.abs(target["q_values"]))))),
+            "is_joint_dark": bool(value <= 1.0e-9 * q_scale),
         }
         for index, value in enumerate(target["q_values"])
     ]
@@ -240,9 +239,7 @@ def _acceptance(frame: pd.DataFrame) -> dict[str, Any]:
     cage_weights = last["cage_target_projector_weight"].astype(float).to_numpy()
     residuals = last["target_maximum_residual"].astype(float).to_numpy()
     tolerances = last["solver_tolerance"].astype(float).to_numpy()
-    residual_ok = bool(
-        np.all(residuals <= np.maximum(1.0e-7, 100.0 * tolerances))
-    )
+    residual_ok = bool(np.all(residuals <= np.maximum(1.0e-7, 100.0 * tolerances)))
     checks = {
         "target_block_dimension_stable": len(dimensions) == 1,
         "joint_dark_rank_stable": len(dark_ranks) == 1,
@@ -256,7 +253,9 @@ def _acceptance(frame: pd.DataFrame) -> dict[str, Any]:
         "last_two_budgets": last["requested_subspace_size"].astype(int).tolist(),
         "target_block_dimension": (next(iter(dimensions)) if len(dimensions) == 1 else None),
         "joint_dark_rank": (next(iter(dark_ranks)) if len(dark_ranks) == 1 else None),
-        "extra_dark_rank_beyond_type1": (next(iter(extra_ranks)) if len(extra_ranks) == 1 else None),
+        "extra_dark_rank_beyond_type1": (
+            next(iter(extra_ranks)) if len(extra_ranks) == 1 else None
+        ),
         "claim_boundary": (
             "P0-A closes only the converged E=12 target-block classification; it does not "
             "establish a thermal-window result."
@@ -341,7 +340,9 @@ def refine(
             "target_maximum_residual": float(convergence["target_maximum_residual"]),
             "runtime_seconds": float(elapsed),
             "peak_rss_gib": float(convergence["peak_rss_gib"]),
-            "solve_policy": "target-energy projector refinement only; broad-window coverage ignored",
+            "solve_policy": (
+                "target-energy projector refinement only; broad-window coverage ignored"
+            ),
         }
         atomic_write_json(
             output / f"qdm_checkerboard_L12_target_block_stage_{stage_index:02d}.json",
