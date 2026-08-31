@@ -115,9 +115,7 @@ def _validate_authoritative_base(base_data_dir: Path) -> dict[str, Any]:
     }
     missing = [str(path) for path in required.values() if not path.is_file()]
     if missing:
-        raise RuntimeError(
-            "missing authoritative Lx=4,8 prerequisite files: " + ", ".join(missing)
-        )
+        raise RuntimeError("missing authoritative Lx=4,8 prerequisite files: " + ", ".join(missing))
     common = pd.read_csv(required["common_sector"])
     result: dict[str, Any] = {"files": {name: str(path) for name, path in required.items()}}
     for lx, expected in ((4, 15), (8, 1125)):
@@ -209,12 +207,10 @@ def run(
             context.tower_energy,
         )
         canonical_raw = {
-            name: float(np.dot(canonical_raw_weights, values))
-            for name, values in raw_q.items()
+            name: float(np.dot(canonical_raw_weights, values)) for name, values in raw_q.items()
         }
         canonical_clean = {
-            name: float(np.dot(canonical_clean_weights, values))
-            for name, values in clean_q.items()
+            name: float(np.dot(canonical_clean_weights, values)) for name, values in clean_q.items()
         }
         stripe_ops, _, stripe_meta, ambient_names, quotient_coefficients = stripe_algebra(
             context,
@@ -243,9 +239,7 @@ def run(
         )
         atomic_write_csv(output / AUDIT_NAME, pd.DataFrame(block_rows))
 
-        empty_exceptional = np.zeros(
-            (context.sector.sector_dimension, 0), dtype=np.complex128
-        )
+        empty_exceptional = np.zeros((context.sector.sector_dimension, 0), dtype=np.complex128)
         for half_width in widths:
             raw_window = select_microcanonical_window_by_width(
                 energies,
@@ -261,13 +255,9 @@ def run(
                 degeneracy_tolerance=ENERGY_BLOCK_TOL,
             )
             clean_indices = np.asarray(clean_window.indices, dtype=int)
-            raw_mc = {
-                name: float(np.mean(values[raw_indices]))
-                for name, values in raw_q.items()
-            }
+            raw_mc = {name: float(np.mean(values[raw_indices])) for name, values in raw_q.items()}
             clean_mc = {
-                name: float(np.mean(values[clean_indices]))
-                for name, values in clean_q.items()
+                name: float(np.mean(values[clean_indices])) for name, values in clean_q.items()
             }
             raw_covariance = projector_deleted_block_covariance(
                 energies,
@@ -344,8 +334,7 @@ def run(
                             float(complex(value).imag),
                         ]
                         for index, value in enumerate(
-                            quotient_coefficients
-                            @ np.asarray(raw_covariance["worst_coefficients"])
+                            quotient_coefficients @ np.asarray(raw_covariance["worst_coefficients"])
                         )
                         if abs(value) > 1.0e-10
                     },
@@ -354,9 +343,7 @@ def run(
             }
             rows.append(row)
             atomic_write_json(
-                output
-                / "fixed_O1_checkpoints"
-                / f"Lx{context.lx}_dE{half_width:.3f}.json",
+                output / "fixed_O1_checkpoints" / f"Lx{context.lx}_dE{half_width:.3f}.json",
                 row,
             )
             atomic_write_csv(output / SYSTEMATICS_NAME, pd.DataFrame(rows))
