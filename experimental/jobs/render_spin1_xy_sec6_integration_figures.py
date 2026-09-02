@@ -21,6 +21,7 @@ import render_spin1_xy_sec6_integration_figures_legacy as _legacy
 import spin1_exchange_convention as _convention
 
 _ORIGINAL_READ = _legacy._read
+_ORIGINAL_RENDER = _legacy.render
 _ORIGINAL_WRITE_AUDIT = _legacy._write_audit
 
 for _name in dir(_legacy):
@@ -134,7 +135,7 @@ _legacy._write_audit = _write_audit
 def render(data_dir: Path, *, use_tex: bool, allow_incomplete: bool) -> list[str]:
     """Render only convention-stamped current Sec. VI figure products."""
 
-    return _legacy.render(data_dir, use_tex=use_tex, allow_incomplete=allow_incomplete)
+    return _ORIGINAL_RENDER(data_dir, use_tex=use_tex, allow_incomplete=allow_incomplete)
 
 
 if __name__ == "__main__":
