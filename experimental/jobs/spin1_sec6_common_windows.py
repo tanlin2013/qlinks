@@ -137,6 +137,44 @@ def _expected_keys(lengths: Iterable[int]) -> set[tuple[int, str, str]]:
     }
 
 
+def _raw_clean_records(
+    *,
+    length: int,
+    kappa_over_j: float,
+    protocol: str,
+    half_width: float,
+    rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Attach current protocol metadata to invariant raw/clean covariance rows."""
+
+    if protocol == PRIMARY_WINDOW_PROTOCOL:
+        exponent = PRIMARY_WINDOW_EXPONENT
+        prefactor = PRIMARY_WINDOW_PREFACTOR
+    elif protocol == FIXED_WINDOW_PROTOCOL:
+        exponent = 0.0
+        prefactor = FIXED_CONTROL_HALF_WIDTH
+    else:
+        raise CachedSpectrumUnavailableError(f"unknown current common-window protocol: {protocol}")
+    output: list[dict[str, Any]] = []
+    for row in rows:
+        record = dict(row)
+        record.update(
+            {
+                "window_protocol": protocol,
+                "window_exponent": exponent,
+                "window_prefactor": prefactor,
+                "window_half_width": float(half_width),
+                "kappa_over_J": float(kappa_over_j),
+                "L": int(length),
+                "w_L": float(record.get("w_L", record["largest_covariance_width"])),
+                "validated_reusable_spectrum": True,
+                EXCHANGE_CONVENTION_METADATA_KEY: CURRENT_EXCHANGE_CONVENTION,
+            }
+        )
+        output.append(record)
+    return output
+
+
 def validate_completed_common_window_export(
     data_dir: Path,
     *,
@@ -206,6 +244,17 @@ def validate_completed_common_window_export(
             raise CachedSpectrumUnavailableError(
                 "completed common-window export has an invalid half-width at "
                 f"L={int(row.L)}, protocol={row.window_protocol}"
+            )
+        expected_prefactor = (
+            PRIMARY_WINDOW_PREFACTOR
+            if str(row.window_protocol) == PRIMARY_WINDOW_PROTOCOL
+            else FIXED_CONTROL_HALF_WIDTH
+        )
+        if "window_prefactor" in selected.columns and not math.isclose(
+            float(row.window_prefactor), expected_prefactor, rel_tol=0.0, abs_tol=1.0e-12
+        ):
+            raise CachedSpectrumUnavailableError(
+                f"completed common-window export has stale prefactor at L={int(row.L)}"
             )
         if float(row.covered_spectral_half_width) + 1.0e-10 < expected_half_width:
             raise CachedSpectrumUnavailableError(
@@ -283,4 +332,5 @@ _legacy._load_arrays = _load_arrays
 _legacy._required_validation_half_width = _required_validation_half_width
 _legacy._window_protocols = _window_protocols
 _legacy._expected_keys = _expected_keys
+_legacy._raw_clean_records = _raw_clean_records
 _legacy.validate_completed_common_window_export = validate_completed_common_window_export
