@@ -1,6 +1,6 @@
 # Spin-1 Sec. VI integration provisioning
 
-**Updated:** 2026-09-03  
+**Updated:** 2026-09-03
 **Permanent convention:** `J_over_2_ladder_v1`
 
 This lane now integrates **convention-mapped derived evidence**, not the historical
