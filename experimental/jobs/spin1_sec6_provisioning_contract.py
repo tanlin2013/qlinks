@@ -181,9 +181,7 @@ def run_sec6_provisioning(
             "manuscript_window_exponents": list(MANUSCRIPT_WINDOW_EXPONENTS),
             "representative_covariance_matrix_rows": int(len(representative)),
             "all_large_size_covariance_matrix_rows": int(len(covariance)),
-            convention.EXCHANGE_CONVENTION_METADATA_KEY: (
-                convention.CURRENT_EXCHANGE_CONVENTION
-            ),
+            convention.EXCHANGE_CONVENTION_METADATA_KEY: (convention.CURRENT_EXCHANGE_CONVENTION),
         }
     )
     summary_path.write_text(
