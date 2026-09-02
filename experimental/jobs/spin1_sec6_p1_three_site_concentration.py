@@ -18,7 +18,6 @@ from typing import Any, Iterable
 
 import numpy as np
 import pandas as pd
-
 import spin1_exchange_convention as _convention
 import spin1_sec6_p1_three_site_concentration_legacy as _legacy
 
@@ -27,6 +26,17 @@ _ORIGINAL_RUN = _legacy.run
 for _name in dir(_legacy):
     if not _name.startswith("__"):
         globals()[_name] = getattr(_legacy, _name)
+
+DENSE_RESIDUAL_TOLERANCE = _legacy.DENSE_RESIDUAL_TOLERANCE
+ENERGY_BLOCK_TOLERANCE = _legacy.ENERGY_BLOCK_TOLERANCE
+LOCAL_ALGEBRA_DIMENSION = _legacy.LOCAL_ALGEBRA_DIMENSION
+LOCAL_SITES = _legacy.LOCAL_SITES
+PROGRESS_NAME = _legacy.PROGRESS_NAME
+REPRESENTATIVE_KAPPA_OVER_J = _legacy.REPRESENTATIVE_KAPPA_OVER_J
+ROWS_NAME = _legacy.ROWS_NAME
+ThreeSiteConcentrationError = _legacy.ThreeSiteConcentrationError
+WORST_NAME = _legacy.WORST_NAME
+charge_conserving_three_site_hermitian_basis = _legacy.charge_conserving_three_site_hermitian_basis
 
 WINDOW_PROTOCOL = _convention.PRIMARY_WINDOW_PROTOCOL
 WINDOW_EXPONENT = _convention.PRIMARY_WINDOW_EXPONENT
@@ -47,7 +57,11 @@ def _map_legacy_row(row: dict[str, Any]) -> dict[str, Any]:
     mapped["window_half_width"] = (
         _convention.LEGACY_TO_CURRENT_ENERGY_SCALE * float(row["window_half_width"])
     )
-    for key in ("window_max_eigenpair_residual", "window_median_eigenpair_residual", "tower_residual"):
+    for key in (
+        "window_max_eigenpair_residual",
+        "window_median_eigenpair_residual",
+        "tower_residual",
+    ):
         value = mapped.get(key)
         if isinstance(value, (int, float)) and math.isfinite(float(value)):
             mapped[key] = _convention.LEGACY_TO_CURRENT_ENERGY_SCALE * float(value)
@@ -290,7 +304,7 @@ def _stamp_outputs(output_dir: Path) -> None:
     output = Path(output_dir)
     for name in (ROWS_NAME, WORST_NAME):
         path = output / name
-        if path.is_file():
+        if path.is_file() and path.stat().st_size:
             frame = pd.read_csv(path)
             frame[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = (
                 _convention.CURRENT_EXCHANGE_CONVENTION
