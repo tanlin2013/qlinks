@@ -15,7 +15,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-
 import spin1_sec6_provisioning_legacy as _legacy
 from spin1_exchange_convention import (
     CURRENT_EXCHANGE_CONVENTION,
@@ -28,10 +27,13 @@ from spin1_exchange_convention import (
 
 _LEGACY_RUN_SEC6_PROVISIONING = _legacy.run_sec6_provisioning
 
-# Re-export the established kernel, including private helpers consumed by sibling jobs.
 for _name in dir(_legacy):
     if not _name.startswith("__"):
         globals()[_name] = getattr(_legacy, _name)
+
+J_DRAFT = _legacy.J_DRAFT
+J3_OVER_J = _legacy.J3_OVER_J
+TOTAL_SZ = _legacy.TOTAL_SZ
 
 J1_MATRIX = J_DRAFT
 _legacy.J1_MATRIX = J1_MATRIX
@@ -206,7 +208,10 @@ def _require_migrated_source(path: Path | None, *, role: str) -> None:
     manifest = directory / "spin1_exchange_convention_migration_manifest.json"
     if manifest.is_file():
         metadata = _metadata(manifest)
-        if metadata and metadata.get(EXCHANGE_CONVENTION_METADATA_KEY) == CURRENT_EXCHANGE_CONVENTION:
+        if (
+            metadata
+            and metadata.get(EXCHANGE_CONVENTION_METADATA_KEY) == CURRENT_EXCHANGE_CONVENTION
+        ):
             return
     raise RuntimeError(
         f"{role} points to an unstamped historical Spin-1 evidence directory: {directory}. "
@@ -219,6 +224,8 @@ def _stamp_output_convention(output_dir: Path) -> None:
 
     output = Path(output_dir)
     for path in output.glob("*.csv"):
+        if path.stat().st_size == 0:
+            continue
         frame = pd.read_csv(path)
         frame[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
         temporary = path.with_name(f".{path.name}.tmp-{os.getpid()}")
@@ -232,7 +239,10 @@ def _stamp_output_convention(output_dir: Path) -> None:
             continue
         metadata[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
         temporary = path.with_name(f".{path.name}.tmp-{os.getpid()}")
-        temporary.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        temporary.write_text(
+            json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         os.replace(temporary, path)
 
 
