@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
-
 import spin1_exchange_convention as _convention
 import spin1_sec6_deformation_grid_legacy as _legacy
 
@@ -27,6 +26,17 @@ _ORIGINAL_RUN_GRID = _legacy.run_grid
 for _name in dir(_legacy):
     if not _name.startswith("__"):
         globals()[_name] = getattr(_legacy, _name)
+
+# Explicit bindings used by the active adapter.
+COMMON_NAME = _legacy.COMMON_NAME
+DeformationGridError = _legacy.DeformationGridError
+GRID_ROWS_NAME = _legacy.GRID_ROWS_NAME
+PANEL_B_NAME = _legacy.PANEL_B_NAME
+PANEL_C_NAME = _legacy.PANEL_C_NAME
+PANEL_D_NAME = _legacy.PANEL_D_NAME
+PROGRESS_NAME = _legacy.PROGRESS_NAME
+REPRESENTATIVE_WORST_NAME = _legacy.REPRESENTATIVE_WORST_NAME
+WORST_NAME = _legacy.WORST_NAME
 
 SCHEMA_VERSION = 2
 WINDOW_PROTOCOL = _convention.PRIMARY_WINDOW_PROTOCOL
@@ -146,8 +156,6 @@ def _stamp_output_file(path: Path) -> None:
     if not path.is_file():
         return
     if path.suffix == ".csv":
-        # The status lane can legitimately emit an empty optional aggregate.
-        # Preserve that sentinel rather than failing while trying to add provenance.
         if path.stat().st_size == 0:
             return
         frame = pd.read_csv(path)
