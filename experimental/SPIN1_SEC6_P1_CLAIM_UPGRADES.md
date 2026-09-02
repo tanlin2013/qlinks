@@ -1,7 +1,7 @@
 # Spin-1 Sec. VI optional P1 claim upgrades
 
-**Updated:** 2026-09-03  
-**Frozen historical P0 source:** `data/evidence_jobs/spin1_sec6_integration_20260825T073925Z/`  
+**Updated:** 2026-09-03
+**Frozen historical P0 source:** `data/evidence_jobs/spin1_sec6_integration_20260825T073925Z/`
 **Permanent convention:** `J_over_2_ladder_v1`
 
 P0 is scientifically and numerically closed. This lane contains only optional claim
