@@ -19,16 +19,15 @@ from typing import Any
 import numpy as np
 import scipy.linalg as la
 import scipy.sparse as sp
-
-from qlinks.basis.configs import basis_configs_from_build_result
-from qlinks.models import SpinOneXYChainModel, spin_one_xy_hxy_h3_imaginary_j2_model
-
 from spin1_exchange_convention import (
     CURRENT_EXCHANGE_CONVENTION,
     EXCHANGE_CONVENTION_METADATA_KEY,
     LEGACY_EXCHANGE_CONVENTION,
     LEGACY_TO_CURRENT_ENERGY_SCALE,
 )
+
+from qlinks.basis.configs import basis_configs_from_build_result
+from qlinks.models import SpinOneXYChainModel, spin_one_xy_hxy_h3_imaginary_j2_model
 
 TOLERANCE = 1.0e-10
 J = 1.0
@@ -56,7 +55,9 @@ def _state_from_amplitudes(
         try:
             state[lookup[tuple(config)]] = complex(amplitude)
         except KeyError as exc:
-            raise RuntimeError(f"analytic support configuration is absent from basis: {config}") from exc
+            raise RuntimeError(
+                f"analytic support configuration is absent from basis: {config}"
+            ) from exc
     norm = float(np.linalg.norm(state))
     if norm == 0.0:
         raise RuntimeError("analytic validation state has zero norm")
@@ -89,8 +90,6 @@ def _deleted_chain_l4_n1_state(configs: np.ndarray) -> np.ndarray:
     """Return the L=4,n=1 deleted-chain state used by the PBC counterexample."""
 
     amplitudes: dict[tuple[int, ...], complex] = {}
-    # The old Appendix construction uses one-based L_A={1,3}.  Translate it
-    # literally, but evaluate the Hamiltonian with the permanent J/2 convention.
     for zero_site in (0, 2):
         r = zero_site + 1
         eta = (-1.0) ** ((r - 1) // 2)
@@ -167,12 +166,6 @@ def _decorated_pbc_counterexample() -> dict[str, float]:
 
 
 def _legacy_equivalent_model(*, length: int, d_z: float = 0.0) -> SpinOneXYChainModel:
-    extra = []
-    for site in range(length):
-        extra.append((site, (site + 3) % length, 2.0 * J3_OVER_J * J))
-        extra.append((site, (site + 2) % length, 2.0j * KAPPA_OVER_J * J))
-    # Deduplicate the undirected distance-3/range-2 pairs with the same helper
-    # behavior used by the public constructor by importing it locally.
     from qlinks.models import spin_one_xy_periodic_range_couplings
 
     extra = list(
@@ -287,8 +280,11 @@ def main() -> None:
         help="Comma-separated dense spot checks. L=8 is CI/desktop-cheap; add L=10 on the server.",
     )
     args = parser.parse_args()
-    dense_sizes = tuple(int(token.strip()) for token in args.dense_sizes.split(",") if token.strip())
-    print(json.dumps(run(output_dir=args.output_dir, dense_sizes=dense_sizes), indent=2), flush=True)
+    dense_sizes = tuple(
+        int(token.strip()) for token in args.dense_sizes.split(",") if token.strip()
+    )
+    result = run(output_dir=args.output_dir, dense_sizes=dense_sizes)
+    print(json.dumps(result, indent=2), flush=True)
 
 
 if __name__ == "__main__":
