@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """Derive conventional-J Spin-1 evidence from immutable historical Sec. VI tables.
 
-This converter never edits the source run.  It rescales only CSV/JSON products whose
+This converter never edits the source run. It rescales only CSV/JSON products whose
 semantics are known to change under the exact mapping from the historical ladder-
-prefactor-one wrappers to the permanent ``J/2`` ladder convention.  Expensive spectral
+prefactor-one wrappers to the permanent ``J/2`` ladder convention. Expensive spectral
 arrays are intentionally not copied; their source paths and hashes remain provenance.
 """
 
@@ -32,6 +32,9 @@ from spin1_exchange_convention import (
 
 MANIFEST_NAME = "spin1_exchange_convention_migration_manifest.json"
 
+# These fields carry one power of energy under H_new = H_old / 2.  Keep this
+# list deliberately explicit: ranks, dimensions, normalized witnesses, and
+# mixed-coordinate Jacobian singular values must not be rescaled heuristically.
 _ENERGY_EXACT_KEYS = {
     "d",
     "d_thermal",
@@ -48,6 +51,13 @@ _ENERGY_EXACT_KEYS = {
     "covered_spectral_half_width",
     "spectral_half_width",
     "delta_e",
+    "energy_block_tolerance",
+    "window_max_eigenpair_residual",
+    "window_median_eigenpair_residual",
+    "sample_maximum_physical_residual",
+    "tower_residual",
+    "eigenpair_residual",
+    "interference_gap",
 }
 _ENERGY_SUBSTRINGS = (
     "energy_density",
