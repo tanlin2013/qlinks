@@ -511,9 +511,9 @@ def spin_one_xy_scar_tower_states(
 class SpinOneXYTowerThermalActivities:
     """Exact fixed-magnetization witness activities for the pi-bimagnon tower.
 
-    ``xy_matrix_element`` is the qlinks convention: it is the matrix element
-    connecting ``|00>`` with ``|+->``.  In the manuscript convention of
-    Eq. (104), ``xy_matrix_element = 2 J``.
+    ``xy_matrix_element`` is the exchange matrix element connecting ``|00>``
+    with ``|+->``. Under the permanent convention
+    ``H_XY=(J/2) sum(S+S- + h.c.)``, ``xy_matrix_element = J``.
     """
 
     length: int
@@ -615,31 +615,30 @@ def spin_one_xy_hxy_h3_model(
     h_z: complex = 0.0,
     d_z: complex = 0.0,
 ) -> SpinOneXYChainModel:
-    """Return the periodic manuscript Hamiltonian ``H_XY + H_3``.
+    """Return the conventional periodic Hamiltonian ``H_XY + H_3``.
 
-    The manuscript convention is
+    Couplings are the physical Cartesian-exchange parameters,
 
-    ``H_XY = J sum_r (S_r^+ S_{r+1}^- + h.c.)`` and
-    ``H_3  = J3 sum_r (S_r^+ S_{r+3}^- + h.c.)``.
+    ``H_XY = (J/2) sum_r (S_r^+ S_{r+1}^- + h.c.)`` and
+    ``H_3  = (J3/2) sum_r (S_r^+ S_{r+3}^- + h.c.)``.
 
-    :class:`SpinOneXYChainModel` uses the conventional ``J_xy/2`` prefactor
-    for the ladder-operator form, so the corresponding qlinks coefficients are
-    ``j_xy=2*J`` and ``extra_xy_coupling=2*J3``.  The third-neighbor term is
-    phase compatible with the staggered tower on even periodic chains.
+    These parameters therefore pass directly to :class:`SpinOneXYChainModel`
+    and :class:`~qlinks.operators.SpinOneXYPairOperator`. The third-neighbor
+    term is phase compatible with the staggered tower on even periodic chains.
     """
     if length <= 0:
         raise ValueError("length must be positive.")
     return SpinOneXYChainModel(
         length=int(length),
         boundary_condition=BoundaryCondition.PERIODIC,
-        j_xy=2.0 * complex(j),
+        j_xy=complex(j),
         h_z=complex(h_z),
         d_z=complex(d_z),
         total_sz=total_sz,
         extra_xy_couplings=spin_one_xy_periodic_range_couplings(
             length=int(length),
             distance=3,
-            coefficient=2.0 * complex(j3),
+            coefficient=complex(j3),
         ),
     )
 
@@ -654,16 +653,16 @@ def spin_one_xy_hxy_h3_imaginary_j2_model(
     h_z: complex = 0.0,
     d_z: complex = 0.0,
 ) -> SpinOneXYChainModel:
-    """Return ``H_XY + H_3 + i kappa H_2^-`` on a periodic chain.
+    """Return ``H_XY + H_3 + K_2(i kappa)`` on a periodic chain.
 
-    In manuscript ladder-operator conventions,
+    In the permanent ladder-operator convention,
 
-    ``H_2^-(kappa) = i kappa sum_r (S_r^+ S_{r+2}^- - h.c.)``.
+    ``K_2(i kappa) = (1/2) sum_r [i kappa S_r^+ S_{r+2}^- + h.c.]``.
 
-    The corresponding qlinks pair coefficient is ``2 i kappa``.  For the
+    The qlinks pair coefficient is therefore exactly ``i kappa``. For the
     staggered ``Q=pi`` bimagnon tower, real odd-range exchanges and purely
     imaginary even-range exchanges separately satisfy the exact bondwise
-    cancellation rule.  Thus this family continuously contains
+    cancellation rule. Thus this family continuously contains
     :func:`spin_one_xy_hxy_h3_model` at ``kappa=0`` while preserving the same
     tower and its zero energy.
     """
@@ -679,7 +678,7 @@ def spin_one_xy_hxy_h3_imaginary_j2_model(
         spin_one_xy_periodic_range_couplings(
             length=int(length),
             distance=3,
-            coefficient=2.0 * complex(j3),
+            coefficient=complex(j3),
         )
     )
     if abs(float(kappa)) > 0.0:
@@ -687,13 +686,13 @@ def spin_one_xy_hxy_h3_imaginary_j2_model(
             spin_one_xy_periodic_range_couplings(
                 length=int(length),
                 distance=2,
-                coefficient=2.0j * float(kappa),
+                coefficient=1.0j * float(kappa),
             )
         )
     return SpinOneXYChainModel(
         length=int(length),
         boundary_condition=BoundaryCondition.PERIODIC,
-        j_xy=2.0 * complex(j),
+        j_xy=complex(j),
         h_z=complex(h_z),
         d_z=complex(d_z),
         total_sz=total_sz,
@@ -727,8 +726,8 @@ def spin_one_xy_tower_thermal_activities(
     The returned quantities are ``Tr(rho Y_r^2)``, the one-sided directed
     activity ``Tr(rho A_r^dagger A_r)``, and
     ``Tr(rho Z_{r,r+1}^2)`` in the infinite-temperature fixed-magnetization
-    ensemble.  They correspond to the local channels in the current draft
-    after identifying ``xy_matrix_element = 2 J``.
+    ensemble. Under ``H_XY=(J/2) sum(S+S- + h.c.)`` the local exchange matrix
+    element is ``xy_matrix_element = J``.
     """
     if length < 2:
         raise ValueError("length must be at least two.")
