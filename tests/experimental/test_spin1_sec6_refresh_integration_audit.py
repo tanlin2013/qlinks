@@ -157,6 +157,8 @@ def test_refresh_recognizes_completed_deformation_grid(
     )
 
     assert report["deformation_grid"]["p0_grid_complete"]
-    assert report["next_numerical_action"] == "none; render final figures from frozen CSVs"
+    assert report["next_numerical_action"] == (
+        "none; render final figures from convention-mapped CSVs"
+    )
     assert "spin1_xy_figure6_panel_c_deformation.csv" in report["figure_data_products"]["written"]
     assert "spin1_xy_figure6_panel_d_family_band.csv" in report["figure_data_products"]["written"]
