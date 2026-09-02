@@ -1,10 +1,10 @@
 # Section VI numerical provisioning cache
 
-**Updated:** 2026-09-03  
-**Permanent exchange convention:** `J_over_2_ladder_v1`  
-**Historical production base:** `data/evidence_jobs/spin1_production_20260806T074051Z/`  
-**Historical sparse-convergence addendum:** `data/evidence_jobs/spin1_production_20260810T082123Z/`  
-**Historical Sec. VI provisioning addendum:** `data/evidence_jobs/spin1_sec6_provisioning_20260820T052954Z/`  
+**Updated:** 2026-09-03
+**Permanent exchange convention:** `J_over_2_ladder_v1`
+**Historical production base:** `data/evidence_jobs/spin1_production_20260806T074051Z/`
+**Historical sparse-convergence addendum:** `data/evidence_jobs/spin1_production_20260810T082123Z/`
+**Historical Sec. VI provisioning addendum:** `data/evidence_jobs/spin1_sec6_provisioning_20260820T052954Z/`
 **Historical common-window integration addendum:** `data/evidence_jobs/spin1_sec6_integration_20260825T073925Z/`
 
 ## Status and migration rule
