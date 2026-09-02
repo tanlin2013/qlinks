@@ -29,8 +29,7 @@ def _write_integration_products(root: Path) -> None:
         for protocol, half_width in (
             (
                 refresh.PRIMARY_WINDOW_PROTOCOL,
-                convention.PRIMARY_WINDOW_PREFACTOR
-                * length**convention.PRIMARY_WINDOW_EXPONENT,
+                convention.PRIMARY_WINDOW_PREFACTOR * length**convention.PRIMARY_WINDOW_EXPONENT,
             ),
             (refresh.FIXED_WINDOW_PROTOCOL, convention.FIXED_CONTROL_HALF_WIDTH),
         ):
