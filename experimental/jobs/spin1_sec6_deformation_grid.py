@@ -234,6 +234,10 @@ def run_grid(
 ) -> pd.DataFrame:
     _require_current_integration_source(integration_data_dir)
     _preflight_checkpoint_conventions(cache_root)
+    # The preserved runner resolves this callable from its own module globals.
+    # Rebind it at invocation time so active-adapter monkeypatches and future
+    # wrapper replacements are honored instead of accidentally starting real solves.
+    _legacy._compute_dense_point = _compute_dense_point
     return _ORIGINAL_RUN_GRID(
         integration_data_dir=integration_data_dir,
         cache_root=cache_root,
