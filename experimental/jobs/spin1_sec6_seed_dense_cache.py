@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-"""Seed the missing dense Spin-1 Sec. VI spectra into the stable cache.
+"""Seed missing small dense Spin-1 Sec. VI spectra in current exchange units.
 
-This is the only solve-capable stage in the Sec. VI integration handoff. It is
-strictly limited to the already-established dense sizes L=8,10,12 at kappa/J=0.1.
-The expensive L=14 sparse spectrum is never recomputed here.
+This repair lane is strictly limited to L=8,10,12 at kappa/J=0.1. Existing
+historical spectra may be validated through the explicit common-window mapping;
+any newly written checkpoint carries the permanent J/2 convention metadata.
+The expensive L=14 spectrum is never recomputed here.
 """
 
 from __future__ import annotations
@@ -36,6 +37,7 @@ for path in (JOBS, NOTEBOOKS, ROOT):
 
 common = importlib.import_module("spin1_sec6_common_windows")
 core = importlib.import_module("spin1_sec6_provisioning")
+convention = importlib.import_module("spin1_exchange_convention")
 
 TARGET_LENGTHS = (8, 10, 12)
 KAPPA_OVER_J = 0.10
@@ -44,7 +46,10 @@ SUMMARY_NAME = "spin1_xy_sec6_dense_cache_seed_summary.json"
 
 
 def _required_half_width(length: int) -> float:
-    return max(float(length) ** common.PRIMARY_WINDOW_EXPONENT, common.FIXED_CONTROL_HALF_WIDTH)
+    return max(
+        common.PRIMARY_WINDOW_PREFACTOR * float(length) ** common.PRIMARY_WINDOW_EXPONENT,
+        common.FIXED_CONTROL_HALF_WIDTH,
+    )
 
 
 def _covered_half_width(energies: np.ndarray) -> float:
@@ -140,6 +145,10 @@ def _audit_row(
         "sample_orthogonality_residual": float(metadata["sample_orthogonality_residual"]),
         "sample_maximum_physical_residual": float(metadata["sample_maximum_physical_residual"]),
         "solve_seconds": float(solve_seconds),
+        convention.EXCHANGE_CONVENTION_METADATA_KEY: convention.CURRENT_EXCHANGE_CONVENTION,
+        convention.RESCALED_FROM_METADATA_KEY: metadata.get(
+            convention.RESCALED_FROM_METADATA_KEY, ""
+        ),
     }
 
 
@@ -148,7 +157,8 @@ def _write_audit(output_dir: Path, rows: list[dict[str, Any]]) -> None:
     frame = pd.DataFrame(rows)
     frame.to_csv(output_dir / AUDIT_NAME, index=False)
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
+        convention.EXCHANGE_CONVENTION_METADATA_KEY: convention.CURRENT_EXCHANGE_CONVENTION,
         "kappa_over_J": KAPPA_OVER_J,
         "target_lengths": list(TARGET_LENGTHS),
         "completed_lengths": [int(row["L"]) for row in rows],
@@ -212,7 +222,8 @@ def seed_dense_cache(*, cache_root: Path, output_dir: Path) -> pd.DataFrame:
             )
 
         metadata = {
-            "schema_version": 1,
+            "schema_version": 2,
+            convention.EXCHANGE_CONVENTION_METADATA_KEY: convention.CURRENT_EXCHANGE_CONVENTION,
             "cache_role": "spin1_sec6_dense_full",
             "solver": "scipy.linalg.eigh",
             "full_spectrum": True,
