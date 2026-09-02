@@ -2,8 +2,9 @@
 """Current-convention three-site Sec. VI concentration from cached spectra only.
 
 Historical three-site checkpoint rows are exactly rescaled in memory: normalized
-covariance data are invariant, while the protocol label and energy half-width change.
-No eigensolver is introduced by this adapter.
+covariance data are invariant, while the protocol label, energy half-width, and
+energy-dimension residual diagnostics change by the uniform factor 1/2. No
+eigensolver is introduced by this adapter.
 """
 
 from __future__ import annotations
@@ -43,7 +44,13 @@ def _map_legacy_row(row: dict[str, Any]) -> dict[str, Any]:
     mapped = dict(row)
     mapped["schema_version"] = 2
     mapped["window_protocol"] = WINDOW_PROTOCOL
-    mapped["window_half_width"] = 0.5 * float(row["window_half_width"])
+    mapped["window_half_width"] = (
+        _convention.LEGACY_TO_CURRENT_ENERGY_SCALE * float(row["window_half_width"])
+    )
+    for key in ("window_max_eigenpair_residual", "window_median_eigenpair_residual", "tower_residual"):
+        value = mapped.get(key)
+        if isinstance(value, (int, float)) and math.isfinite(float(value)):
+            mapped[key] = _convention.LEGACY_TO_CURRENT_ENERGY_SCALE * float(value)
     mapped[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = (
         _convention.CURRENT_EXCHANGE_CONVENTION
     )
