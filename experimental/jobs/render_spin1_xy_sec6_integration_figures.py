@@ -16,7 +16,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 import render_spin1_xy_sec6_integration_figures_legacy as _legacy
 import spin1_exchange_convention as _convention
 
@@ -126,7 +125,10 @@ def _write_audit(data: Path, figures: Path, written: list[str]) -> None:
     with markdown_path.open("a", encoding="utf-8") as handle:
         handle.write(f"- Exchange convention: `{CURRENT_EXCHANGE_CONVENTION}`.\n")
         handle.write("- Window labels: $\\Delta E=(J/2)L^{1/4}$ and $\\Delta E=J/2$.\n")
-        handle.write("- Energy density is consumed from mapped figure data without a second rescaling.\n")
+        handle.write(
+            "- Energy density is consumed from mapped figure data without a second "
+            "rescaling.\n"
+        )
 
 
 _legacy._write_audit = _write_audit
