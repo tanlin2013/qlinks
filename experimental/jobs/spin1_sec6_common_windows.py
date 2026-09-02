@@ -18,17 +18,13 @@ from typing import Any, Iterable
 import numpy as np
 import pandas as pd
 
+import spin1_exchange_convention as _convention
 import spin1_sec6_common_windows_legacy as _legacy
 from spin1_exchange_convention import (
     CURRENT_EXCHANGE_CONVENTION,
     EXCHANGE_CONVENTION_METADATA_KEY,
-    FIXED_CONTROL_HALF_WIDTH,
-    FIXED_WINDOW_PROTOCOL,
     LEGACY_EXCHANGE_CONVENTION,
     LEGACY_TO_CURRENT_ENERGY_SCALE,
-    PRIMARY_WINDOW_EXPONENT,
-    PRIMARY_WINDOW_PREFACTOR,
-    PRIMARY_WINDOW_PROTOCOL,
     RESCALED_FROM_METADATA_KEY,
     current_window_half_width,
     exchange_convention_from_metadata,
@@ -40,11 +36,11 @@ for _name in dir(_legacy):
     if not _name.startswith("__"):
         globals()[_name] = getattr(_legacy, _name)
 
-FIXED_CONTROL_HALF_WIDTH = FIXED_CONTROL_HALF_WIDTH
-PRIMARY_WINDOW_EXPONENT = PRIMARY_WINDOW_EXPONENT
-PRIMARY_WINDOW_PREFACTOR = PRIMARY_WINDOW_PREFACTOR
-PRIMARY_WINDOW_PROTOCOL = PRIMARY_WINDOW_PROTOCOL
-FIXED_WINDOW_PROTOCOL = FIXED_WINDOW_PROTOCOL
+FIXED_CONTROL_HALF_WIDTH = _convention.FIXED_CONTROL_HALF_WIDTH
+PRIMARY_WINDOW_EXPONENT = _convention.PRIMARY_WINDOW_EXPONENT
+PRIMARY_WINDOW_PREFACTOR = _convention.PRIMARY_WINDOW_PREFACTOR
+PRIMARY_WINDOW_PROTOCOL = _convention.PRIMARY_WINDOW_PROTOCOL
+FIXED_WINDOW_PROTOCOL = _convention.FIXED_WINDOW_PROTOCOL
 
 # Established normalized concentration anchors are invariant under uniform rescaling.
 REFERENCE_L14_FIXED_RAW_WIDTH = _legacy.REFERENCE_L14_FIXED_RAW_WIDTH
@@ -242,7 +238,12 @@ def validate_completed_common_window_export(
 
 def _stamp_current_outputs(output_dir: Path) -> None:
     output = Path(output_dir)
-    for path in (output / COMMON_NAME, output / CHECKPOINT_AUDIT_NAME, output / WORST_NAME, output / TOLERANCE_NAME):
+    for path in (
+        output / COMMON_NAME,
+        output / CHECKPOINT_AUDIT_NAME,
+        output / WORST_NAME,
+        output / TOLERANCE_NAME,
+    ):
         if not path.is_file():
             continue
         frame = pd.read_csv(path)
@@ -256,7 +257,10 @@ def _stamp_current_outputs(output_dir: Path) -> None:
         if isinstance(summary, dict):
             summary[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
             temporary = summary_path.with_name(f".{summary_path.name}.tmp-{os.getpid()}")
-            temporary.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            temporary.write_text(
+                json.dumps(summary, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
             os.replace(temporary, summary_path)
 
 
