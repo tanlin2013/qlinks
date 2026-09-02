@@ -4,6 +4,7 @@ import json
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -12,6 +13,7 @@ if str(JOBS) not in sys.path:
     sys.path.insert(0, str(JOBS))
 
 import spin1_exchange_convention as convention  # noqa: E402
+
 import spin1_sec6_integration as integration  # noqa: E402
 
 
@@ -231,7 +233,12 @@ def test_build_figure_data_uses_current_primary_window_contract(tmp_path: Path) 
     assert set(panel_b[convention.EXCHANGE_CONVENTION_METADATA_KEY]) == {
         convention.CURRENT_EXCHANGE_CONVENTION
     }
-    assert (panel_b["window_half_width"] == 0.5 * panel_b["L"] ** 0.25).all()
+    np.testing.assert_allclose(
+        panel_b["window_half_width"].to_numpy(dtype=float),
+        0.5 * panel_b["L"].to_numpy(dtype=float) ** 0.25,
+        rtol=0.0,
+        atol=1.0e-12,
+    )
 
 
 def test_legacy_deformation_window_is_reported_pending(tmp_path: Path) -> None:
