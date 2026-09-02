@@ -117,11 +117,11 @@ def test_cache_validation_ignores_inaccurate_outer_shift_invert_vectors(
         "requested_eigenpairs": 5,
         convention.EXCHANGE_CONVENTION_METADATA_KEY: convention.CURRENT_EXCHANGE_CONVENTION,
     }
-    # The outer two returned vectors deliberately have O(1) residuals, while every
-    # vector that can enter either current common-window protocol is exact.
+    # validate_cached_spectrum is the preserved numerical kernel, so patch the
+    # dependency in that kernel's module namespace rather than the adapter alias.
     h_sector = np.diag([-4.5, -0.5, 0.0, 0.5, 4.5]).astype(np.complex128)
     monkeypatch.setattr(
-        common,
+        common._legacy,
         "_load_arrays",
         lambda _directory: (energies, vectors, metadata),
     )
@@ -153,7 +153,7 @@ def test_cache_validation_still_rejects_bad_vectors_inside_common_window(
     }
     h_sector = np.diag([-1.0, -0.25, 0.0, 0.5, 1.0]).astype(np.complex128)
     monkeypatch.setattr(
-        common,
+        common._legacy,
         "_load_arrays",
         lambda _directory: (energies, vectors, metadata),
     )
