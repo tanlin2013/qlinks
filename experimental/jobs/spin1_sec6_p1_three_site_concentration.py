@@ -54,8 +54,8 @@ def _map_legacy_row(row: dict[str, Any]) -> dict[str, Any]:
     mapped = dict(row)
     mapped["schema_version"] = 2
     mapped["window_protocol"] = WINDOW_PROTOCOL
-    mapped["window_half_width"] = (
-        _convention.LEGACY_TO_CURRENT_ENERGY_SCALE * float(row["window_half_width"])
+    mapped["window_half_width"] = _convention.LEGACY_TO_CURRENT_ENERGY_SCALE * float(
+        row["window_half_width"]
     )
     for key in (
         "window_max_eigenpair_residual",
@@ -65,12 +65,8 @@ def _map_legacy_row(row: dict[str, Any]) -> dict[str, Any]:
         value = mapped.get(key)
         if isinstance(value, (int, float)) and math.isfinite(float(value)):
             mapped[key] = _convention.LEGACY_TO_CURRENT_ENERGY_SCALE * float(value)
-    mapped[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = (
-        _convention.CURRENT_EXCHANGE_CONVENTION
-    )
-    mapped[_convention.RESCALED_FROM_METADATA_KEY] = (
-        _convention.LEGACY_EXCHANGE_CONVENTION
-    )
+    mapped[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = _convention.CURRENT_EXCHANGE_CONVENTION
+    mapped[_convention.RESCALED_FROM_METADATA_KEY] = _convention.LEGACY_EXCHANGE_CONVENTION
     return mapped
 
 
@@ -141,9 +137,7 @@ def _load_checkpoint(
                 _convention.EXCHANGE_CONVENTION_METADATA_KEY: (
                     _convention.CURRENT_EXCHANGE_CONVENTION
                 ),
-                _convention.RESCALED_FROM_METADATA_KEY: (
-                    _convention.LEGACY_EXCHANGE_CONVENTION
-                ),
+                _convention.RESCALED_FROM_METADATA_KEY: (_convention.LEGACY_EXCHANGE_CONVENTION),
             }
             for item in worst
         ]
@@ -171,13 +165,9 @@ def _write_checkpoint(
     directory.mkdir(parents=True, exist_ok=True)
     stamped = dict(row)
     stamped["schema_version"] = 2
-    stamped[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = (
-        _convention.CURRENT_EXCHANGE_CONVENTION
-    )
+    stamped[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = _convention.CURRENT_EXCHANGE_CONVENTION
     worst = pd.DataFrame(worst_rows)
-    worst[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = (
-        _convention.CURRENT_EXCHANGE_CONVENTION
-    )
+    worst[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = _convention.CURRENT_EXCHANGE_CONVENTION
     _legacy._atomic_write_json(directory / "row.json", stamped)
     _legacy._atomic_write_csv(directory / "worst_eigenoperator.csv", worst)
     _legacy._atomic_write_json(
@@ -193,9 +183,7 @@ def _write_checkpoint(
             "window_protocol": WINDOW_PROTOCOL,
             "window_half_width": float(stamped["window_half_width"]),
             "source_spectrum_checkpoint": str(stamped["source_spectrum_checkpoint"]),
-            _convention.EXCHANGE_CONVENTION_METADATA_KEY: (
-                _convention.CURRENT_EXCHANGE_CONVENTION
-            ),
+            _convention.EXCHANGE_CONVENTION_METADATA_KEY: (_convention.CURRENT_EXCHANGE_CONVENTION),
         },
     )
 
@@ -270,9 +258,7 @@ def _compute_length(*, roots: Iterable[Path], length: int):
         "source_spectrum_returned_eigenpairs": int(metadata["returned_eigenpairs"]),
         "source_spectrum_full": True,
         "source_role": "p1_three_site_from_reused_dense_spectrum",
-        _convention.EXCHANGE_CONVENTION_METADATA_KEY: (
-            _convention.CURRENT_EXCHANGE_CONVENTION
-        ),
+        _convention.EXCHANGE_CONVENTION_METADATA_KEY: (_convention.CURRENT_EXCHANGE_CONVENTION),
         _convention.RESCALED_FROM_METADATA_KEY: metadata.get(
             _convention.RESCALED_FROM_METADATA_KEY,
             "",
@@ -287,9 +273,7 @@ def _compute_length(*, roots: Iterable[Path], length: int):
             "coefficient_real": float(complex(coefficient).real),
             "coefficient_imag": float(complex(coefficient).imag),
             "coefficient_abs": float(abs(coefficient)),
-            _convention.EXCHANGE_CONVENTION_METADATA_KEY: (
-                _convention.CURRENT_EXCHANGE_CONVENTION
-            ),
+            _convention.EXCHANGE_CONVENTION_METADATA_KEY: (_convention.CURRENT_EXCHANGE_CONVENTION),
         }
         for name, coefficient in zip(names, coefficients, strict=True)
     ]
