@@ -17,7 +17,6 @@ from typing import Any, Iterable
 
 import numpy as np
 import pandas as pd
-
 import spin1_exchange_convention as _convention
 import spin1_sec6_common_windows_legacy as _legacy
 from spin1_exchange_convention import (
@@ -35,6 +34,20 @@ _ORIGINAL_COMPUTE_COMMON_WINDOWS = _legacy.compute_common_windows_from_cache
 for _name in dir(_legacy):
     if not _name.startswith("__"):
         globals()[_name] = getattr(_legacy, _name)
+
+# Explicit bindings used by this adapter.  The dynamic re-export above remains for
+# sibling-job compatibility, while these names keep static analysis honest.
+CachedSpectrumUnavailableError = _legacy.CachedSpectrumUnavailableError
+CHECKPOINT_AUDIT_NAME = _legacy.CHECKPOINT_AUDIT_NAME
+COMMON_NAME = _legacy.COMMON_NAME
+J3_OVER_J = _legacy.J3_OVER_J
+PHYSICAL_RESIDUAL_TOLERANCE = _legacy.PHYSICAL_RESIDUAL_TOLERANCE
+REPRESENTATIVE_KAPPA_OVER_J = _legacy.REPRESENTATIVE_KAPPA_OVER_J
+SUMMARY_NAME = _legacy.SUMMARY_NAME
+TARGET_LENGTHS = _legacy.TARGET_LENGTHS
+TOLERANCE_NAME = _legacy.TOLERANCE_NAME
+TOTAL_SZ = _legacy.TOTAL_SZ
+WORST_NAME = _legacy.WORST_NAME
 
 FIXED_CONTROL_HALF_WIDTH = _convention.FIXED_CONTROL_HALF_WIDTH
 PRIMARY_WINDOW_EXPONENT = _convention.PRIMARY_WINDOW_EXPONENT
@@ -258,7 +271,8 @@ def validate_completed_common_window_export(
             )
         if float(row.covered_spectral_half_width) + 1.0e-10 < expected_half_width:
             raise CachedSpectrumUnavailableError(
-                f"completed common-window export exceeds cached spectral coverage at L={int(row.L)}"
+                "completed common-window export exceeds cached spectral coverage at "
+                f"L={int(row.L)}"
             )
         residual = float(row.window_max_eigenpair_residual)
         if math.isfinite(residual) and residual > PHYSICAL_RESIDUAL_TOLERANCE:
@@ -293,7 +307,7 @@ def _stamp_current_outputs(output_dir: Path) -> None:
         output / WORST_NAME,
         output / TOLERANCE_NAME,
     ):
-        if not path.is_file():
+        if not path.is_file() or path.stat().st_size == 0:
             continue
         frame = pd.read_csv(path)
         frame[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
