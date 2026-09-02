@@ -16,8 +16,8 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-
 import spin1_exchange_convention as convention
+
 import spin1_sec6_integration as integration
 
 REPRESENTATIVE_KAPPA_OVER_J = 0.10
