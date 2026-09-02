@@ -14,10 +14,17 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from spin1_exchange_convention import (
+    CURRENT_EXCHANGE_CONVENTION,
+    EXCHANGE_CONVENTION_METADATA_KEY,
+    PRIMARY_WINDOW_PREFACTOR,
+    PRIMARY_WINDOW_PROTOCOL,
+)
+
 TARGET_LENGTHS = (8, 10, 12)
 MIDPOINT_KAPPA = (0.075, 0.125, 0.175)
 P0_KAPPA = (0.05, 0.10, 0.15, 0.20)
-WINDOW_PROTOCOL = "quarter_power_c1"
+WINDOW_PROTOCOL = PRIMARY_WINDOW_PROTOCOL
 OPERATOR_BASIS_DIMENSION = 19
 
 P0_ROWS_NAME = "spin1_xy_sec6_deformation_grid_rows.csv"
@@ -68,7 +75,7 @@ def _validate_row(row: dict[str, Any], *, length: int, kappa_over_j: float) -> N
         raise KappaRefinementError("checkpoint window protocol mismatch")
     if int(row.get("operator_basis_dimension", -1)) != OPERATOR_BASIS_DIMENSION:
         raise KappaRefinementError("checkpoint operator-basis dimension mismatch")
-    expected_half_width = float(length) ** 0.25
+    expected_half_width = PRIMARY_WINDOW_PREFACTOR * float(length) ** 0.25
     if not math.isclose(
         float(row.get("window_half_width", np.nan)),
         expected_half_width,
@@ -113,6 +120,10 @@ def _load_checkpoint(
         raise KappaRefinementError(f"invalid checkpoint: {directory}") from exc
     if metadata.get("status") != "complete":
         raise KappaRefinementError(f"incomplete checkpoint must be inspected: {directory}")
+    if metadata.get(EXCHANGE_CONVENTION_METADATA_KEY) != CURRENT_EXCHANGE_CONVENTION:
+        raise KappaRefinementError(
+            f"legacy midpoint checkpoint requires explicit convention migration: {directory}"
+        )
     _validate_row(row, length=length, kappa_over_j=kappa_over_j)
     return row, worst
 
@@ -127,12 +138,16 @@ def _write_checkpoint(
     kappa_over_j = float(row["kappa_over_J"])
     directory = _checkpoint_dir(cache_root, length, kappa_over_j)
     directory.mkdir(parents=True, exist_ok=True)
+    row = dict(row)
+    row[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
     _atomic_write_json(directory / "row.json", row)
-    _atomic_write_csv(directory / "worst_eigenoperator.csv", pd.DataFrame(worst_rows))
+    worst_frame = pd.DataFrame(worst_rows)
+    worst_frame[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
+    _atomic_write_csv(directory / "worst_eigenoperator.csv", worst_frame)
     _atomic_write_json(
         directory / "metadata.json",
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "status": "complete",
             "cache_role": "spin1_sec6_p1_midpoint_kappa_refinement",
             "L": length,
@@ -140,6 +155,7 @@ def _write_checkpoint(
             "window_protocol": WINDOW_PROTOCOL,
             "operator_basis_dimension": OPERATOR_BASIS_DIMENSION,
             "source_role": "p1_midpoint_dense_refinement",
+            EXCHANGE_CONVENTION_METADATA_KEY: CURRENT_EXCHANGE_CONVENTION,
         },
     )
 
@@ -149,6 +165,13 @@ def _load_p0_rows(p0_data_dir: Path) -> pd.DataFrame:
     if not path.is_file():
         raise KappaRefinementError(f"frozen P0 deformation grid is missing: {path}")
     frame = pd.read_csv(path)
+    if EXCHANGE_CONVENTION_METADATA_KEY not in frame.columns or set(
+        frame[EXCHANGE_CONVENTION_METADATA_KEY].astype(str)
+    ) != {CURRENT_EXCHANGE_CONVENTION}:
+        raise KappaRefinementError(
+            "P0 deformation rows use historical exchange semantics; use the derived "
+            "spin-1 convention-migration directory before P1 reuse"
+        )
     selected = frame[
         frame["L"].astype(int).isin(TARGET_LENGTHS)
         & frame["kappa_over_J"].astype(float).isin(P0_KAPPA)
@@ -174,7 +197,15 @@ def _compute_dense_point(length: int, kappa_over_j: float):
     row = dict(row)
     row["source_role"] = "p1_midpoint_dense_refinement"
     row["checkpoint_reused"] = False
-    worst_rows = [dict(value, source_role="p1_midpoint_dense_refinement") for value in worst_rows]
+    row[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
+    worst_rows = [
+        dict(
+            value,
+            source_role="p1_midpoint_dense_refinement",
+            **{EXCHANGE_CONVENTION_METADATA_KEY: CURRENT_EXCHANGE_CONVENTION},
+        )
+        for value in worst_rows
+    ]
     return row, worst_rows
 
 
@@ -198,6 +229,7 @@ def _finite_differences(frame: pd.DataFrame) -> pd.DataFrame:
                         "delta_kappa": delta_kappa,
                         "finite_difference_slope": slope,
                         "absolute_slope": abs(slope),
+                        EXCHANGE_CONVENTION_METADATA_KEY: CURRENT_EXCHANGE_CONVENTION,
                     }
                 )
     return pd.DataFrame(rows)
@@ -243,10 +275,12 @@ def run(
 
     midpoint = pd.DataFrame(midpoint_rows)
     combined = pd.concat([p0, midpoint], ignore_index=True, sort=False)
+    combined[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
     combined = combined.sort_values(["L", "kappa_over_J"]).reset_index(drop=True)
     _atomic_write_csv(output / ROWS_NAME, combined)
     if worst_rows:
         worst = pd.DataFrame(worst_rows).sort_values(["L", "kappa_over_J", "basis_operator"])
+        worst[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
         _atomic_write_csv(output / WORST_NAME, worst)
 
     complete = all(status in {"computed", "reused"} for status in statuses.values())
@@ -256,11 +290,14 @@ def run(
     _atomic_write_json(
         output / PROGRESS_NAME,
         {
-            "schema_version": 1,
+            "schema_version": 2,
+            EXCHANGE_CONVENTION_METADATA_KEY: CURRENT_EXCHANGE_CONVENTION,
             "target_lengths": list(TARGET_LENGTHS),
             "frozen_p0_kappa": list(P0_KAPPA),
             "midpoint_kappa": list(MIDPOINT_KAPPA),
             "full_sampled_kappa": sorted(set(P0_KAPPA + MIDPOINT_KAPPA)),
+            "window_protocol": WINDOW_PROTOCOL,
+            "window_prefactor": PRIMARY_WINDOW_PREFACTOR,
             "solve_policy": "new full-dense solves allowed only for the nine midpoint L<=12 points",
             "point_status": dict(sorted(statuses.items())),
             "complete": complete,
