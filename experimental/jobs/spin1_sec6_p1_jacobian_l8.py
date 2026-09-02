@@ -17,6 +17,11 @@ from qlinks.caging.stability import (
     diagnose_cage_stability,
 )
 
+from spin1_exchange_convention import (
+    CURRENT_EXCHANGE_CONVENTION,
+    EXCHANGE_CONVENTION_METADATA_KEY,
+)
+
 TOLERANCE = 1.0e-10
 LENGTH = 8
 TOTAL_SZ = -2
@@ -91,8 +96,10 @@ def run(*, output_dir: Path) -> dict[str, Any]:
     row = {
         "L": LENGTH,
         "M": TOTAL_SZ,
+        "J_over_J": 1.0,
         "J3_over_J": J3_OVER_J,
         "kappa_over_J": KAPPA_OVER_J,
+        EXCHANGE_CONVENTION_METADATA_KEY: CURRENT_EXCHANGE_CONVENTION,
         "tower_support_size": int(support.size),
         "tower_residual": tower_residual,
         "boundary_nullity": int(stability.boundary_nullity),
@@ -114,6 +121,7 @@ def run(*, output_dir: Path) -> dict[str, Any]:
     )
     geometry = {
         "L": LENGTH,
+        EXCHANGE_CONVENTION_METADATA_KEY: CURRENT_EXCHANGE_CONVENTION,
         "range_three_pair_count": len(range_three_pairs),
         "range_three_pairs": [[int(i), int(j)] for i, j, _ in range_three_pairs],
         "generic_ring_expected_pair_count": LENGTH,
@@ -121,8 +129,8 @@ def run(*, output_dir: Path) -> dict[str, Any]:
         "L6_range_three_pair_count": len(half_ring_pairs),
         "L6_half_ring_collision": len(half_ring_pairs) != 6,
         "scientific_role": (
-            "editorial replacement for the exceptional L=6 range-three ring; "
-            "does not alter the analytic compatibility claim"
+            "post-migration generic-ring calibration under the J/2 ladder convention; "
+            "the interference gap is remeasured rather than inferred from the old run"
         ),
     }
     _atomic_write_json(output / GEOMETRY_NAME, geometry)
