@@ -11,15 +11,14 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from spin1_exchange_convention import (
+    CURRENT_EXCHANGE_CONVENTION,
+    EXCHANGE_CONVENTION_METADATA_KEY,
+)
 
 from qlinks.caging.stability import (
     cage_jacobian_conditioning_from_hamiltonian,
     diagnose_cage_stability,
-)
-
-from spin1_exchange_convention import (
-    CURRENT_EXCHANGE_CONVENTION,
-    EXCHANGE_CONVENTION_METADATA_KEY,
 )
 
 TOLERANCE = 1.0e-10
