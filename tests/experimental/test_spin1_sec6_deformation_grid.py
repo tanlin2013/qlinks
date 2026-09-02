@@ -13,10 +13,6 @@ JOBS = ROOT / "experimental" / "jobs"
 if str(JOBS) not in sys.path:
     sys.path.insert(0, str(JOBS))
 
-# The production evidence image contains IPython, while the fast CI lane intentionally
-# omits notebook dependencies. Only the imported helper's display symbol is needed at
-# module import time; remove the temporary shim immediately after importing the grid so
-# unrelated tests continue to see the normal no-IPython environment.
 _created_ipython_stub = "IPython.display" not in sys.modules
 if _created_ipython_stub:
     ipython = types.ModuleType("IPython")
@@ -26,11 +22,18 @@ if _created_ipython_stub:
     sys.modules["IPython"] = ipython
     sys.modules["IPython.display"] = ipython_display
 
+import spin1_exchange_convention as convention  # noqa: E402
 import spin1_sec6_deformation_grid as grid  # noqa: E402
 
 if _created_ipython_stub:
     sys.modules.pop("IPython.display", None)
     sys.modules.pop("IPython", None)
+
+
+def _stamp(frame: pd.DataFrame) -> pd.DataFrame:
+    result = frame.copy()
+    result[convention.EXCHANGE_CONVENTION_METADATA_KEY] = convention.CURRENT_EXCHANGE_CONVENTION
+    return result
 
 
 def _write_representative_products(root: Path) -> None:
@@ -39,6 +42,7 @@ def _write_representative_products(root: Path) -> None:
     sequence_rows = []
     worst_rows = []
     for length in (8, 10, 12, 14):
+        half_width = grid._expected_half_width(length)
         concentration_rows.append(
             {
                 "L": length,
@@ -47,13 +51,13 @@ def _write_representative_products(root: Path) -> None:
                 "kappa_over_J": 0.1,
                 "variant": "raw",
                 "window_protocol": grid.WINDOW_PROTOCOL,
-                "window_half_width": length**0.25,
+                "window_half_width": half_width,
                 "window_state_count": 20 + length,
                 "retained_state_count": 19 + length,
                 "joint_dark_rank": 1,
                 "removed_fraction": 1.0 / (20 + length),
                 "energy_block_count": 10,
-                "covered_spectral_half_width": 10.0,
+                "covered_spectral_half_width": 5.0,
                 "window_max_eigenpair_residual": 1.0e-12,
                 "window_median_eigenpair_residual": 5.0e-13,
                 "tower_residual": 1.0e-13,
@@ -81,18 +85,18 @@ def _write_representative_products(root: Path) -> None:
                         "kappa_over_J": 0.1,
                         "variant": "raw",
                         "window_protocol": grid.WINDOW_PROTOCOL,
-                        "window_half_width": length**0.25,
+                        "window_half_width": half_width,
                         "basis_operator": f"B{index:02d}",
                         "coefficient": 1.0 if index == 1 else 0.0,
                     }
                 )
-    pd.DataFrame(concentration_rows).to_csv(root / grid.COMMON_NAME, index=False)
-    pd.DataFrame(sequence_rows).to_csv(root / grid.PANEL_B_NAME, index=False)
-    pd.DataFrame(worst_rows).to_csv(root / grid.REPRESENTATIVE_WORST_NAME, index=False)
+    _stamp(pd.DataFrame(concentration_rows)).to_csv(root / grid.COMMON_NAME, index=False)
+    _stamp(pd.DataFrame(sequence_rows)).to_csv(root / grid.PANEL_B_NAME, index=False)
+    _stamp(pd.DataFrame(worst_rows)).to_csv(root / grid.REPRESENTATIVE_WORST_NAME, index=False)
 
 
 def _fake_point(length: int, kappa_over_j: float):
-    half_width = length**0.25
+    half_width = grid._expected_half_width(length)
     row = {
         "schema_version": grid.SCHEMA_VERSION,
         "L": length,
@@ -108,7 +112,7 @@ def _fake_point(length: int, kappa_over_j: float):
         "joint_dark_rank": 1,
         "joint_dark_fraction": 1.0 / (30 + length),
         "energy_block_count": 12,
-        "covered_spectral_half_width": 10.0,
+        "covered_spectral_half_width": 5.0,
         "window_max_eigenpair_residual": 1.0e-12,
         "window_median_eigenpair_residual": 5.0e-13,
         "tower_residual": 1.0e-13,
@@ -132,6 +136,7 @@ def _fake_point(length: int, kappa_over_j: float):
         "source_role": "test_dense_point",
         "checkpoint_reused": False,
         "checkpoint_path": "",
+        convention.EXCHANGE_CONVENTION_METADATA_KEY: convention.CURRENT_EXCHANGE_CONVENTION,
     }
     worst = [
         {
@@ -144,6 +149,7 @@ def _fake_point(length: int, kappa_over_j: float):
             "coefficient_imag": 0.0,
             "coefficient_abs": 1.0 if index == 1 else 0.0,
             "source_role": "test_dense_point",
+            convention.EXCHANGE_CONVENTION_METADATA_KEY: convention.CURRENT_EXCHANGE_CONVENTION,
         }
         for index in range(grid.OPERATOR_BASIS_DIMENSION)
     ]
@@ -177,6 +183,9 @@ def test_status_lane_reuses_representative_points_without_solving(
     assert progress["target_count"] == 12
     assert len(progress["pending_points"]) == 9
     assert not progress["p0_grid_complete"]
+    assert progress[convention.EXCHANGE_CONVENTION_METADATA_KEY] == (
+        convention.CURRENT_EXCHANGE_CONVENTION
+    )
 
 
 def test_complete_grid_is_checkpointed_and_second_run_performs_no_solves(
@@ -210,6 +219,9 @@ def test_complete_grid_is_checkpointed_and_second_run_performs_no_solves(
     assert len(panel_c) == 12
     assert set(panel_d["L"]) == {8, 10, 12}
     assert panel_d["complete"].all()
+    assert set(panel_c[convention.EXCHANGE_CONVENTION_METADATA_KEY]) == {
+        convention.CURRENT_EXCHANGE_CONVENTION
+    }
 
     def forbidden_solve(**_kwargs):
         raise AssertionError("validated point checkpoints must be reused")
