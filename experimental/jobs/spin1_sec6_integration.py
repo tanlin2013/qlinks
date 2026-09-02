@@ -15,7 +15,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 import spin1_exchange_convention as _convention
 import spin1_sec6_integration_legacy as _legacy
 
@@ -25,6 +24,10 @@ _ORIGINAL_BUILD_FIGURE_DATA = _legacy.build_figure_data
 for _name in dir(_legacy):
     if not _name.startswith("__"):
         globals()[_name] = getattr(_legacy, _name)
+
+EvidenceValidationError = _legacy.EvidenceValidationError
+REPRESENTATIVE_KAPPA_OVER_J = _legacy.REPRESENTATIVE_KAPPA_OVER_J
+_read_csv = _legacy._read_csv
 
 PRIMARY_WINDOW_EXPONENT = _convention.PRIMARY_WINDOW_EXPONENT
 PRIMARY_WINDOW_PREFACTOR = _convention.PRIMARY_WINDOW_PREFACTOR
@@ -84,7 +87,9 @@ def _require_current_source(source_data_dir: Path) -> None:
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise EvidenceValidationError(f"invalid convention migration manifest: {manifest_path}") from exc
+        raise EvidenceValidationError(
+            f"invalid convention migration manifest: {manifest_path}"
+        ) from exc
     if not isinstance(manifest, dict) or manifest.get(EXCHANGE_CONVENTION_METADATA_KEY) != (
         CURRENT_EXCHANGE_CONVENTION
     ):
