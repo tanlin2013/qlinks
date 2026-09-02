@@ -13,7 +13,6 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-
 from spin1_exchange_convention import (
     CURRENT_EXCHANGE_CONVENTION,
     EXCHANGE_CONVENTION_METADATA_KEY,
