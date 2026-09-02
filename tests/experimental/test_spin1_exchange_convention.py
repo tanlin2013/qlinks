@@ -39,7 +39,9 @@ def test_exchange_convention_contract_and_windows() -> None:
     assert convention.map_legacy_window_protocol("fixed_width_1") == "fixed_width_0p5"
 
 
-def test_converter_rescales_energy_beta_and_protocol_without_touching_source(tmp_path: Path) -> None:
+def test_converter_rescales_energy_beta_and_protocol_without_touching_source(
+    tmp_path: Path,
+) -> None:
     converter = _load_converter()
     source = tmp_path / "legacy-run"
     output = tmp_path / "derived-run"
