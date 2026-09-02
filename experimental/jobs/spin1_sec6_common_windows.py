@@ -1,76 +1,54 @@
 #!/usr/bin/env python
-"""Compute homogeneous Spin-1 Sec. VI concentration windows from cached spectra only.
+"""Current-convention cache-only Sec. VI common-window reducer.
 
-The validation/reuse path is deliberately lightweight. The heavy Sec. VI numerical
-kernel is imported only after no completed derived product can be reused. This module
-never calls the eigensolver entry point: missing reusable spectra are provisioning gaps.
+The historical reducer is preserved in ``spin1_sec6_common_windows_legacy``.
+Legacy spectral payloads are reused only through an explicit in-memory mapping:
+eigenvalues and energy-like metadata are multiplied by 1/2 while eigenvectors are
+left unchanged and then revalidated against the current Hamiltonian.
 """
 
 from __future__ import annotations
 
-import argparse
-import importlib
 import json
 import math
-import shutil
-import sys
+import os
 from pathlib import Path
 from typing import Any, Iterable
 
 import numpy as np
 import pandas as pd
 
-for candidate in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
-    if (candidate / "qlinks").is_dir() and (candidate / "experimental").is_dir():
-        ROOT = candidate
-        break
-else:
-    ROOT = Path(__file__).resolve().parents[2]
-JOBS = ROOT / "experimental" / "jobs"
-NOTEBOOKS = ROOT / "experimental" / "notebooks"
-for path in (JOBS, NOTEBOOKS, ROOT):
-    if str(path) not in sys.path:
-        sys.path.insert(0, str(path))
+import spin1_sec6_common_windows_legacy as _legacy
+from spin1_exchange_convention import (
+    CURRENT_EXCHANGE_CONVENTION,
+    EXCHANGE_CONVENTION_METADATA_KEY,
+    FIXED_CONTROL_HALF_WIDTH,
+    FIXED_WINDOW_PROTOCOL,
+    LEGACY_EXCHANGE_CONVENTION,
+    LEGACY_TO_CURRENT_ENERGY_SCALE,
+    PRIMARY_WINDOW_EXPONENT,
+    PRIMARY_WINDOW_PREFACTOR,
+    PRIMARY_WINDOW_PROTOCOL,
+    RESCALED_FROM_METADATA_KEY,
+    current_window_half_width,
+    exchange_convention_from_metadata,
+)
 
-REPRESENTATIVE_KAPPA_OVER_J = 0.10
-TOTAL_SZ = -2
-J3_OVER_J = 0.10
-PRIMARY_WINDOW_EXPONENT = 0.25
-FIXED_CONTROL_HALF_WIDTH = 1.0
-TARGET_LENGTHS = (8, 10, 12, 14)
-PHYSICAL_RESIDUAL_TOLERANCE = 1.0e-6
-ORTHOGONALITY_TOLERANCE = 1.0e-6
-REFERENCE_L14_FIXED_RAW_WIDTH = 0.0237316428
-REFERENCE_L14_FIXED_CLEAN_WIDTH = 0.0236713087
+_ORIGINAL_COMPUTE_COMMON_WINDOWS = _legacy.compute_common_windows_from_cache
 
-COMMON_NAME = "spin1_xy_kappa0p1_concentration_common_windows.csv"
-CHECKPOINT_AUDIT_NAME = "spin1_xy_kappa0p1_common_window_checkpoint_audit.csv"
-WORST_NAME = "spin1_xy_kappa0p1_common_window_worst_eigenoperator.csv"
-TOLERANCE_NAME = "spin1_xy_kappa0p1_common_window_tolerance_audit.csv"
-SUMMARY_NAME = "spin1_xy_kappa0p1_common_window_summary.json"
+for _name in dir(_legacy):
+    if not _name.startswith("__"):
+        globals()[_name] = getattr(_legacy, _name)
 
+FIXED_CONTROL_HALF_WIDTH = FIXED_CONTROL_HALF_WIDTH
+PRIMARY_WINDOW_EXPONENT = PRIMARY_WINDOW_EXPONENT
+PRIMARY_WINDOW_PREFACTOR = PRIMARY_WINDOW_PREFACTOR
+PRIMARY_WINDOW_PROTOCOL = PRIMARY_WINDOW_PROTOCOL
+FIXED_WINDOW_PROTOCOL = FIXED_WINDOW_PROTOCOL
 
-class CachedSpectrumUnavailableError(RuntimeError):
-    """Raised when a required reusable eigensystem cannot be validated."""
-
-
-def _load_core():
-    """Load the heavy numerical kernel only after derived-data reuse has failed."""
-
-    core = importlib.import_module("spin1_sec6_provisioning")
-    if int(core.TOTAL_SZ) != TOTAL_SZ or not math.isclose(
-        float(core.J3_OVER_J), J3_OVER_J, rel_tol=0.0, abs_tol=1.0e-15
-    ):
-        raise RuntimeError("Spin-1 Sec. VI cache contract disagrees with numerical kernel")
-    return core
-
-
-def _metadata(path: Path) -> dict[str, Any] | None:
-    try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    return value if isinstance(value, dict) else None
+# Established normalized concentration anchors are invariant under uniform rescaling.
+REFERENCE_L14_FIXED_RAW_WIDTH = _legacy.REFERENCE_L14_FIXED_RAW_WIDTH
+REFERENCE_L14_FIXED_CLEAN_WIDTH = _legacy.REFERENCE_L14_FIXED_CLEAN_WIDTH
 
 
 def _compatible_metadata(metadata: dict[str, Any], *, length: int, kappa_over_j: float) -> bool:
@@ -80,169 +58,77 @@ def _compatible_metadata(metadata: dict[str, Any], *, length: int, kappa_over_j:
         "J3_over_J": J3_OVER_J,
         "kappa_over_J": float(kappa_over_j),
     }
-    return all(metadata.get(key) == value for key, value in expected.items())
+    if not all(metadata.get(key) == value for key, value in expected.items()):
+        return False
+    return exchange_convention_from_metadata(metadata) in {
+        LEGACY_EXCHANGE_CONVENTION,
+        CURRENT_EXCHANGE_CONVENTION,
+    }
 
 
-def discover_checkpoint_directories(
-    roots: Iterable[Path], *, length: int, kappa_over_j: float
-) -> list[Path]:
-    """Return compatible completed checkpoints, largest spectral payload first."""
-
-    candidates: list[tuple[int, Path]] = []
-    seen: set[Path] = set()
-    for raw_root in roots:
-        root = Path(raw_root).resolve(strict=False)
-        if not root.is_dir():
-            continue
-        for metadata_path in root.rglob("metadata.json"):
-            directory = metadata_path.parent
-            if directory in seen:
-                continue
-            seen.add(directory)
-            metadata = _metadata(metadata_path)
-            if metadata is None or not _compatible_metadata(
-                metadata, length=length, kappa_over_j=kappa_over_j
-            ):
-                continue
-            energies_path = directory / "energies.npy"
-            vectors_path = directory / "vectors.npy"
-            if not vectors_path.is_file():
-                vectors_path = directory / "eigenvectors.npy"
-            if not energies_path.is_file() or not vectors_path.is_file():
-                continue
-            returned = metadata.get("returned_eigenpairs")
-            if returned is None:
-                try:
-                    returned = int(np.load(energies_path, mmap_mode="r", allow_pickle=False).size)
-                except (OSError, ValueError):
-                    continue
-            candidates.append((int(returned), directory))
-    candidates.sort(key=lambda item: (item[0], str(item[1])), reverse=True)
-    return [directory for _, directory in candidates]
+def _scale_legacy_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+    scaled = dict(metadata)
+    for key in (
+        "covered_spectral_half_width",
+        "validation_window_half_width",
+        "sampled_energy_abs_max",
+        "shift",
+    ):
+        value = scaled.get(key)
+        if isinstance(value, (int, float)) and np.isfinite(float(value)):
+            scaled[key] = float(value) * LEGACY_TO_CURRENT_ENERGY_SCALE
+    scaled[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
+    scaled[RESCALED_FROM_METADATA_KEY] = LEGACY_EXCHANGE_CONVENTION
+    return scaled
 
 
 def _load_arrays(directory: Path) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
-    metadata = _metadata(directory / "metadata.json")
+    metadata = _legacy._metadata(directory / "metadata.json")
     if metadata is None:
         raise CachedSpectrumUnavailableError(f"invalid checkpoint metadata: {directory}")
     vectors_path = directory / "vectors.npy"
     if not vectors_path.is_file():
         vectors_path = directory / "eigenvectors.npy"
     try:
-        energies = np.load(directory / "energies.npy", mmap_mode="r", allow_pickle=False)
+        raw_energies = np.load(directory / "energies.npy", mmap_mode="r", allow_pickle=False)
         vectors = np.load(vectors_path, mmap_mode="r", allow_pickle=False)
     except (OSError, ValueError) as exc:
         raise CachedSpectrumUnavailableError(f"unreadable checkpoint arrays: {directory}") from exc
-    if energies.ndim != 1 or vectors.ndim != 2 or vectors.shape[1] != energies.size:
+    if raw_energies.ndim != 1 or vectors.ndim != 2 or vectors.shape[1] != raw_energies.size:
         raise CachedSpectrumUnavailableError(f"checkpoint shape mismatch: {directory}")
     if int(metadata.get("sector_dimension", vectors.shape[0])) != int(vectors.shape[0]):
         raise CachedSpectrumUnavailableError(f"checkpoint sector dimension mismatch: {directory}")
-    if not np.all(np.isfinite(energies)):
+    if not np.all(np.isfinite(raw_energies)):
         raise CachedSpectrumUnavailableError(f"checkpoint has non-finite energies: {directory}")
+
+    convention = exchange_convention_from_metadata(metadata)
+    if convention == LEGACY_EXCHANGE_CONVENTION:
+        energies = np.asarray(raw_energies, dtype=np.float64) * LEGACY_TO_CURRENT_ENERGY_SCALE
+        metadata = _scale_legacy_metadata(metadata)
+    elif convention == CURRENT_EXCHANGE_CONVENTION:
+        energies = raw_energies
+        metadata = dict(metadata)
+    else:
+        raise CachedSpectrumUnavailableError(
+            f"unsupported spin-1 exchange convention {convention!r}: {directory}"
+        )
     return energies, vectors, metadata
 
 
 def _required_validation_half_width(length: int) -> float:
-    return max(float(length) ** PRIMARY_WINDOW_EXPONENT, FIXED_CONTROL_HALF_WIDTH)
-
-
-def _validation_sample_indices(
-    energies: np.ndarray,
-    *,
-    length: int,
-    sample_vectors: int,
-) -> np.ndarray:
-    """Sample only eigenvectors that can enter the requested common-window evidence."""
-
-    values = np.asarray(energies, dtype=float)
-    half_width = _required_validation_half_width(length)
-    eligible = np.flatnonzero(np.abs(values) <= half_width + 1.0e-10)
-    if eligible.size == 0:
-        raise CachedSpectrumUnavailableError(
-            f"cached L={length} spectrum contains no states inside required validation "
-            f"half-width {half_width:.6g}"
-        )
-    count = min(int(sample_vectors), int(eligible.size))
-    if count <= 0:
-        return np.zeros(0, dtype=np.int64)
-    positions = np.linspace(0, eligible.size - 1, count, dtype=np.int64)
-    return np.unique(eligible[positions])
-
-
-def validate_cached_spectrum(
-    directory: Path,
-    *,
-    length: int,
-    kappa_over_j: float,
-    context: dict[str, Any],
-    sample_vectors: int = 8,
-) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
-    """Validate one reusable spectrum without solving or mutating it.
-
-    The cheap sanity sample is restricted to the largest common window that will
-    actually be reused. Outer shift-invert vectors are irrelevant to P0-A and may be
-    less accurate than the central spectral block. Every state used by each final
-    window is checked later through the kernel's chunked window-residual audit.
-    """
-
-    energies, vectors, metadata = _load_arrays(directory)
-    if not _compatible_metadata(metadata, length=length, kappa_over_j=kappa_over_j):
-        raise CachedSpectrumUnavailableError(f"scientifically incompatible checkpoint: {directory}")
-    if vectors.shape[0] != int(context["h_sector"].shape[0]):
-        raise CachedSpectrumUnavailableError(
-            f"resolved-sector dimension changed for cached checkpoint: {directory}"
-        )
-    sample = _validation_sample_indices(
-        energies,
-        length=length,
-        sample_vectors=sample_vectors,
+    return max(
+        PRIMARY_WINDOW_PREFACTOR * float(length) ** PRIMARY_WINDOW_EXPONENT,
+        FIXED_CONTROL_HALF_WIDTH,
     )
-    if sample.size:
-        block = np.asarray(vectors[:, sample])
-        if not np.all(np.isfinite(block)):
-            raise CachedSpectrumUnavailableError(
-                f"checkpoint has non-finite eigenvectors in validation window: {directory}"
-            )
-        gram = block.conj().T @ block
-        orthogonality = float(np.linalg.norm(gram - np.eye(sample.size), ord=2))
-        action = context["h_sector"] @ block
-        residuals = np.linalg.norm(action - block * np.asarray(energies[sample])[None, :], axis=0)
-        maximum_residual = float(np.max(residuals, initial=0.0))
-        sampled_energy_abs_max = float(np.max(np.abs(np.asarray(energies[sample])), initial=0.0))
-    else:
-        orthogonality = 0.0
-        maximum_residual = 0.0
-        sampled_energy_abs_max = 0.0
-    if orthogonality > ORTHOGONALITY_TOLERANCE:
-        raise CachedSpectrumUnavailableError(
-            f"sample orthogonality residual {orthogonality:.3e} exceeds "
-            f"{ORTHOGONALITY_TOLERANCE:.1e} inside required common window: {directory}"
-        )
-    if maximum_residual > PHYSICAL_RESIDUAL_TOLERANCE:
-        raise CachedSpectrumUnavailableError(
-            f"sample physical eigenpair residual {maximum_residual:.3e} exceeds "
-            f"{PHYSICAL_RESIDUAL_TOLERANCE:.1e} inside required common window: {directory}"
-        )
-    checked = dict(metadata)
-    checked.update(
-        {
-            "checkpoint_path": str(directory),
-            "checkpoint_reused": True,
-            "sample_orthogonality_residual": orthogonality,
-            "sample_maximum_physical_residual": maximum_residual,
-            "validation_window_half_width": _required_validation_half_width(length),
-            "sampled_energy_abs_max": sampled_energy_abs_max,
-            "returned_eigenpairs": int(energies.size),
-            "requested_eigenpairs": int(metadata.get("requested_eigenpairs", energies.size)),
-        }
-    )
-    return energies, vectors, checked
 
 
 def _window_protocols(length: int) -> tuple[tuple[str, float], ...]:
     return (
-        ("quarter_power_c1", float(length) ** PRIMARY_WINDOW_EXPONENT),
-        ("fixed_width_1", FIXED_CONTROL_HALF_WIDTH),
+        (
+            PRIMARY_WINDOW_PROTOCOL,
+            PRIMARY_WINDOW_PREFACTOR * float(length) ** PRIMARY_WINDOW_EXPONENT,
+        ),
+        (FIXED_WINDOW_PROTOCOL, FIXED_CONTROL_HALF_WIDTH),
     )
 
 
@@ -250,7 +136,7 @@ def _expected_keys(lengths: Iterable[int]) -> set[tuple[int, str, str]]:
     return {
         (int(length), protocol, variant)
         for length in lengths
-        for protocol in ("quarter_power_c1", "fixed_width_1")
+        for protocol in (PRIMARY_WINDOW_PROTOCOL, FIXED_WINDOW_PROTOCOL)
         for variant in ("raw", "clean")
     }
 
@@ -261,7 +147,7 @@ def validate_completed_common_window_export(
     lengths: Iterable[int] = TARGET_LENGTHS,
     kappa_over_j: float = REPRESENTATIVE_KAPPA_OVER_J,
 ) -> pd.DataFrame | None:
-    """Validate/reuse a completed P0-A export before numerical setup."""
+    """Validate only explicitly current derived/common-window exports."""
 
     data = Path(data_dir).resolve(strict=False)
     concentration_path = data / COMMON_NAME
@@ -276,6 +162,11 @@ def validate_completed_common_window_export(
         raise CachedSpectrumUnavailableError(
             f"invalid completed common-window export: {concentration_path}"
         ) from exc
+    if EXCHANGE_CONVENTION_METADATA_KEY not in frame.columns:
+        return None
+    conventions = set(frame[EXCHANGE_CONVENTION_METADATA_KEY].astype(str))
+    if conventions != {CURRENT_EXCHANGE_CONVENTION}:
+        return None
     required = {
         "L",
         "kappa_over_J",
@@ -308,24 +199,8 @@ def validate_completed_common_window_export(
     expected_keys = _expected_keys(target_lengths)
     if actual_keys != expected_keys or len(selected) != len(expected_keys):
         return None
-    if not np.all(np.isfinite(selected["w_L"].to_numpy(dtype=float))):
-        raise CachedSpectrumUnavailableError("completed common-window export has non-finite widths")
-    if np.any(selected["w_L"].to_numpy(dtype=float) < 0.0):
-        raise CachedSpectrumUnavailableError("completed common-window export has negative widths")
-    if np.any(selected["removed_fraction"].to_numpy(dtype=float) < 0.0):
-        raise CachedSpectrumUnavailableError(
-            "completed common-window export has negative removed fraction"
-        )
-    if np.any(selected["energy_block_count"].to_numpy(dtype=int) <= 0):
-        raise CachedSpectrumUnavailableError(
-            "completed common-window export has invalid energy blocks"
-        )
     for row in selected.itertuples(index=False):
-        expected_half_width = (
-            float(row.L) ** PRIMARY_WINDOW_EXPONENT
-            if str(row.window_protocol) == "quarter_power_c1"
-            else FIXED_CONTROL_HALF_WIDTH
-        )
+        expected_half_width = current_window_half_width(int(row.L), str(row.window_protocol))
         if not math.isclose(
             float(row.window_half_width),
             expected_half_width,
@@ -345,15 +220,15 @@ def validate_completed_common_window_export(
             raise CachedSpectrumUnavailableError(
                 f"completed common-window export has residual {residual:.3e} at L={int(row.L)}"
             )
+
     l14 = selected[
         (selected["L"].astype(int) == 14)
-        & (selected["window_protocol"].astype(str) == "fixed_width_1")
+        & (selected["window_protocol"].astype(str) == FIXED_WINDOW_PROTOCOL)
     ]
-    anchors = {
+    for variant, expected in {
         "raw": REFERENCE_L14_FIXED_RAW_WIDTH,
         "clean": REFERENCE_L14_FIXED_CLEAN_WIDTH,
-    }
-    for variant, expected in anchors.items():
+    }.items():
         row = l14[l14["variant"].astype(str) == variant]
         if len(row) != 1 or not math.isclose(
             float(row.iloc[0]["w_L"]), expected, rel_tol=0.0, abs_tol=5.0e-8
@@ -365,290 +240,43 @@ def validate_completed_common_window_export(
     return selected.sort_values(["window_protocol", "L", "variant"]).reset_index(drop=True)
 
 
-def _copy_completed_products(source: Path, output: Path) -> None:
-    names = (COMMON_NAME, CHECKPOINT_AUDIT_NAME, WORST_NAME, TOLERANCE_NAME, SUMMARY_NAME)
-    for name in names:
-        src = source / name
-        dst = output / name
-        if src.is_file() and src.resolve() != dst.resolve(strict=False):
-            shutil.copy2(src, dst)
-
-
-def _raw_clean_records(
-    *,
-    length: int,
-    kappa_over_j: float,
-    protocol: str,
-    half_width: float,
-    rows: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    output: list[dict[str, Any]] = []
-    for row in rows:
-        record = dict(row)
-        record.update(
-            {
-                "window_protocol": protocol,
-                "window_exponent": (
-                    PRIMARY_WINDOW_EXPONENT if protocol == "quarter_power_c1" else 0.0
-                ),
-                "window_prefactor": 1.0,
-                "window_half_width": float(half_width),
-                "kappa_over_J": float(kappa_over_j),
-                "L": int(length),
-                "w_L": float(record.get("w_L", record["largest_covariance_width"])),
-                "validated_reusable_spectrum": True,
-            }
-        )
-        output.append(record)
-    return output
-
-
-def compute_common_windows_from_cache(
-    *,
-    checkpoint_roots: Iterable[Path],
-    output_dir: Path,
-    lengths: Iterable[int] = TARGET_LENGTHS,
-    kappa_over_j: float = REPRESENTATIVE_KAPPA_OVER_J,
-    energy_block_tolerance: float = 1.0e-10,
-    existing_data_dir: Path | None = None,
-) -> pd.DataFrame:
-    """Compute P0-A from validated cached spectra; never invoke an eigensolver."""
-
-    output = Path(output_dir).resolve(strict=False)
-    output.mkdir(parents=True, exist_ok=True)
-    target_lengths = tuple(int(value) for value in lengths)
-    reuse_source = (
-        output if existing_data_dir is None else Path(existing_data_dir).resolve(strict=False)
-    )
-    completed = validate_completed_common_window_export(
-        reuse_source, lengths=target_lengths, kappa_over_j=kappa_over_j
-    )
-    if completed is not None:
-        _copy_completed_products(reuse_source, output)
-        return completed
-
-    candidates_by_length = {
-        length: discover_checkpoint_directories(
-            checkpoint_roots, length=length, kappa_over_j=kappa_over_j
-        )
-        for length in target_lengths
-    }
-    missing = [length for length, candidates in candidates_by_length.items() if not candidates]
-    if missing:
-        pd.DataFrame(
-            [
-                {
-                    "L": length,
-                    "kappa_over_J": kappa_over_j,
-                    "status": "MISSING_REUSABLE_SPECTRUM",
-                    "candidate_count": 0,
-                    "validation_errors": "",
-                }
-                for length in missing
-            ]
-        ).to_csv(output / CHECKPOINT_AUDIT_NAME, index=False)
-        raise CachedSpectrumUnavailableError(
-            "missing validated reusable spectra for L="
-            + ",".join(str(value) for value in missing)
-            + "; no eigensolve was started"
-        )
-
-    core = _load_core()
-    concentration_rows: list[dict[str, Any]] = []
-    worst_rows: list[dict[str, Any]] = []
-    tolerance_rows: list[dict[str, Any]] = []
-    checkpoint_rows: list[dict[str, Any]] = []
-    invalid: list[int] = []
-
-    for length in target_lengths:
-        context = core._point_context(length=length, kappa_over_j=kappa_over_j)
-        validated = None
-        errors: list[str] = []
-        for candidate in candidates_by_length[length]:
-            try:
-                validated = validate_cached_spectrum(
-                    candidate,
-                    length=length,
-                    kappa_over_j=kappa_over_j,
-                    context=context,
-                )
-                break
-            except CachedSpectrumUnavailableError as exc:
-                errors.append(str(exc))
-        if validated is None:
-            invalid.append(length)
-            checkpoint_rows.append(
-                {
-                    "L": length,
-                    "kappa_over_J": kappa_over_j,
-                    "status": "MISSING_REUSABLE_SPECTRUM",
-                    "candidate_count": len(candidates_by_length[length]),
-                    "validation_errors": " | ".join(errors),
-                }
-            )
+def _stamp_current_outputs(output_dir: Path) -> None:
+    output = Path(output_dir)
+    for path in (output / COMMON_NAME, output / CHECKPOINT_AUDIT_NAME, output / WORST_NAME, output / TOLERANCE_NAME):
+        if not path.is_file():
             continue
+        frame = pd.read_csv(path)
+        frame[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
+        temporary = path.with_name(f".{path.name}.tmp-{os.getpid()}")
+        frame.to_csv(temporary, index=False)
+        os.replace(temporary, path)
+    summary_path = output / SUMMARY_NAME
+    if summary_path.is_file():
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        if isinstance(summary, dict):
+            summary[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
+            temporary = summary_path.with_name(f".{summary_path.name}.tmp-{os.getpid()}")
+            temporary.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            os.replace(temporary, summary_path)
 
-        energies, vectors, metadata = validated
-        coverage = float(min(abs(float(np.min(energies))), abs(float(np.max(energies)))))
-        checkpoint_rows.append(
-            {
-                "L": length,
-                "kappa_over_J": kappa_over_j,
-                "status": "VALIDATED_REUSE",
-                "checkpoint_path": metadata["checkpoint_path"],
-                "returned_eigenpairs": int(energies.size),
-                "covered_spectral_half_width": coverage,
-                "validation_window_half_width": metadata["validation_window_half_width"],
-                "sampled_energy_abs_max": metadata["sampled_energy_abs_max"],
-                "sample_orthogonality_residual": metadata["sample_orthogonality_residual"],
-                "sample_maximum_physical_residual": metadata["sample_maximum_physical_residual"],
-            }
-        )
-        for protocol, half_width in _window_protocols(length):
-            if half_width > coverage + energy_block_tolerance:
-                raise CachedSpectrumUnavailableError(
-                    f"cached L={length} spectrum covers |E|<={coverage:.6g}, below required "
-                    f"{protocol} half-width {half_width:.6g}; no solve was started"
-                )
-            config = core.Sec6ProvisioningConfig(
-                output_dir=output,
-                dense_sizes=(),
-                large_size=length,
-                representative_kappa_over_j=kappa_over_j,
-                concentration_half_width=half_width,
-                energy_block_tolerance=energy_block_tolerance,
-                run_large_representative=False,
-                run_family_large_size=False,
-                reuse_checkpoints=True,
-                write_checkpoints=False,
-            )
-            sparse_metadata = {
-                "requested_eigenpairs": int(metadata["requested_eigenpairs"]),
-                "checkpoint_reused": True,
-                "checkpoint_path": metadata["checkpoint_path"],
-            }
-            rows, worst, tolerance, _dark, _exceptional = core._concentration_at_point(
-                length=length,
-                kappa_over_j=kappa_over_j,
-                energies=energies,
-                vectors=vectors,
-                context=context,
-                config=config,
-                sparse_metadata=sparse_metadata,
-                sparse_convergence_passed=True,
-                budget_certification_source="validated_reusable_spectrum",
-            )
-            window_residuals = [
-                float(row["window_max_eigenpair_residual"])
-                for row in rows
-                if "window_max_eigenpair_residual" in row
-            ]
-            maximum_window_residual = max(window_residuals, default=0.0)
-            if (
-                not math.isfinite(maximum_window_residual)
-                or maximum_window_residual > PHYSICAL_RESIDUAL_TOLERANCE
-            ):
-                raise CachedSpectrumUnavailableError(
-                    f"cached L={length} {protocol} window has maximum physical eigenpair "
-                    f"residual {maximum_window_residual:.3e}, above required "
-                    f"{PHYSICAL_RESIDUAL_TOLERANCE:.1e}; no solve was started"
-                )
-            concentration_rows.extend(
-                _raw_clean_records(
-                    length=length,
-                    kappa_over_j=kappa_over_j,
-                    protocol=protocol,
-                    half_width=half_width,
-                    rows=rows,
-                )
-            )
-            worst_rows.extend(
-                {
-                    **row,
-                    "window_protocol": protocol,
-                    "window_half_width": half_width,
-                }
-                for row in worst
-            )
-            tolerance_rows.extend(
-                {
-                    **row,
-                    "window_protocol": protocol,
-                    "window_half_width": half_width,
-                }
-                for row in tolerance
-            )
 
-    checkpoint_frame = pd.DataFrame(checkpoint_rows)
-    checkpoint_frame.to_csv(output / CHECKPOINT_AUDIT_NAME, index=False)
-    if invalid:
-        raise CachedSpectrumUnavailableError(
-            "no validated reusable spectrum remained for L="
-            + ",".join(str(value) for value in invalid)
-            + "; common-window P0-A was not completed and no eigensolve was started"
-        )
-
-    frame = pd.DataFrame(concentration_rows).sort_values(["window_protocol", "L", "variant"])
-    frame.to_csv(output / COMMON_NAME, index=False)
-    pd.DataFrame(worst_rows).to_csv(output / WORST_NAME, index=False)
-    pd.DataFrame(tolerance_rows).to_csv(output / TOLERANCE_NAME, index=False)
-    summary: dict[str, Any] = {
-        "solve_policy": "cache-only; no eigensolver fallback",
-        "lengths": sorted(set(frame["L"].astype(int))),
-        "window_protocols": sorted(set(frame["window_protocol"].astype(str))),
-        "representative_kappa_over_J": float(kappa_over_j),
-        "qualitative_narrowing": {},
-        "power_law_fit_computed": False,
-    }
-    for protocol, group in frame[frame["variant"] == "raw"].groupby("window_protocol"):
-        ordered = group.sort_values("L")
-        widths = ordered["w_L"].to_numpy(dtype=float)
-        summary["qualitative_narrowing"][str(protocol)] = {
-            "strictly_decreasing": bool(np.all(np.diff(widths) < 0.0)),
-            "widths": [float(value) for value in widths],
-            "sizes": [int(value) for value in ordered["L"]],
-        }
-    (output / SUMMARY_NAME).write_text(
-        json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+def compute_common_windows_from_cache(*args, **kwargs) -> pd.DataFrame:
+    frame = _ORIGINAL_COMPUTE_COMMON_WINDOWS(*args, **kwargs)
+    output_dir = kwargs.get("output_dir")
+    if output_dir is None and len(args) >= 2:
+        output_dir = args[1]
+    if output_dir is not None:
+        _stamp_current_outputs(Path(output_dir))
+    if EXCHANGE_CONVENTION_METADATA_KEY not in frame.columns:
+        frame = frame.copy()
+        frame[EXCHANGE_CONVENTION_METADATA_KEY] = CURRENT_EXCHANGE_CONVENTION
     return frame
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument(
-        "--checkpoint-root",
-        type=Path,
-        action="append",
-        default=[],
-        help="Reusable checkpoint root. May be supplied multiple times.",
-    )
-    parser.add_argument("--lengths", default="8,10,12,14")
-    parser.add_argument(
-        "--existing-data-dir",
-        type=Path,
-        default=None,
-        help=(
-            "Optional prior derived-evidence directory. A complete validated common-window "
-            "export is copied/reused before covariance reduction is attempted."
-        ),
-    )
-    args = parser.parse_args()
-    roots = list(args.checkpoint_root)
-    if not roots:
-        roots = [ROOT / "experimental" / "data" / "evidence_cache" / "spin1"]
-    lengths = tuple(int(token.strip()) for token in args.lengths.split(",") if token.strip())
-    if not lengths:
-        raise ValueError("--lengths must contain at least one size")
-    frame = compute_common_windows_from_cache(
-        checkpoint_roots=roots,
-        output_dir=args.output_dir,
-        lengths=lengths,
-        existing_data_dir=args.existing_data_dir,
-    )
-    print(frame.to_string(index=False), flush=True)
-
-
-if __name__ == "__main__":
-    main()
+# Patch global lookups used inside the preserved implementation.
+_legacy._compatible_metadata = _compatible_metadata
+_legacy._load_arrays = _load_arrays
+_legacy._required_validation_half_width = _required_validation_half_width
+_legacy._window_protocols = _window_protocols
+_legacy._expected_keys = _expected_keys
+_legacy.validate_completed_common_window_export = validate_completed_common_window_export
