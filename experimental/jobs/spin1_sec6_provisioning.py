@@ -23,9 +23,10 @@ from spin1_exchange_convention import (
     FIXED_CONTROL_HALF_WIDTH,
     LEGACY_EXCHANGE_CONVENTION,
     PRIMARY_WINDOW_PREFACTOR,
-    RESCALED_FROM_METADATA_KEY,
     exchange_convention_from_metadata,
 )
+
+_LEGACY_RUN_SEC6_PROVISIONING = _legacy.run_sec6_provisioning
 
 # Re-export the established kernel, including private helpers consumed by sibling jobs.
 for _name in dir(_legacy):
@@ -243,9 +244,6 @@ def run_sec6_provisioning(config: Sec6ProvisioningConfig):
         config.sparse_convergence_data_dir,
         role="sparse_convergence_data_dir",
     )
-    result = _legacy.run_sec6_provisioning(config)
+    result = _LEGACY_RUN_SEC6_PROVISIONING(config)
     _stamp_output_convention(config.output_dir)
     return result
-
-
-_legacy.run_sec6_provisioning = run_sec6_provisioning
