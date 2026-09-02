@@ -54,6 +54,8 @@ def test_converter_rescales_energy_beta_and_protocol_without_touching_source(tmp
                 "window_prefactor": 1.0,
                 "covered_spectral_half_width": 2.08384,
                 "energy_density": 0.2,
+                "window_max_eigenpair_residual": 2.0e-7,
+                "energy_block_tolerance": 1.0e-10,
                 "beta": -0.0568,
                 "kappa_over_J": 0.1,
                 "tau_A_mc_raw": 0.113204,
@@ -71,6 +73,8 @@ def test_converter_rescales_energy_beta_and_protocol_without_touching_source(tmp
                 "window_protocol": "fixed_width_1",
                 "window_half_width": 1.0,
                 "covered_spectral_half_width": 2.08384,
+                "tower_residual": 4.0e-12,
+                "interference_gap": 1.59991,
                 "beta_J": -0.0568,
                 "D_over_J": 0.63,
                 "kappa_over_J": 0.1,
@@ -89,6 +93,8 @@ def test_converter_rescales_energy_beta_and_protocol_without_touching_source(tmp
     assert np.isclose(converted.window_prefactor, 0.5)
     assert np.isclose(converted.covered_spectral_half_width, 1.04192)
     assert np.isclose(converted.energy_density, 0.1)
+    assert np.isclose(converted.window_max_eigenpair_residual, 1.0e-7)
+    assert np.isclose(converted.energy_block_tolerance, 5.0e-11)
     assert np.isclose(converted.beta, -0.1136)
     assert np.isclose(converted.kappa_over_J, 0.1)
     assert np.isclose(converted.tau_A_mc_raw, 0.113204)
@@ -100,6 +106,8 @@ def test_converter_rescales_energy_beta_and_protocol_without_touching_source(tmp
     assert metadata["window_protocol"] == "fixed_width_0p5"
     assert np.isclose(metadata["window_half_width"], 0.5)
     assert np.isclose(metadata["covered_spectral_half_width"], 1.04192)
+    assert np.isclose(metadata["tower_residual"], 2.0e-12)
+    assert np.isclose(metadata["interference_gap"], 0.799955)
     assert np.isclose(metadata["beta_J"], -0.1136)
     assert np.isclose(metadata["D_over_J"], 0.315)
     assert np.isclose(metadata["kappa_over_J"], 0.1)
