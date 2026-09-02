@@ -146,6 +146,10 @@ def _stamp_output_file(path: Path) -> None:
     if not path.is_file():
         return
     if path.suffix == ".csv":
+        # The status lane can legitimately emit an empty optional aggregate.
+        # Preserve that sentinel rather than failing while trying to add provenance.
+        if path.stat().st_size == 0:
+            return
         frame = pd.read_csv(path)
         frame[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = (
             _convention.CURRENT_EXCHANGE_CONVENTION
