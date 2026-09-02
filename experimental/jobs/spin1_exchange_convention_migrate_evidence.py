@@ -19,7 +19,6 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-
 from spin1_exchange_convention import (
     CURRENT_EXCHANGE_CONVENTION,
     EXCHANGE_CONVENTION_METADATA_KEY,
@@ -32,7 +31,7 @@ from spin1_exchange_convention import (
 
 MANIFEST_NAME = "spin1_exchange_convention_migration_manifest.json"
 
-# These fields carry one power of energy under H_new = H_old / 2.  Keep this
+# These fields carry one power of energy under H_new = H_old / 2. Keep this
 # list deliberately explicit: ranks, dimensions, normalized witnesses, and
 # mixed-coordinate Jacobian singular values must not be rescaled heuristically.
 _ENERGY_EXACT_KEYS = {
