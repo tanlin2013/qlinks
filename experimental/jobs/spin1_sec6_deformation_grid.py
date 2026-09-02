@@ -58,9 +58,7 @@ _legacy._expected_half_width = _expected_half_width
 
 def _stamp_record(record: dict[str, Any]) -> dict[str, Any]:
     stamped = dict(record)
-    stamped[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = (
-        _convention.CURRENT_EXCHANGE_CONVENTION
-    )
+    stamped[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = _convention.CURRENT_EXCHANGE_CONVENTION
     stamped["schema_version"] = SCHEMA_VERSION
     stamped["window_protocol"] = WINDOW_PROTOCOL
     stamped["window_exponent"] = WINDOW_EXPONENT
@@ -126,9 +124,7 @@ def _write_checkpoint(
     stamped_worst = [
         {
             **item,
-            _convention.EXCHANGE_CONVENTION_METADATA_KEY: (
-                _convention.CURRENT_EXCHANGE_CONVENTION
-            ),
+            _convention.EXCHANGE_CONVENTION_METADATA_KEY: (_convention.CURRENT_EXCHANGE_CONVENTION),
         }
         for item in worst_rows
     ]
@@ -141,9 +137,7 @@ def _write_checkpoint(
     metadata_path = directory / "metadata.json"
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     metadata["schema_version"] = SCHEMA_VERSION
-    metadata[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = (
-        _convention.CURRENT_EXCHANGE_CONVENTION
-    )
+    metadata[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = _convention.CURRENT_EXCHANGE_CONVENTION
     temporary = metadata_path.with_name(f".{metadata_path.name}.tmp-{os.getpid()}")
     temporary.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     os.replace(temporary, metadata_path)
@@ -156,9 +150,10 @@ def _stamp_output_file(path: Path) -> None:
     if not path.is_file():
         return
     if path.suffix == ".csv":
-        if path.stat().st_size == 0:
+        try:
+            frame = pd.read_csv(path)
+        except pd.errors.EmptyDataError:
             return
-        frame = pd.read_csv(path)
         frame[_convention.EXCHANGE_CONVENTION_METADATA_KEY] = (
             _convention.CURRENT_EXCHANGE_CONVENTION
         )
