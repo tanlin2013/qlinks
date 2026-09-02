@@ -271,8 +271,7 @@ def validate_completed_common_window_export(
             )
         if float(row.covered_spectral_half_width) + 1.0e-10 < expected_half_width:
             raise CachedSpectrumUnavailableError(
-                "completed common-window export exceeds cached spectral coverage at "
-                f"L={int(row.L)}"
+                f"completed common-window export exceeds cached spectral coverage at L={int(row.L)}"
             )
         residual = float(row.window_max_eigenpair_residual)
         if math.isfinite(residual) and residual > PHYSICAL_RESIDUAL_TOLERANCE:
