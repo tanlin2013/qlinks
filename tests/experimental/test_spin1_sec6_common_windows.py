@@ -12,6 +12,7 @@ JOBS = ROOT / "experimental" / "jobs"
 if str(JOBS) not in sys.path:
     sys.path.insert(0, str(JOBS))
 
+import spin1_exchange_convention as convention  # noqa: E402
 import spin1_sec6_common_windows as common  # noqa: E402
 
 
@@ -19,12 +20,12 @@ def _write_complete_export(root: Path) -> None:
     rows = []
     for length in (8, 10, 12, 14):
         for protocol, half_width in (
-            ("quarter_power_c1", length**0.25),
-            ("fixed_width_1", 1.0),
+            (convention.PRIMARY_WINDOW_PROTOCOL, 0.5 * length**0.25),
+            (convention.FIXED_WINDOW_PROTOCOL, 0.5),
         ):
             for variant in ("raw", "clean"):
                 width = 0.1 / length
-                if length == 14 and protocol == "fixed_width_1":
+                if length == 14 and protocol == convention.FIXED_WINDOW_PROTOCOL:
                     width = 0.0237316428 if variant == "raw" else 0.0236713087
                 rows.append(
                     {
@@ -38,13 +39,25 @@ def _write_complete_export(root: Path) -> None:
                         "energy_block_count": 10,
                         "removed_projector_rank": 1,
                         "removed_fraction": 2.0e-4,
-                        "covered_spectral_half_width": 3.0,
+                        "covered_spectral_half_width": 1.5,
                         "window_max_eigenpair_residual": 1.0e-8,
+                        convention.EXCHANGE_CONVENTION_METADATA_KEY: (
+                            convention.CURRENT_EXCHANGE_CONVENTION
+                        ),
                     }
                 )
     pd.DataFrame(rows).to_csv(root / common.COMMON_NAME, index=False)
     for name in (common.CHECKPOINT_AUDIT_NAME, common.WORST_NAME, common.TOLERANCE_NAME):
-        pd.DataFrame([{"validated": True}]).to_csv(root / name, index=False)
+        pd.DataFrame(
+            [
+                {
+                    "validated": True,
+                    convention.EXCHANGE_CONVENTION_METADATA_KEY: (
+                        convention.CURRENT_EXCHANGE_CONVENTION
+                    ),
+                }
+            ]
+        ).to_csv(root / name, index=False)
 
 
 def test_completed_common_window_export_is_reused_before_heavy_kernel_import(
@@ -67,6 +80,9 @@ def test_completed_common_window_export_is_reused_before_heavy_kernel_import(
 
     assert len(frame) == 16
     assert (output / common.COMMON_NAME).is_file()
+    assert set(frame[convention.EXCHANGE_CONVENTION_METADATA_KEY]) == {
+        convention.CURRENT_EXCHANGE_CONVENTION
+    }
 
 
 def test_completed_common_window_export_checks_established_l14_anchor(
@@ -77,7 +93,7 @@ def test_completed_common_window_export_checks_established_l14_anchor(
     frame = pd.read_csv(path)
     mask = (
         (frame["L"] == 14)
-        & (frame["window_protocol"] == "fixed_width_1")
+        & (frame["window_protocol"] == convention.FIXED_WINDOW_PROTOCOL)
         & (frame["variant"] == "raw")
     )
     frame.loc[mask, "w_L"] = 0.5
@@ -90,7 +106,7 @@ def test_completed_common_window_export_checks_established_l14_anchor(
 def test_cache_validation_ignores_inaccurate_outer_shift_invert_vectors(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    energies = np.asarray([-10.0, -1.0, 0.0, 1.0, 10.0])
+    energies = np.asarray([-5.0, -0.5, 0.0, 0.5, 5.0])
     vectors = np.eye(5, dtype=np.complex128)
     metadata = {
         "L": 14,
@@ -99,10 +115,11 @@ def test_cache_validation_ignores_inaccurate_outer_shift_invert_vectors(
         "kappa_over_J": 0.1,
         "sector_dimension": 5,
         "requested_eigenpairs": 5,
+        convention.EXCHANGE_CONVENTION_METADATA_KEY: convention.CURRENT_EXCHANGE_CONVENTION,
     }
     # The outer two returned vectors deliberately have O(1) residuals, while every
-    # vector that can enter either common-window protocol is an exact eigenvector.
-    h_sector = np.diag([-9.0, -1.0, 0.0, 1.0, 9.0]).astype(np.complex128)
+    # vector that can enter either current common-window protocol is exact.
+    h_sector = np.diag([-4.5, -0.5, 0.0, 0.5, 4.5]).astype(np.complex128)
     monkeypatch.setattr(
         common,
         "_load_arrays",
@@ -123,7 +140,7 @@ def test_cache_validation_ignores_inaccurate_outer_shift_invert_vectors(
 def test_cache_validation_still_rejects_bad_vectors_inside_common_window(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    energies = np.asarray([-2.0, -1.0, 0.0, 1.0, 2.0])
+    energies = np.asarray([-1.0, -0.5, 0.0, 0.5, 1.0])
     vectors = np.eye(5, dtype=np.complex128)
     metadata = {
         "L": 14,
@@ -132,8 +149,9 @@ def test_cache_validation_still_rejects_bad_vectors_inside_common_window(
         "kappa_over_J": 0.1,
         "sector_dimension": 5,
         "requested_eigenpairs": 5,
+        convention.EXCHANGE_CONVENTION_METADATA_KEY: convention.CURRENT_EXCHANGE_CONVENTION,
     }
-    h_sector = np.diag([-2.0, -0.5, 0.0, 1.0, 2.0]).astype(np.complex128)
+    h_sector = np.diag([-1.0, -0.25, 0.0, 0.5, 1.0]).astype(np.complex128)
     monkeypatch.setattr(
         common,
         "_load_arrays",
