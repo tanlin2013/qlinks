@@ -23,8 +23,8 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-
 import spin1_exchange_convention as convention
+
 import spin1_sec6_provisioning as core
 
 MANUSCRIPT_WINDOW_PREFACTORS = (0.375, 0.5, 0.625)
