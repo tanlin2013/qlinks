@@ -97,11 +97,10 @@ case "${STAGE}" in
         JOB_COMMAND=(
             python experimental/jobs/spin1_exchange_convention_render_p0.py
             --data-dir "${P0_DERIVED_DIR}"
-            --historical-source-dir "${P0_SOURCE_DIR}"
             --source-run-id "${P0_SOURCE_RUN_ID}"
         )
         [[ "${USE_TEX}" == "0" ]] || JOB_COMMAND+=(--use-tex)
-        SOLVE_POLICY="solver-free manifest verification/repair, convention-aware integration formatting, and rendering"
+        SOLVE_POLICY="solver-free completed-manifest/hash verification and direct rendering"
         ;;
     *)
         echo "unknown stage: ${STAGE}" >&2
@@ -168,11 +167,10 @@ Recommended sequence with one explicit timestamped run id:
   QLINKS_EVIDENCE_RUN_ID=${RUN_ID} scripts/docker/docker_run_spin1_exchange_convention_migration.sh --stage jacobian-l8
   QLINKS_EVIDENCE_RUN_ID=${RUN_ID} scripts/docker/docker_run_spin1_exchange_convention_migration.sh --stage render-p0
 
-The render-p0 stage verifies the convention-migration manifest. If the manifest is
-missing, it reconstructs it only after byte-for-byte deterministic verification of the
-mapped CSV/JSON products against the immutable P0 source. It then rebuilds the
-convention-stamped Fig. 6 integration tables and renders them. The stage is solver-free
-and can be rerun safely.
+The render-p0 stage requires a completed P0 migration manifest. It verifies every
+renderer input against the manifest path and SHA-256 record and then renders the
+already-integrated mapped products directly. It does not reconstruct a manifest or
+rerun Sec. VI integration. The stage is solver-free and can be rerun safely.
 
 For the optional L=10 dense spot check, rerun only the validation stage with:
   QLINKS_SPIN1_CONVENTION_DENSE_SIZES=8,10 QLINKS_EVIDENCE_RUN_ID=${RUN_ID} \
