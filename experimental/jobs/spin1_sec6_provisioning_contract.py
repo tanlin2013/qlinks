@@ -1,16 +1,18 @@
 """Draft-contract layer for the restartable Spin-1 Sec. VI provisioning workflow.
 
 The core provisioning module owns spectral checkpointing, sector construction,
-RDM diagnostics, and orchestration.  This module supplies two presentation-level
-contracts from the 2026-08-19 draft handoff without duplicating numerical work:
+RDM diagnostics, and orchestration. This module supplies two presentation-level
+contracts without duplicating numerical work:
 
-1. use the complete manuscript window grid c L^alpha for
-   c in {0.75, 1, 1.25}, alpha in {1/2, 1/4, 0}, dropping only sparse windows
-   that are not spectrally covered;
+1. use the complete current-convention window grid c L^alpha for
+   c in {0.375, 0.5, 0.625}, alpha in {1/2, 1/4, 0}, dropping only sparse
+   windows that are not spectrally covered;
 2. retain and export the actual 19x19 block-invariant covariance matrices from
    the same calls that produce the concentration summaries.
 
-It is intentionally experimental and may evolve together with the draft.
+The prefactors are exactly one half of the historical {0.75, 1, 1.25} grid,
+so they select the same physical eigenstate sets under
+H_new = H_legacy / 2 at h=D=0.
 """
 
 from __future__ import annotations
@@ -21,9 +23,11 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import spin1_exchange_convention as convention
+
 import spin1_sec6_provisioning as core
 
-MANUSCRIPT_WINDOW_PREFACTORS = (0.75, 1.0, 1.25)
+MANUSCRIPT_WINDOW_PREFACTORS = (0.375, 0.5, 0.625)
 MANUSCRIPT_WINDOW_EXPONENTS = (0.5, 0.25, 0.0)
 
 
@@ -33,7 +37,7 @@ def _manuscript_window_specs(
     *,
     dense: bool,
 ) -> list[tuple[str, float, float, float]]:
-    """Return the manuscript window grid; sparse coverage is filtered downstream."""
+    """Return the current-convention window grid; coverage is filtered downstream."""
 
     del dense, config
     rows: list[tuple[str, float, float, float]] = []
@@ -66,6 +70,9 @@ def _covariance_long_form(
                         "row_operator": row_name,
                         "column_operator": column_name,
                         "covariance": float(matrix[row_index, column_index]),
+                        convention.EXCHANGE_CONVENTION_METADATA_KEY: (
+                            convention.CURRENT_EXCHANGE_CONVENTION
+                        ),
                     }
                 )
     return pd.DataFrame(rows)
@@ -74,7 +81,7 @@ def _covariance_long_form(
 def run_sec6_provisioning(
     config: core.Sec6ProvisioningConfig,
 ) -> dict[str, pd.DataFrame]:
-    """Run the core P0 workflow with the full draft window/covariance contract."""
+    """Run the core P0 workflow with the full current window/covariance contract."""
 
     original_window_specs = core._window_specs
     original_concentration = core._concentration_at_point
@@ -174,6 +181,7 @@ def run_sec6_provisioning(
             "manuscript_window_exponents": list(MANUSCRIPT_WINDOW_EXPONENTS),
             "representative_covariance_matrix_rows": int(len(representative)),
             "all_large_size_covariance_matrix_rows": int(len(covariance)),
+            convention.EXCHANGE_CONVENTION_METADATA_KEY: (convention.CURRENT_EXCHANGE_CONVENTION),
         }
     )
     summary_path.write_text(

@@ -13,6 +13,7 @@ RUNNER = ROOT / "scripts/docker/docker_run_spin1_sec6_p1.sh"
 JACOBIAN = JOBS / "spin1_sec6_p1_jacobian_l8.py"
 REFINEMENT = JOBS / "spin1_sec6_p1_kappa_refinement.py"
 THREE_SITE = JOBS / "spin1_sec6_p1_three_site_concentration.py"
+THREE_SITE_LEGACY = JOBS / "spin1_sec6_p1_three_site_concentration_legacy.py"
 
 
 def _load(path: Path, name: str):
@@ -35,7 +36,9 @@ def test_three_site_charge_algebra_has_locked_dimension_and_is_orthonormal() -> 
 
 def test_p1_solver_boundaries_are_mechanical() -> None:
     refinement = REFINEMENT.read_text(encoding="utf-8")
-    three_site = THREE_SITE.read_text(encoding="utf-8")
+    three_site_adapter = THREE_SITE.read_text(encoding="utf-8")
+    three_site_kernel = THREE_SITE_LEGACY.read_text(encoding="utf-8")
+    three_site = three_site_adapter + "\n" + three_site_kernel
     jacobian = JACOBIAN.read_text(encoding="utf-8")
 
     assert "TARGET_LENGTHS = (8, 10, 12)" in refinement
@@ -44,9 +47,9 @@ def test_p1_solver_boundaries_are_mechanical() -> None:
     assert "eigsh" not in refinement
     assert "_partial_spectrum" not in refinement
 
-    assert "TARGET_LENGTHS = (8, 10, 12)" in three_site
-    assert "LOCAL_ALGEBRA_DIMENSION = 141" in three_site
-    assert "discover_checkpoint_directories" in three_site
+    assert "TARGET_LENGTHS = (8, 10, 12)" in three_site_kernel
+    assert "LOCAL_ALGEBRA_DIMENSION = 141" in three_site_kernel
+    assert "discover_checkpoint_directories" in three_site_kernel
     assert "eigsh" not in three_site
     assert "eigh(" not in three_site
     assert "_partial_spectrum" not in three_site

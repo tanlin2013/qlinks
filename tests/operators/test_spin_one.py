@@ -42,6 +42,27 @@ def test_spin_one_xy_bond_affected_variables() -> None:
     )
 
 
+def test_spin_one_xy_bond_conventional_j_matrix_element() -> None:
+    lattice = ChainLattice(2, boundary_condition="open")
+    layout = VariableLayout.from_lattice_sites(lattice, LocalSpace.spin_one())
+    coupling = 1.7
+    op = SpinOneXYBondOperator(
+        layout=layout,
+        lattice=lattice,
+        link_id=0,
+        coefficient=coupling,
+    )
+
+    for config in (
+        np.array([1, -1], dtype=np.int64),
+        np.array([-1, 1], dtype=np.int64),
+    ):
+        actions = op.apply(config)
+        assert len(actions) == 1
+        np.testing.assert_array_equal(actions[0].config, np.array([0, 0], dtype=np.int64))
+        np.testing.assert_allclose(actions[0].coefficient, coupling, atol=1.0e-12)
+
+
 @pytest.mark.parametrize(
     "config, expected_configs",
     [

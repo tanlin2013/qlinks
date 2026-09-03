@@ -1,101 +1,152 @@
 # Section VI numerical provisioning cache
 
-**Updated:** 2026-08-26
-**Authoritative production base:** `data/evidence_jobs/spin1_production_20260806T074051Z/`
-**Sparse-convergence addendum:** `data/evidence_jobs/spin1_production_20260810T082123Z/`
-**Sec. VI provisioning addendum:** `data/evidence_jobs/spin1_sec6_provisioning_20260820T052954Z/`
-**Common-window integration addendum:** `data/evidence_jobs/spin1_sec6_integration_20260825T073925Z/`
+**Updated:** 2026-09-03
+**Permanent exchange convention:** `J_over_2_ladder_v1`
+**Historical production base:** `data/evidence_jobs/spin1_production_20260806T074051Z/`
+**Historical sparse-convergence addendum:** `data/evidence_jobs/spin1_production_20260810T082123Z/`
+**Historical Sec. VI provisioning addendum:** `data/evidence_jobs/spin1_sec6_provisioning_20260820T052954Z/`
+**Historical common-window integration addendum:** `data/evidence_jobs/spin1_sec6_integration_20260825T073925Z/`
 
-## Purpose
+## Status and migration rule
 
-This is the short-term qlinks handoff for the **remaining** Sec. VI work.  Do
-not rerun evidence that is already cached and validated.  The 20260825
-integration addendum closes the homogeneous representative concentration
-sequence under both the primary `W_L(gamma=1/4,c=1)` window and the fixed
-`Delta E=1` control, and it supplies final common-protocol source data for
-Fig. 6(a,b), the Appendix-D beta-zero bridge figure, and the complex-`t2`
-obstruction figure.  The remaining P0 numerical work is now restricted to the
-common-window **deformation grid** needed for Fig. 6(c) and the family band in
-Fig. 6(d), followed by stable CSV-driven figure rendering.  Larger-size
-family-wide and open-interval upgrades remain P1.
+The August timestamped evidence folders are **immutable historical inputs**. They were
+produced through manuscript-facing helpers that used a ladder prefactor of one. The
+low-level qlinks Spin-1 exchange operator itself was already conventional, so the old
+helpers effectively supplied twice the intended exchange coefficient.
 
-The file `spin1_xy_sec6_integration_audit.json` inside the 20260825 folder is
-stale: it was written before the later common-window covariance stage and still
-marks that stage pending.  The completed CSV/summary products in the same folder
-are authoritative.  Regenerate the audit manifest before launching any new
-work so future resumptions do not misclassify completed checkpoints.
+All new qlinks calculations and all manuscript-facing derived evidence use
+
+\[
+H_{XY}=J\sum_r(S_r^xS_{r+1}^x+S_r^yS_{r+1}^y)
+=\frac{J}{2}\sum_r(S_r^+S_{r+1}^-+S_r^-S_{r+1}^+).
+\]
+
+For the completed `h=D=0` Sec. VI evidence the migration is exact:
+
+\[
+H_{\rm new}=\frac12H_{\rm legacy},\qquad
+E_{\rm new}=\frac12E_{\rm legacy},
+\]
+
+with unchanged eigenvectors. Therefore normalized witness expectation values,
+trace-distance diagnostics, dark ranks, state counts, and covariance widths are
+unchanged when the energy window is also divided by two. Energy-dimensional residuals,
+gaps, tolerances, and spectral coverage are divided by two; matched `beta J` values are
+doubled.
+
+Do **not** edit or overwrite the historical folders. Use
+`spin1_exchange_convention_migrate_evidence.py` or the dedicated Docker runner to
+construct a convention-stamped derived layer.
+
+P0 is scientifically and numerically closed. This convention migration is a
+normalization/provenance repair, not a request for a new `L=14` production solve.
 
 ## Locked Hamiltonian and representative point
 
-Use
+Define
 
 \[
-K_d(t_d)=\sum_r\left[t_dS_r^+S_{r+d}^-+t_d^*S_r^-S_{r+d}^+\right],
+K_d(t_d)=\frac12\sum_r\left[
+ t_dS_r^+S_{r+d}^-+t_d^*S_r^-S_{r+d}^+
+\right],
 \]
+
+and
 
 \[
 H_\kappa=K_1(J)+K_3(0.1J)+K_2(i\kappa),
 \qquad \kappa_\star/J=0.1.
 \]
 
-Use even `L>=8`, PBC, `M=-2`, the tower momentum sector, and `h=D=0` for
-thermodynamic fits.  `L=6` may remain as a visual/pre-asymptotic control only:
-for that ring the range-three bond coincides with its reverse under the current
-translation-invariant sum convention. The exact
-compatibility rule is
+Use even `L>=8`, PBC, `M=-2`, the tower momentum sector, and `h=D=0` for the
+representative thermodynamic evidence. `L=6` is only a pre-asymptotic/geometry control
+because range three coincides with its reverse on that ring.
+
+The exact tower-compatibility rule remains
 
 \[
 t_d^*+(-1)^dt_d=0.
 \]
 
-The representative point breaks ordinary inversion and the unitary `C_A`
-anticommutation but retains the antiunitary spectral reflection
-`Theta=C_A K`. Keep exact-energy blocks basis independent.
+The factor `1/2` multiplies the complete kinetic operator and therefore does not alter
+this zero condition.
+
+The representative point continues to break ordinary inversion and the unitary
+`C_A` anticommutation while retaining the antiunitary spectral reflection
+`Theta=C_A K`. Exact-energy blocks remain basis independent.
 
 The principal sampled positive grid remains
 
-`kappa/J in {0.05,0.10,0.15,0.20}`.
+`kappa/J in {0.05, 0.10, 0.15, 0.20}`,
 
-Treat `kappa=0` as a symmetry-enhanced endpoint control.
+with `kappa=0` used only as a symmetry-enhanced endpoint control.
 
-## Completed representative-point evidence
+## Convention checks that must remain mechanical
 
-### Direct microcanonical sequence
+For a nearest-neighbor exchange with parameter `J`, qlinks must satisfy
+
+\[
+\langle 00|H|+-\rangle
+=\langle 00|H|-+\rangle=J.
+\]
+
+The migration validation job also checks:
+
+- the two `L=5`, `M=-2` shell modes have kinetic energies `0` and `-2J` with zero
+  boundary residual;
+- the decorated `L=4,n=1` PBC counterexample has normalized residual
+  `sqrt(2)|J|`;
+- homogeneous and finite-`D` Hamiltonians obey the exact old-to-new factor-one-half
+  mapping;
+- optional dense `L=8`/`L=10` spot checks reuse the old eigenvectors with eigenvalues
+  divided by two;
+- the generic `L=8` cage/Jacobian quantity is remeasured rather than inferred from
+  the old mixed-coordinate Jacobian.
+
+These are cheap checks. They do not justify or require an `L=14` eigensolve.
+
+## Completed representative-point evidence in current units
 
 At `kappa_star/J=0.1`, the translated joint-dark projector has rank one through
-`L=14`. For `L=14` the spectrum was obtained with `sparse_shift_invert` and
-8192 eigenpairs in a resolved sector of dimension 35925. The computed spectrum
-covers
+`L=14`. The historical `L=14` calculation returned 8192 shift-invert eigenpairs in a
+resolved sector of dimension 35925. In the permanent convention the same returned
+vectors cover approximately
 
 \[
-|E|\lesssim 2.08384.
+|E|\lesssim 1.04192,
 \]
 
-The original `Delta E proportional to L^(1/2)` window is therefore **not**
-covered at `L=14`, and must not be used there. The narrower windows below lie inside the returned spectral range.  Their
-microcanonical observables are now certified under the tested eigenpair-budget
-increase described below.
+rather than the historical displayed `2.08384`.
 
-For the `L^(1/4)`, prefactor-1 window,
+The permanent primary window is
 
 \[
-\Delta E_{14}=1.93351<2.08384,
+W_L:\qquad \Delta E=\frac{J}{2}L^{1/4},
 \]
 
-with 7615 raw and 7614 retained states. The defining raw `L=14` values are
+with protocol name `quarter_power_c0p5`. For `J=1` and `L=14`,
+
+\[
+\Delta E_{14}=0.966755<1.04192.
+\]
+
+It contains the same 7615 raw and 7614 retained states as the historical
+`L^(1/4)` prefactor-one window. The defining raw witness values are unchanged:
 
 \[
 (\tau_A,\tau_Z,\tau_Y)_{L=14}^{\rm raw}
 =(0.113204,0.220109,0.328044),
 \]
 
-while the cleaned companion is `(0.113212,0.220243,0.328219)`. Across
-`L=8,10,12,14`, the raw state counts are `28,157,1083,7615`, giving
-`log(N_win)/L = 0.4165,0.5056,0.5823,0.6384`. Treat this only as a
-positive-entropy consistency trend, not a proof of the limiting entropy density.
+with cleaned companion `(0.113212,0.220243,0.328219)`.
 
-For the same window convention, the raw--raw and clean--clean matching
-sequences are
+Across `L=8,10,12,14`, the primary raw state counts remain
+`28,157,1083,7615`, so the previously recorded `log(N_win)/L` sequence is unchanged.
+It remains a positive-entropy consistency trend rather than a proof of a limiting
+entropy density.
+
+The raw--raw and clean--clean matching sequences are likewise invariant under the
+uniform energy rescaling:
 
 \[
 \Delta_L^{\rm rr}
@@ -108,252 +159,101 @@ sequences are
 \quad (L=8,10,12,14).
 \]
 
-A fixed-width `Delta E about 1` window is also contained inside the returned `L=14` range (4011
-raw states) and gives `Delta_14^cc=0.012882`, so the apparent `L=12 -> 14`
-plateau is not explained simply by using the largest available window.
-
-The convergence addendum reran the same `L=14` sector with 10000 requested
-shift-invert eigenpairs.  The covered half-width increased from `2.08384` to
-`2.55396`, while the raw state counts in the `L^(1/4)`, `Delta E=1`, and
-`Delta E=0.75` windows remained `7615`, `4011`, and `3063`.  Across those
-windows, increasing the budget changes each cleaned microcanonical witness and
-`Delta^cc` by at most `2.6e-11`; all exported `converged_vs_previous` flags are
-true.  The `O(10^-2)` matching plateau is therefore not caused by the earlier
-8192-eigenpair cutoff.  It remains a finite-size/window/ensemble-resolution
-question, not a sparse-budget question.
-
-The exact fixed-`M`, `beta=0` limits remain `(1/9,2/9,1/3)`, but they are an
-auxiliary reference only until local microcanonical--trace equivalence is
-settled.
-
-### Two-site concentration
-
-The complete magnetization-preserving two-site Hermitian algebra has dimension
-19.  The 20260825 integration addendum closes the homogeneous representative
-sequence.  Under the primary `W_L(gamma=1/4,c=1)` protocol, the **raw** widths
-for `L=8,10,12,14` are
+The permanent fixed control is
 
 \[
-0.1685908,\quad 0.0763339,\quad 0.0469195,\quad 0.0174573,
+\Delta E=J/2,
 \]
 
-and are strictly decreasing.  The independent fixed-width `Delta E=1` control
-is also strictly decreasing,
+with protocol name `fixed_width_0p5`. At `J=1` it contains the same 4011 raw `L=14`
+states as the historical `Delta E=1` control and gives the same normalized
+`Delta_14^cc=0.012882`.
+
+The historical 10000-eigenpair convergence calculation must not be repeated. In current
+units its covered half-width is
+
+\[
+1.27698
+\]
+
+instead of `2.55396`. The preserved state counts for the current primary, fixed
+`J/2`, and current `Delta E=0.375` controls are respectively `7615`, `4011`, and
+`3063`. The previously established cross-budget changes of at most `2.6e-11` in the
+normalized cleaned observables remain valid.
+
+The exact fixed-`M`, `beta=0` limits remain `(1/9,2/9,1/3)`.
+
+## Two-site concentration
+
+The complete magnetization-preserving two-site Hermitian algebra has dimension 19.
+The convention migration does not change the normalized covariance widths when the
+window is mapped to the same eigenstate set.
+
+For the permanent primary `quarter_power_c0p5` window the raw widths for
+`L=8,10,12,14` remain
+
+\[
+0.1685908,\quad 0.0763339,\quad 0.0469195,\quad 0.0174573.
+\]
+
+For the permanent `fixed_width_0p5` control they remain
 
 \[
 0.1760308,\quad 0.0927004,\quad 0.0616927,\quad 0.0237316.
 \]
 
-The primary-window raw state counts are `28,157,1083,7615`; the fixed-width
-counts are `24,101,609,4011`.  Raw and joint-dark-cleaned widths remain close,
-and the exact-energy grouping tolerance audit is stable.  No concentration
-power-law exponent is fitted or required.
+The corresponding raw state counts remain `28,157,1083,7615` and
+`24,101,609,4011`. No concentration exponent is fitted or required.
 
-## Mandatory checkpoint / resume discipline
+## Cache and provenance discipline
 
-**qlinks: read this block before launching any Sec. VI integration job.**
+1. Historical August evidence is read-only.
+2. A current product must explicitly declare
+   `spin1_xy_exchange_convention = J_over_2_ladder_v1`.
+3. Missing convention metadata means historical legacy only inside the explicit
+   migration/rescaling path; active numerical jobs must not silently interpret it as
+   current.
+4. Legacy spectral arrays may be reused only by mapping eigenvalues and
+   energy-dimensional metadata by `1/2`, keeping eigenvectors unchanged, and validating
+   the mapped eigenpairs against the current Hamiltonian.
+5. Current spectral checkpoints are schema-v2 and convention-stamped.
+6. No implicit eigensolver fallback is allowed when an old/incompatible checkpoint is
+   found.
+7. Never repeat the historical `L=14` 10000-eigenpair convergence calculation merely to
+   rebuild tables or figures.
+8. Figure renderers consume already-mapped energy-density columns and must never apply a
+   second factor of `1/2`.
 
-1. **Regenerate the integration audit first.**  The current
-   `spin1_xy_sec6_integration_audit.json` is stale and predates the completed
-   common-window covariance stage.  Re-scan the run folder, record every
-   existing product checksum, and mark P0-A/common-window representative
-   concentration as closed before deciding what to run.
-2. **Validate and reuse before computing.**  Reuse the validated dense caches
-   at `L=8,10,12` and the certified `L=14` 8192-eigenpair checkpoint.  Never
-   rerun the 10000-eigenpair convergence calculation or any completed
-   representative covariance merely to rebuild figures.
-3. **No implicit eigensolver fallback.**  Missing cache/data must cause an
-   explicit `PENDING`/`MISSING_CHECKPOINT` status, not an automatic heavy solve.
-   A heavy solve may run only when the requested task below explicitly requires
-   it.
-4. **Checkpoint every `(L,kappa)` unit immediately.**  For the remaining
-   deformation grid, persist the validated eigensystem metadata and derived raw
-   witness/covariance row after each `kappa` and each size.  Do not wait until
-   the full grid or notebook finishes.
-5. **Write aggregate CSVs incrementally and atomically.**  After each completed
-   unit, update the panel-C deformation CSV and panel-D family-band source table
-   (or a resumable row cache) and flush a progress manifest.  A plotting or
-   pandas failure must never invalidate completed numerical rows.
-6. **Checkpoint before rendering.**  Figure scripts must consume stable exported
-   CSVs only.  Record the exact CSV checksums/source manifest before generating
-   SVG/PDF/PNG.  Rendering failure must not trigger numerical recomputation.
-7. **On every resumed run, validate checkpoints rather than trusting filenames.**
-   Check sector labels, `L`, `kappa`, window definition, state count, spectral
-   coverage, residuals, and operator-basis/version metadata.
-8. **Preserve completed products.**  Do not overwrite the authoritative
-   20260825 common-window CSVs with partial/legacy-window data.  New products
-   should either append compatible rows or carry a new run id/version.
+## One-time migration runner
 
-## P0 tasks
+After the migration PR is merged, use one explicit timestamped run ID:
 
-### P0.1 -- close bookkeeping and freeze completed representative products
+```bash
+export QLINKS_EVIDENCE_RUN_ID=spin1_exchange_convention_migration_20260903T000000Z
+export QLINKS_NUM_THREADS=16
 
-Regenerate the stale integration audit so it recognizes the following products
-as complete and reusable:
+scripts/docker/docker_run_spin1_exchange_convention_migration.sh --stage status
+scripts/docker/docker_run_spin1_exchange_convention_migration.sh --stage migrate-p0
+scripts/docker/docker_run_spin1_exchange_convention_migration.sh --stage migrate-p1
+scripts/docker/docker_run_spin1_exchange_convention_migration.sh --stage validate
+scripts/docker/docker_run_spin1_exchange_convention_migration.sh --stage jacobian-l8
+scripts/docker/docker_run_spin1_exchange_convention_migration.sh --stage render-p0
+```
 
-- `spin1_xy_kappa0p1_concentration_common_windows.csv`;
-- `spin1_xy_kappa0p1_common_window_summary.json`;
-- `spin1_xy_figure6_panel_a_scatter.csv`;
-- `spin1_xy_figure6_panel_b_witness_sequence.csv`;
-- `spin1_xy_appendix_beta0_bridges_data.csv`;
-- `spin1_xy_appendix_complex_t2_obstruction_data.csv`;
-- common-window checkpoint and tolerance audits.
+Replace the example timestamp with the actual run timestamp. The default cheap dense
+validation is `L=8`. An optional `L=10` spot check may be requested by setting
 
-Acceptance: the regenerated audit must report the primary and fixed-width
-representative concentration sequences as complete at `L=8,10,12,14`, with no
-missing-size list and no request to recompute them.
+```bash
+QLINKS_SPIN1_CONVENTION_DENSE_SIZES=8,10
+```
 
-### P0.2 -- common-window deformation data for Fig. 6(c)
-
-At `L=12`, compute or validate/reuse raw microcanonical `tau_A,tau_Z,tau_Y` on
-the positive grid
-
-`kappa/J in {0.05,0.10,0.15,0.20}`
-
-using exactly the primary `W_L(gamma=1/4,c=1)` protocol.  `kappa=0` remains a
-symmetry-enhanced endpoint control and should not define the positive-interior
-curve.
-
-Export/update:
-
-- `spin1_xy_figure6_panel_c_deformation.csv`;
-- per-`kappa` checkpoint rows containing sector labels, window half-width, raw
-  state count, joint-dark rank, tower residual, spectral coverage, and maximum
-  in-window eigenpair residual.
-
-**Checkpoint after every kappa value.**  If one point fails, preserve the other
-completed points and report only that point pending.
-
-### P0.3 -- common-window family concentration band for Fig. 6(d)
-
-For `L=8,10,12` and the same positive grid, compute/validate the complete
-19-operator **raw** covariance using `W_L(1/4,1)`.  The representative
-`kappa_star/J=0.1` line through `L=14` is already complete and must be reused.
-
-Export:
-
-- one resumable row per `(L,kappa)` with `w_L^raw`, state count, joint-dark
-  rank/fraction, energy-block count, spectral coverage, residual audit, and
-  worst eigenoperator metadata;
-- `spin1_xy_figure6_panel_d_family_band.csv` containing the positive-grid
-  `min/max` envelope for each `L=8,10,12` plus the representative line through
-  `L=14`.
-
-**Checkpoint after every `(L,kappa)` covariance.**  Do not recompute completed
-representative rows or older sizes if validation passes.
-
-### P0.4 -- render final PRX figures from stable CSVs
-
-Once P0.2--P0.3 source tables are complete, render the main figure independently
-of the evidence notebook:
-
-- `spin1_xy_figure6_prx.svg`;
-- `spin1_xy_figure6_prx.pdf`;
-- preview PNG;
-- source-data/checksum manifest and physical-dimension/font audit.
-
-Also render Appendix-D support figures:
-
-1. homogeneous-window concentration systematics (source data already complete);
-2. two-bridge `beta=0` RDM distances/witness differences (source data complete);
-3. complex-`t2` obstruction plane (source data complete).
-
-Rendering must be a pure postprocessing step.  A figure-generation failure must
-never invoke or repeat an eigensolver/covariance calculation.
-
-## Closed by the 20260810--20260825 evidence chain
-
-- `L=14` sparse-budget certification under `8192 -> 10000`;
-- post-convergence checkpoint/postprocessing repair;
-- representative raw microcanonical witness sequence through `L=14`;
-- representative complete two-site covariance under **two homogeneous** window
-  protocols at `L=8,10,12,14`;
-- common primary-window Fig. 6(a) scatter and Fig. 6(b) witness-sequence source
-  data;
-- two-bridge local RDM decomposition;
-- resolved `(M,k)` to fixed-`M` `beta=0` bridge, which falls to `2.78e-5` at
-  `L=14`;
-- residual-operator spectrum/coefficients;
-- Appendix-D complex-`t2` obstruction source grid;
-- exact-energy tolerance and common-window checkpoint audits.
-
-The remaining auxiliary `beta=0` uncertainty is the first bridge
-`rho_mc^(M,k) <-> rho_beta0^(M,k)`, which remains `O(10^-2)` at `L=14`.
-Do not schedule `L=16` merely to resolve this before the deformation-grid and
-figure P0 tasks are complete.
-
-## P1 tasks
-
-1. **Nonrepresentative `L=14` family point:** the 20260820 job has
-   `run_family_large_size=false`; preferably compute `kappa/J=0.20` after P0 if
-   a stronger larger-size family-wide claim is desired.  One extra point is not
-   a full `L=14` kappa envelope.
-2. **Grid refinement / continuity:** required for an open-interval ICQMBS claim.
-3. **Larger local region / upgrade argument:** required for a literal
-   Definition III.2 certification over every fixed bounded region.  Otherwise
-   retain the wording “complete two-site concentration.”
-4. **Finite-beta deformation grid:** optional generality evidence only.
-
-## Fig. 6 PRX design contract
-
-The final main figure should communicate one physical sentence: the exact caged
-tower is spectrally embedded but locally separated from an increasingly
-concentrated thermal background, and this separation persists under the
-compatible deformation.
-
-- **(a) Representative ETH scatter:** raw background at `L=12`,
-  `kappa_star/J=0.1`; three A/Z/Y mini-axes are acceptable; shade the primary
-  window; show the tower prominently; avoid a large legend.
-- **(b) Representative local separation:** raw A/Z/Y microcanonical values
-  versus `L`; optional thin fixed-`M` `beta=0` asymptotes as auxiliary guides;
-  no cleaned curves or matching-distance subpanel.
-- **(c) Deformation persistence:** raw A/Z/Y microcanonical values versus
-  positive `kappa/J` at `L=12`; mark `kappa_star/J=0.1`; zero baseline denotes
-  the exact caged values.  Move `Delta_L(kappa)` to Appendix D.
-- **(d) Background concentration:** line/band plot rather than the current
-  sparse heatmap.  Plot representative raw `w_L(kappa_star)` through `L=14`
-  plus a light sampled-positive-kappa min--max band through `L=12`.  No fitted
-  critical/power-law exponent in the main figure.
-
-Use final REVTeX two-column dimensions, base typography about 8.5--9 pt,
-integer-only `L` ticks, marker shapes in addition to color, and SVG/PDF exports.
-
-## Appendix D figure contract
-
-- **Window concentration:** `w_L^raw` for homogeneous `W_L(1/4,1)` and fixed
-  `Delta E=1`; pair with state-count/entropy-density trend or removed-fraction
-  control.
-- **Two beta-zero bridges:** plot the two RDM trace distances versus `L` (log-y
-  is appropriate because the second bridge falls by orders of magnitude) and
-  the first-bridge A/Z/Y differences.  Residual-operator coefficients can
-  remain tabular unless a stable direction emerges.
-- **Complex-t2 obstruction:** 2D residual map in `Re(t_2/J), Im(t_2/J)`, with
-  the exact compatible line `Re(t_2)=0` and `t_2/J=i0.1` marked.  This supports
-  the analytic compatibility rule of Sec. VI.C and belongs in the appendix.
+for the `validate` stage. The migration runner contains no `L=14` eigensolve route.
 
 ## Claim boundary
 
-Already established:
-
-- exact compatible caged family and bounded `A,Z,Y` construction;
-- positive raw same-Hamiltonian microcanonical witness values through the
-  solver-certified `L=14` contained-window sequence at the representative point;
-- rank-one translated-joint-dark inventory through `L=14`;
-- complete two-site concentration at the representative point under two
-  homogeneous `L=8,10,12,14` window protocols; the primary `L^(1/4)` raw
-  sequence narrows `0.1685908 -> 0.0763339 -> 0.0469195 -> 0.0174573`;
-- resolved-to-fixed-`M` `beta=0` local equivalence is numerically negligible by
-  `L=14`; the remaining matching issue lies in the microcanonical-to-resolved
-  bridge.
-
-Still provisioned:
-
-- common-window deformation-grid data for Fig. 6(c) and the family band in
-  Fig. 6(d);
-- controlled direct raw-microcanonical thermodynamic lower bound and positive
-  raw-window entropy-density control;
-- a larger-size family-wide point/envelope;
-- grid refinement/continuity for an open interval;
-- a larger-region concentration test or independent upgrade argument before a
-  literal all-bounded-region ICQMBS certification;
-- final Fig. 6 and Appendix-D figure regeneration under the common protocol.
+The migration does not strengthen or weaken the approved Sec. VI scientific claim. It
+puts the draft and qlinks on the conventional exchange normalization while preserving
+the already-established finite-size evidence exactly where the mapping is uniform.
+The manuscript claim remains strong finite-size evidence for deformation-stable
+interference-caged many-body scars; a literal thermodynamic open-interval theorem is
+not inferred from this normalization repair.

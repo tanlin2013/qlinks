@@ -12,7 +12,14 @@ JOBS = ROOT / "experimental" / "jobs"
 if str(JOBS) not in sys.path:
     sys.path.insert(0, str(JOBS))
 
+import spin1_exchange_convention as convention  # noqa: E402
 import spin1_sec6_refresh_integration_audit as refresh  # noqa: E402
+
+
+def _stamp(frame: pd.DataFrame) -> pd.DataFrame:
+    result = frame.copy()
+    result[convention.EXCHANGE_CONVENTION_METADATA_KEY] = convention.CURRENT_EXCHANGE_CONVENTION
+    return result
 
 
 def _write_integration_products(root: Path) -> None:
@@ -20,8 +27,11 @@ def _write_integration_products(root: Path) -> None:
     rows = []
     for length in refresh.TARGET_LENGTHS:
         for protocol, half_width in (
-            (refresh.PRIMARY_WINDOW_PROTOCOL, length**0.25),
-            (refresh.FIXED_WINDOW_PROTOCOL, 1.0),
+            (
+                refresh.PRIMARY_WINDOW_PROTOCOL,
+                convention.PRIMARY_WINDOW_PREFACTOR * length**convention.PRIMARY_WINDOW_EXPONENT,
+            ),
+            (refresh.FIXED_WINDOW_PROTOCOL, convention.FIXED_CONTROL_HALF_WIDTH),
         ):
             for variant in ("raw", "clean"):
                 rows.append(
@@ -33,11 +43,11 @@ def _write_integration_products(root: Path) -> None:
                         "window_half_width": half_width,
                         "w_L": 1.0 / length,
                         "window_state_count": 20 + length,
-                        "covered_spectral_half_width": 10.0,
-                        "window_max_eigenpair_residual": 2.0e-6,
+                        "covered_spectral_half_width": 5.0,
+                        "window_max_eigenpair_residual": 1.0e-6,
                     }
                 )
-    pd.DataFrame(rows).to_csv(
+    _stamp(pd.DataFrame(rows)).to_csv(
         root / "spin1_xy_kappa0p1_concentration_common_windows.csv",
         index=False,
     )
@@ -50,6 +60,9 @@ def _write_integration_products(root: Path) -> None:
                     refresh.FIXED_WINDOW_PROTOCOL,
                 ],
                 "power_law_fit_computed": False,
+                convention.EXCHANGE_CONVENTION_METADATA_KEY: (
+                    convention.CURRENT_EXCHANGE_CONVENTION
+                ),
             }
         )
         + "\n",
@@ -64,7 +77,7 @@ def _write_integration_products(root: Path) -> None:
         "spin1_xy_appendix_beta0_bridges_data.csv",
         "spin1_xy_appendix_complex_t2_obstruction_data.csv",
     ):
-        pd.DataFrame([{"value": 1.0}]).to_csv(root / name, index=False)
+        _stamp(pd.DataFrame([{"value": 1.0}])).to_csv(root / name, index=False)
 
 
 def _validation() -> dict[str, object]:
@@ -124,6 +137,9 @@ def test_refresh_recognizes_completed_deformation_grid(
                 "pending_points": [],
                 "completed_count": 12,
                 "target_count": 12,
+                convention.EXCHANGE_CONVENTION_METADATA_KEY: (
+                    convention.CURRENT_EXCHANGE_CONVENTION
+                ),
             }
         )
         + "\n",
@@ -141,6 +157,8 @@ def test_refresh_recognizes_completed_deformation_grid(
     )
 
     assert report["deformation_grid"]["p0_grid_complete"]
-    assert report["next_numerical_action"] == "none; render final figures from frozen CSVs"
+    assert report["next_numerical_action"] == (
+        "none; render final figures from convention-mapped CSVs"
+    )
     assert "spin1_xy_figure6_panel_c_deformation.csv" in report["figure_data_products"]["written"]
     assert "spin1_xy_figure6_panel_d_family_band.csv" in report["figure_data_products"]["written"]

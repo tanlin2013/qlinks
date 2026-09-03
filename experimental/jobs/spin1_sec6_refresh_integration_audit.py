@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-"""Refresh the Spin-1 Sec. VI integration audit after common-window completion.
+"""Refresh the Spin-1 Sec. VI integration audit after convention migration.
 
-The original integration audit predates the later common-window covariance pass.
-This post-processing-only refresher validates the authoritative Aug-20 evidence
-and the completed Aug-25 integration products, then records the remaining P0
-deformation-grid/rendering status. It never invokes an eigensolver.
+This post-processing-only refresher validates convention-mapped source evidence and
+completed integration products. It never invokes an eigensolver.
 """
 
 from __future__ import annotations
@@ -18,12 +16,13 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import spin1_exchange_convention as convention
 
 import spin1_sec6_integration as integration
 
 REPRESENTATIVE_KAPPA_OVER_J = 0.10
-PRIMARY_WINDOW_PROTOCOL = "quarter_power_c1"
-FIXED_WINDOW_PROTOCOL = "fixed_width_1"
+PRIMARY_WINDOW_PROTOCOL = convention.PRIMARY_WINDOW_PROTOCOL
+FIXED_WINDOW_PROTOCOL = convention.FIXED_WINDOW_PROTOCOL
 TARGET_LENGTHS = (8, 10, 12, 14)
 GRID_PROGRESS_NAME = "spin1_xy_sec6_deformation_grid_progress.json"
 
@@ -86,8 +85,18 @@ def _read_csv(path: Path) -> pd.DataFrame:
     return frame
 
 
+def _require_current_convention(frame: pd.DataFrame, *, path: Path) -> None:
+    key = convention.EXCHANGE_CONVENTION_METADATA_KEY
+    if key not in frame.columns or set(frame[key].astype(str)) != {
+        convention.CURRENT_EXCHANGE_CONVENTION
+    }:
+        raise IntegrationAuditRefreshError(f"product is not convention-mapped: {path}")
+
+
 def _validate_common_windows(data_dir: Path) -> pd.DataFrame:
-    frame = _read_csv(data_dir / "spin1_xy_kappa0p1_concentration_common_windows.csv")
+    path = data_dir / "spin1_xy_kappa0p1_concentration_common_windows.csv"
+    frame = _read_csv(path)
+    _require_current_convention(frame, path=path)
     required = {
         "L",
         "kappa_over_J",
@@ -122,22 +131,27 @@ def _validate_common_windows(data_dir: Path) -> pd.DataFrame:
         (selected["window_protocol"].astype(str) == PRIMARY_WINDOW_PROTOCOL)
         & (selected["variant"].astype(str) == "raw")
     ].sort_values("L")
-    expected_half_widths = primary_raw["L"].to_numpy(dtype=float) ** 0.25
+    expected_half_widths = (
+        convention.PRIMARY_WINDOW_PREFACTOR
+        * primary_raw["L"].to_numpy(dtype=float) ** convention.PRIMARY_WINDOW_EXPONENT
+    )
     if not np.allclose(
         primary_raw["window_half_width"].to_numpy(dtype=float),
         expected_half_widths,
         rtol=0.0,
         atol=1.0e-10,
     ):
-        raise IntegrationAuditRefreshError("primary common-window half-widths do not equal L^(1/4)")
+        raise IntegrationAuditRefreshError(
+            "primary common-window half-widths do not equal (J/2)L^(1/4) at J=1"
+        )
     fixed = selected[selected["window_protocol"].astype(str) == FIXED_WINDOW_PROTOCOL]
     if not np.allclose(
         fixed["window_half_width"].to_numpy(dtype=float),
-        1.0,
+        convention.FIXED_CONTROL_HALF_WIDTH,
         rtol=0.0,
         atol=1.0e-10,
     ):
-        raise IntegrationAuditRefreshError("fixed common-window half-width is not 1")
+        raise IntegrationAuditRefreshError("fixed common-window half-width is not J/2 at J=1")
     if np.any(
         selected["covered_spectral_half_width"].to_numpy(dtype=float) + 1.0e-10
         < selected["window_half_width"].to_numpy(dtype=float)
@@ -157,6 +171,10 @@ def _validate_common_windows(data_dir: Path) -> pd.DataFrame:
 
 def _validate_common_summary(data_dir: Path) -> dict[str, Any]:
     summary = _read_json(data_dir / "spin1_xy_kappa0p1_common_window_summary.json")
+    if summary.get(convention.EXCHANGE_CONVENTION_METADATA_KEY) != (
+        convention.CURRENT_EXCHANGE_CONVENTION
+    ):
+        raise IntegrationAuditRefreshError("common-window summary is not convention-mapped")
     if bool(summary.get("power_law_fit_computed", True)):
         raise IntegrationAuditRefreshError(
             "common-window summary unexpectedly reports a fitted power law"
@@ -178,9 +196,14 @@ def _validate_completed_products(data_dir: Path) -> dict[str, str]:
     for name in REPRESENTATIVE_PRODUCTS:
         path = data_dir / name
         if name.endswith(".csv"):
-            _read_csv(path)
+            frame = _read_csv(path)
+            _require_current_convention(frame, path=path)
         else:
-            _read_json(path)
+            value = _read_json(path)
+            if value.get(convention.EXCHANGE_CONVENTION_METADATA_KEY) != (
+                convention.CURRENT_EXCHANGE_CONVENTION
+            ):
+                raise IntegrationAuditRefreshError(f"product is not convention-mapped: {path}")
         hashes[name] = _sha256(path)
     return hashes
 
@@ -196,6 +219,10 @@ def _grid_status(data_dir: Path) -> dict[str, Any]:
             "pending_points": [],
         }
     progress = _read_json(path)
+    if progress.get(convention.EXCHANGE_CONVENTION_METADATA_KEY) != (
+        convention.CURRENT_EXCHANGE_CONVENTION
+    ):
+        raise IntegrationAuditRefreshError("deformation-grid progress uses legacy semantics")
     return {
         "present": True,
         "panel_c_complete": bool(progress.get("panel_c_complete", False)),
@@ -261,7 +288,8 @@ def refresh_audit(
         figure_written.append("spin1_xy_figure6_panel_d_family_band.csv")
 
     report = {
-        "schema_version": 2,
+        "schema_version": 3,
+        convention.EXCHANGE_CONVENTION_METADATA_KEY: convention.CURRENT_EXCHANGE_CONVENTION,
         "source_data_dir": str(source),
         "integration_data_dir": str(data),
         "representative_l14_validated": bool(validation["representative_l14_validated"]),
@@ -274,6 +302,9 @@ def refresh_audit(
         "missing_primary_concentration_sizes": [],
         "common_window_status": "READY",
         "representative_common_window_closed": True,
+        "primary_window_protocol": PRIMARY_WINDOW_PROTOCOL,
+        "primary_window_prefactor": convention.PRIMARY_WINDOW_PREFACTOR,
+        "fixed_window_protocol": FIXED_WINDOW_PROTOCOL,
         "primary_raw_widths": {
             str(int(row.L)): float(row.w_L) for row in primary_raw.itertuples(index=False)
         },
@@ -298,10 +329,10 @@ def refresh_audit(
         ),
         "remaining_p0": remaining,
         "next_numerical_action": (
-            "none; render final figures from frozen CSVs"
+            "none; render final figures from convention-mapped CSVs"
             if grid["p0_grid_complete"]
             else (
-                "compute or reuse only missing L<=12 positive-kappa primary-window "
+                "compute or reuse only missing L<=12 positive-kappa current-window "
                 "deformation-grid points"
             )
         ),

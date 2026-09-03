@@ -25,14 +25,14 @@ def test_exact_tower_thermal_activities_match_direct_counting() -> None:
     report = spin_one_xy_tower_thermal_activities(
         length=4,
         total_sz=0,
-        xy_matrix_element=2.0,
+        xy_matrix_element=1.0,
     )
     assert report.sector_dimension == 19
     assert report.one_zero_count == 7
     assert report.two_site_remainder_count == 3
     assert np.isclose(report.y2_activity, 7.0 / 19.0)
-    assert np.isclose(report.directed_q_activity, 24.0 / 19.0)
-    assert np.isclose(report.z2_activity, 48.0 / 19.0)
+    assert np.isclose(report.directed_q_activity, 6.0 / 19.0)
+    assert np.isclose(report.z2_activity, 12.0 / 19.0)
     assert np.isclose(report.directed_q_limit, 0.5 * report.z2_limit)
     assert report.p0_limit > 0.0
 
@@ -53,7 +53,7 @@ def test_periodic_odd_range_is_phase_compatible() -> None:
     assert not broken_report.is_compatible
 
 
-def test_hxy_h3_model_uses_manuscript_coupling_convention() -> None:
+def test_hxy_h3_model_uses_conventional_coupling_parameters() -> None:
     model = spin_one_xy_hxy_h3_model(
         length=8,
         j=1.0,
@@ -61,9 +61,9 @@ def test_hxy_h3_model_uses_manuscript_coupling_convention() -> None:
         total_sz=-2,
     )
     assert model.boundary_condition.value == "periodic"
-    assert np.isclose(model.j_xy, 2.0)
+    assert np.isclose(model.j_xy, 1.0)
     assert len(model.extra_xy_couplings) == 8
-    assert all(np.isclose(coupling[2], 0.2) for coupling in model.extra_xy_couplings)
+    assert all(np.isclose(coupling[2], 0.1) for coupling in model.extra_xy_couplings)
 
     phases = (-1.0) ** np.arange(8)
     report = spin_one_xy_phase_compatibility(
@@ -84,7 +84,7 @@ def test_hxy_h3_imaginary_j2_family_preserves_pi_tower() -> None:
         kappa=0.07,
         total_sz=-2,
     )
-    assert np.isclose(model.j_xy, 2.0)
+    assert np.isclose(model.j_xy, 1.0)
     assert len(model.extra_xy_couplings) == 2 * length
 
     phases = (-1.0) ** np.arange(length)
@@ -96,7 +96,7 @@ def test_hxy_h3_imaginary_j2_family_preserves_pi_tower() -> None:
     assert report.max_residual < 1.0e-12
 
     j2 = model.extra_xy_couplings[length:]
-    assert all(np.isclose(coupling[2], 0.14j) for coupling in j2)
+    assert all(np.isclose(coupling[2], 0.07j) for coupling in j2)
 
     build = model.build(builder="optimized", basis_solver="dfs", sort_basis=True)
     configs = basis_configs_from_build_result(build)
