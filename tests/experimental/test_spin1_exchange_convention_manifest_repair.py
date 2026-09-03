@@ -16,6 +16,16 @@ import spin1_exchange_convention as convention  # noqa: E402
 import spin1_exchange_convention_migrate_evidence as migration  # noqa: E402
 import spin1_exchange_convention_repair_manifest as repair  # noqa: E402
 
+_REGENERABLE_ROOT_PRODUCTS = {
+    "spin1_xy_figure6_panel_a_scatter.csv",
+    "spin1_xy_figure6_panel_b_witness_sequence.csv",
+    "spin1_xy_figure6_panel_c_deformation.csv",
+    "spin1_xy_figure6_panel_d_family_band.csv",
+    "spin1_xy_appendix_beta0_bridges_data.csv",
+    "spin1_xy_appendix_complex_t2_obstruction_data.csv",
+    "spin1_xy_sec6_integration_audit.json",
+}
+
 
 def _make_legacy_source(path: Path) -> None:
     path.mkdir()
@@ -40,6 +50,14 @@ def _make_legacy_source(path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    pd.DataFrame([{"L": 14, "bridge": "mc_to_beta0_resolved", "trace_distance": 0.1}]).to_csv(
+        path / "spin1_xy_appendix_beta0_bridges_data.csv",
+        index=False,
+    )
+    (path / "spin1_xy_sec6_integration_audit.json").write_text(
+        json.dumps({"representative_l14_validated": True}),
+        encoding="utf-8",
+    )
     figures = path / "figures"
     figures.mkdir()
     (figures / "spin1_xy_figure6_prx_audit.json").write_text(
@@ -48,7 +66,12 @@ def _make_legacy_source(path: Path) -> None:
     )
 
 
-def test_repair_reconstructs_manifest_when_regenerable_render_product_is_missing(
+@pytest.mark.parametrize("name", sorted(_REGENERABLE_ROOT_PRODUCTS))
+def test_known_sec6_integration_products_are_regenerable(name: str) -> None:
+    assert repair._is_regenerable_output(Path(name))
+
+
+def test_repair_reconstructs_manifest_when_postprocessing_products_are_missing(
     tmp_path: Path,
 ) -> None:
     source = tmp_path / "legacy"
@@ -57,9 +80,16 @@ def test_repair_reconstructs_manifest_when_regenerable_render_product_is_missing
     migration.convert_evidence_directory(source_dir=source, output_dir=output)
     manifest_path = output / migration.MANIFEST_NAME
     manifest_path.unlink()
-    rendered_audit = output / "figures" / "spin1_xy_figure6_prx_audit.json"
-    rendered_audit.unlink()
-    rendered_audit.parent.rmdir()
+
+    missing_regenerable = (
+        Path("spin1_xy_appendix_beta0_bridges_data.csv"),
+        Path("spin1_xy_sec6_integration_audit.json"),
+        Path("figures/spin1_xy_figure6_prx_audit.json"),
+    )
+    for relative in missing_regenerable:
+        (output / relative).unlink()
+    (output / "figures").rmdir()
+
     mapped_snapshot = {
         path.relative_to(output): path.read_bytes() for path in output.rglob("*") if path.is_file()
     }
@@ -76,8 +106,9 @@ def test_repair_reconstructs_manifest_when_regenerable_render_product_is_missing
         convention.CURRENT_EXCHANGE_CONVENTION
     )
     assert manifest_path.is_file()
-    skipped = manifest["skipped_regenerable_render_products"]
-    assert [entry["path"] for entry in skipped] == ["figures/spin1_xy_figure6_prx_audit.json"]
+    skipped = manifest["skipped_regenerable_postprocessing_products"]
+    skipped_paths = {entry["path"] for entry in skipped}
+    assert {str(path) for path in missing_regenerable}.issubset(skipped_paths)
     for relative, payload in mapped_snapshot.items():
         assert (output / relative).read_bytes() == payload
 
