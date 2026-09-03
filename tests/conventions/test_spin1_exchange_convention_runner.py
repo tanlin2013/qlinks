@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 RUNNER = ROOT / "scripts/docker/docker_run_spin1_exchange_convention_migration.sh"
 VALIDATOR = ROOT / "experimental/jobs/spin1_exchange_convention_validate.py"
+RENDER_P0 = ROOT / "experimental/jobs/spin1_exchange_convention_render_p0.py"
 
 
 def test_runner_uses_immutable_authoritative_p0_p1_sources() -> None:
@@ -22,6 +23,15 @@ def test_runner_exposes_only_bounded_migration_validation_stages() -> None:
     assert "eigsh" not in script
     assert "L14 eigensolve is available" not in script
     assert "No L=14 eigensolve is available" in script
+
+
+def test_render_stage_prepares_standardized_figure_data_first() -> None:
+    script = RUNNER.read_text(encoding="utf-8")
+    helper = RENDER_P0.read_text(encoding="utf-8")
+    assert "spin1_exchange_convention_render_p0.py" in script
+    integration_index = helper.index("integration.run_integration(data, data)")
+    renderer_index = helper.index("renderer.render(")
+    assert integration_index < renderer_index
 
 
 def test_validation_job_has_no_large_size_solver_route() -> None:
