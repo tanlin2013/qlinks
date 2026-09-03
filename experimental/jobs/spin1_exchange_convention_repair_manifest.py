@@ -4,10 +4,10 @@
 The repair is deliberately conservative. It replays the deterministic CSV/JSON
 conversion from the immutable historical source into a temporary directory and
 requires every migration-relevant source product already present in the derived
-directory to match byte-for-byte. Regenerable renderer outputs under ``figures/`` are
-not provenance requirements because failed or repeated rendering may replace them.
-Only after verification succeeds is the missing migration manifest reconstructed.
-Historical sources and mapped evidence products are never modified.
+directory to match byte-for-byte. Regenerable Sec. VI integration/renderer products
+are not provenance requirements because failed or repeated post-processing may replace
+or remove them. Only after verification succeeds is the missing migration manifest
+reconstructed. Historical sources and mapped evidence products are never modified.
 """
 
 from __future__ import annotations
@@ -30,12 +30,25 @@ from spin1_exchange_convention import (
 )
 
 _REGENERABLE_OUTPUT_DIRS = {"figures"}
+_REGENERABLE_OUTPUT_NAMES = {
+    "spin1_xy_figure6_panel_a_scatter.csv",
+    "spin1_xy_figure6_panel_b_witness_sequence.csv",
+    "spin1_xy_figure6_panel_c_deformation.csv",
+    "spin1_xy_figure6_panel_d_family_band.csv",
+    "spin1_xy_appendix_beta0_bridges_data.csv",
+    "spin1_xy_appendix_complex_t2_obstruction_data.csv",
+    "spin1_xy_sec6_integration_audit.json",
+}
 
 
 def _is_regenerable_output(relative: Path) -> bool:
-    """Return whether a historical product is renderer output, not source evidence."""
+    """Return whether a historical product is deterministic Sec. VI post-processing."""
 
-    return bool(relative.parts) and relative.parts[0] in _REGENERABLE_OUTPUT_DIRS
+    if not relative.parts:
+        return False
+    if relative.parts[0] in _REGENERABLE_OUTPUT_DIRS:
+        return True
+    return len(relative.parts) == 1 and relative.name in _REGENERABLE_OUTPUT_NAMES
 
 
 def repair_missing_manifest(
@@ -133,12 +146,12 @@ def repair_missing_manifest(
         "beta_J_scale": LEGACY_TO_CURRENT_BETA_J_SCALE,
         "converted_files": records,
         "skipped_heavy_arrays": skipped_heavy,
-        "skipped_regenerable_render_products": skipped_regenerable,
+        "skipped_regenerable_postprocessing_products": skipped_regenerable,
         "notes": (
             "Recovered missing migration provenance only after exact deterministic verification "
-            "against the immutable historical source. Regenerable products under figures/ are "
-            "recorded but are not provenance requirements. Historical source files and mapped "
-            "evidence products were not modified."
+            "against the immutable historical source. Deterministic Sec. VI integration/renderer "
+            "products are recorded but are not provenance requirements. Historical source files "
+            "and mapped evidence products were not modified."
         ),
         "manifest_repaired": True,
     }
