@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 
 import render_spin1_xy_sec6_integration_figures as renderer
+
 import spin1_sec6_integration as integration
 
 _REQUIRED_RENDER_INPUTS = (
