@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -12,7 +13,20 @@ JOBS = ROOT / "experimental" / "jobs"
 if str(JOBS) not in sys.path:
     sys.path.insert(0, str(JOBS))
 
+_created_ipython_stub = "IPython.display" not in sys.modules
+if _created_ipython_stub:
+    ipython = types.ModuleType("IPython")
+    ipython_display = types.ModuleType("IPython.display")
+    ipython_display.display = lambda *_args, **_kwargs: None
+    ipython.display = ipython_display
+    sys.modules["IPython"] = ipython
+    sys.modules["IPython.display"] = ipython_display
+
 import spin1_exchange_convention_render_p0 as render_p0  # noqa: E402
+
+if _created_ipython_stub:
+    sys.modules.pop("IPython.display", None)
+    sys.modules.pop("IPython", None)
 
 
 def test_prepare_and_render_builds_required_panel_data_first(
@@ -38,7 +52,9 @@ def test_prepare_and_render_builds_required_panel_data_first(
         assert data == tmp_path
         assert use_tex is False
         assert allow_incomplete is False
-        assert all((tmp_path / name).is_file() for name in render_p0._REQUIRED_RENDER_INPUTS)
+        assert all(
+            (tmp_path / name).is_file() for name in render_p0._REQUIRED_RENDER_INPUTS
+        )
         events.append("render")
         return ["figures/spin1_xy_figure6.pdf"]
 
