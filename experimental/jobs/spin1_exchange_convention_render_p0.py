@@ -94,7 +94,8 @@ def _verify_render_inputs(data: Path, manifest: dict[str, Any]) -> None:
                 f"actual={actual_hash!r}"
             )
     if problems:
-        raise RuntimeError("Spin-1 P0 migration/render preflight failed:\n- " + "\n- ".join(problems))
+        message = "Spin-1 P0 migration/render preflight failed:\n- " + "\n- ".join(problems)
+        raise RuntimeError(message)
 
 
 def prepare_and_render(
