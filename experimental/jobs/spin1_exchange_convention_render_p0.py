@@ -55,8 +55,7 @@ def _load_completed_manifest(data: Path, *, source_run_id: str | None) -> dict[s
     actual_convention = value.get(convention.EXCHANGE_CONVENTION_METADATA_KEY)
     if actual_convention != convention.CURRENT_EXCHANGE_CONVENTION:
         raise RuntimeError(
-            "Spin-1 P0 migration manifest has the wrong exchange convention: "
-            f"{actual_convention!r}"
+            f"Spin-1 P0 migration manifest has the wrong exchange convention: {actual_convention!r}"
         )
     if source_run_id is not None and value.get("source_run_id") != source_run_id:
         raise RuntimeError(
