@@ -103,8 +103,8 @@ def repair_missing_manifest(
             derived_path = output / relative
             if not derived_path.is_file():
                 raise FileNotFoundError(
-                    "cannot repair convention manifest because a mapped evidence product is missing: "
-                    f"{derived_path}"
+                    "cannot repair convention manifest because a mapped evidence "
+                    f"product is missing: {derived_path}"
                 )
             expected_sha = migration._sha256(expected_path)
             actual_sha = migration._sha256(derived_path)
