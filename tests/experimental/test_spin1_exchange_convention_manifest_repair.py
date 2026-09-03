@@ -52,9 +52,7 @@ def test_repair_reconstructs_only_missing_manifest_after_exact_verification(
     manifest_path = output / migration.MANIFEST_NAME
     manifest_path.unlink()
     mapped_snapshot = {
-        path.relative_to(output): path.read_bytes()
-        for path in output.rglob("*")
-        if path.is_file()
+        path.relative_to(output): path.read_bytes() for path in output.rglob("*") if path.is_file()
     }
 
     manifest = repair.repair_missing_manifest(
