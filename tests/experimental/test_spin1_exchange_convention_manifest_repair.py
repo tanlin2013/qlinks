@@ -40,9 +40,15 @@ def _make_legacy_source(path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    figures = path / "figures"
+    figures.mkdir()
+    (figures / "spin1_xy_figure6_prx_audit.json").write_text(
+        json.dumps({"rendered": True, "energy_density": 0.2}),
+        encoding="utf-8",
+    )
 
 
-def test_repair_reconstructs_only_missing_manifest_after_exact_verification(
+def test_repair_reconstructs_manifest_when_regenerable_render_product_is_missing(
     tmp_path: Path,
 ) -> None:
     source = tmp_path / "legacy"
@@ -51,6 +57,9 @@ def test_repair_reconstructs_only_missing_manifest_after_exact_verification(
     migration.convert_evidence_directory(source_dir=source, output_dir=output)
     manifest_path = output / migration.MANIFEST_NAME
     manifest_path.unlink()
+    rendered_audit = output / "figures" / "spin1_xy_figure6_prx_audit.json"
+    rendered_audit.unlink()
+    rendered_audit.parent.rmdir()
     mapped_snapshot = {
         path.relative_to(output): path.read_bytes() for path in output.rglob("*") if path.is_file()
     }
@@ -67,8 +76,24 @@ def test_repair_reconstructs_only_missing_manifest_after_exact_verification(
         convention.CURRENT_EXCHANGE_CONVENTION
     )
     assert manifest_path.is_file()
+    skipped = manifest["skipped_regenerable_render_products"]
+    assert [entry["path"] for entry in skipped] == ["figures/spin1_xy_figure6_prx_audit.json"]
     for relative, payload in mapped_snapshot.items():
         assert (output / relative).read_bytes() == payload
+
+
+def test_repair_rejects_missing_mapped_evidence_product(tmp_path: Path) -> None:
+    source = tmp_path / "legacy"
+    output = tmp_path / "derived"
+    _make_legacy_source(source)
+    migration.convert_evidence_directory(source_dir=source, output_dir=output)
+    (output / migration.MANIFEST_NAME).unlink()
+    (output / "rows.csv").unlink()
+
+    with pytest.raises(FileNotFoundError, match="mapped evidence product is missing"):
+        repair.repair_missing_manifest(source_dir=source, output_dir=output)
+
+    assert not (output / migration.MANIFEST_NAME).exists()
 
 
 def test_repair_rejects_tampered_mapped_product(tmp_path: Path) -> None:
