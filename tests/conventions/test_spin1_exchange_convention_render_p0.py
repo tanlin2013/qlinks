@@ -52,9 +52,7 @@ def test_prepare_and_render_builds_required_panel_data_first(
         assert data == tmp_path
         assert use_tex is False
         assert allow_incomplete is False
-        assert all(
-            (tmp_path / name).is_file() for name in render_p0._REQUIRED_RENDER_INPUTS
-        )
+        assert all((tmp_path / name).is_file() for name in render_p0._REQUIRED_RENDER_INPUTS)
         events.append("render")
         return ["figures/spin1_xy_figure6.pdf"]
 
