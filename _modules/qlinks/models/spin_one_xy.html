@@ -925,9 +925,9 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">SpinOneXYTowerThermalActivities</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exact fixed-magnetization witness activities for the pi-bimagnon tower.</span>
 
-<span class="sd">    ``xy_matrix_element`` is the qlinks convention: it is the matrix element</span>
-<span class="sd">    connecting ``|00&gt;`` with ``|+-&gt;``.  In the manuscript convention of</span>
-<span class="sd">    Eq. (104), ``xy_matrix_element = 2 J``.</span>
+<span class="sd">    ``xy_matrix_element`` is the exchange matrix element connecting ``|00&gt;``</span>
+<span class="sd">    with ``|+-&gt;``. Under the permanent convention</span>
+<span class="sd">    ``H_XY=(J/2) sum(S+S- + h.c.)``, ``xy_matrix_element = J``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">length</span><span class="p">:</span> <span class="nb">int</span>
@@ -1044,31 +1044,30 @@
     <span class="n">h_z</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="n">d_z</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpinOneXYChainModel</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the periodic manuscript Hamiltonian ``H_XY + H_3``.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the conventional periodic Hamiltonian ``H_XY + H_3``.</span>
 
-<span class="sd">    The manuscript convention is</span>
+<span class="sd">    Couplings are the physical Cartesian-exchange parameters,</span>
 
-<span class="sd">    ``H_XY = J sum_r (S_r^+ S_{r+1}^- + h.c.)`` and</span>
-<span class="sd">    ``H_3  = J3 sum_r (S_r^+ S_{r+3}^- + h.c.)``.</span>
+<span class="sd">    ``H_XY = (J/2) sum_r (S_r^+ S_{r+1}^- + h.c.)`` and</span>
+<span class="sd">    ``H_3  = (J3/2) sum_r (S_r^+ S_{r+3}^- + h.c.)``.</span>
 
-<span class="sd">    :class:`SpinOneXYChainModel` uses the conventional ``J_xy/2`` prefactor</span>
-<span class="sd">    for the ladder-operator form, so the corresponding qlinks coefficients are</span>
-<span class="sd">    ``j_xy=2*J`` and ``extra_xy_coupling=2*J3``.  The third-neighbor term is</span>
-<span class="sd">    phase compatible with the staggered tower on even periodic chains.</span>
+<span class="sd">    These parameters therefore pass directly to :class:`SpinOneXYChainModel`</span>
+<span class="sd">    and :class:`~qlinks.operators.SpinOneXYPairOperator`. The third-neighbor</span>
+<span class="sd">    term is phase compatible with the staggered tower on even periodic chains.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;length must be positive.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">SpinOneXYChainModel</span><span class="p">(</span>
         <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
         <span class="n">boundary_condition</span><span class="o">=</span><span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">,</span>
-        <span class="n">j_xy</span><span class="o">=</span><span class="mf">2.0</span> <span class="o">*</span> <span class="nb">complex</span><span class="p">(</span><span class="n">j</span><span class="p">),</span>
+        <span class="n">j_xy</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">j</span><span class="p">),</span>
         <span class="n">h_z</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">h_z</span><span class="p">),</span>
         <span class="n">d_z</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">d_z</span><span class="p">),</span>
         <span class="n">total_sz</span><span class="o">=</span><span class="n">total_sz</span><span class="p">,</span>
         <span class="n">extra_xy_couplings</span><span class="o">=</span><span class="n">spin_one_xy_periodic_range_couplings</span><span class="p">(</span>
             <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
             <span class="n">distance</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-            <span class="n">coefficient</span><span class="o">=</span><span class="mf">2.0</span> <span class="o">*</span> <span class="nb">complex</span><span class="p">(</span><span class="n">j3</span><span class="p">),</span>
+            <span class="n">coefficient</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">j3</span><span class="p">),</span>
         <span class="p">),</span>
     <span class="p">)</span></div>
 
@@ -1086,16 +1085,16 @@
     <span class="n">h_z</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="n">d_z</span><span class="p">:</span> <span class="nb">complex</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpinOneXYChainModel</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``H_XY + H_3 + i kappa H_2^-`` on a periodic chain.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``H_XY + H_3 + K_2(i kappa)`` on a periodic chain.</span>
 
-<span class="sd">    In manuscript ladder-operator conventions,</span>
+<span class="sd">    In the permanent ladder-operator convention,</span>
 
-<span class="sd">    ``H_2^-(kappa) = i kappa sum_r (S_r^+ S_{r+2}^- - h.c.)``.</span>
+<span class="sd">    ``K_2(i kappa) = (1/2) sum_r [i kappa S_r^+ S_{r+2}^- + h.c.]``.</span>
 
-<span class="sd">    The corresponding qlinks pair coefficient is ``2 i kappa``.  For the</span>
+<span class="sd">    The qlinks pair coefficient is therefore exactly ``i kappa``. For the</span>
 <span class="sd">    staggered ``Q=pi`` bimagnon tower, real odd-range exchanges and purely</span>
 <span class="sd">    imaginary even-range exchanges separately satisfy the exact bondwise</span>
-<span class="sd">    cancellation rule.  Thus this family continuously contains</span>
+<span class="sd">    cancellation rule. Thus this family continuously contains</span>
 <span class="sd">    :func:`spin_one_xy_hxy_h3_model` at ``kappa=0`` while preserving the same</span>
 <span class="sd">    tower and its zero energy.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1111,7 +1110,7 @@
         <span class="n">spin_one_xy_periodic_range_couplings</span><span class="p">(</span>
             <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
             <span class="n">distance</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-            <span class="n">coefficient</span><span class="o">=</span><span class="mf">2.0</span> <span class="o">*</span> <span class="nb">complex</span><span class="p">(</span><span class="n">j3</span><span class="p">),</span>
+            <span class="n">coefficient</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">j3</span><span class="p">),</span>
         <span class="p">)</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">kappa</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -1119,13 +1118,13 @@
             <span class="n">spin_one_xy_periodic_range_couplings</span><span class="p">(</span>
                 <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
                 <span class="n">distance</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                <span class="n">coefficient</span><span class="o">=</span><span class="mf">2.0</span><span class="n">j</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">kappa</span><span class="p">),</span>
+                <span class="n">coefficient</span><span class="o">=</span><span class="mf">1.0</span><span class="n">j</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">kappa</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">SpinOneXYChainModel</span><span class="p">(</span>
         <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">),</span>
         <span class="n">boundary_condition</span><span class="o">=</span><span class="n">BoundaryCondition</span><span class="o">.</span><span class="n">PERIODIC</span><span class="p">,</span>
-        <span class="n">j_xy</span><span class="o">=</span><span class="mf">2.0</span> <span class="o">*</span> <span class="nb">complex</span><span class="p">(</span><span class="n">j</span><span class="p">),</span>
+        <span class="n">j_xy</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">j</span><span class="p">),</span>
         <span class="n">h_z</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">h_z</span><span class="p">),</span>
         <span class="n">d_z</span><span class="o">=</span><span class="nb">complex</span><span class="p">(</span><span class="n">d_z</span><span class="p">),</span>
         <span class="n">total_sz</span><span class="o">=</span><span class="n">total_sz</span><span class="p">,</span>
@@ -1165,8 +1164,8 @@
 <span class="sd">    The returned quantities are ``Tr(rho Y_r^2)``, the one-sided directed</span>
 <span class="sd">    activity ``Tr(rho A_r^dagger A_r)``, and</span>
 <span class="sd">    ``Tr(rho Z_{r,r+1}^2)`` in the infinite-temperature fixed-magnetization</span>
-<span class="sd">    ensemble.  They correspond to the local channels in the current draft</span>
-<span class="sd">    after identifying ``xy_matrix_element = 2 J``.</span>
+<span class="sd">    ensemble. Under ``H_XY=(J/2) sum(S+S- + h.c.)`` the local exchange matrix</span>
+<span class="sd">    element is ``xy_matrix_element = J``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;length must be at least two.&quot;</span><span class="p">)</span>
