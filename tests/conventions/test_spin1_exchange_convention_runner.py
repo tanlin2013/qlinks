@@ -29,9 +29,9 @@ def test_render_stage_prepares_standardized_figure_data_first() -> None:
     script = RUNNER.read_text(encoding="utf-8")
     helper = RENDER_P0.read_text(encoding="utf-8")
     assert "spin1_exchange_convention_render_p0.py" in script
-    assert "integration.run_integration(data, data)" in helper
-    assert "renderer.render(" in helper
-    assert helper.index("integration.run_integration(data, data)") < helper.index("renderer.render(")
+    integration_index = helper.index("integration.run_integration(data, data)")
+    renderer_index = helper.index("renderer.render(")
+    assert integration_index < renderer_index
 
 
 def test_validation_job_has_no_large_size_solver_route() -> None:
