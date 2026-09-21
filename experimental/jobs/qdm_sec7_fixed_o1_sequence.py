@@ -19,8 +19,8 @@ import pandas as pd
 from qdm_sec7_fixed_o1 import atomic_write_csv, atomic_write_json
 from qdm_sec7_fixed_o1_l12_observables import (
     ACCEPTANCE_NAME as OBSERVABLES_ACCEPTANCE_NAME,
-    THERMAL_NAME,
 )
+from qdm_sec7_fixed_o1_l12_observables import THERMAL_NAME
 from qdm_sec7_fixed_o1_l12_spectrum import RECOMMENDATION_NAME
 from qdm_sec7_fixed_o1_pilot import SYSTEMATICS_NAME as PILOT_SYSTEMATICS_NAME
 
