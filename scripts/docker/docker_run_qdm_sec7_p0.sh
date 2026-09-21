@@ -16,11 +16,13 @@ fi
 
 BASE_RUN_ID="${QLINKS_QDM_BASE_RUN_ID:-qdm_checkerboard_fullsym_finite_beta_20260810T164206Z}"
 PRIMME_RUN_ID="${QLINKS_QDM_PRIMME_RUN_ID:-qdm_checkerboard_primme_staged_20260825T164226Z}"
+TARGET_RUN_ID="${QLINKS_QDM_TARGET_RUN_ID:-qdm_sec7_fixed_o1_p0_20260831T064812Z}"
 CONTAINER_REPO_DIR="/workspace/qlinks"
 CONTAINER_DATA_DIR="${CONTAINER_REPO_DIR}/experimental/data"
 HOST_DATA_DIR="$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).expanduser().resolve(strict=False))' "${QLINKS_DATA_DIR:-${REPO_ROOT}/experimental/data}")"
 BASE_DATA_DIR="${CONTAINER_DATA_DIR}/evidence_jobs/${BASE_RUN_ID}"
 PRIMME_DATA_DIR="${CONTAINER_DATA_DIR}/evidence_jobs/${PRIMME_RUN_ID}"
+TARGET_DATA_DIR="${CONTAINER_DATA_DIR}/evidence_jobs/${TARGET_RUN_ID}"
 OUTPUT_DATA_DIR="${CONTAINER_DATA_DIR}/evidence_jobs/${RUN_ID}"
 CACHE_ROOT="${CONTAINER_DATA_DIR}/evidence_cache"
 
@@ -123,10 +125,11 @@ case "${STAGE}" in
         ;;
     status)
         JOB_COMMAND=(
-            bash -lc
-            "python experimental/jobs/qdm_sec7_target_block.py --mode status --cache-root '${CACHE_ROOT}' --output-dir '${OUTPUT_DATA_DIR}'"
+            python experimental/jobs/qdm_sec7_fixed_o1_status.py
+            --target-data-dir "${TARGET_DATA_DIR}"
+            --output-dir "${OUTPUT_DATA_DIR}"
         )
-        SOLVE_POLICY="no eigensolver; target-block cache inventory only"
+        SOLVE_POLICY="file-only P0 ledger; no sector construction or eigensolver"
         ;;
     *)
         echo "unknown stage: ${STAGE}" >&2
@@ -194,6 +197,7 @@ Image: ${IMAGE_NAME}
 Pull policy: ${PULL_POLICY}
 Authoritative Lx=4,8 base: ${BASE_RUN_ID}
 Staged PRIMME/canonical source: ${PRIMME_RUN_ID}
+Closed target-block source: ${TARGET_RUN_ID}
 Output evidence: ${HOST_DATA_DIR}/evidence_jobs/${RUN_ID}
 Stable cache: ${HOST_DATA_DIR}/evidence_cache
 Target refinement budgets (closed audit lane): ${TARGET_BUDGETS}
@@ -215,6 +219,7 @@ Recommended remaining P0 sequence using one explicit run id:
   scripts/docker/docker_run_qdm_sec7_p0.sh --stage fixed-O1-L12-spectrum
   scripts/docker/docker_run_qdm_sec7_p0.sh --stage fixed-O1-L12-observables
   scripts/docker/docker_run_qdm_sec7_p0.sh --stage fixed-O1-three-size
+  scripts/docker/docker_run_qdm_sec7_p0.sh --stage status
 
 The target-block lane is already closed by the 20260831 evidence addendum.
 Do not rerun target-block-refine merely to build the thermal window.
