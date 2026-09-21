@@ -55,14 +55,12 @@ def _load_recommendation(output_dir: Path) -> tuple[dict[str, Any], float, float
     path = Path(output_dir) / RECOMMENDATION_NAME
     if not path.is_file():
         raise FileNotFoundError(
-            f"fixed-O(1) pilot recommendation is missing: {path}. "
-            "Run --stage fixed-O1-pilot first."
+            f"fixed-O(1) pilot recommendation is missing: {path}. Run --stage fixed-O1-pilot first."
         )
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("status") != "recommended":
         raise RuntimeError(
-            "fixed-O(1) pilot did not select a production window; "
-            f"status={payload.get('status')!r}"
+            f"fixed-O(1) pilot did not select a production window; status={payload.get('status')!r}"
         )
     width = payload.get("recommended_half_width")
     if width is None or float(width) <= 0:
@@ -163,8 +161,7 @@ def _merge_row(path: Path, row: dict[str, Any]) -> pd.DataFrame:
         frame = pd.read_csv(path)
         if "requested_subspace_size" in frame.columns:
             frame = frame[
-                frame["requested_subspace_size"].astype(int)
-                != int(row["requested_subspace_size"])
+                frame["requested_subspace_size"].astype(int) != int(row["requested_subspace_size"])
             ]
         frame = pd.concat([frame, pd.DataFrame([row])], ignore_index=True, sort=False)
     else:
@@ -194,10 +191,7 @@ def _acceptance(
         "last_two_window_residuals_acceptable": (
             len(last) == 2
             and bool(
-                np.all(
-                    last["window_maximum_residual"].astype(float)
-                    <= float(residual_tolerance)
-                )
+                np.all(last["window_maximum_residual"].astype(float) <= float(residual_tolerance))
             )
         ),
     }
