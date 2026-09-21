@@ -270,11 +270,13 @@ def run(
         if int(budget) in existing_budgets:
             continue
 
-        spectrum_closed = bool(_acceptance(
+        spectrum_closed = bool(
+            _acceptance(
                 frame,
                 width=half_width,
                 residual_tolerance=residual_tolerance,
-            )["closed"])
+            )["closed"]
+        )
         if spectrum_closed and not _observables_request_extension(output):
             break
 
