@@ -34,6 +34,7 @@ from qdm_sec7_fixed_o1 import (
 RECOMMENDATION_NAME = "qdm_checkerboard_fixed_O1_window_recommendation.json"
 CONVERGENCE_NAME = "qdm_checkerboard_L12_fixed_O1_spectral_convergence.csv"
 ACCEPTANCE_NAME = "qdm_checkerboard_L12_fixed_O1_spectral_acceptance.json"
+OBSERVABLES_ACCEPTANCE_NAME = "qdm_checkerboard_L12_fixed_O1_observables_acceptance.json"
 DEFAULT_TOLERANCE = 1.0e-8
 DEFAULT_MAX_BUDGET = 8192
 BUDGET_QUANTUM = 256
@@ -203,6 +204,18 @@ def _acceptance(frame: pd.DataFrame, *, width: float) -> dict[str, Any]:
     }
 
 
+def _observables_request_extension(output_dir: Path) -> bool:
+    """Return whether a completed observable pass explicitly requested another budget."""
+
+    path = Path(output_dir) / OBSERVABLES_ACCEPTANCE_NAME
+    if not path.is_file():
+        return False
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"expected JSON object: {path}")
+    return payload.get("closed") is False
+
+
 def run(
     *,
     output_dir: Path,
@@ -236,10 +249,17 @@ def run(
                 "start a new evidence run instead of mixing protocols"
             )
     for budget in budgets:
-        if not frame.empty:
-            covered_existing = frame[frame["window_coverage_complete"].astype(bool)]
-            if len(covered_existing) >= 2:
-                break
+        existing_budgets = (
+            set(frame["requested_subspace_size"].astype(int))
+            if not frame.empty and "requested_subspace_size" in frame.columns
+            else set()
+        )
+        if int(budget) in existing_budgets:
+            continue
+
+        spectrum_closed = bool(_acceptance(frame, width=half_width)["closed"])
+        if spectrum_closed and not _observables_request_extension(output):
+            break
 
         started = time.perf_counter()
         partial = solver(
@@ -288,6 +308,7 @@ def run(
             "requested_budget_schedule": list(map(int, budgets)),
             "pilot_estimated_budget": estimate,
             "maximum_configured_budget": int(max_budget),
+            "observables_requested_extension": _observables_request_extension(output),
         }
     )
     atomic_write_json(output / ACCEPTANCE_NAME, acceptance)
