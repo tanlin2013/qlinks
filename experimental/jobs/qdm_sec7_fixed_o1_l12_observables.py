@@ -146,12 +146,8 @@ def _joint_dark_subspace(
                 "energy": float(np.mean(spectrum[group])),
                 "block_dimension": len(group),
                 "joint_dark_rank": int(keep.size),
-                "q_all_min_eigenvalue": (
-                    float(np.min(q_values)) if q_values.size else math.nan
-                ),
-                "q_all_max_eigenvalue": (
-                    float(np.max(q_values)) if q_values.size else math.nan
-                ),
+                "q_all_min_eigenvalue": (float(np.min(q_values)) if q_values.size else math.nan),
+                "q_all_max_eigenvalue": (float(np.max(q_values)) if q_values.size else math.nan),
                 "energy_block_tolerance": float(energy_tolerance),
             }
         )
@@ -508,9 +504,7 @@ def run(
             atomic_write_csv(output / WORST_NAME, pd.DataFrame(worst_rows))
 
     primary = (
-        pd.DataFrame(primary_rows)
-        .sort_values("requested_subspace_size")
-        .reset_index(drop=True)
+        pd.DataFrame(primary_rows).sort_values("requested_subspace_size").reset_index(drop=True)
     )
     if len(primary) < 2:
         raise RuntimeError("postprocessing did not produce two primary-window budget rows")
@@ -552,8 +546,7 @@ def run(
     atomic_write_json(output / ACCEPTANCE_NAME, acceptance)
     if not acceptance["closed"]:
         raise RuntimeError(
-            "Lx=12 fixed-O(1) observables are not budget-stable; "
-            f"see {output / ACCEPTANCE_NAME}"
+            f"Lx=12 fixed-O(1) observables are not budget-stable; see {output / ACCEPTANCE_NAME}"
         )
     return primary
 
