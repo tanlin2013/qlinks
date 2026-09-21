@@ -36,6 +36,7 @@ CONVERGENCE_NAME = "qdm_checkerboard_L12_fixed_O1_spectral_convergence.csv"
 ACCEPTANCE_NAME = "qdm_checkerboard_L12_fixed_O1_spectral_acceptance.json"
 OBSERVABLES_ACCEPTANCE_NAME = "qdm_checkerboard_L12_fixed_O1_observables_acceptance.json"
 DEFAULT_TOLERANCE = 1.0e-8
+DEFAULT_RESIDUAL_TOLERANCE = 1.0e-6
 DEFAULT_MAX_BUDGET = 8192
 BUDGET_QUANTUM = 256
 MIN_PRODUCTION_BUDGET = 1024
@@ -173,7 +174,12 @@ def _merge_row(path: Path, row: dict[str, Any]) -> pd.DataFrame:
     return frame
 
 
-def _acceptance(frame: pd.DataFrame, *, width: float) -> dict[str, Any]:
+def _acceptance(
+    frame: pd.DataFrame,
+    *,
+    width: float,
+    residual_tolerance: float,
+) -> dict[str, Any]:
     if frame.empty:
         covered = frame
     else:
@@ -187,13 +193,19 @@ def _acceptance(frame: pd.DataFrame, *, width: float) -> dict[str, Any]:
         ),
         "last_two_window_residuals_acceptable": (
             len(last) == 2
-            and bool(np.all(last["window_maximum_residual"].astype(float) <= 1.0e-6))
+            and bool(
+                np.all(
+                    last["window_maximum_residual"].astype(float)
+                    <= float(residual_tolerance)
+                )
+            )
         ),
     }
     return {
         "schema_version": 1,
         "closed": all(checks.values()),
         "window_half_width": float(width),
+        "residual_acceptance_tolerance": float(residual_tolerance),
         "checks": checks,
         "covered_budgets": covered["requested_subspace_size"].astype(int).tolist(),
         "last_two_covered_budgets": last["requested_subspace_size"].astype(int).tolist(),
@@ -222,6 +234,7 @@ def run(
     cache_root: Path,
     budgets_raw: str,
     tolerance: float,
+    residual_tolerance: float,
     max_budget: int,
 ) -> pd.DataFrame:
     output = Path(output_dir)
@@ -257,7 +270,11 @@ def run(
         if int(budget) in existing_budgets:
             continue
 
-        spectrum_closed = bool(_acceptance(frame, width=half_width)["closed"])
+        spectrum_closed = bool(_acceptance(
+                frame,
+                width=half_width,
+                residual_tolerance=residual_tolerance,
+            )["closed"])
         if spectrum_closed and not _observables_request_extension(output):
             break
 
@@ -291,6 +308,12 @@ def run(
             "returned_eigenpairs": int(partial.energies.size),
             "solver_tolerance": float(tolerance),
             "spectrum_method": partial.method,
+            "solver_status": "completed",
+            "transformed_maximum_residual": (
+                float(np.max(partial.transformed_residuals, initial=0.0))
+                if partial.transformed_residuals is not None
+                else math.nan
+            ),
             "runtime_seconds": float(elapsed),
             "peak_rss_gib": float(partial.peak_rss_gib or process_memory_gib()),
             "partial_maximum_residual": float(partial.maximum_residual),
@@ -302,7 +325,11 @@ def run(
             row,
         )
 
-    acceptance = _acceptance(frame, width=half_width)
+    acceptance = _acceptance(
+        frame,
+        width=half_width,
+        residual_tolerance=residual_tolerance,
+    )
     acceptance.update(
         {
             "requested_budget_schedule": list(map(int, budgets)),
@@ -326,6 +353,11 @@ def main() -> None:
     parser.add_argument("--cache-root", type=Path, required=True)
     parser.add_argument("--budgets", default="auto")
     parser.add_argument("--tolerance", type=float, default=DEFAULT_TOLERANCE)
+    parser.add_argument(
+        "--residual-tolerance",
+        type=float,
+        default=DEFAULT_RESIDUAL_TOLERANCE,
+    )
     parser.add_argument("--max-budget", type=int, default=DEFAULT_MAX_BUDGET)
     args = parser.parse_args()
     frame = run(
@@ -333,6 +365,7 @@ def main() -> None:
         cache_root=args.cache_root,
         budgets_raw=args.budgets,
         tolerance=args.tolerance,
+        residual_tolerance=args.residual_tolerance,
         max_budget=args.max_budget,
     )
     print(frame.to_string(index=False), flush=True)
