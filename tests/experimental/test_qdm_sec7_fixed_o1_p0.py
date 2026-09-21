@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 JOBS = ROOT / "experimental" / "jobs"
@@ -84,6 +85,38 @@ def test_l12_spectrum_stage_owns_only_window_coverage_solves() -> None:
     assert "w_raw" not in source
 
 
+def test_spectrum_stage_can_extend_after_failed_observable_budget_gate(tmp_path: Path) -> None:
+    spectrum = _load(SPECTRUM, "qdm_sec7_fixed_o1_l12_spectrum_extension_test")
+    assert spectrum._observables_request_extension(tmp_path) is False
+    (tmp_path / spectrum.OBSERVABLES_ACCEPTANCE_NAME).write_text(
+        '{"closed": false}\n',
+        encoding="utf-8",
+    )
+    assert spectrum._observables_request_extension(tmp_path) is True
+
+
+def test_spectrum_acceptance_requires_two_distinct_covered_budgets() -> None:
+    spectrum = _load(SPECTRUM, "qdm_sec7_fixed_o1_l12_spectrum_acceptance_test")
+    frame = pd.DataFrame(
+        [
+            {
+                "requested_subspace_size": 2048,
+                "window_coverage_complete": True,
+                "window_state_count": 100,
+                "window_maximum_residual": 1.0e-8,
+            },
+            {
+                "requested_subspace_size": 2048,
+                "window_coverage_complete": True,
+                "window_state_count": 100,
+                "window_maximum_residual": 1.0e-8,
+            },
+        ]
+    )
+    acceptance = spectrum._acceptance(frame, width=0.20)
+    assert acceptance["closed"] is False
+
+
 def test_fixed_window_coverage_requires_both_edges() -> None:
     spectrum = _load(SPECTRUM, "qdm_sec7_fixed_o1_l12_spectrum_coverage_test")
     residuals = np.full(4, 1.0e-9)
@@ -115,6 +148,9 @@ def test_l12_observables_stage_is_solver_free_and_uses_cached_checkpoints() -> N
     assert "folded_spectrum_partial_spectrum" not in source
     assert "make_resumable_folded_solver" not in source
     assert "primme.eigsh" not in source
+    assert 'checkpoint.metadata.get("backend", "")' in source
+    assert '!= "primme"' in source
+    assert "by_budget" in source
 
 
 def test_three_size_stage_is_descriptive_and_solver_free() -> None:
