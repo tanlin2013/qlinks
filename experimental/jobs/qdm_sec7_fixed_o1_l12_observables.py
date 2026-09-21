@@ -188,7 +188,7 @@ def _load_covered_checkpoints(
     residual_tolerance: float,
 ) -> list[tuple[int, Any, dict[str, Any]]]:
     problem = folded_problem_description(context.h_sector, target_energy=context.tower_energy)
-    records: list[tuple[int, Any, dict[str, Any]]] = []
+    by_budget: dict[int, tuple[int, Any, dict[str, Any]]] = {}
     for directory in iter_spectral_checkpoints(
         namespace="qdm/checkerboard_large_strip",
         problem=problem,
@@ -204,6 +204,8 @@ def _load_covered_checkpoints(
         )
         if checkpoint is None or checkpoint.status is not CacheValidationStatus.VALID_FINAL:
             continue
+        if str(checkpoint.metadata.get("backend", "")).lower() != "primme":
+            continue
         tolerance = float(checkpoint.metadata.get("solver_tolerance", 1.0e-8))
         coverage = coverage_metrics(
             checkpoint.energies,
@@ -215,9 +217,16 @@ def _load_covered_checkpoints(
         if not coverage["window_coverage_complete"]:
             continue
         budget = int(checkpoint.metadata.get("requested_budget", checkpoint.energies.size))
-        records.append((budget, checkpoint, coverage))
-    records.sort(key=lambda item: item[0])
-    return records
+        candidate = (budget, checkpoint, coverage)
+        previous = by_budget.get(budget)
+        if previous is None:
+            by_budget[budget] = candidate
+            continue
+        previous_residual = float(np.max(previous[1].residuals, initial=0.0))
+        candidate_residual = float(np.max(checkpoint.residuals, initial=0.0))
+        if candidate_residual < previous_residual:
+            by_budget[budget] = candidate
+    return [by_budget[budget] for budget in sorted(by_budget)]
 
 
 def _evaluate_width(
@@ -408,7 +417,7 @@ def _acceptance(primary: pd.DataFrame, *, tolerance: float) -> dict[str, Any]:
         observable_change = math.inf
         counts_stable = False
     checks = {
-        "at_least_two_covered_budgets": len(ordered) >= 2,
+        "at_least_two_covered_budgets": ordered["requested_subspace_size"].nunique() >= 2,
         "last_two_window_counts_stable": counts_stable,
         "last_two_raw_observables_stable": observable_change <= float(tolerance),
     }
