@@ -101,6 +101,7 @@ case "${STAGE}" in
             --cache-root "${CACHE_ROOT}"
             --budgets "${FIXED_L12_BUDGETS}"
             --tolerance "${FIXED_L12_TOLERANCE}"
+            --residual-tolerance "${FIXED_L12_RESIDUAL_TOLERANCE}"
             --max-budget "${FIXED_L12_MAX_BUDGET}"
         )
         SOLVE_POLICY="Lx=12 folded-spectrum PRIMME only; stop after two budgets cover the pilot-selected fixed window"
