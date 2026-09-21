@@ -19,6 +19,7 @@ PILOT = JOBS / "qdm_sec7_fixed_o1_pilot.py"
 SPECTRUM = JOBS / "qdm_sec7_fixed_o1_l12_spectrum.py"
 OBSERVABLES = JOBS / "qdm_sec7_fixed_o1_l12_observables.py"
 SEQUENCE = JOBS / "qdm_sec7_fixed_o1_sequence.py"
+STATUS = JOBS / "qdm_sec7_fixed_o1_status.py"
 RUNNER = ROOT / "scripts" / "docker" / "docker_run_qdm_sec7_p0.sh"
 
 
@@ -36,7 +37,7 @@ def _load(path: Path, name: str):
 
 
 def test_sec7_p0_python_jobs_are_syntactically_valid() -> None:
-    for path in (COMMON, TARGET, PILOT, SPECTRUM, OBSERVABLES, SEQUENCE):
+    for path in (COMMON, TARGET, PILOT, SPECTRUM, OBSERVABLES, SEQUENCE, STATUS):
         ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
 
@@ -163,6 +164,18 @@ def test_three_size_stage_is_descriptive_and_solver_free() -> None:
     assert "primme.eigsh" not in source
 
 
+def test_p0_status_is_file_only_and_tracks_all_remaining_gates() -> None:
+    source = STATUS.read_text(encoding="utf-8")
+    assert "qdm_checkerboard_L12_target_block_acceptance.json" in source
+    assert "fixed_O1_pilot_recommended" in source
+    assert "L12_spectrum_closed" in source
+    assert "L12_observables_closed" in source
+    assert "three_size_sequence_closed" in source
+    assert "p0_thermal_lane_closed" in source
+    assert "build_context" not in source
+    assert "folded_spectrum_partial_spectrum" not in source
+
+
 def test_runner_keeps_target_and_thermal_lanes_separate() -> None:
     script = RUNNER.read_text(encoding="utf-8")
     assert "target-block-status)" in script
@@ -173,6 +186,7 @@ def test_runner_keeps_target_and_thermal_lanes_separate() -> None:
     assert "fixed-O1-three-size)" in script
     assert "qdm_checkerboard_fullsym_finite_beta_20260810T164206Z" in script
     assert "qdm_checkerboard_primme_staged_20260825T164226Z" in script
+    assert "qdm_sec7_fixed_o1_p0_20260831T064812Z" in script
     assert "QLINKS_QDM_PRIMME_WARM_START_VECTORS:-512" in script
 
     pilot = script.split("fixed-O1-pilot)", maxsplit=1)[1].split(
@@ -196,6 +210,7 @@ def test_runner_recommends_only_remaining_thermal_lane() -> None:
     assert "--stage fixed-O1-L12-spectrum" in recommended
     assert "--stage fixed-O1-L12-observables" in recommended
     assert "--stage fixed-O1-three-size" in recommended
+    assert "--stage status" in recommended
     assert "--stage target-block-refine" not in recommended
     assert "target-block lane is already closed" in recommended
 
