@@ -82,6 +82,9 @@ def test_l12_spectrum_stage_owns_only_window_coverage_solves() -> None:
     assert "qdm_checkerboard_L12_fixed_O1_spectral_convergence.csv" in source
     assert "at_least_two_covered_budgets" in source
     assert "projector_deleted_block_covariance" not in source
+    assert '"solver_status": "completed"' in source
+    assert "transformed_maximum_residual" in source
+    assert "residual_acceptance_tolerance" in source
     assert "tau_A_mc_raw" not in source
     assert "w_raw" not in source
 
@@ -114,7 +117,11 @@ def test_spectrum_acceptance_requires_two_distinct_covered_budgets() -> None:
             },
         ]
     )
-    acceptance = spectrum._acceptance(frame, width=0.20)
+    acceptance = spectrum._acceptance(
+        frame,
+        width=0.20,
+        residual_tolerance=1.0e-6,
+    )
     assert acceptance["closed"] is False
 
 
@@ -188,6 +195,7 @@ def test_runner_keeps_target_and_thermal_lanes_separate() -> None:
     assert "qdm_checkerboard_primme_staged_20260825T164226Z" in script
     assert "qdm_sec7_fixed_o1_p0_20260831T064812Z" in script
     assert "QLINKS_QDM_PRIMME_WARM_START_VECTORS:-512" in script
+    assert '--residual-tolerance "${FIXED_L12_RESIDUAL_TOLERANCE}"' in script
 
     pilot = script.split("fixed-O1-pilot)", maxsplit=1)[1].split(
         "fixed-O1-L12-spectrum)", maxsplit=1
