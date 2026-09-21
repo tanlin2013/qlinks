@@ -65,10 +65,7 @@ def status(*, target_data_dir: Path, output_dir: Path) -> dict[str, Any]:
         "L12_observables_closed": _closed(observables),
         "three_size_sequence_closed": _closed(three_size),
         "p0_thermal_lane_closed": bool(
-            pilot_recommended
-            and _closed(spectrum)
-            and _closed(observables)
-            and _closed(three_size)
+            pilot_recommended and _closed(spectrum) and _closed(observables) and _closed(three_size)
         ),
         "files": {
             "target_block_acceptance": str(target_path),
