@@ -12,6 +12,8 @@ from qdm_sec7_fixed_o1 import atomic_write_json
 from qdm_sec7_fixed_o1_l12_observables import ACCEPTANCE_NAME as OBSERVABLES_ACCEPTANCE_NAME
 from qdm_sec7_fixed_o1_l12_spectrum import (
     ACCEPTANCE_NAME as SPECTRUM_ACCEPTANCE_NAME,
+)
+from qdm_sec7_fixed_o1_l12_spectrum import (
     RECOMMENDATION_NAME,
 )
 from qdm_sec7_fixed_o1_sequence import STATUS_NAME as THREE_SIZE_STATUS_NAME
