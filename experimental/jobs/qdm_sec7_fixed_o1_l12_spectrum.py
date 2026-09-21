@@ -181,7 +181,7 @@ def _acceptance(frame: pd.DataFrame, *, width: float) -> dict[str, Any]:
     covered = covered.sort_values("requested_subspace_size")
     last = covered.tail(2)
     checks = {
-        "at_least_two_covered_budgets": len(covered) >= 2,
+        "at_least_two_covered_budgets": covered["requested_subspace_size"].nunique() >= 2,
         "last_two_window_counts_stable": (
             len(last) == 2 and len(set(last["window_state_count"].astype(int))) == 1
         ),
