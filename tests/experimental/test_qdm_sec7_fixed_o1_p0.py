@@ -63,6 +63,26 @@ def test_target_block_lane_starts_from_persisted_512_checkpoint() -> None:
     assert "shift_invert" not in source
 
 
+def test_fixed_o1_pilot_allows_empty_clean_window() -> None:
+    pilot = _load(PILOT, "qdm_sec7_fixed_o1_pilot_empty_clean_test")
+    missing = pilot._select_optional_microcanonical_window(
+        np.asarray([11.0, 13.0]),
+        target_energy=12.0,
+        half_width=0.1,
+        degeneracy_tolerance=1.0e-9,
+    )
+    retained = pilot._select_optional_microcanonical_window(
+        np.asarray([11.95, 12.05]),
+        target_energy=12.0,
+        half_width=0.1,
+        degeneracy_tolerance=1.0e-9,
+    )
+    assert missing is None
+    assert retained is not None
+    assert retained.n_states == 2
+    assert "clean_window_available" in PILOT.read_text(encoding="utf-8")
+
+
 def test_fixed_o1_pilot_cannot_start_large_strip_or_primme_solver() -> None:
     source = PILOT.read_text(encoding="utf-8")
     assert "for repeats in (1, 2):" in source
