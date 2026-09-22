@@ -119,6 +119,23 @@ def test_spectrum_stage_can_extend_after_failed_observable_budget_gate(tmp_path:
     assert spectrum._observables_request_extension(tmp_path) is True
 
 
+def test_spectrum_acceptance_handles_empty_convergence_frame() -> None:
+    spectrum = _load(SPECTRUM, "qdm_sec7_fixed_o1_l12_spectrum_empty_acceptance_test")
+    acceptance = spectrum._acceptance(
+        pd.DataFrame(),
+        width=0.20,
+        residual_tolerance=1.0e-6,
+    )
+    assert acceptance["closed"] is False
+    assert acceptance["covered_budgets"] == []
+    assert acceptance["last_two_covered_budgets"] == []
+    assert acceptance["checks"] == {
+        "at_least_two_covered_budgets": False,
+        "last_two_window_counts_stable": False,
+        "last_two_window_residuals_acceptable": False,
+    }
+
+
 def test_spectrum_acceptance_requires_two_distinct_covered_budgets() -> None:
     spectrum = _load(SPECTRUM, "qdm_sec7_fixed_o1_l12_spectrum_acceptance_test")
     frame = pd.DataFrame(
