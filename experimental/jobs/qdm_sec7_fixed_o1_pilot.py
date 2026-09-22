@@ -284,10 +284,7 @@ def run(
             )
             raw_mc = {name: float(np.mean(values[raw_indices])) for name, values in raw_q.items()}
             clean_mc = (
-                {
-                    name: float(np.mean(values[clean_indices]))
-                    for name, values in clean_q.items()
-                }
+                {name: float(np.mean(values[clean_indices])) for name, values in clean_q.items()}
                 if clean_indices.size
                 else {name: float("nan") for name in clean_q}
             )
@@ -352,9 +349,7 @@ def run(
                 ),
                 "w_raw": float(raw_covariance["largest_width"]),
                 "w_clean": clean_width,
-                "raw_clean_width_difference": float(
-                    raw_covariance["largest_width"] - clean_width
-                ),
+                "raw_clean_width_difference": float(raw_covariance["largest_width"] - clean_width),
                 "formal_local_dimension": int(stripe_meta["formal_operator_dimension"]),
                 "formal_nonidentity_dimension": int(stripe_meta["ambient_nonidentity_dimension"]),
                 "projected_quotient_dimension": int(stripe_meta["projected_operator_dimension"]),
