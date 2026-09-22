@@ -177,9 +177,18 @@ def _acceptance(
     width: float,
     residual_tolerance: float,
 ) -> dict[str, Any]:
+    required_columns = (
+        "requested_subspace_size",
+        "window_state_count",
+        "window_maximum_residual",
+        "window_coverage_complete",
+    )
     if frame.empty:
-        covered = frame
+        covered = pd.DataFrame(columns=required_columns)
     else:
+        missing = [column for column in required_columns if column not in frame.columns]
+        if missing:
+            raise ValueError(f"spectral convergence frame is missing columns: {missing}")
         covered = frame[frame["window_coverage_complete"].astype(bool)].copy()
     covered = covered.sort_values("requested_subspace_size")
     last = covered.tail(2)
