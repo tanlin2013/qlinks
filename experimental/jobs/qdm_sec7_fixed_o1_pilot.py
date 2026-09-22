@@ -57,6 +57,29 @@ def _orthonormalize(columns: np.ndarray, *, tolerance: float = 1.0e-9) -> np.nda
     return np.asarray(u[:, keep], dtype=np.complex128)
 
 
+def _select_optional_microcanonical_window(
+    energies: np.ndarray,
+    *,
+    target_energy: float,
+    half_width: float,
+    degeneracy_tolerance: float,
+):
+    """Return the prescribed window, or None when no retained levels lie in it."""
+
+    values = np.asarray(energies, dtype=float).reshape(-1)
+    mask = np.abs(values - float(target_energy)) <= (
+        float(half_width) + float(degeneracy_tolerance)
+    )
+    if not np.any(mask):
+        return None
+    return select_microcanonical_window_by_width(
+        values,
+        target_energy=target_energy,
+        half_width=half_width,
+        degeneracy_tolerance=degeneracy_tolerance,
+    )
+
+
 def _joint_dark_all(
     energies: np.ndarray,
     vectors: np.ndarray,
@@ -248,17 +271,23 @@ def run(
                 degeneracy_tolerance=ENERGY_BLOCK_TOL,
             )
             raw_indices = np.asarray(raw_window.indices, dtype=int)
-            clean_window = select_microcanonical_window_by_width(
+            clean_window = _select_optional_microcanonical_window(
                 clean_energies,
                 target_energy=context.tower_energy,
                 half_width=float(half_width),
                 degeneracy_tolerance=ENERGY_BLOCK_TOL,
             )
-            clean_indices = np.asarray(clean_window.indices, dtype=int)
+            clean_indices = (
+                np.asarray(clean_window.indices, dtype=int)
+                if clean_window is not None
+                else np.zeros(0, dtype=int)
+            )
             raw_mc = {name: float(np.mean(values[raw_indices])) for name, values in raw_q.items()}
-            clean_mc = {
-                name: float(np.mean(values[clean_indices])) for name, values in clean_q.items()
-            }
+            clean_mc = (
+                {name: float(np.mean(values[clean_indices])) for name, values in clean_q.items()}
+                if clean_indices.size
+                else {name: float("nan") for name in clean_q}
+            )
             raw_covariance = projector_deleted_block_covariance(
                 energies,
                 vectors,
@@ -268,14 +297,23 @@ def run(
                 energy_tolerance=ENERGY_BLOCK_TOL,
                 vector_tolerance=1.0e-9,
             )
-            clean_covariance = projector_deleted_block_covariance(
-                energies,
-                vectors,
-                exceptional,
-                stripe_ops,
-                raw_indices,
-                energy_tolerance=ENERGY_BLOCK_TOL,
-                vector_tolerance=1.0e-9,
+            clean_covariance = (
+                projector_deleted_block_covariance(
+                    energies,
+                    vectors,
+                    exceptional,
+                    stripe_ops,
+                    raw_indices,
+                    energy_tolerance=ENERGY_BLOCK_TOL,
+                    vector_tolerance=1.0e-9,
+                )
+                if clean_indices.size
+                else None
+            )
+            clean_width = (
+                float(clean_covariance["largest_width"])
+                if clean_covariance is not None
+                else float("nan")
             )
             removed_rank = int(np.count_nonzero(exceptional_mask[raw_indices]))
             row = {
@@ -287,7 +325,8 @@ def run(
                 "window_energy_density_half_width": float(half_width) / context.lx,
                 "sector_dimension": context.sector.sector_dimension,
                 "raw_window_state_count": int(raw_window.n_states),
-                "clean_window_state_count": int(clean_window.n_states),
+                "clean_window_state_count": int(clean_indices.size),
+                "clean_window_available": bool(clean_indices.size),
                 "joint_dark_removed_rank": removed_rank,
                 "removed_fraction": float(removed_rank / max(1, raw_window.n_states)),
                 "matched_beta_raw": beta_raw,
@@ -309,10 +348,8 @@ def run(
                     abs(clean_mc["Z"] - canonical_clean["Z"]),
                 ),
                 "w_raw": float(raw_covariance["largest_width"]),
-                "w_clean": float(clean_covariance["largest_width"]),
-                "raw_clean_width_difference": float(
-                    raw_covariance["largest_width"] - clean_covariance["largest_width"]
-                ),
+                "w_clean": clean_width,
+                "raw_clean_width_difference": float(raw_covariance["largest_width"] - clean_width),
                 "formal_local_dimension": int(stripe_meta["formal_operator_dimension"]),
                 "formal_nonidentity_dimension": int(stripe_meta["ambient_nonidentity_dimension"]),
                 "projected_quotient_dimension": int(stripe_meta["projected_operator_dimension"]),
