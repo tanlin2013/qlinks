@@ -152,6 +152,10 @@ def main() -> None:
     figures.mkdir(parents=True, exist_ok=True)
     formats = tuple(x.strip() for x in args.figure_formats.split(",") if x.strip())
     set_revtex_matplotlib_style(base_font_size=9.0, prefer_tex=args.use_tex)
+    if args.use_tex and not bool(plt.rcParams.get("text.usetex", False)):
+        raise RuntimeError(
+            "--use-tex requires a working LaTeX executable; refusing mathtext fallback"
+        )
 
     sequence = _read_first(
         data, "spin1_xy_kappa0p1_sequence.csv", "spin1_xy_cage_excised_sequence.csv"
@@ -400,7 +404,9 @@ def main() -> None:
         ax_d.set_yticks(np.sort(display_concentration["L"].unique()).astype(int))
     add_panel_label(ax_d, "(d)")
 
+    # Keep the historical combined stem and emit the manuscript-facing PRX stem.
     save_prx_figure(fig, "spin1_xy_figure6_combined", directory=figures, formats=formats)
+    save_prx_figure(fig, "spin1_xy_figure6_prx", directory=figures, formats=formats)
 
     # Standalone representative matching and family-wide matching figures.
     fig_delta, (ax0, ax1) = plt.subplots(1, 2, figsize=PRX_TWO_PANEL_FIGSIZE)
