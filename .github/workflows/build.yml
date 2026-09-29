@@ -59,6 +59,10 @@ jobs:
 
       - name: Smoke test bind mount, notebook runtime, and Cairo drawing backend
         run: |
+          docker run --rm qlinks:ci-runtime kpsewhich type1cm.sty
+          docker run --rm \
+            qlinks:ci-runtime \
+            /opt/qlinks-venv/bin/python -c 'import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt; plt.rcParams["text.usetex"] = True; fig, ax = plt.subplots(); ax.set_xlabel("Energy"); ax.plot([0, 1], [0, 1]); fig.savefig("/tmp/qlinks-usetex-smoke.pdf")'
           docker run --rm \
             --volume "${GITHUB_WORKSPACE}:/workspace/qlinks" \
             --workdir /workspace/qlinks \

@@ -61,6 +61,7 @@ RUN apt-get update && \
             poppler-utils \
             texlive-fonts-recommended \
             texlive-latex-base \
+            texlive-latex-extra \
             texlive-latex-recommended; \
     fi && \
     rm -rf /var/lib/apt/lists/*
