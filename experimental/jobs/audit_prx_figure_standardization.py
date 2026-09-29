@@ -32,7 +32,10 @@ ASSETS = (
             "spin1_xy_kappa_matching_grid.csv",
             "spin1_xy_kappa_concentration_grid.csv",
         ),
-        "command": "python experimental/jobs/render_spin1_xy_draft_figures.py --data-dir {data} --use-tex",
+        "command": (
+            "python experimental/jobs/render_spin1_xy_draft_figures.py "
+            "--data-dir {data} --use-tex"
+        ),
     },
     {
         "figure": "Fig. 9",
@@ -46,7 +49,10 @@ ASSETS = (
             "qdm_checkerboard_concentration_grid.csv",
             "qdm_checkerboard_representative_phase.csv",
         ),
-        "command": "python experimental/jobs/render_square_qdm_draft_figures.py --data-dir {data} --use-tex",
+        "command": (
+            "python experimental/jobs/render_square_qdm_draft_figures.py "
+            "--data-dir {data} --use-tex"
+        ),
     },
     {
         "figure": "Fig. 10",
@@ -54,7 +60,10 @@ ASSETS = (
         "dir_key": "spin1_appendix",
         "expected_width_in": PRX_COLUMN_WIDTH,
         "sources": ("spin1_xy_appendix_beta0_bridges_data.csv",),
-        "command": "python experimental/jobs/render_prx_appendix_figures.py --spin1-data-dir {data} --use-tex",
+        "command": (
+            "python experimental/jobs/render_prx_appendix_figures.py "
+            "--spin1-data-dir {data} --use-tex"
+        ),
     },
     {
         "figure": "Fig. 11",
@@ -62,7 +71,10 @@ ASSETS = (
         "dir_key": "spin1_appendix",
         "expected_width_in": PRX_COLUMN_WIDTH,
         "sources": ("spin1_xy_kappa0p1_concentration_common_windows.csv",),
-        "command": "python experimental/jobs/render_prx_appendix_figures.py --spin1-data-dir {data} --use-tex",
+        "command": (
+            "python experimental/jobs/render_prx_appendix_figures.py "
+            "--spin1-data-dir {data} --use-tex"
+        ),
     },
     {
         "figure": "Fig. 14(b)",
@@ -70,7 +82,10 @@ ASSETS = (
         "dir_key": "qdm_appendix",
         "expected_width_in": PRX_COLUMN_WIDTH,
         "sources": ("qdm_4x4_minimum_annihilator_radius.csv",),
-        "command": "python experimental/jobs/render_prx_appendix_figures.py --qdm-data-dir {data} --use-tex",
+        "command": (
+            "python experimental/jobs/render_prx_appendix_figures.py "
+            "--qdm-data-dir {data} --use-tex"
+        ),
     },
     {
         "figure": "Fig. 14(c)",
@@ -78,7 +93,10 @@ ASSETS = (
         "dir_key": "qdm_appendix",
         "expected_width_in": PRX_COLUMN_WIDTH,
         "sources": ("qdm_4N_by_4_exact_sequence.csv",),
-        "command": "python experimental/jobs/render_prx_appendix_figures.py --qdm-data-dir {data} --use-tex",
+        "command": (
+            "python experimental/jobs/render_prx_appendix_figures.py "
+            "--qdm-data-dir {data} --use-tex"
+        ),
     },
 )
 
