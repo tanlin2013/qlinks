@@ -86,9 +86,7 @@ def _require_current_spin1_convention(frame: pd.DataFrame, *, source: Path) -> N
         raise ValueError(f"unstamped Spin-1 cached figure table: {source}")
     conventions = set(frame[EXCHANGE_CONVENTION_METADATA_KEY].dropna().astype(str))
     if conventions != {CURRENT_EXCHANGE_CONVENTION}:
-        raise ValueError(
-            f"Spin-1 convention mismatch in {source}: {sorted(conventions)!r}"
-        )
+        raise ValueError(f"Spin-1 convention mismatch in {source}: {sorted(conventions)!r}")
 
 
 def _configure_style(*, use_tex: bool) -> None:
@@ -270,9 +268,7 @@ def render_spin1_appendix(
     )
     return {
         "data_dir": str(data),
-        "sources": {
-            path.name: _sha256(path) for path in (bridge_path, concentration_path)
-        },
+        "sources": {path.name: _sha256(path) for path in (bridge_path, concentration_path)},
         "written": [str(path) for path in written],
     }
 
@@ -321,10 +317,9 @@ def _qdm_compatibility_figure(frame: pd.DataFrame) -> plt.Figure:
         source=Path("QDM repeated-strip table"),
     )
     ordered = frame.sort_values("repeats").copy()
-    ordered["kinetic_parameter_count"] = (
-        ordered["kinetic_constraint_rank"].astype(float)
-        + ordered["kinetic_compatible_dimension"].astype(float)
-    )
+    ordered["kinetic_parameter_count"] = ordered["kinetic_constraint_rank"].astype(float) + ordered[
+        "kinetic_compatible_dimension"
+    ].astype(float)
 
     fig, ax = plt.subplots(figsize=(PRX_COLUMN_WIDTH, 2.62))
     ax.plot(
@@ -343,10 +338,9 @@ def _qdm_compatibility_figure(frame: pd.DataFrame) -> plt.Figure:
         linewidth=LINE_WIDTH,
         label="compatibility constraints",
     )
-    per_cell = (
-        ordered["kinetic_constraint_rank"].to_numpy(dtype=float)
-        / ordered["repeats"].to_numpy(dtype=float)
-    )
+    per_cell = ordered["kinetic_constraint_rank"].to_numpy(dtype=float) / ordered[
+        "repeats"
+    ].to_numpy(dtype=float)
     if np.allclose(per_cell, per_cell[0], rtol=0.0, atol=1.0e-12):
         annotation = "$" + f"{per_cell[0]:g}" + r"$ constraints/cell"
         ax.text(
