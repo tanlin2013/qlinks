@@ -92,3 +92,50 @@ def test_proof_keeps_narrow_window_and_qdm_boundaries_explicit() -> None:
     assert "eigsh" not in source
     assert "eigh(" not in source
     assert "spectral_solver_launched" in source
+
+
+@pytest.mark.integration
+def test_locked_spin1_family_satisfies_center_and_row_norm_sanity() -> None:
+    import numpy as np
+    import scipy.sparse as sp
+
+    from qlinks.models import (
+        spin_one_xy_hxy_h3_imaginary_j2_model,
+        spin_one_xy_scar_tower_states,
+    )
+
+    length = 8
+    model = spin_one_xy_hxy_h3_imaginary_j2_model(
+        length=length,
+        j=1.0,
+        j3=0.1,
+        kappa=0.2,
+        total_sz=-2,
+    )
+    build = model.build(builder="optimized", basis_solver="dfs", sort_basis=True)
+    configs = np.asarray(build.basis.states)
+    hamiltonian = sp.csr_array(build.hamiltonian, dtype=np.complex128)
+
+    charges = np.sum(configs[:, 0::2] + 1, axis=1).astype(np.int64)
+    signs = np.where(charges % 2 == 0, 1.0, -1.0)
+    grading = sp.diags(signs.astype(np.complex128), format="csr")
+    transformed = grading @ hamiltonian.conjugate() @ grading
+    scale = max(float(sp.linalg.norm(hamiltonian)), np.finfo(float).tiny)
+    assert float(sp.linalg.norm(transformed + hamiltonian)) / scale < 1.0e-12
+
+    translated_charges = np.sum(np.roll(configs, 1, axis=1)[:, 0::2] + 1, axis=1)
+    translated_signs = np.where(translated_charges % 2 == 0, 1.0, -1.0)
+    np.testing.assert_array_equal(signs, translated_signs)
+
+    row_norm_squared = np.asarray(
+        hamiltonian.multiply(hamiltonian.conjugate()).sum(axis=1)
+    ).ravel().real
+    assert float(np.max(row_norm_squared)) <= 2.1 * length + 1.0e-12
+
+    tower, labels = spin_one_xy_scar_tower_states(
+        basis_configs=configs,
+        length=length,
+        normalize=True,
+    )
+    assert tower.shape[1] == 1, labels
+    assert float(np.linalg.norm(hamiltonian @ tower[:, 0])) < 1.0e-12
