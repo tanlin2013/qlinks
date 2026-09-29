@@ -33,8 +33,14 @@ def test_appendix_renderer_uses_final_prx_column_width() -> None:
 
     bridge = pd.DataFrame(
         [
-            {"L": length, "bridge": bridge_name, "trace_distance": value, "abs_delta_tau_A": 0.02,
-             "abs_delta_tau_Z": 0.01, "abs_delta_tau_Y": 0.015}
+            {
+                "L": length,
+                "bridge": bridge_name,
+                "trace_distance": value,
+                "abs_delta_tau_A": 0.02,
+                "abs_delta_tau_Z": 0.01,
+                "abs_delta_tau_Y": 0.015,
+            }
             for length, value in ((8, 0.04), (10, 0.03))
             for bridge_name in ("mc_to_beta0_resolved", "beta0_resolved_to_fixedM")
         ]
