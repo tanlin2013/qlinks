@@ -68,15 +68,58 @@ def _copy_final_figures(output_dir: Path, spin1_data_dir: Path, qdm_data_dir: Pa
         shutil.copy2(source, destination / source.name)
 
 
+def _git_sha_from_metadata(repo_root: Path) -> str | None:
+    """Resolve HEAD directly from .git metadata without requiring git."""
+    git_entry = repo_root / ".git"
+    git_dir = git_entry
+    if git_entry.is_file():
+        prefix = "gitdir:"
+        line = git_entry.read_text(encoding="utf-8").strip()
+        if not line.startswith(prefix):
+            return None
+        target = Path(line[len(prefix) :].strip())
+        git_dir = target if target.is_absolute() else (repo_root / target).resolve(strict=False)
+
+    head_path = git_dir / "HEAD"
+    if not head_path.is_file():
+        return None
+    head = head_path.read_text(encoding="utf-8").strip()
+    if not head.startswith("ref: "):
+        return head or None
+
+    ref = head.removeprefix("ref: ").strip()
+    loose_ref = git_dir / ref
+    if loose_ref.is_file():
+        return loose_ref.read_text(encoding="utf-8").strip() or None
+
+    packed_refs = git_dir / "packed-refs"
+    if packed_refs.is_file():
+        suffix = f" {ref}"
+        for line in packed_refs.read_text(encoding="utf-8").splitlines():
+            if line.startswith(("#", "^")) or not line.endswith(suffix):
+                continue
+            return line.split(" ", 1)[0]
+    return None
+
+
 def _git_sha() -> str | None:
-    completed = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    return completed.stdout.strip() if completed.returncode == 0 else None
+    """Best-effort provenance stamp; never make the evidence job depend on git."""
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        completed = None
+
+    if completed is not None and completed.returncode == 0:
+        sha = completed.stdout.strip()
+        if sha:
+            return sha
+    return _git_sha_from_metadata(ROOT)
 
 
 def _write_verdict(output_dir: Path, *, figures_rendered: bool) -> None:
