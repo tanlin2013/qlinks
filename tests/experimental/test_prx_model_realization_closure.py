@@ -127,9 +127,9 @@ def test_locked_spin1_family_satisfies_center_and_row_norm_sanity() -> None:
     translated_signs = np.where(translated_charges % 2 == 0, 1.0, -1.0)
     np.testing.assert_array_equal(signs, translated_signs)
 
-    row_norm_squared = np.asarray(
-        hamiltonian.multiply(hamiltonian.conjugate()).sum(axis=1)
-    ).ravel().real
+    row_norm_squared = (
+        np.asarray(hamiltonian.multiply(hamiltonian.conjugate()).sum(axis=1)).ravel().real
+    )
     assert float(np.max(row_norm_squared)) <= 2.1 * length + 1.0e-12
 
     tower, labels = spin_one_xy_scar_tower_states(
