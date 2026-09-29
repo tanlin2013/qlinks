@@ -37,6 +37,9 @@ def test_resolved_entropy_exact_translation_character_counts() -> None:
     assert module.momentum_dimensions(4, -2) == [3, 2, 3, 2]
     assert module.momentum_dimensions(6, -2) == [16, 14, 16, 14, 16, 14]
     assert sum(module.momentum_dimensions(8, -2)) == 784
+    dims_38 = module.momentum_dimensions(38, -2)
+    assert dims_38[1] == 2594819515843946
+    assert sum(dims_38) == module.coefficient_for_cycles(38, 0, -2)
     assert module.staggered_tower_momentum_index(8, -2) == 4
     assert module.staggered_tower_momentum_index(10, -2) == 0
 

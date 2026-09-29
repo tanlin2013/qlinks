@@ -25,26 +25,72 @@ def coefficient_for_cycles(length: int, shift: int, magnetization: int) -> int:
     return counts.get(magnetization, 0)
 
 
+def _divisors(value: int) -> list[int]:
+    """Positive divisors in increasing order."""
+    divisors: list[int] = []
+    for candidate in range(1, math.isqrt(value) + 1):
+        if value % candidate:
+            continue
+        divisors.append(candidate)
+        partner = value // candidate
+        if partner != candidate:
+            divisors.append(partner)
+    return sorted(divisors)
+
+
+def _mobius(value: int) -> int:
+    """Integer Möbius function for the small divisors used here."""
+    if value == 1:
+        return 1
+    result = 1
+    remaining = value
+    prime = 2
+    while prime * prime <= remaining:
+        if remaining % prime == 0:
+            remaining //= prime
+            result = -result
+            if remaining % prime == 0:
+                return 0
+            while remaining % prime == 0:
+                remaining //= prime
+        prime = 3 if prime == 2 else prime + 2
+    if remaining > 1:
+        result = -result
+    return result
+
+
+def _ramanujan_sum(order: int, momentum_index: int) -> int:
+    """Exact sum of characters over shifts of a fixed translation order."""
+    common = math.gcd(order, momentum_index)
+    return sum(divisor * _mobius(order // divisor) for divisor in _divisors(common))
+
+
 def momentum_dimensions(length: int, magnetization: int) -> list[int]:
-    """Exact dimensions of all translation-momentum sectors."""
-    traces = [coefficient_for_cycles(length, r, magnetization) for r in range(length)]
-    dimensions = []
+    """Exact dimensions of all translation-momentum sectors.
+
+    The trace Tr_M(T^r) depends only on gcd(L, r).  Grouping shifts by their
+    translation order replaces the floating-point roots-of-unity projection by
+    an integer Ramanujan sum.  This keeps the character projection exact even
+    when the fixed-M traces are much larger than IEEE-754 integer precision.
+    """
+    divisors = _divisors(length)
+    identity_trace = coefficient_for_cycles(length, 0, magnetization)
+    traces_by_order = {
+        order: coefficient_for_cycles(length, length // order, magnetization) for order in divisors
+    }
+
+    dimensions: list[int] = []
     for q in range(length):
-        value = (
-            sum(
-                traces[r]
-                * complex(
-                    math.cos(-2 * math.pi * q * r / length),
-                    math.sin(-2 * math.pi * q * r / length),
-                )
-                for r in range(length)
+        numerator = sum(_ramanujan_sum(order, q) * traces_by_order[order] for order in divisors)
+        quotient, remainder = divmod(numerator, length)
+        if remainder:
+            raise RuntimeError(
+                f"exact character projection failed at L={length}, q={q}: "
+                f"numerator={numerator} is not divisible by L"
             )
-            / length
-        )
-        if abs(value.imag) > 1e-7 or abs(value.real - round(value.real)) > 1e-7:
-            raise RuntimeError(f"character projection failed at L={length}, q={q}: {value}")
-        dimensions.append(int(round(value.real)))
-    if sum(dimensions) != traces[0]:
+        dimensions.append(quotient)
+
+    if sum(dimensions) != identity_trace:
         raise RuntimeError("momentum dimensions do not sum to the fixed-M dimension")
     return dimensions
 
