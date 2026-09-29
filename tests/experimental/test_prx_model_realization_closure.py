@@ -96,7 +96,6 @@ def test_proof_keeps_narrow_window_and_qdm_boundaries_explicit() -> None:
     assert "spectral_solver_launched" in source
 
 
-@pytest.mark.integration
 def test_locked_spin1_family_satisfies_center_and_row_norm_sanity() -> None:
     import numpy as np
     import scipy.sparse as sp
