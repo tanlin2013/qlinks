@@ -66,6 +66,18 @@ jobs:
             bash -c '
               set -euo pipefail
               python -c "import sys, cairo, igraph, matplotlib, nbconvert, lxml.html.clean, qlinks; assert sys.executable == '\''/opt/qlinks-venv/bin/python'\'', sys.executable; print('\''bind-mounted notebook/drawing environment OK:'\'', sys.executable)"
+              kpsewhich type1cm.sty
+              python - <<'PY'
+              import matplotlib
+              matplotlib.use("Agg")
+              import matplotlib.pyplot as plt
+              plt.rcParams["text.usetex"] = True
+              fig, ax = plt.subplots()
+              ax.set_xlabel(r"$E/L$")
+              ax.plot([0, 1], [0, 1])
+              fig.savefig("/tmp/qlinks-usetex-smoke.pdf")
+              PY
+              test -s /tmp/qlinks-usetex-smoke.pdf
               uv sync --locked --group notebook --group docs --extra storage --extra drawing
               python scripts/docker/verify_optional_environment.py --extras "notebook drawing storage"
               QLINKS_TEST_COVERAGE=0 scripts/dev/test.sh fast tests/visualizer/test_hamiltonian_graph.py
