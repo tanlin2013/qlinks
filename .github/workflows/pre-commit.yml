@@ -65,5 +65,11 @@ jobs:
       - name: Dependency lock
         run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD lock
 
+      - name: Pull request title policy
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: uv run cz check --message "${PR_TITLE}"
+
       - name: Commit message policy
         run: ./scripts/dev/precommit_ci.sh "${{ steps.range.outputs.base }}" HEAD commits
