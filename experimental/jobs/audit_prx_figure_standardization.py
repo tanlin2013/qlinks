@@ -33,8 +33,7 @@ ASSETS = (
             "spin1_xy_kappa_concentration_grid.csv",
         ),
         "command": (
-            "python experimental/jobs/render_spin1_xy_draft_figures.py "
-            "--data-dir {data} --use-tex"
+            "python experimental/jobs/render_spin1_xy_draft_figures.py --data-dir {data} --use-tex"
         ),
     },
     {
@@ -185,11 +184,7 @@ def _manifest_usetex(data_dir: Path, stem: str) -> bool | None:
             continue
         figures = payload.get("figures") if isinstance(payload, dict) else None
         if isinstance(figures, list):
-            rows = [
-                row
-                for row in figures
-                if isinstance(row, dict) and str(row.get("stem")) == stem
-            ]
+            rows = [row for row in figures if isinstance(row, dict) and str(row.get("stem")) == stem]
             if rows:
                 values = {bool(row.get("usetex")) for row in rows}
                 if len(values) == 1:
@@ -214,9 +209,7 @@ def _verified_qdm_lengths(data_dir: Path) -> list[int]:
         frame = frame[np.isclose(frame["window_prefactor"], primary)].copy()
     if "window_coverage_complete" in frame.columns:
         large = frame["Lx"].astype(int) >= 12
-        frame = frame[
-            ~large | frame["window_coverage_complete"].fillna(False).astype(bool)
-        ]
+        frame = frame[~large | frame["window_coverage_complete"].fillna(False).astype(bool)]
     if "converged_vs_previous_budget" in frame.columns:
         large = frame["Lx"].astype(int) >= 12
         converged = frame["converged_vs_previous_budget"].fillna(False).astype(bool)
@@ -258,9 +251,7 @@ def run(
         svg_width, svg_height = _svg_inches(svg)
         expected_width = float(spec["expected_width_in"])
         widths = [value for value in (pdf_width, svg_width) if value is not None]
-        dimension_ok = bool(widths) and all(
-            abs(value - expected_width) <= 0.02 for value in widths
-        )
+        dimension_ok = bool(widths) and all(abs(value - expected_width) <= 0.02 for value in widths)
 
         font_audit = _pdffonts(pdf)
         if strict and not font_audit.get("available"):
@@ -322,8 +313,7 @@ def run(
         "- Numerical recomputation: no; all figures are render-only from cached tables.",
         "- Verified QDM raw thermal lengths: "
         + (", ".join(str(value) for value in verified_qdm_lengths) or "none"),
-        "- raw_12x4_thermal_present = "
-        + ("true" if 12 in verified_qdm_lengths else "false"),
+        "- raw_12x4_thermal_present = " + ("true" if 12 in verified_qdm_lengths else "false"),
         "",
     ]
     for row in records:
@@ -344,10 +334,8 @@ def run(
                 + str(row["svg_height_in"])
                 + " in.",
                 "- Base font: 9.0 pt.",
-                "- text.usetex=True: "
-                + ("yes" if row["text_usetex"] is True else "not certified"),
-                "- pdffonts: "
-                + " | ".join(row["pdffonts"].get("summary", [])),
+                "- text.usetex=True: " + ("yes" if row["text_usetex"] is True else "not certified"),
+                "- pdffonts: " + " | ".join(row["pdffonts"].get("summary", [])),
                 "- Numerical recomputation: no.",
                 "",
             ]
