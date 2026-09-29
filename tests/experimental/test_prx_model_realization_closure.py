@@ -86,7 +86,8 @@ def test_proof_keeps_narrow_window_and_qdm_boundaries_explicit() -> None:
     assert "L^{7/2}3^{-L/2}" in text
     assert "arbitrary-fixed-bounded-region background-concentration gate" in text
     assert "QDM" in text
-    assert "fixed-width thermodynamic ICQMBS classification" in text
+    assert "fixed-width" in text
+    assert "thermodynamic ICQMBS classification remains open" in text
     assert not [char for char in text if ord(char) < 32 and char not in "\n\t"]
 
     source = RUNNER.read_text(encoding="utf-8")
