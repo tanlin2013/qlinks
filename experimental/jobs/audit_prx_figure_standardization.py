@@ -185,9 +185,7 @@ def _manifest_usetex(data_dir: Path, stem: str) -> bool | None:
         figures = payload.get("figures") if isinstance(payload, dict) else None
         if isinstance(figures, list):
             rows = [
-                row
-                for row in figures
-                if isinstance(row, dict) and str(row.get("stem")) == stem
+                row for row in figures if isinstance(row, dict) and str(row.get("stem")) == stem
             ]
             if rows:
                 values = {bool(row.get("usetex")) for row in rows}
