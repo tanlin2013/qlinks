@@ -18,10 +18,12 @@ import numpy as np
 import pandas as pd
 import render_spin1_xy_sec6_integration_figures_legacy as _legacy
 import spin1_exchange_convention as _convention
+from helpers import PRX_COLUMN_WIDTH, PRX_TEXT_WIDTH, save_prx_figure, write_figure_manifest
 
 _ORIGINAL_READ = _legacy._read
 _ORIGINAL_RENDER = _legacy.render
 _ORIGINAL_WRITE_AUDIT = _legacy._write_audit
+_ORIGINAL_SAVE = _legacy._save
 
 for _name in dir(_legacy):
     if not _name.startswith("__"):
@@ -31,6 +33,37 @@ PRIMARY_WINDOW_PROTOCOL = _convention.PRIMARY_WINDOW_PROTOCOL
 FIXED_WINDOW_PROTOCOL = _convention.FIXED_WINDOW_PROTOCOL
 CURRENT_EXCHANGE_CONVENTION = _convention.CURRENT_EXCHANGE_CONVENTION
 EXCHANGE_CONVENTION_METADATA_KEY = _convention.EXCHANGE_CONVENTION_METADATA_KEY
+
+# Render at the physical widths of the active REVTeX manuscript.
+_legacy.FULL_WIDTH_IN = PRX_TEXT_WIDTH
+FULL_WIDTH_IN = PRX_TEXT_WIDTH
+
+
+def _save_final_size(
+    fig: _legacy.plt.Figure,
+    directory: Path,
+    stem: str,
+    *,
+    preview: bool = False,
+) -> list[str]:
+    """Save vector artwork without tight-bbox resizing the physical canvas."""
+    paths = save_prx_figure(
+        fig,
+        stem,
+        directory=directory,
+        formats=("svg", "pdf"),
+        close=False,
+    )
+    written = [path.name for path in paths]
+    if preview:
+        path = directory / f"{stem}_preview.png"
+        fig.savefig(path, dpi=180, bbox_inches=None, pad_inches=0.0)
+        written.append(path.name)
+    _legacy.plt.close(fig)
+    return written
+
+
+_legacy._save = _save_final_size
 
 
 def _read_current(path: Path) -> pd.DataFrame:
@@ -65,7 +98,19 @@ _legacy._read = _read
 def _appendix_concentration(data: Path, figures: Path) -> list[str]:
     concentration = _read_current(data / "spin1_xy_kappa0p1_concentration_common_windows.csv")
     raw = concentration[concentration["variant"].astype(str) == "raw"].copy()
-    fig, (ax0, ax1) = _legacy.plt.subplots(1, 2, figsize=(_legacy.FULL_WIDTH_IN, 2.65))
+    fig = _legacy.plt.figure(figsize=(PRX_COLUMN_WIDTH, 4.55))
+    grid = fig.add_gridspec(
+        2,
+        1,
+        height_ratios=(3.0, 2.0),
+        left=0.22,
+        right=0.97,
+        bottom=0.11,
+        top=0.98,
+        hspace=0.30,
+    )
+    ax0 = fig.add_subplot(grid[0])
+    ax1 = fig.add_subplot(grid[1], sharex=ax0)
     labels = {
         PRIMARY_WINDOW_PROTOCOL: r"$\Delta E=(J/2)L^{1/4}$",
         FIXED_WINDOW_PROTOCOL: r"$\Delta E=J/2$",
@@ -73,14 +118,14 @@ def _appendix_concentration(data: Path, figures: Path) -> list[str]:
     for protocol, frame in raw.groupby("window_protocol", sort=True):
         frame = frame.sort_values("L")
         label = labels.get(str(protocol), str(protocol))
-        ax0.plot(
+        line = ax0.plot(
             frame["L"],
             frame["w_L"],
             marker="o",
             markersize=_legacy.MARKER_SIZE,
             linewidth=_legacy.LINE_WIDTH,
             label=label,
-        )
+        )[0]
         if "window_state_count" in frame.columns:
             ax1.plot(
                 frame["L"],
@@ -89,24 +134,85 @@ def _appendix_concentration(data: Path, figures: Path) -> list[str]:
                 marker="o",
                 markersize=_legacy.MARKER_SIZE,
                 linewidth=_legacy.LINE_WIDTH,
-                label=label,
+                color=line.get_color(),
             )
-    ax0.set_xlabel(r"System size $L$")
     ax0.set_ylabel(r"$w_L^{\rm raw}$")
     ax0.set_ylim(bottom=0.0)
-    ax0.legend(frameon=False)
+    ax0.legend(frameon=False, fontsize=8.0, loc="best")
+    ax0.tick_params(labelbottom=False)
     ax1.set_xlabel(r"System size $L$")
     ax1.set_ylabel(r"$\log N_{\rm win}/L$")
     for axis in (ax0, ax1):
         _legacy.use_integer_ticks(axis, axis="x")
-        axis.set_xticks([8, 10, 12, 14])
+        axis.set_xticks(sorted(set(raw["L"].astype(int))))
+        axis.grid(alpha=0.18)
     _legacy.add_panel_label(ax0, "(a)")
     _legacy.add_panel_label(ax1, "(b)")
-    fig.subplots_adjust(left=0.085, right=0.985, bottom=0.20, top=0.95, wspace=0.32)
     return _legacy._save(fig, figures, "spin1_xy_appendix_concentration_windows")
 
 
 _legacy._appendix_concentration = _appendix_concentration
+
+
+def _appendix_beta0(data: Path, figures: Path) -> list[str]:
+    frame = _read_current(data / "spin1_xy_appendix_beta0_bridges_data.csv")
+    fig = _legacy.plt.figure(figsize=(PRX_COLUMN_WIDTH, 4.75))
+    grid = fig.add_gridspec(
+        2,
+        1,
+        left=0.22,
+        right=0.97,
+        bottom=0.11,
+        top=0.98,
+        hspace=0.30,
+    )
+    ax0 = fig.add_subplot(grid[0])
+    ax1 = fig.add_subplot(grid[1], sharex=ax0)
+    bridge_labels = {
+        "mc_to_beta0_resolved": r"$\rho_{\rm mc}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{(M,k)}$",
+        "beta0_resolved_to_fixedM": r"$\rho_{\beta=0}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{M}$",
+    }
+    for bridge, group in frame.groupby("bridge", sort=True):
+        group = group.sort_values("L")
+        ax0.plot(
+            group["L"],
+            group["trace_distance"],
+            marker="o",
+            markersize=_legacy.MARKER_SIZE,
+            linewidth=_legacy.LINE_WIDTH,
+            label=bridge_labels.get(str(bridge), str(bridge)),
+        )
+    ax0.set_yscale("log")
+    ax0.set_ylabel("Two-site RDM distance")
+    ax0.legend(frameon=False, fontsize=7.5, loc="best")
+    ax0.tick_params(labelbottom=False)
+    ax0.grid(alpha=0.18, which="both")
+
+    first = frame[frame["bridge"].astype(str) == "mc_to_beta0_resolved"].sort_values("L")
+    for key, spec in _legacy.WITNESS_SPECS.items():
+        column = f"abs_delta_tau_{key}"
+        if column in first.columns:
+            ax1.plot(
+                first["L"],
+                first[column],
+                marker=spec["marker"],
+                markersize=_legacy.MARKER_SIZE,
+                linewidth=_legacy.LINE_WIDTH,
+                label=spec["label"],
+            )
+    ax1.set_xlabel(r"System size $L$")
+    ax1.set_ylabel(r"$|\Delta\tau_\alpha|$")
+    ax1.legend(frameon=False, fontsize=8.0, ncol=3, loc="best")
+    ax1.grid(alpha=0.18)
+    for axis in (ax0, ax1):
+        _legacy.use_integer_ticks(axis, axis="x")
+        axis.set_xticks(sorted(set(frame["L"].astype(int))))
+    _legacy.add_panel_label(ax0, "(a)")
+    _legacy.add_panel_label(ax1, "(b)")
+    return _legacy._save(fig, figures, "spin1_xy_appendix_beta0_bridges")
+
+
+_legacy._appendix_beta0 = _appendix_beta0
 
 
 def _write_audit(data: Path, figures: Path, written: list[str]) -> None:
@@ -135,7 +241,9 @@ _legacy._write_audit = _write_audit
 def render(data_dir: Path, *, use_tex: bool, allow_incomplete: bool) -> list[str]:
     """Render only convention-stamped current Sec. VI figure products."""
 
-    return _ORIGINAL_RENDER(data_dir, use_tex=use_tex, allow_incomplete=allow_incomplete)
+    written = _ORIGINAL_RENDER(data_dir, use_tex=use_tex, allow_incomplete=allow_incomplete)
+    write_figure_manifest(Path(data_dir) / "figure_manifest.json")
+    return written
 
 
 if __name__ == "__main__":

@@ -53,6 +53,16 @@ RUN apt-get update && \
         libxslt1-dev \
         pkg-config \
         zlib1g-dev && \
+    if printf ' %s ' "${QLINKS_EXTRAS}" | grep -q ' notebook '; then \
+        apt-get install -y --no-install-recommends \
+            cm-super \
+            dvipng \
+            ghostscript \
+            poppler-utils \
+            texlive-fonts-recommended \
+            texlive-latex-base \
+            texlive-latex-recommended; \
+    fi && \
     rm -rf /var/lib/apt/lists/*
 
 RUN python -m pip install --no-cache-dir "uv==${UV_VERSION}"
