@@ -62,10 +62,7 @@ def _mobius(value: int) -> int:
 def _ramanujan_sum(order: int, momentum_index: int) -> int:
     """Exact sum of characters over shifts of a fixed translation order."""
     common = math.gcd(order, momentum_index)
-    return sum(
-        divisor * _mobius(order // divisor)
-        for divisor in _divisors(common)
-    )
+    return sum(divisor * _mobius(order // divisor) for divisor in _divisors(common))
 
 
 def momentum_dimensions(length: int, magnetization: int) -> list[int]:
@@ -79,16 +76,12 @@ def momentum_dimensions(length: int, magnetization: int) -> list[int]:
     divisors = _divisors(length)
     identity_trace = coefficient_for_cycles(length, 0, magnetization)
     traces_by_order = {
-        order: coefficient_for_cycles(length, length // order, magnetization)
-        for order in divisors
+        order: coefficient_for_cycles(length, length // order, magnetization) for order in divisors
     }
 
     dimensions: list[int] = []
     for q in range(length):
-        numerator = sum(
-            _ramanujan_sum(order, q) * traces_by_order[order]
-            for order in divisors
-        )
+        numerator = sum(_ramanujan_sum(order, q) * traces_by_order[order] for order in divisors)
         quotient, remainder = divmod(numerator, length)
         if remainder:
             raise RuntimeError(
