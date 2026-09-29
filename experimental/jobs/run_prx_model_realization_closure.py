@@ -15,7 +15,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
-
 from spin1_prx_p1_resolved_entropy import (
     coefficient_for_cycles,
     momentum_dimensions,
@@ -170,13 +169,19 @@ def _closure_rows() -> list[dict[str, str]]:
             "layer": "vanishing caged fraction",
             "current_status": "gated",
             "after_this_ticket": "closed for declared tower",
-            "proof_evidence": "one tower state in fixed M=-2 sector versus exp[(log3+o(1))L] window",
+            "proof_evidence": (
+                "one tower state in fixed M=-2 sector versus "
+                "exp[(log3+o(1))L] window"
+            ),
         },
         {
             "layer": "all-fixed-bounded-region concentration",
             "current_status": "open",
             "after_this_ticket": "closed",
-            "proof_evidence": "momentum compression + fixed-M covariance O(1/L) + window conditioning",
+            "proof_evidence": (
+                "momentum compression + fixed-M covariance O(1/L) + "
+                "window conditioning"
+            ),
         },
         {
             "layer": "literal ICQMBS realization",
@@ -188,7 +193,10 @@ def _closure_rows() -> list[dict[str, str]]:
             "layer": "deformation-stable ICQMBS realization",
             "current_status": "open",
             "after_this_ticket": "closed on 0.05<kappa/J<0.20",
-            "proof_evidence": "uniform variance/window bound and Hamiltonian-independent beta-zero local bounds",
+            "proof_evidence": (
+                "uniform variance/window bound and Hamiltonian-independent "
+                "beta-zero local bounds"
+            ),
         },
     ]
 
@@ -211,7 +219,7 @@ def _write_closure_matrix(output: Path) -> dict[str, object]:
         ],
         "rows": _closure_rows(),
         "narrow_L_quarter_window_status": (
-            "finite-size diagnostic only; no thermodynamic theorem claimed"
+            "L^(1/4) finite-size diagnostic only; no thermodynamic theorem claimed"
         ),
     }
     (output / "framework_model_closure_matrix.json").write_text(
