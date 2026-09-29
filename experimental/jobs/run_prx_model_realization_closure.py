@@ -36,9 +36,7 @@ KAPPA_STAR_OVER_J = 0.10
 ETA = 0.25
 WINDOW_POWER = 0.5 + ETA
 DEFAULT_WINDOW_PREFACTOR = 1.0
-FIXED_M_VARIANCE_COEFFICIENT_MAX = 2.0 * (
-    1.0 + J3_OVER_J**2 + KAPPA_MAX_OVER_J**2
-)
+FIXED_M_VARIANCE_COEFFICIENT_MAX = 2.0 * (1.0 + J3_OVER_J**2 + KAPPA_MAX_OVER_J**2)
 CHEBYSHEV_DECAY_POWER = 2.0 * ETA
 Y_BETA0_LIMIT = 1.0 / 3.0
 Y_EVENTUAL_SAFE_LOWER_BOUND = 1.0 / 6.0
@@ -46,8 +44,12 @@ Y_EVENTUAL_SAFE_LOWER_BOUND = 1.0 / 6.0
 
 def default_output_dir() -> Path:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    return ROOT / "experimental" / "data" / "evidence_jobs" / (
-        "prx_model_realization_closure_" + stamp
+    return (
+        ROOT
+        / "experimental"
+        / "data"
+        / "evidence_jobs"
+        / ("prx_model_realization_closure_" + stamp)
     )
 
 
@@ -92,9 +94,7 @@ def chebyshev_asymptotic_coefficient(
         raise ValueError("epsilon must be positive")
     if window_prefactor <= 0.0:
         raise ValueError("window_prefactor must be positive")
-    return float(
-        (FIXED_M_VARIANCE_COEFFICIENT_MAX + epsilon) / window_prefactor**2
-    )
+    return float((FIXED_M_VARIANCE_COEFFICIENT_MAX + epsilon) / window_prefactor**2)
 
 
 def _git_sha_from_metadata(repo_root: Path) -> str | None:
@@ -170,8 +170,7 @@ def _closure_rows() -> list[dict[str, str]]:
             "current_status": "gated",
             "after_this_ticket": "closed for declared tower",
             "proof_evidence": (
-                "one tower state in fixed M=-2 sector versus "
-                "exp[(log3+o(1))L] window"
+                "one tower state in fixed M=-2 sector versus exp[(log3+o(1))L] window"
             ),
         },
         {
@@ -179,8 +178,7 @@ def _closure_rows() -> list[dict[str, str]]:
             "current_status": "open",
             "after_this_ticket": "closed",
             "proof_evidence": (
-                "momentum compression + fixed-M covariance O(1/L) + "
-                "window conditioning"
+                "momentum compression + fixed-M covariance O(1/L) + window conditioning"
             ),
         },
         {
@@ -194,8 +192,7 @@ def _closure_rows() -> list[dict[str, str]]:
             "current_status": "open",
             "after_this_ticket": "closed on 0.05<kappa/J<0.20",
             "proof_evidence": (
-                "uniform variance/window bound and Hamiltonian-independent "
-                "beta-zero local bounds"
+                "uniform variance/window bound and Hamiltonian-independent beta-zero local bounds"
             ),
         },
     ]
@@ -280,9 +277,7 @@ def _write_bounds(output: Path) -> dict[str, object]:
             KAPPA_MAX_OVER_J,
         ],
         "energy_variance": {
-            "fixed_M_pointwise_upper_coefficient_over_J2": (
-                FIXED_M_VARIANCE_COEFFICIENT_MAX
-            ),
+            "fixed_M_pointwise_upper_coefficient_over_J2": (FIXED_M_VARIANCE_COEFFICIENT_MAX),
             "resolved_sector_asymptotic": "(2.1+o(1)) J^2 L",
             "resolved_character_correction": "O(J^2 L^(7/2) 3^(-L/2))",
             "mean_energy": 0.0,
@@ -300,9 +295,7 @@ def _write_bounds(output: Path) -> dict[str, object]:
         "chebyshev": {
             "outside_fraction": "O(L^(-1/2))",
             "decay_power": CHEBYSHEV_DECAY_POWER,
-            "asymptotic_coefficient_for_epsilon_0p1_c_1": (
-                chebyshev_asymptotic_coefficient()
-            ),
+            "asymptotic_coefficient_for_epsilon_0p1_c_1": (chebyshev_asymptotic_coefficient()),
         },
         "entropy_density": math.log(3.0),
         "declared_caged_count_in_fixed_M_sector": 1,
