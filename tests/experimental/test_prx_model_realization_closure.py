@@ -40,14 +40,11 @@ def test_fixed_m_local_pattern_probability_is_exact_combinatorics() -> None:
     module = _load(RUNNER, "run_prx_model_realization_closure_probability_test")
     for length in (8, 10, 20, 40):
         probability = module.fixed_m_local_pattern_probability(length, (0,))
-        expected = (
-            module.coefficient_for_cycles(length - 1, 0, module.TOTAL_SZ)
-            / module.coefficient_for_cycles(length, 0, module.TOTAL_SZ)
-        )
+        expected = module.coefficient_for_cycles(
+            length - 1, 0, module.TOTAL_SZ
+        ) / module.coefficient_for_cycles(length, 0, module.TOTAL_SZ)
         assert probability == pytest.approx(expected)
-    assert module.fixed_m_local_pattern_probability(40, (0,)) == pytest.approx(
-        1.0 / 3.0, abs=0.02
-    )
+    assert module.fixed_m_local_pattern_probability(40, (0,)) == pytest.approx(1.0 / 3.0, abs=0.02)
 
 
 def test_model_closure_runner_emits_required_solver_free_package(tmp_path: Path) -> None:
