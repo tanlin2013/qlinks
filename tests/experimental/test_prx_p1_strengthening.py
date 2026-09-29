@@ -258,6 +258,25 @@ def test_style_audit_checks_fonts_tex_dimensions_and_qdm_l12() -> None:
     assert "qdm_12x4_verified_row_present" in source
 
 
+def test_runner_git_sha_falls_back_to_git_metadata_without_binary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load(RUNNER, "run_prx_p1_strengthening_gitless_test")
+    git_dir = tmp_path / ".git"
+    (git_dir / "refs" / "heads").mkdir(parents=True)
+    expected = "0123456789abcdef0123456789abcdef01234567"
+    (git_dir / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+    (git_dir / "refs" / "heads" / "main").write_text(expected + "\n", encoding="utf-8")
+
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+
+    def _missing_git(*args, **kwargs):
+        raise FileNotFoundError("git")
+
+    monkeypatch.setattr(module.subprocess, "run", _missing_git)
+    assert module._git_sha() == expected
+
+
 def test_runner_is_solver_free_and_render_only_for_figures() -> None:
     source = RUNNER.read_text(encoding="utf-8")
     assert '"spectral_solver_launched": False' in source
