@@ -229,18 +229,14 @@ def _spin1_mapped_p0_provenance(data_dir: Path) -> dict[str, object]:
 
     result["source_run_id"] = payload.get("source_run_id")
     result["exchange_convention"] = payload.get("spin1_xy_exchange_convention")
-    result["rescaled_from_exchange_convention"] = payload.get(
-        "rescaled_from_exchange_convention"
-    )
+    result["rescaled_from_exchange_convention"] = payload.get("rescaled_from_exchange_convention")
     if result["exchange_convention"] != SPIN1_CURRENT_EXCHANGE_CONVENTION:
         errors.append(
-            "migration manifest exchange convention is not "
-            + SPIN1_CURRENT_EXCHANGE_CONVENTION
+            "migration manifest exchange convention is not " + SPIN1_CURRENT_EXCHANGE_CONVENTION
         )
     if result["rescaled_from_exchange_convention"] != SPIN1_LEGACY_EXCHANGE_CONVENTION:
         errors.append(
-            "migration manifest source convention is not "
-            + SPIN1_LEGACY_EXCHANGE_CONVENTION
+            "migration manifest source convention is not " + SPIN1_LEGACY_EXCHANGE_CONVENTION
         )
 
     records = payload.get("converted_files")
@@ -269,8 +265,7 @@ def _spin1_mapped_p0_provenance(data_dir: Path) -> dict[str, object]:
         actual = _sha256(source)
         if expected != actual:
             errors.append(
-                f"mapped Fig. 6 input hash mismatch: {name} "
-                f"expected={expected!r} actual={actual!r}"
+                f"mapped Fig. 6 input hash mismatch: {name} expected={expected!r} actual={actual!r}"
             )
             continue
         verified.append(name)
