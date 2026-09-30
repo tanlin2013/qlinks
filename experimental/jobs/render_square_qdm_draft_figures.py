@@ -21,7 +21,6 @@ else:
 sys.path[:0] = [str(ROOT / "experimental" / "notebooks"), str(ROOT)]
 
 from helpers import (  # noqa: E402
-    add_panel_label,
     add_panel_label_margin,
     save_prx_figure,
     set_revtex_matplotlib_style,
@@ -111,7 +110,6 @@ def main():
         else float(sorted(primary.phase.unique())[len(primary.phase.unique()) // 2])
     )
     protocol = str(primary.thermal_protocol.iloc[0])
-    reference_label = r"$\beta=0$ trace" if protocol == "beta0" else r"matched canonical"
     use_physical_target = "Delta_physical_target" in primary.columns
 
     # Match the spin-1 Fig. 6 physical canvas and nested-strip grammar.
