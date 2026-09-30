@@ -81,22 +81,14 @@ ASSETS = (
         ),
     },
     {
-        "figure": "Fig. 14(b)",
-        "stem": "qdm_4x4_annihilator_radius",
+        "figure": "Fig. 15",
+        "stem": "qdm_appendix_locality_scaling_certificates",
         "dir_key": "qdm_appendix",
-        "expected_width_in": PRX_COLUMN_WIDTH,
-        "sources": ("qdm_4x4_minimum_annihilator_radius.csv",),
-        "command": (
-            "python experimental/jobs/render_prx_appendix_figures.py "
-            "--qdm-data-dir {data} --use-tex"
+        "expected_width_in": 7.05,
+        "sources": (
+            "qdm_4x4_minimum_annihilator_radius.csv",
+            "qdm_4N_by_4_exact_sequence.csv",
         ),
-    },
-    {
-        "figure": "Fig. 14(c)",
-        "stem": "qdm_strip_compatibility_scaling",
-        "dir_key": "qdm_appendix",
-        "expected_width_in": PRX_COLUMN_WIDTH,
-        "sources": ("qdm_4N_by_4_exact_sequence.csv",),
         "command": (
             "python experimental/jobs/render_prx_appendix_figures.py "
             "--qdm-data-dir {data} --use-tex"
@@ -434,6 +426,38 @@ def run(
     if errors:
         lines.extend(["## Audit errors", "", *["- " + error for error in errors], ""])
     (output / "prx_figure_style_audit.md").write_text("\n".join(lines), encoding="utf-8")
+
+    followup_lines = [
+        "# PRX figure polish follow-up audit",
+        "",
+        "- Panel-label placement: axes-relative upper-left margin via "
+        "`add_panel_label_margin`; labels are outside the active data rectangle "
+        "and independent of data limits.",
+        "- Fig. 6(a) ordinate: "
+        "$\\langle\\widehat Q_R^\\alpha\\rangle_n$ on the eigenstate strips.",
+        "- Fig. 6(b,c) ordinate: "
+        "$\\langle\\widehat Q_R^\\alpha\\rangle_{\\rm mc}$.",
+        "- Fig. 9(a) ordinate: "
+        "$\\langle\\widehat Q_R^\\alpha\\rangle_n$ on the eigenstate strips.",
+        "- Fig. 9(b) ordinate: $\\langle\\widehat Q_R^\\alpha\\rangle$, "
+        "with separate outside-panel keys for witness identity and mc/can ensemble identity.",
+        "- Fig. 9(c): derived mismatch notation $\\Delta_{L_x}(\\varphi)$ is retained.",
+        "- Fig. 6(b,c) legends: compact one-row witness keys above the axes; "
+        "reference guides remain subordinate line-style encodings.",
+        "- Fig. 9(b) legend: factorized witness and ensemble keys above the axes; "
+        "Fig. 9(c) strip-size key is above the axes.",
+        "- Figs. 10 and 11: panel labels use the same upper-left margin convention.",
+        "- Numerical recomputation: none; all affected artwork is render-only from cached tables.",
+        "- Fig. 14 environment-independence artwork: not redrawn or modified by qlinks; "
+        "the manuscript should continue to use `directed_iz_components.pdf` unchanged.",
+        "- Final split target: Fig. 14 = standalone environment-independence certificate; "
+        "Fig. 15 = two-panel numerical locality/compatibility certificates.",
+        "",
+    ]
+    (output / "prx_figure_polish_followup_audit.md").write_text(
+        "\n".join(followup_lines),
+        encoding="utf-8",
+    )
 
     if strict and errors:
         raise RuntimeError("PRX figure style audit failed: " + "; ".join(errors))
