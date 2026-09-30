@@ -146,8 +146,8 @@ def _appendix_concentration(data: Path, figures: Path) -> list[str]:
         _legacy.use_integer_ticks(axis, axis="x")
         axis.set_xticks(sorted(set(raw["L"].astype(int))))
         axis.grid(alpha=0.18)
-    _legacy.add_panel_label(ax0, "(a)")
-    _legacy.add_panel_label(ax1, "(b)")
+    _legacy.add_panel_label_margin(ax0, "(a)")
+    _legacy.add_panel_label_margin(ax1, "(b)")
     return _legacy._save(fig, figures, "spin1_xy_appendix_concentration_windows")
 
 

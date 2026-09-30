@@ -16,6 +16,9 @@ import pandas as pd
 
 PRX_COLUMN_WIDTH = 246.0 / 72.27
 BASE_FONT_SIZE = 9.0
+SPIN1_CURRENT_EXCHANGE_CONVENTION = "J_over_2_ladder_v1"
+SPIN1_LEGACY_EXCHANGE_CONVENTION = "ladder_prefactor_1"
+SPIN1_MIGRATION_MANIFEST = "spin1_exchange_convention_migration_manifest.json"
 
 ASSETS = (
     {
@@ -24,16 +27,18 @@ ASSETS = (
         "dir_key": "spin1_main",
         "expected_width_in": 7.05,
         "sources": (
-            "spin1_xy_kappa0p1_sequence.csv",
-            "spin1_xy_cage_excised_sequence.csv",
-            "spin1_xy_kappa0p1_eth_scatter_Lmax.csv",
-            "spin1_xy_kappa0p1_eth_scatter_all_sizes.csv",
-            "spin1_xy_kappa0p1_beta0_overlap.csv",
-            "spin1_xy_kappa_matching_grid.csv",
-            "spin1_xy_kappa_concentration_grid.csv",
+            "spin1_xy_figure6_panel_a_scatter.csv",
+            "spin1_xy_figure6_panel_b_witness_sequence.csv",
+            "spin1_xy_figure6_panel_c_deformation.csv",
+            "spin1_xy_figure6_panel_d_family_band.csv",
+            "spin1_xy_kappa0p1_concentration_common_windows.csv",
+            "spin1_xy_appendix_beta0_bridges_data.csv",
+            "spin1_xy_appendix_complex_t2_obstruction_data.csv",
+            SPIN1_MIGRATION_MANIFEST,
         ),
         "command": (
-            "python experimental/jobs/render_spin1_xy_draft_figures.py --data-dir {data} --use-tex"
+            "python experimental/jobs/spin1_exchange_convention_render_p0.py "
+            "--data-dir {data} --use-tex"
         ),
     },
     {
@@ -76,22 +81,14 @@ ASSETS = (
         ),
     },
     {
-        "figure": "Fig. 14(b)",
-        "stem": "qdm_4x4_annihilator_radius",
+        "figure": "Fig. 15",
+        "stem": "qdm_appendix_locality_scaling_certificates",
         "dir_key": "qdm_appendix",
-        "expected_width_in": PRX_COLUMN_WIDTH,
-        "sources": ("qdm_4x4_minimum_annihilator_radius.csv",),
-        "command": (
-            "python experimental/jobs/render_prx_appendix_figures.py "
-            "--qdm-data-dir {data} --use-tex"
+        "expected_width_in": 7.05,
+        "sources": (
+            "qdm_4x4_minimum_annihilator_radius.csv",
+            "qdm_4N_by_4_exact_sequence.csv",
         ),
-    },
-    {
-        "figure": "Fig. 14(c)",
-        "stem": "qdm_strip_compatibility_scaling",
-        "dir_key": "qdm_appendix",
-        "expected_width_in": PRX_COLUMN_WIDTH,
-        "sources": ("qdm_4N_by_4_exact_sequence.csv",),
         "command": (
             "python experimental/jobs/render_prx_appendix_figures.py "
             "--qdm-data-dir {data} --use-tex"
@@ -196,6 +193,81 @@ def _manifest_usetex(data_dir: Path, stem: str) -> bool | None:
     return None
 
 
+def _spin1_mapped_p0_provenance(data_dir: Path) -> dict[str, object]:
+    """Validate the immutable-legacy -> current-convention Fig. 6 migration record."""
+
+    manifest_path = data_dir / SPIN1_MIGRATION_MANIFEST
+    result: dict[str, object] = {
+        "manifest": str(manifest_path),
+        "valid": False,
+        "source_run_id": None,
+        "exchange_convention": None,
+        "rescaled_from_exchange_convention": None,
+        "verified_inputs": [],
+        "errors": [],
+    }
+    errors: list[str] = []
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        result["errors"] = ["migration manifest is missing"]
+        return result
+    except (OSError, json.JSONDecodeError) as exc:
+        result["errors"] = [f"migration manifest is invalid: {exc}"]
+        return result
+    if not isinstance(payload, dict):
+        result["errors"] = ["migration manifest is not a JSON object"]
+        return result
+
+    result["source_run_id"] = payload.get("source_run_id")
+    result["exchange_convention"] = payload.get("spin1_xy_exchange_convention")
+    result["rescaled_from_exchange_convention"] = payload.get("rescaled_from_exchange_convention")
+    if result["exchange_convention"] != SPIN1_CURRENT_EXCHANGE_CONVENTION:
+        errors.append(
+            "migration manifest exchange convention is not " + SPIN1_CURRENT_EXCHANGE_CONVENTION
+        )
+    if result["rescaled_from_exchange_convention"] != SPIN1_LEGACY_EXCHANGE_CONVENTION:
+        errors.append(
+            "migration manifest source convention is not " + SPIN1_LEGACY_EXCHANGE_CONVENTION
+        )
+
+    records = payload.get("converted_files")
+    if not isinstance(records, list):
+        errors.append("migration manifest has no converted_files list")
+        records = []
+    by_path = {
+        str(record.get("path")): record
+        for record in records
+        if isinstance(record, dict) and record.get("path") is not None
+    }
+
+    fig6 = next(spec for spec in ASSETS if spec["figure"] == "Fig. 6")
+    required = [str(name) for name in fig6["sources"] if name != SPIN1_MIGRATION_MANIFEST]
+    verified: list[str] = []
+    for name in required:
+        source = data_dir / name
+        record = by_path.get(name)
+        if not source.is_file():
+            errors.append(f"mapped Fig. 6 input is missing: {name}")
+            continue
+        if record is None:
+            errors.append(f"mapped Fig. 6 input is absent from migration manifest: {name}")
+            continue
+        expected = record.get("derived_sha256")
+        actual = _sha256(source)
+        if expected != actual:
+            errors.append(
+                f"mapped Fig. 6 input hash mismatch: {name} expected={expected!r} actual={actual!r}"
+            )
+            continue
+        verified.append(name)
+
+    result["verified_inputs"] = verified
+    result["errors"] = errors
+    result["valid"] = not errors
+    return result
+
+
 def _verified_qdm_lengths(data_dir: Path) -> list[int]:
     thermal_path = data_dir / "qdm_checkerboard_thermal_overlap.csv"
     if not thermal_path.is_file():
@@ -275,6 +347,13 @@ def run(
         if strict and usetex is not True:
             errors.append(str(spec["figure"]) + ": text.usetex=True not certified")
 
+        provenance = None
+        if spec["figure"] == "Fig. 6":
+            provenance = _spin1_mapped_p0_provenance(data)
+            if strict and not bool(provenance.get("valid")):
+                for error in provenance.get("errors", []):
+                    errors.append("Fig. 6 provenance: " + str(error))
+
         records.append(
             {
                 "figure": spec["figure"],
@@ -282,6 +361,7 @@ def run(
                 "renderer_command": str(spec["command"]).format(data=str(data)),
                 "evidence_source_directory": str(data),
                 "source_sha256": source_hashes,
+                "provenance": provenance,
                 "pdf_width_in": pdf_width,
                 "pdf_height_in": pdf_height,
                 "svg_width_in": svg_width,
@@ -326,6 +406,7 @@ def run(
                 "- Renderer: " + str(row["renderer_command"]),
                 "- Evidence source: " + str(row["evidence_source_directory"]),
                 "- Source SHA-256: " + json.dumps(row["source_sha256"], sort_keys=True),
+                "- Provenance: " + json.dumps(row["provenance"], sort_keys=True),
                 "- Physical size: PDF "
                 + str(row["pdf_width_in"])
                 + " x "
@@ -345,6 +426,35 @@ def run(
     if errors:
         lines.extend(["## Audit errors", "", *["- " + error for error in errors], ""])
     (output / "prx_figure_style_audit.md").write_text("\n".join(lines), encoding="utf-8")
+
+    followup_lines = [
+        "# PRX figure polish follow-up audit",
+        "",
+        "- Panel-label placement: axes-relative upper-left margin via "
+        "`add_panel_label_margin`; labels are outside the active data rectangle "
+        "and independent of data limits.",
+        "- Fig. 6(a) ordinate: $\\langle\\widehat Q_R^\\alpha\\rangle_n$ on the eigenstate strips.",
+        "- Fig. 6(b,c) ordinate: $\\langle\\widehat Q_R^\\alpha\\rangle_{\\rm mc}$.",
+        "- Fig. 9(a) ordinate: $\\langle\\widehat Q_R^\\alpha\\rangle_n$ on the eigenstate strips.",
+        "- Fig. 9(b) ordinate: $\\langle\\widehat Q_R^\\alpha\\rangle$, "
+        "with separate outside-panel keys for witness identity and mc/can ensemble identity.",
+        "- Fig. 9(c): derived mismatch notation $\\Delta_{L_x}(\\varphi)$ is retained.",
+        "- Fig. 6(b,c) legends: compact one-row witness keys above the axes; "
+        "reference guides remain subordinate line-style encodings.",
+        "- Fig. 9(b) legend: factorized witness and ensemble keys above the axes; "
+        "Fig. 9(c) strip-size key is above the axes.",
+        "- Figs. 10 and 11: panel labels use the same upper-left margin convention.",
+        "- Numerical recomputation: none; all affected artwork is render-only from cached tables.",
+        "- Fig. 14 environment-independence artwork: not redrawn or modified by qlinks; "
+        "the manuscript should continue to use `directed_iz_components.pdf` unchanged.",
+        "- Final split target: Fig. 14 = standalone environment-independence certificate; "
+        "Fig. 15 = two-panel numerical locality/compatibility certificates.",
+        "",
+    ]
+    (output / "prx_figure_polish_followup_audit.md").write_text(
+        "\n".join(followup_lines),
+        encoding="utf-8",
+    )
 
     if strict and errors:
         raise RuntimeError("PRX figure style audit failed: " + "; ".join(errors))
