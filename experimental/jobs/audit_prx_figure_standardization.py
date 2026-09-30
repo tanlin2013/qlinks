@@ -433,12 +433,9 @@ def run(
         "- Panel-label placement: axes-relative upper-left margin via "
         "`add_panel_label_margin`; labels are outside the active data rectangle "
         "and independent of data limits.",
-        "- Fig. 6(a) ordinate: "
-        "$\\langle\\widehat Q_R^\\alpha\\rangle_n$ on the eigenstate strips.",
-        "- Fig. 6(b,c) ordinate: "
-        "$\\langle\\widehat Q_R^\\alpha\\rangle_{\\rm mc}$.",
-        "- Fig. 9(a) ordinate: "
-        "$\\langle\\widehat Q_R^\\alpha\\rangle_n$ on the eigenstate strips.",
+        "- Fig. 6(a) ordinate: $\\langle\\widehat Q_R^\\alpha\\rangle_n$ on the eigenstate strips.",
+        "- Fig. 6(b,c) ordinate: $\\langle\\widehat Q_R^\\alpha\\rangle_{\\rm mc}$.",
+        "- Fig. 9(a) ordinate: $\\langle\\widehat Q_R^\\alpha\\rangle_n$ on the eigenstate strips.",
         "- Fig. 9(b) ordinate: $\\langle\\widehat Q_R^\\alpha\\rangle$, "
         "with separate outside-panel keys for witness identity and mc/can ensemble identity.",
         "- Fig. 9(c): derived mismatch notation $\\Delta_{L_x}(\\varphi)$ is retained.",
