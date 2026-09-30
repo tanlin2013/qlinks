@@ -22,6 +22,7 @@ sys.path[:0] = [str(ROOT / "experimental" / "notebooks"), str(ROOT)]
 
 from helpers import (  # noqa: E402
     add_panel_label,
+    add_panel_label_margin,
     save_prx_figure,
     set_revtex_matplotlib_style,
     use_integer_ticks,
@@ -116,7 +117,7 @@ def main():
     # Match the spin-1 Fig. 6 physical canvas and nested-strip grammar.
     fig = plt.figure(figsize=(7.05, 6.85))
     outer = fig.add_gridspec(
-        2, 2, left=0.08, right=0.955, bottom=0.08, top=0.955, wspace=0.38, hspace=0.34
+        2, 2, left=0.09, right=0.955, bottom=0.08, top=0.925, wspace=0.38, hspace=0.46
     )
     representative = primary[np.isclose(primary.phase, phi)].sort_values("Lx")
     verified_lengths = set(representative["Lx"].astype(int))
@@ -132,8 +133,8 @@ def main():
     # use exactly the same visual semantics as spin-1 Fig. 6.
     gsa = outer[0, 0].subgridspec(2, 1, hspace=0.08)
     axes_a = [fig.add_subplot(gsa[i]) for i in range(2)]
-    for index, ((col, label, _marker), axa) in enumerate(
-        zip([("Q_A", r"$Q_R^A$", "o"), ("Q_Z", r"$Q_R^Z$", "s")], axes_a, strict=True)
+    for index, ((col, key, _marker), axa) in enumerate(
+        zip([("Q_A", "A", "o"), ("Q_Z", "Z", "s")], axes_a, strict=True)
     ):
         axa.axvspan(
             row.cage_energy_density - row.window_energy_density_half_width,
@@ -160,30 +161,30 @@ def main():
             linewidths=0.45,
             zorder=8,
         )
-        axa.set_ylabel(label)
+        axa.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_n$")
         axa.grid(alpha=0.18)
         if index == 0:
             axa.tick_params(labelbottom=False)
         else:
             axa.set_xlabel(r"Energy density $e=E/(4L_x)$")
-    add_panel_label(axes_a[0], "(a)")
+    add_panel_label_margin(axes_a[0], "(a)")
 
     gsb = outer[0, 1].subgridspec(2, 1, height_ratios=(2.2, 1.0), hspace=0.08)
     axb = fig.add_subplot(gsb[0])
     axb2 = fig.add_subplot(gsb[1], sharex=axb)
     r = primary[np.isclose(primary.phase, phi)].sort_values("Lx")
-    for key, label, marker in [("A", r"$Q_R^A$", "o"), ("Z", r"$Q_R^Z$", "s")]:
+    for key, marker in [("A", "o"), ("Z", "s")]:
         reference_column = (
             f"tau_{key}_reference_physical" if use_physical_target else f"tau_{key}_reference"
         )
         delta_column = f"delta_{key}_physical_target" if use_physical_target else f"delta_{key}"
-        axb.plot(r.Lx, r[f"tau_{key}_mc"], marker=marker, label=label)
+        axb.plot(r.Lx, r[f"tau_{key}_mc"], marker=marker, label=rf"${key}$")
         axb.plot(r.Lx, r[reference_column], marker=marker, fillstyle="none", ls="--")
         axb2.plot(r.Lx, r[delta_column], marker=marker, label=rf"$\delta_{key}$")
-    axb.set_ylabel(r"Local activity $\tau$")
+    axb.set_ylabel(r"$\langle \widehat Q_R^\alpha\rangle$")
     axb.grid(alpha=0.20)
     axb.tick_params(labelbottom=False)
-    add_panel_label(axb, "(b)")
+    add_panel_label_margin(axb, "(b)")
     axb2.set_xlabel(r"Strip length $L_x$")
     axb2.set_ylabel(r"$\delta_{\alpha,L_x}$")
     axb2.set_ylim(bottom=0.0)
@@ -193,7 +194,7 @@ def main():
     if r.Lx.nunique() == 1:
         axb2.set_xlim(float(r.Lx.iloc[0]) - 0.5, float(r.Lx.iloc[0]) + 0.5)
     style_handles = [
-        Line2D([0], [0], marker="o", color="0.25", lw=1, label="microcanonical"),
+        Line2D([0], [0], marker="o", color="0.25", lw=1, label=r"$\mathrm{mc}$"),
         Line2D(
             [0],
             [0],
@@ -202,10 +203,32 @@ def main():
             color="0.25",
             ls="--",
             lw=1,
-            label=reference_label,
+            label=(r"$\mathrm{can}$" if protocol != "beta0" else r"$\beta=0$"),
         ),
     ]
-    axb.legend(handles=style_handles, fontsize=8.2, loc="best")
+    witness_handles, witness_labels = axb.get_legend_handles_labels()
+    witness_legend = axb.legend(
+        witness_handles,
+        witness_labels,
+        loc="lower left",
+        bbox_to_anchor=(0.0, 1.015),
+        borderaxespad=0.0,
+        ncol=2,
+        title="witness",
+        fontsize=8.0,
+        title_fontsize=8.0,
+    )
+    axb.add_artist(witness_legend)
+    axb.legend(
+        handles=style_handles,
+        loc="lower right",
+        bbox_to_anchor=(1.0, 1.015),
+        borderaxespad=0.0,
+        ncol=2,
+        title="ensemble",
+        fontsize=8.0,
+        title_fontsize=8.0,
+    )
 
     gsc = outer[1, 0].subgridspec(2, 1, height_ratios=(2.2, 1.0), hspace=0.08)
     axc = fig.add_subplot(gsc[0])
@@ -223,8 +246,16 @@ def main():
     axc.set_ylabel(r"$\Delta_{L_x}(\varphi)$")
     axc.grid(alpha=0.20)
     axc.tick_params(labelbottom=False)
-    add_panel_label(axc, "(c)")
-    axc.legend(fontsize=8.5)
+    add_panel_label_margin(axc, "(c)")
+    axc.legend(
+        loc="lower left",
+        bbox_to_anchor=(0.0, 1.015),
+        borderaxespad=0.0,
+        ncol=3,
+        fontsize=8.0,
+        title=r"strip size",
+        title_fontsize=8.0,
+    )
     axc2.set_xlabel(r"Checkerboard phase $\varphi$")
     axc2.set_ylabel(r"$L_x\Delta_{L_x}$")
     axc2.grid(alpha=0.20)
@@ -259,7 +290,7 @@ def main():
     axd.axvline(phi, color="w", ls=":", lw=1.0, alpha=0.9)
     axd.set_xlabel(r"Checkerboard phase $\varphi$")
     axd.set_ylabel(r"Strip length $L_x$")
-    add_panel_label(axd, "(d)")
+    add_panel_label_margin(axd, "(d)")
     # Keep the historical stem and emit the manuscript-facing Fig. 9 alias.
     save_prx_figure(fig, "qdm_checkerboard_figure7_combined", directory=figs, formats=formats)
     save_prx_figure(fig, "qdm_checkerboard_figure9_prx", directory=figs, formats=formats)
