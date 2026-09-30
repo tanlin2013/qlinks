@@ -32,7 +32,6 @@ for path in (NOTEBOOKS, ROOT):
 from helpers import (  # noqa: E402
     PRX_COLUMN_WIDTH,
     PRX_TEXT_WIDTH,
-    add_panel_label,
     add_panel_label_margin,
     save_prx_figure,
     set_revtex_matplotlib_style,
@@ -217,12 +216,12 @@ def _spin1_concentration_figure(frame: pd.DataFrame) -> plt.Figure:
     ax0.legend(loc="best", fontsize=7.6)
     ax0.tick_params(labelbottom=False)
     ax0.grid(alpha=0.18)
-    add_panel_label(ax0, "(a)")
+    add_panel_label_margin(ax0, "(a)")
 
     ax1.set_xlabel(r"System size $L$")
     ax1.set_ylabel(r"$\log N_{\rm win}/L$")
     ax1.grid(alpha=0.18)
-    add_panel_label(ax1, "(b)")
+    add_panel_label_margin(ax1, "(b)")
 
     ticks = sorted(set(raw["L"].astype(int)))
     for axis in (ax0, ax1):
@@ -423,9 +422,9 @@ def _qdm_locality_scaling_figure(
     add_panel_label_margin(ax0, "(a)")
 
     ordered = sequence.sort_values("repeats").copy()
-    ordered["kinetic_parameter_count"] = ordered["kinetic_constraint_rank"].astype(
-        float
-    ) + ordered["kinetic_compatible_dimension"].astype(float)
+    ordered["kinetic_parameter_count"] = ordered["kinetic_constraint_rank"].astype(float) + ordered[
+        "kinetic_compatible_dimension"
+    ].astype(float)
     ax1.plot(
         ordered["repeats"],
         ordered["kinetic_parameter_count"],
