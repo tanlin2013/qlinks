@@ -25,7 +25,12 @@ for path in (NOTEBOOKS, ROOT):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from helpers import add_panel_label, set_revtex_matplotlib_style, use_integer_ticks  # noqa: E402
+from helpers import (  # noqa: E402
+    add_panel_label,
+    add_panel_label_margin,
+    set_revtex_matplotlib_style,
+    use_integer_ticks,
+)
 
 FULL_WIDTH_IN = 7.05
 BASE_FONT_SIZE = 9.0
@@ -108,9 +113,9 @@ def _figure6(data: Path, figures: Path, *, allow_incomplete: bool) -> list[str]:
         left=0.085,
         right=0.985,
         bottom=0.095,
-        top=0.975,
+        top=0.925,
         wspace=0.34,
-        hspace=0.36,
+        hspace=0.46,
     )
 
     gs_a = outer[0, 0].subgridspec(3, 1, hspace=0.08)
@@ -145,12 +150,12 @@ def _figure6(data: Path, figures: Path, *, allow_incomplete: bool) -> list[str]:
         if len(mean_row) != 1:
             raise ValueError(f"panel (a) has no unique L=12 mean for witness {key}")
         ax.axhline(float(mean_row.iloc[0]["tau_mc_raw"]), ls=":", lw=0.9)
-        ax.set_ylabel(spec["label"])
+        ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_n$")
         if index < 2:
             ax.tick_params(labelbottom=False)
         else:
             ax.set_xlabel(r"Energy density $e=E/L$")
-    add_panel_label(axes_a[0], "(a)")
+    add_panel_label_margin(axes_a[0], "(a)")
 
     ax_b = fig.add_subplot(outer[0, 1])
     for key, spec in WITNESS_SPECS.items():
@@ -161,15 +166,24 @@ def _figure6(data: Path, figures: Path, *, allow_incomplete: bool) -> list[str]:
             marker=spec["marker"],
             markersize=MARKER_SIZE,
             linewidth=LINE_WIDTH,
-            label=spec["label"],
+            label=rf"${key}$",
         )[0]
         ax_b.axhline(spec["target"], ls="--", lw=0.75, color=line.get_color(), alpha=0.55)
     ax_b.set_xlabel(r"System size $L$")
-    ax_b.set_ylabel("Raw microcanonical activity")
+    ax_b.set_ylabel(r"$\langle \widehat Q_R^\alpha\rangle_{\rm mc}$")
     use_integer_ticks(ax_b, axis="x")
     ax_b.set_xticks([8, 10, 12, 14])
-    ax_b.legend(loc="best", frameon=False)
-    add_panel_label(ax_b, "(b)")
+    ax_b.legend(
+        loc="lower left",
+        bbox_to_anchor=(0.0, 1.015),
+        borderaxespad=0.0,
+        frameon=False,
+        ncol=3,
+        title="witness",
+        fontsize=8.0,
+        title_fontsize=8.0,
+    )
+    add_panel_label_margin(ax_b, "(b)")
 
     ax_c = fig.add_subplot(outer[1, 0])
     for key, spec in WITNESS_SPECS.items():
@@ -180,14 +194,23 @@ def _figure6(data: Path, figures: Path, *, allow_incomplete: bool) -> list[str]:
             marker=spec["marker"],
             markersize=MARKER_SIZE,
             linewidth=LINE_WIDTH,
-            label=spec["label"],
+            label=rf"${key}$",
         )
     ax_c.axhline(0.0, lw=0.75, alpha=0.55)
     ax_c.axvline(REPRESENTATIVE_KAPPA_OVER_J, ls=":", lw=0.9, alpha=0.7)
     ax_c.set_xlabel(r"Compatible deformation $\kappa/J$")
-    ax_c.set_ylabel("Raw microcanonical activity")
-    ax_c.legend(loc="best", frameon=False)
-    add_panel_label(ax_c, "(c)")
+    ax_c.set_ylabel(r"$\langle \widehat Q_R^\alpha\rangle_{\rm mc}$")
+    ax_c.legend(
+        loc="lower left",
+        bbox_to_anchor=(0.0, 1.015),
+        borderaxespad=0.0,
+        frameon=False,
+        ncol=3,
+        title="witness",
+        fontsize=8.0,
+        title_fontsize=8.0,
+    )
+    add_panel_label_margin(ax_c, "(c)")
 
     ax_d = fig.add_subplot(outer[1, 1])
     if not band.empty:
@@ -213,7 +236,7 @@ def _figure6(data: Path, figures: Path, *, allow_incomplete: bool) -> list[str]:
     ax_d.set_xticks([8, 10, 12, 14])
     ax_d.set_ylim(bottom=0.0)
     ax_d.legend(loc="best", frameon=False)
-    add_panel_label(ax_d, "(d)")
+    add_panel_label_margin(ax_d, "(d)")
     return _save(fig, figures, "spin1_xy_figure6_prx", preview=True)
 
 
