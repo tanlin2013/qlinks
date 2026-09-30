@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -132,6 +134,57 @@ def test_figure_audit_gates_unverified_qdm_12x4(tmp_path: Path) -> None:
     frame.loc[frame["Lx"] == 12, "converged_vs_previous_budget"] = True
     frame.to_csv(path, index=False)
     assert module._verified_qdm_lengths(tmp_path) == [4, 8, 12]
+
+
+def test_figure_audit_uses_convention_mapped_spin1_p0_contract() -> None:
+    source = AUDIT.read_text(encoding="utf-8")
+    assert "spin1_exchange_convention_render_p0.py" in source
+    assert "spin1_xy_figure6_panel_a_scatter.csv" in source
+    assert "spin1_xy_figure6_panel_d_family_band.csv" in source
+    assert "spin1_exchange_convention_migration_manifest.json" in source
+    assert "render_spin1_xy_draft_figures.py --data-dir {data}" not in source
+
+
+def test_figure_audit_validates_mapped_spin1_p0_manifest_hashes(tmp_path: Path) -> None:
+    module = _load(AUDIT, "audit_prx_figure_standardization_p0_test")
+    fig6 = next(spec for spec in module.ASSETS if spec["figure"] == "Fig. 6")
+    required = [
+        str(name)
+        for name in fig6["sources"]
+        if name != module.SPIN1_MIGRATION_MANIFEST
+    ]
+    converted = []
+    for index, name in enumerate(required):
+        path = tmp_path / name
+        path.write_text(f"payload-{index}\n", encoding="utf-8")
+        converted.append(
+            {
+                "path": name,
+                "derived_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+        )
+
+    manifest = {
+        "source_run_id": "spin1_sec6_integration_20260825T073925Z",
+        "spin1_xy_exchange_convention": module.SPIN1_CURRENT_EXCHANGE_CONVENTION,
+        "rescaled_from_exchange_convention": module.SPIN1_LEGACY_EXCHANGE_CONVENTION,
+        "converted_files": converted,
+    }
+    (tmp_path / module.SPIN1_MIGRATION_MANIFEST).write_text(
+        json.dumps(manifest),
+        encoding="utf-8",
+    )
+
+    provenance = module._spin1_mapped_p0_provenance(tmp_path)
+    assert provenance["valid"] is True
+    assert provenance["errors"] == []
+    assert provenance["verified_inputs"] == required
+
+    first = tmp_path / required[0]
+    first.write_text("tampered\n", encoding="utf-8")
+    provenance = module._spin1_mapped_p0_provenance(tmp_path)
+    assert provenance["valid"] is False
+    assert any("hash mismatch" in str(error) for error in provenance["errors"])
 
 
 def test_notebook_image_contains_tex_and_pdf_font_audit_tools() -> None:
