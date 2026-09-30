@@ -87,15 +87,30 @@ def test_appendix_renderer_uses_final_prx_column_width() -> None:
         module._qdm_radius_figure(radius),
         module._qdm_compatibility_figure(compatibility),
     )
+    combined = module._qdm_locality_scaling_figure(radius, compatibility)
     try:
         for figure in figures:
             assert figure.get_size_inches()[0] == pytest.approx(module.PRX_COLUMN_WIDTH)
+        assert combined.get_size_inches()[0] == pytest.approx(module.PRX_TEXT_WIDTH)
         assert len(figures[0].axes) == 2
         assert len(figures[1].axes) == 2
         assert len(figures[2].axes) == 1
         assert len(figures[3].axes) == 1
+        assert len(combined.axes) == 2
+
+        for figure in (figures[0], figures[1], combined):
+            panel_labels = [
+                text
+                for axis in figure.axes
+                for text in axis.texts
+                if text.get_text() in {"(a)", "(b)"}
+            ]
+            assert panel_labels
+            assert all(text.get_position()[0] < 0.0 for text in panel_labels)
+            assert all(text.get_position()[1] > 1.0 for text in panel_labels)
+            assert all(text.get_clip_on() is False for text in panel_labels)
     finally:
-        for figure in figures:
+        for figure in (*figures, combined):
             plt.close(figure)
 
 
@@ -109,6 +124,32 @@ def test_appendix_renderer_is_render_only() -> None:
     assert "eigh(" not in source
     assert "scan_windowed_operator_annihilators" not in source
     assert "scan_square_qdm_periodic_product_cancellation_scaling" not in source
+
+
+def test_polished_main_figure_renderers_make_expectation_semantics_explicit() -> None:
+    spin1 = (JOBS / "render_spin1_xy_sec6_integration_figures_legacy.py").read_text(
+        encoding="utf-8"
+    )
+    qdm = (JOBS / "render_square_qdm_draft_figures.py").read_text(encoding="utf-8")
+
+    assert r"\langle \widehat Q_R^{{{key}}}\rangle_n" in spin1
+    assert r"\langle \widehat Q_R^\alpha\rangle_{\rm mc}" in spin1
+    assert 'bbox_to_anchor=(0.0, 1.015)' in spin1
+    assert "add_panel_label_margin" in spin1
+
+    assert r"\langle \widehat Q_R^{{{key}}}\rangle_n" in qdm
+    assert r"\langle \widehat Q_R^\alpha\rangle" in qdm
+    assert 'title="ensemble"' in qdm
+    assert 'title=r"strip size"' in qdm
+    assert "add_panel_label_margin" in qdm
+
+
+def test_appendix_renderer_emits_combined_fig15_asset() -> None:
+    source = RENDERER.read_text(encoding="utf-8")
+    assert "_qdm_locality_scaling_figure" in source
+    assert "qdm_appendix_locality_scaling_certificates" in source
+    assert "PRX_TEXT_WIDTH" in source
+    assert "add_panel_label_margin" in source
 
 
 def test_figure_audit_gates_unverified_qdm_12x4(tmp_path: Path) -> None:
@@ -143,6 +184,9 @@ def test_figure_audit_uses_convention_mapped_spin1_p0_contract() -> None:
     assert "spin1_xy_figure6_panel_d_family_band.csv" in source
     assert "spin1_exchange_convention_migration_manifest.json" in source
     assert "render_spin1_xy_draft_figures.py --data-dir {data}" not in source
+    assert "qdm_appendix_locality_scaling_certificates" in source
+    assert '"figure": "Fig. 15"' in source
+    assert "prx_figure_polish_followup_audit.md" in source
 
 
 def test_figure_audit_validates_mapped_spin1_p0_manifest_hashes(tmp_path: Path) -> None:
