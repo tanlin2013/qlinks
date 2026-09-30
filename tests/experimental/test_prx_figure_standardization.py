@@ -148,11 +148,7 @@ def test_figure_audit_uses_convention_mapped_spin1_p0_contract() -> None:
 def test_figure_audit_validates_mapped_spin1_p0_manifest_hashes(tmp_path: Path) -> None:
     module = _load(AUDIT, "audit_prx_figure_standardization_p0_test")
     fig6 = next(spec for spec in module.ASSETS if spec["figure"] == "Fig. 6")
-    required = [
-        str(name)
-        for name in fig6["sources"]
-        if name != module.SPIN1_MIGRATION_MANIFEST
-    ]
+    required = [str(name) for name in fig6["sources"] if name != module.SPIN1_MIGRATION_MANIFEST]
     converted = []
     for index, name in enumerate(required):
         path = tmp_path / name
