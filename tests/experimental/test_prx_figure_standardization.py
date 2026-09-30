@@ -134,7 +134,7 @@ def test_polished_main_figure_renderers_make_expectation_semantics_explicit() ->
 
     assert r"\langle \widehat Q_R^{{{key}}}\rangle_n" in spin1
     assert r"\langle \widehat Q_R^\alpha\rangle_{\rm mc}" in spin1
-    assert 'bbox_to_anchor=(0.0, 1.015)' in spin1
+    assert "bbox_to_anchor=(0.0, 1.015)" in spin1
     assert "add_panel_label_margin" in spin1
 
     assert r"\langle \widehat Q_R^{{{key}}}\rangle_n" in qdm
