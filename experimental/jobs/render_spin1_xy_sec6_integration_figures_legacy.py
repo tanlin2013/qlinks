@@ -126,7 +126,7 @@ def _figure6(data: Path, figures: Path, *, allow_incomplete: bool) -> list[str]:
     if sequence_l12.empty:
         raise ValueError("panel (a) needs the L=12 primary-window means")
     half = float(sequence_l12.iloc[0]["window_energy_density_half_width"])
-    for index, (key, spec) in enumerate(WITNESS_SPECS.items()):
+    for index, key in enumerate(WITNESS_SPECS):
         ax = axes_a[index]
         ax.axvspan(-half, half, alpha=0.10, zorder=0)
         ax.scatter(
