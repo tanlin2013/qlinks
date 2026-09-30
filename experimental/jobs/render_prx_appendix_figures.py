@@ -31,7 +31,9 @@ for path in (NOTEBOOKS, ROOT):
 
 from helpers import (  # noqa: E402
     PRX_COLUMN_WIDTH,
+    PRX_TEXT_WIDTH,
     add_panel_label,
+    add_panel_label_margin,
     save_prx_figure,
     set_revtex_matplotlib_style,
     use_integer_ticks,
@@ -131,7 +133,7 @@ def _spin1_bridge_figure(frame: pd.DataFrame) -> plt.Figure:
     ax0.legend(loc="best", fontsize=7.4)
     ax0.tick_params(labelbottom=False)
     ax0.grid(alpha=0.18)
-    add_panel_label(ax0, "(a)")
+    add_panel_label_margin(ax0, "(a)")
 
     first = frame[frame["bridge"].astype(str) == "mc_to_beta0_resolved"].sort_values("L")
     specs = (("A", r"$Q_R^A$", "o"), ("Z", r"$Q_R^Z$", "s"), ("Y", r"$Q_R^Y$", "^"))
@@ -151,7 +153,7 @@ def _spin1_bridge_figure(frame: pd.DataFrame) -> plt.Figure:
     ax1.set_ylabel(r"$|\Delta\tau_\alpha|$")
     ax1.legend(loc="best", fontsize=8.0)
     ax1.grid(alpha=0.18)
-    add_panel_label(ax1, "(b)")
+    add_panel_label_margin(ax1, "(b)")
 
     ticks = sorted(set(frame["L"].astype(int)))
     for axis in (ax0, ax1):
@@ -363,6 +365,107 @@ def _qdm_compatibility_figure(frame: pd.DataFrame) -> plt.Figure:
     return fig
 
 
+def _qdm_locality_scaling_figure(
+    radius: pd.DataFrame,
+    sequence: pd.DataFrame,
+) -> plt.Figure:
+    """Compose the two numerical Appendix-E certificates as final Fig. 15."""
+
+    _require_columns(
+        radius,
+        {"state", "radius", "minimum_residual"},
+        source=Path("QDM radius table"),
+    )
+    _require_columns(
+        sequence,
+        {"repeats", "kinetic_constraint_rank", "kinetic_compatible_dimension"},
+        source=Path("QDM repeated-strip table"),
+    )
+
+    fig = plt.figure(figsize=(PRX_TEXT_WIDTH, 3.05))
+    grid = fig.add_gridspec(
+        1,
+        2,
+        left=0.09,
+        right=0.985,
+        bottom=0.19,
+        top=0.90,
+        wspace=0.34,
+    )
+    ax0 = fig.add_subplot(grid[0])
+    ax1 = fig.add_subplot(grid[1])
+
+    label_map = {
+        "compact record 0": "compact",
+        "collective record 8": "collective",
+    }
+    for state, group in radius.groupby("state", sort=True):
+        group = group.sort_values("radius")
+        ax0.semilogy(
+            group["radius"],
+            np.maximum(group["minimum_residual"].to_numpy(dtype=float), 1.0e-16),
+            marker="o",
+            markersize=MARKER_SIZE,
+            linewidth=LINE_WIDTH,
+            label=label_map.get(str(state), str(state)),
+        )
+    ax0.axhline(
+        NUMERICAL_TOLERANCE,
+        linestyle="--",
+        linewidth=0.8,
+        label=r"tolerance $10^{-10}$",
+    )
+    ax0.set_xlabel("Allowed Chebyshev radius")
+    ax0.set_ylabel("Minimum annihilation residual")
+    ax0.set_xticks(sorted(set(radius["radius"].astype(int))))
+    ax0.grid(alpha=0.18)
+    ax0.legend(loc="best", fontsize=7.6)
+    add_panel_label_margin(ax0, "(a)")
+
+    ordered = sequence.sort_values("repeats").copy()
+    ordered["kinetic_parameter_count"] = ordered["kinetic_constraint_rank"].astype(
+        float
+    ) + ordered["kinetic_compatible_dimension"].astype(float)
+    ax1.plot(
+        ordered["repeats"],
+        ordered["kinetic_parameter_count"],
+        marker="o",
+        markersize=MARKER_SIZE,
+        linewidth=LINE_WIDTH,
+        label="local kinetic parameters",
+    )
+    ax1.plot(
+        ordered["repeats"],
+        ordered["kinetic_constraint_rank"],
+        marker="s",
+        markersize=MARKER_SIZE,
+        linewidth=LINE_WIDTH,
+        label="compatibility constraints",
+    )
+    per_cell = ordered["kinetic_constraint_rank"].to_numpy(dtype=float) / ordered[
+        "repeats"
+    ].to_numpy(dtype=float)
+    if np.allclose(per_cell, per_cell[0], rtol=0.0, atol=1.0e-12):
+        ax1.text(
+            0.97,
+            0.08,
+            "$" + f"{per_cell[0]:g}" + r"$ constraints/cell",
+            transform=ax1.transAxes,
+            ha="right",
+            va="bottom",
+            fontsize=8.0,
+        )
+    ax1.set_xlabel(r"Repeated four-column cells $N$")
+    ax1.set_ylabel("Coefficient-space dimension")
+    use_integer_ticks(ax1, axis="both")
+    ax1.set_xticks(ordered["repeats"].astype(int))
+    ax1.set_ylim(bottom=0.0)
+    ax1.grid(alpha=0.18)
+    ax1.legend(loc="upper left", fontsize=7.6)
+    add_panel_label_margin(ax1, "(b)")
+    return fig
+
+
 def render_qdm_appendix(
     data_dir: Path,
     *,
@@ -393,6 +496,16 @@ def render_qdm_appendix(
         save_prx_figure(
             fig14c,
             "qdm_strip_compatibility_scaling",
+            directory=figures,
+            formats=formats,
+            close=True,
+        )
+    )
+    fig15 = _qdm_locality_scaling_figure(radius, sequence)
+    written.extend(
+        save_prx_figure(
+            fig15,
+            "qdm_appendix_locality_scaling_certificates",
             directory=figures,
             formats=formats,
             close=True,
