@@ -546,6 +546,33 @@ def add_panel_label(ax, label: str, *, x: float = 0.01, y: float = 0.99) -> None
     )
 
 
+def add_panel_label_margin(
+    ax,
+    label: str,
+    *,
+    x: float = -0.04,
+    y: float = 1.035,
+) -> None:
+    """Place a panel label in the upper-left axes margin, outside the data rectangle.
+
+    The position is axes-relative, so changing data limits cannot move the label
+    into the plotted data.  clip_on=False keeps the label visible in the
+    reserved figure margin.
+    """
+    ax.text(
+        x,
+        y,
+        label,
+        transform=ax.transAxes,
+        ha="right",
+        va="bottom",
+        fontsize=PRX_PANEL_LABEL_SIZE,
+        fontweight="bold",
+        clip_on=False,
+        zorder=20,
+    )
+
+
 def save_prx_figure(
     fig,
     stem: str,
