@@ -63,6 +63,16 @@ def test_renderers_use_followup_polish_module() -> None:
     assert "from prx_main_thermal_figure_polish import render_qdm_figure9" in qdm
 
 
+def test_spin1_witness_support_notation_is_explicit() -> None:
+    source = SPIN1_RENDERER.read_text(encoding="utf-8")
+    assert '"A": r"\\widehat Q^A_{R_r}"' in source
+    assert '"Z": r"\\widehat Q^Z_{R_r}"' in source
+    assert '"Y": r"\\widehat Q^Y_r"' in source
+    assert "_save_figure6_with_support_notation" in source
+    assert 'label=rf"${SPIN1_WITNESS_OPERATOR_LABELS[key]}$"' in source
+    assert 'audit["spin1_witness_support_notation"] = SPIN1_WITNESS_OPERATOR_LABELS' in source
+
+
 def test_spin1_appendix_figures_are_horizontal_full_width() -> None:
     source = SPIN1_RENDERER.read_text(encoding="utf-8")
     assert source.count("figsize=(PRX_TEXT_WIDTH, 2.72)") == 2
