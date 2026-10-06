@@ -37,6 +37,11 @@ PRIMARY_WINDOW_PROTOCOL = _convention.PRIMARY_WINDOW_PROTOCOL
 FIXED_WINDOW_PROTOCOL = _convention.FIXED_WINDOW_PROTOCOL
 CURRENT_EXCHANGE_CONVENTION = _convention.CURRENT_EXCHANGE_CONVENTION
 EXCHANGE_CONVENTION_METADATA_KEY = _convention.EXCHANGE_CONVENTION_METADATA_KEY
+SPIN1_WITNESS_OPERATOR_LABELS = {
+    "A": r"\widehat Q^A_{R_r}",
+    "Z": r"\widehat Q^Z_{R_r}",
+    "Y": r"\widehat Q^Y_r",
+}
 
 # Render at the physical widths of the active REVTeX manuscript.
 _legacy.FULL_WIDTH_IN = PRX_TEXT_WIDTH
@@ -68,6 +73,34 @@ def _save_final_size(
 
 
 _legacy._save = _save_final_size
+
+
+def _apply_spin1_witness_support_notation(fig: _legacy.plt.Figure) -> None:
+    """Replace generic witness-support labels with the manuscript convention.
+
+    The A and Z witnesses live on the two-site region R_r, while the Y witness
+    is supported on the single site r.  Keeping that distinction in the
+    rendered labels prevents the generic subscript R from suggesting a common
+    physical support.
+    """
+
+    for axis in fig.axes:
+        label = axis.get_ylabel()
+        for key, operator in SPIN1_WITNESS_OPERATOR_LABELS.items():
+            generic = rf"\widehat Q_R^{{{key}}}"
+            if generic in label:
+                axis.set_ylabel(label.replace(generic, operator))
+
+
+def _save_figure6_with_support_notation(
+    fig: _legacy.plt.Figure,
+    directory: Path,
+    stem: str,
+    *,
+    preview: bool = False,
+) -> list[str]:
+    _apply_spin1_witness_support_notation(fig)
+    return _legacy._save(fig, directory, stem, preview=preview)
 
 
 def _read_current(path: Path) -> pd.DataFrame:
@@ -107,7 +140,7 @@ def _figure6(data: Path, figures: Path, *, allow_incomplete: bool) -> list[str]:
         figures,
         allow_incomplete=allow_incomplete,
         read_csv=_read_current,
-        save_figure=_legacy._save,
+        save_figure=_save_figure6_with_support_notation,
     )
 
 
@@ -223,7 +256,7 @@ def _appendix_beta0(data: Path, figures: Path) -> list[str]:
                 marker=spec["marker"],
                 markersize=_legacy.MARKER_SIZE,
                 linewidth=_legacy.LINE_WIDTH,
-                label=spec["label"],
+                label=rf"${SPIN1_WITNESS_OPERATOR_LABELS[key]}$",
             )
     ax1.set_xlabel(r"System size $L$")
     ax1.set_ylabel(r"$|\Delta\tau_\alpha|$")
@@ -259,6 +292,7 @@ def _write_audit(data: Path, figures: Path, written: list[str]) -> None:
     audit["deformation_ranges_use_interpolation"] = False
     audit["fig10_layout"] = "horizontal_1x2_full_text_width"
     audit["fig11_layout"] = "horizontal_1x2_full_text_width"
+    audit["spin1_witness_support_notation"] = SPIN1_WITNESS_OPERATOR_LABELS
     json_text = json.dumps(audit, indent=2, sort_keys=True) + "\n"
     json_path.write_text(json_text, encoding="utf-8")
 
@@ -275,6 +309,10 @@ def _write_audit(data: Path, figures: Path, written: list[str]) -> None:
         )
         handle.write("- No interpolation or L=14 deformation whisker is introduced.\n")
         handle.write("- Figs. 10 and 11 are final-width horizontal 1x2 figures.\n")
+        handle.write(
+            "- Spin-1 witness supports: $\\widehat Q^A_{R_r}$, "
+            "$\\widehat Q^Z_{R_r}$, and $\\widehat Q^Y_r$.\n"
+        )
 
 
 _legacy._write_audit = _write_audit
