@@ -21,6 +21,7 @@ THERMO = JOBS / "spin1_prx_p1_thermodynamic_summary.py"
 RUNNER = JOBS / "run_prx_p1_strengthening.py"
 SPIN_RENDER = JOBS / "render_spin1_xy_draft_figures.py"
 QDM_RENDER = JOBS / "render_square_qdm_draft_figures.py"
+MAIN_REDESIGN = JOBS / "prx_main_thermal_figure_redesign.py"
 STYLE_AUDIT = JOBS / "audit_prx_p1_figure_style.py"
 
 
@@ -101,7 +102,9 @@ def test_blind_obstruction_runtime_smoke_uses_public_stability_api() -> None:
     assert result["spot_checks"]
 
 
-def test_a4_requires_current_convention_and_reports_finite_size_only(tmp_path: Path) -> None:
+def test_a4_requires_current_convention_and_reports_finite_size_only(
+    tmp_path: Path,
+) -> None:
     module = _load(THERMO, "spin1_prx_p1_thermodynamic_summary_test")
     key = module.EXCHANGE_CONVENTION_METADATA_KEY
     convention = module.CURRENT_EXCHANGE_CONVENTION
@@ -140,22 +143,25 @@ def test_a4_requires_current_convention_and_reports_finite_size_only(tmp_path: P
 def test_final_renderers_require_real_tex_and_keep_manuscript_stems() -> None:
     spin = SPIN_RENDER.read_text(encoding="utf-8")
     qdm = QDM_RENDER.read_text(encoding="utf-8")
+    redesign = MAIN_REDESIGN.read_text(encoding="utf-8")
     assert "spin1_xy_figure6_prx" in spin
     assert "text.usetex" in spin
     assert "refusing mathtext fallback" in spin
-    assert "qdm_checkerboard_figure7_combined" in qdm
-    assert "qdm_checkerboard_figure9_prx" in qdm
+    assert "qdm_checkerboard_figure7_combined" in qdm + redesign
+    assert "qdm_checkerboard_figure9_prx" in qdm + redesign
     assert "text.usetex" in qdm
     assert "refusing mathtext fallback" in qdm
 
 
-def test_qdm_figure_uses_nested_fig6_grammar_and_optional_l12_gate() -> None:
-    source = QDM_RENDER.read_text(encoding="utf-8")
-    assert "subgridspec(2, 1, height_ratios=(2.2, 1.0)" in source
+def test_qdm_figure_uses_redesigned_bridge_grammar_and_raw_l12_gate() -> None:
+    source = MAIN_REDESIGN.read_text(encoding="utf-8")
     assert "subgridspec(2, 1, hspace=0.08)" in source
-    assert 'cb.ax.set_title(r"$w_{L_x}(\\varphi)$"' in source
+    assert "subgridspec(2, 1, hspace=0.10)" in source
+    assert "canonical_typicality" in source
     assert "window_coverage_complete" in source
-    assert "fig.legend(" not in source
+    assert "sampled min/max only" in source
+    assert "pcolormesh" not in source
+    assert r"L_x\Delta_{L_x}" not in source
 
 
 @pytest.mark.integration
@@ -203,14 +209,35 @@ def test_qdm_renderer_ignores_unverified_optional_l12(tmp_path: Path) -> None:
             )
 
     pd.DataFrame(thermal_rows).to_csv(
-        tmp_path / "qdm_checkerboard_thermal_overlap.csv", index=False
+        tmp_path / "qdm_checkerboard_thermal_overlap.csv",
+        index=False,
     )
     pd.DataFrame(concentration_rows).to_csv(
-        tmp_path / "qdm_checkerboard_concentration_grid.csv", index=False
+        tmp_path / "qdm_checkerboard_concentration_grid.csv",
+        index=False,
     )
-    pd.DataFrame(scatter_rows).to_csv(tmp_path / "qdm_checkerboard_eth_scatter.csv", index=False)
+    pd.DataFrame(scatter_rows).to_csv(
+        tmp_path / "qdm_checkerboard_eth_scatter.csv",
+        index=False,
+    )
     pd.DataFrame([{"phi_star": 0.10}]).to_csv(
-        tmp_path / "qdm_checkerboard_representative_phase.csv", index=False
+        tmp_path / "qdm_checkerboard_representative_phase.csv",
+        index=False,
+    )
+    pd.DataFrame(
+        [
+            {
+                "Lx": 12,
+                "phase": 0.10,
+                "tau_A_target": 0.105,
+                "tau_Z_target": 0.205,
+                "tau_A_stderr": 4.0e-5,
+                "tau_Z_stderr": 4.0e-5,
+            }
+        ]
+    ).to_csv(
+        tmp_path / "qdm_checkerboard_finite_beta_transfer_target.csv",
+        index=False,
     )
 
     ipython_stub = tmp_path / "ipython_stub" / "IPython"
@@ -245,6 +272,11 @@ def test_qdm_renderer_ignores_unverified_optional_l12(tmp_path: Path) -> None:
     )
 
     assert (tmp_path / "figures" / "qdm_checkerboard_figure9_prx.svg").is_file()
+    panel_b = pd.read_csv(tmp_path / "figures" / "qdm_checkerboard_figure9_panel_b_plot.csv")
+    raw_lengths = set(panel_b[panel_b["ensemble"] == "raw_microcanonical"]["Lx"].astype(int))
+    canonical_lengths = set(panel_b[panel_b["ensemble"] == "canonical"]["Lx"].astype(int))
+    assert raw_lengths == {4, 8}
+    assert canonical_lengths == {4, 8, 12}
     manifest = (tmp_path / "figure_manifest.json").read_text(encoding="utf-8")
     assert "qdm_checkerboard_figure9_prx" in manifest
 
@@ -259,14 +291,18 @@ def test_style_audit_checks_fonts_tex_dimensions_and_qdm_l12() -> None:
 
 
 def test_runner_git_sha_falls_back_to_git_metadata_without_binary(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     module = _load(RUNNER, "run_prx_p1_strengthening_gitless_test")
     git_dir = tmp_path / ".git"
     (git_dir / "refs" / "heads").mkdir(parents=True)
     expected = "0123456789abcdef0123456789abcdef01234567"
     (git_dir / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
-    (git_dir / "refs" / "heads" / "main").write_text(expected + "\n", encoding="utf-8")
+    (git_dir / "refs" / "heads" / "main").write_text(
+        expected + "\n",
+        encoding="utf-8",
+    )
 
     monkeypatch.setattr(module, "ROOT", tmp_path)
 

@@ -19,6 +19,7 @@ if str(JOBS) not in sys.path:
 
 RENDERER = JOBS / "render_prx_appendix_figures.py"
 AUDIT = JOBS / "audit_prx_figure_standardization.py"
+MAIN_REDESIGN = JOBS / "prx_main_thermal_figure_redesign.py"
 
 
 def _load(path: Path, name: str):
@@ -126,22 +127,33 @@ def test_appendix_renderer_is_render_only() -> None:
     assert "scan_square_qdm_periodic_product_cancellation_scaling" not in source
 
 
-def test_polished_main_figure_renderers_make_expectation_semantics_explicit() -> None:
-    spin1 = (JOBS / "render_spin1_xy_sec6_integration_figures_legacy.py").read_text(
+def test_main_figure_redesign_matches_handoff_contract() -> None:
+    source = MAIN_REDESIGN.read_text(encoding="utf-8")
+    spin1_wrapper = (JOBS / "render_spin1_xy_sec6_integration_figures.py").read_text(
         encoding="utf-8"
     )
-    qdm = (JOBS / "render_square_qdm_draft_figures.py").read_text(encoding="utf-8")
+    qdm_wrapper = (JOBS / "render_square_qdm_draft_figures.py").read_text(encoding="utf-8")
 
-    assert r"\langle \widehat Q_R^{{{key}}}\rangle_n" in spin1
-    assert r"\langle \widehat Q_R^\alpha\rangle_{\rm mc}" in spin1
-    assert "bbox_to_anchor=(0.0, 1.015)" in spin1
-    assert "add_panel_label_margin" in spin1
+    assert "render_spin1_figure6" in spin1_wrapper
+    assert "render_qdm_figure9" in qdm_wrapper
+    assert "spin1_xy_sec6_p1_kappa_refinement_rows.csv" in source
+    assert "spin1_xy_sec6_deformation_grid_rows.csv" in source
+    assert "qdm_checkerboard_finite_beta_transfer_target.csv" in source
+    assert "canonical_typicality" in source
+    assert "sampled min/max only" in source
+    assert "qdm_checkerboard_figure9_prx_preview.png" in source
+    assert "spin1_xy_figure6_provenance.json" in source
+    assert "qdm_checkerboard_figure9_provenance.json" in source
+    assert "pcolormesh" not in source
+    assert "L_x\\Delta" not in source
 
-    assert r"\langle \widehat Q_R^{{{key}}}\rangle_n" in qdm
-    assert r"\langle \widehat Q_R^\alpha\rangle" in qdm
-    assert 'title="ensemble"' in qdm
-    assert 'title=r"strip size"' in qdm
-    assert "add_panel_label_margin" in qdm
+
+def test_main_redesign_uses_asymmetric_sampled_whiskers() -> None:
+    module = _load(MAIN_REDESIGN, "prx_main_thermal_figure_redesign_test")
+    error = module._asymmetric_yerr(0.10, 0.08, 0.15)
+    assert error.shape == (2, 1)
+    assert error[0, 0] == pytest.approx(0.02)
+    assert error[1, 0] == pytest.approx(0.05)
 
 
 def test_appendix_renderer_emits_combined_fig15_asset() -> None:

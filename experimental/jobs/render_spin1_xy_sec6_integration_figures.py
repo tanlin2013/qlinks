@@ -4,9 +4,8 @@
 The pre-migration renderer is preserved in
 ``render_spin1_xy_sec6_integration_figures_legacy``. This adapter requires
 convention-stamped figure data, aliases protocol names only inside the preserved
-plotting logic, and updates displayed window labels to the permanent J/2 ladder
-convention. Energy-density columns are consumed as stored and are never rescaled
-again in the renderer.
+plotting logic, and replaces only the main Fig. 6 artwork with the current
+finite-size/deformation handoff design.
 """
 
 from __future__ import annotations
@@ -18,7 +17,13 @@ import numpy as np
 import pandas as pd
 import render_spin1_xy_sec6_integration_figures_legacy as _legacy
 import spin1_exchange_convention as _convention
-from helpers import PRX_COLUMN_WIDTH, PRX_TEXT_WIDTH, save_prx_figure, write_figure_manifest
+from helpers import (
+    PRX_COLUMN_WIDTH,
+    PRX_TEXT_WIDTH,
+    save_prx_figure,
+    write_figure_manifest,
+)
+from prx_main_thermal_figure_redesign import render_spin1_figure6
 
 _ORIGINAL_READ = _legacy._read
 _ORIGINAL_RENDER = _legacy.render
@@ -57,7 +62,7 @@ def _save_final_size(
     written = [path.name for path in paths]
     if preview:
         path = directory / f"{stem}_preview.png"
-        fig.savefig(path, dpi=180, bbox_inches=None, pad_inches=0.0)
+        fig.savefig(path, dpi=300, bbox_inches=None, pad_inches=0.0)
         written.append(path.name)
     _legacy.plt.close(fig)
     return written
@@ -95,8 +100,24 @@ def _read(path: Path) -> pd.DataFrame:
 _legacy._read = _read
 
 
+def _figure6(data: Path, figures: Path, *, allow_incomplete: bool) -> list[str]:
+    """Render the main figure from frozen evidence with no inferred values."""
+
+    return render_spin1_figure6(
+        data,
+        figures,
+        allow_incomplete=allow_incomplete,
+        read_csv=_read_current,
+        save_figure=_legacy._save,
+    )
+
+
+_legacy._figure6 = _figure6
+
+
 def _appendix_concentration(data: Path, figures: Path) -> list[str]:
-    concentration = _read_current(data / "spin1_xy_kappa0p1_concentration_common_windows.csv")
+    source = data / "spin1_xy_kappa0p1_concentration_common_windows.csv"
+    concentration = _read_current(source)
     raw = concentration[concentration["variant"].astype(str) == "raw"].copy()
     fig = _legacy.plt.figure(figsize=(PRX_COLUMN_WIDTH, 4.55))
     grid = fig.add_gridspec(
@@ -169,8 +190,8 @@ def _appendix_beta0(data: Path, figures: Path) -> list[str]:
     ax0 = fig.add_subplot(grid[0])
     ax1 = fig.add_subplot(grid[1], sharex=ax0)
     bridge_labels = {
-        "mc_to_beta0_resolved": r"$\rho_{\rm mc}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{(M,k)}$",
-        "beta0_resolved_to_fixedM": r"$\rho_{\beta=0}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{M}$",
+        "mc_to_beta0_resolved": (r"$\rho_{\rm mc}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{(M,k)}$"),
+        "beta0_resolved_to_fixedM": (r"$\rho_{\beta=0}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{M}$"),
     }
     for bridge, group in frame.groupby("bridge", sort=True):
         group = group.sort_values("L")
@@ -207,8 +228,8 @@ def _appendix_beta0(data: Path, figures: Path) -> list[str]:
     for axis in (ax0, ax1):
         _legacy.use_integer_ticks(axis, axis="x")
         axis.set_xticks(sorted(set(frame["L"].astype(int))))
-    _legacy.add_panel_label(ax0, "(a)")
-    _legacy.add_panel_label(ax1, "(b)")
+    _legacy.add_panel_label_margin(ax0, "(a)")
+    _legacy.add_panel_label_margin(ax1, "(b)")
     return _legacy._save(fig, figures, "spin1_xy_appendix_beta0_bridges")
 
 
@@ -225,14 +246,25 @@ def _write_audit(data: Path, figures: Path, written: list[str]) -> None:
     audit["fixed_window_protocol"] = FIXED_WINDOW_PROTOCOL
     audit["fixed_window_label"] = "Delta E=J/2"
     audit["energy_density_rescaled_in_renderer"] = False
-    json_path.write_text(json.dumps(audit, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    audit["main_figure_panel_logic"] = (
+        "local exceptionalness -> representative finite-size trend -> "
+        "sampled-deformation min/max robustness -> background concentration "
+        "min/max robustness"
+    )
+    audit["deformation_ranges_are_statistical_errors"] = False
+    audit["deformation_ranges_use_interpolation"] = False
+    json_text = json.dumps(audit, indent=2, sort_keys=True) + "\n"
+    json_path.write_text(json_text, encoding="utf-8")
 
     markdown_path = figures / "spin1_xy_figure6_prx_audit.md"
     with markdown_path.open("a", encoding="utf-8") as handle:
         handle.write(f"- Exchange convention: `{CURRENT_EXCHANGE_CONVENTION}`.\n")
         handle.write("- Window labels: $\\Delta E=(J/2)L^{1/4}$ and $\\Delta E=J/2$.\n")
-        handle.write("- Energy density is consumed from mapped figure data without ")
-        handle.write("a second rescaling.\n")
+        handle.write(
+            "- Energy density is consumed from mapped figure data without a second rescaling.\n"
+        )
+        handle.write("- Fig. 6(c,d) whiskers are sampled deformation min/max ranges, not errors.\n")
+        handle.write("- No interpolation or L=14 deformation whisker is introduced.\n")
 
 
 _legacy._write_audit = _write_audit
@@ -241,7 +273,11 @@ _legacy._write_audit = _write_audit
 def render(data_dir: Path, *, use_tex: bool, allow_incomplete: bool) -> list[str]:
     """Render only convention-stamped current Sec. VI figure products."""
 
-    written = _ORIGINAL_RENDER(data_dir, use_tex=use_tex, allow_incomplete=allow_incomplete)
+    written = _ORIGINAL_RENDER(
+        data_dir,
+        use_tex=use_tex,
+        allow_incomplete=allow_incomplete,
+    )
     write_figure_manifest(Path(data_dir) / "figure_manifest.json")
     return written
 
