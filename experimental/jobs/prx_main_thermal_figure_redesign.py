@@ -153,9 +153,7 @@ def _spin1_tables(
         at_star = np.isclose(kappas, REPRESENTATIVE_KAPPA_OVER_J)
         representative = group[at_star]
         if len(representative) != 1:
-            raise ValueError(
-                f"Fig. 6(c) needs one representative kappa row at L={length}"
-            )
+            raise ValueError(f"Fig. 6(c) needs one representative kappa row at L={length}")
         for key in ("A", "Z", "Y"):
             column = f"tau_{key}_mc_raw"
             values = group[column].to_numpy(dtype=float)
@@ -184,16 +182,12 @@ def _spin1_tables(
         )
     ].copy()
     if "window_protocol" in primary.columns:
-        preferred = primary[
-            primary["window_protocol"].astype(str).str.contains("quarter_power")
-        ]
+        preferred = primary[primary["window_protocol"].astype(str).str.contains("quarter_power")]
         if not preferred.empty:
             primary = preferred
     primary = primary.sort_values("L")
     if set(primary["L"].astype(int)) != {8, 10, 12, 14}:
-        raise ValueError(
-            "Fig. 6(d) requires representative L=8,10,12,14 concentration rows"
-        )
+        raise ValueError("Fig. 6(d) requires representative L=8,10,12,14 concentration rows")
 
     records_d: list[dict] = []
     for row in primary.itertuples(index=False):
@@ -474,9 +468,7 @@ def render_spin1_figure6(
                 "whiskers": "sampled min/max only",
             },
             "d": {
-                "representative_source": (
-                    "spin1_xy_kappa0p1_concentration_common_windows.csv"
-                ),
+                "representative_source": ("spin1_xy_kappa0p1_concentration_common_windows.csv"),
                 "range_source": grid_path.name,
                 "range_source_directory": str(grid_path.parent),
                 "whiskers": "sampled min/max only",
@@ -495,9 +487,9 @@ def _prefer_partial_rows(frame: pd.DataFrame, *, keys: list[str]) -> pd.DataFram
         return frame
     result = frame.copy()
     if "spectrum_method" in result.columns:
-        result["_method_priority"] = result["spectrum_method"].eq(
-            "shift_invert_partial"
-        ).astype(int)
+        result["_method_priority"] = (
+            result["spectrum_method"].eq("shift_invert_partial").astype(int)
+        )
     else:
         result["_method_priority"] = 0
     return (
@@ -725,9 +717,7 @@ def _qdm_panel_c(
                 "value_min": float(np.min(values)),
                 "value_max": float(np.max(values)),
                 "sampled_phase_grid": json.dumps(phase_grid),
-                "source_file": (
-                    "" if phase_check_path is None else phase_check_path.name
-                ),
+                "source_file": ("" if phase_check_path is None else phase_check_path.name),
             }
         )
     return pd.DataFrame(records)
@@ -806,12 +796,10 @@ def _draw_qdm_b_c(
 ) -> None:
     for index, key in enumerate(("A", "Z")):
         b_raw = panel_b[
-            (panel_b["witness"] == key)
-            & (panel_b["ensemble"] == "raw_microcanonical")
+            (panel_b["witness"] == key) & (panel_b["ensemble"] == "raw_microcanonical")
         ].sort_values("Lx")
         b_can = panel_b[
-            (panel_b["witness"] == key)
-            & (panel_b["ensemble"] == "canonical")
+            (panel_b["witness"] == key) & (panel_b["ensemble"] == "canonical")
         ].sort_values("Lx")
         c_key = panel_c[panel_c["witness"] == key]
         ylim = _shared_positive_ylim(
@@ -945,9 +933,9 @@ def render_qdm_figure9(
         raise RuntimeError("No verified raw thermal size has matching ETH-scatter data")
     largest = int(common[-1])
     scatter_largest = scatter[scatter["Lx"].astype(int) == largest].copy()
-    representative_row = representative_raw[
-        representative_raw["Lx"].astype(int) == largest
-    ].iloc[-1]
+    representative_row = representative_raw[representative_raw["Lx"].astype(int) == largest].iloc[
+        -1
+    ]
 
     panel_b = _qdm_panel_b(
         raw=raw,
@@ -986,12 +974,10 @@ def render_qdm_figure9(
     gsa = outer[0, 0].subgridspec(2, 1, hspace=0.08)
     axes_a = [fig.add_subplot(gsa[index]) for index in range(2)]
     lower = (
-        representative_row.cage_energy_density
-        - representative_row.window_energy_density_half_width
+        representative_row.cage_energy_density - representative_row.window_energy_density_half_width
     )
     upper = (
-        representative_row.cage_energy_density
-        + representative_row.window_energy_density_half_width
+        representative_row.cage_energy_density + representative_row.window_energy_density_half_width
     )
     for index, (key, column) in enumerate((("A", "Q_A"), ("Z", "Q_Z"))):
         ax = axes_a[index]
