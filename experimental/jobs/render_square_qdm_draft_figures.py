@@ -15,10 +15,19 @@ for candidate in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
         break
 else:
     raise RuntimeError("Could not locate qlinks repository")
-sys.path[:0] = [str(ROOT / "experimental" / "notebooks"), str(ROOT / "experimental" / "jobs"), str(ROOT)]
+sys.path[:0] = [
+    str(ROOT / "experimental" / "notebooks"),
+    str(ROOT / "experimental" / "jobs"),
+    str(ROOT),
+]
 
 from helpers import set_revtex_matplotlib_style, write_figure_manifest  # noqa: E402
 from prx_main_thermal_figure_redesign import render_qdm_figure9  # noqa: E402
+
+MANUSCRIPT_STEMS = (
+    "qdm_checkerboard_figure7_combined",
+    "qdm_checkerboard_figure9_prx",
+)
 
 
 def main() -> None:
@@ -29,7 +38,9 @@ def main() -> None:
     args = parser.parse_args()
 
     data = args.data_dir.resolve()
-    formats = tuple(value.strip() for value in args.figure_formats.split(",") if value.strip())
+    formats = tuple(
+        value.strip() for value in args.figure_formats.split(",") if value.strip()
+    )
     set_revtex_matplotlib_style(base_font_size=9.0, prefer_tex=args.use_tex)
     if args.use_tex and not bool(plt.rcParams.get("text.usetex", False)):
         raise RuntimeError(
