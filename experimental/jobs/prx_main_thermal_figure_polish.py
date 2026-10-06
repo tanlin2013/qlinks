@@ -10,7 +10,6 @@ panel (d) uses a subordinate dashed guide.  No solver or interpolation is used.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Callable
 
@@ -303,15 +302,30 @@ def render_spin1_figure6(
     axd.set_xticks([8, 10, 12, 14])
     axd.grid(alpha=0.13)
     marker_handle = Line2D(
-        [0], [0], color=WITNESS_COLORS["A"], marker="_", linestyle="none",
-        markersize=BAR_MARKER_SIZE, markeredgewidth=BAR_MARKER_EDGE_WIDTH,
+        [0],
+        [0],
+        color=WITNESS_COLORS["A"],
+        marker="_",
+        linestyle="none",
+        markersize=BAR_MARKER_SIZE,
+        markeredgewidth=BAR_MARKER_EDGE_WIDTH,
         label=r"$\kappa_\star/J=0.1$",
     )
     whisker_handle = Line2D(
-        [0], [0], color=WITNESS_COLORS["A"], marker="|", markersize=11,
-        lw=WHISKER_LINE_WIDTH, label="sampled range",
+        [0],
+        [0],
+        color=WITNESS_COLORS["A"],
+        marker="|",
+        markersize=11,
+        lw=WHISKER_LINE_WIDTH,
+        label="sampled range",
     )
-    axd.legend(handles=[marker_handle, whisker_handle], loc="upper right", frameon=False, fontsize=7.6)
+    axd.legend(
+        handles=[marker_handle, whisker_handle],
+        loc="upper right",
+        frameon=False,
+        fontsize=7.6,
+    )
     add_panel_label_margin(axd, "(d)")
 
     manifest = {
@@ -396,10 +410,26 @@ def _sanitize_length_column(frame: pd.DataFrame) -> pd.DataFrame:
 
 def _qdm_ensemble_handles() -> list[Line2D]:
     return [
-        Line2D([0], [0], color=RAW_COLOR, marker="_", linestyle="none", markersize=BAR_MARKER_SIZE,
-               markeredgewidth=BAR_MARKER_EDGE_WIDTH, label="raw microcanonical"),
-        Line2D([0], [0], color=CANONICAL_COLOR, marker="_", linestyle="none", markersize=BAR_MARKER_SIZE,
-               markeredgewidth=BAR_MARKER_EDGE_WIDTH, label="energy-matched canonical"),
+        Line2D(
+            [0],
+            [0],
+            color=RAW_COLOR,
+            marker="_",
+            linestyle="none",
+            markersize=BAR_MARKER_SIZE,
+            markeredgewidth=BAR_MARKER_EDGE_WIDTH,
+            label="raw microcanonical",
+        ),
+        Line2D(
+            [0],
+            [0],
+            color=CANONICAL_COLOR,
+            marker="_",
+            linestyle="none",
+            markersize=BAR_MARKER_SIZE,
+            markeredgewidth=BAR_MARKER_EDGE_WIDTH,
+            label="energy-matched canonical",
+        ),
     ]
 
 
@@ -412,8 +442,14 @@ def _draw_qdm_b_c(
     phase: float,
 ) -> None:
     for index, key in enumerate(("A", "Z")):
-        b_raw = panel_b[(panel_b["witness"] == key) & (panel_b["ensemble"] == "raw_microcanonical")].sort_values("Lx")
-        b_can = panel_b[(panel_b["witness"] == key) & (panel_b["ensemble"] == "canonical")].sort_values("Lx")
+        raw_mask = (panel_b["witness"] == key) & (
+            panel_b["ensemble"] == "raw_microcanonical"
+        )
+        canonical_mask = (panel_b["witness"] == key) & (
+            panel_b["ensemble"] == "canonical"
+        )
+        b_raw = panel_b[raw_mask].sort_values("Lx")
+        b_can = panel_b[canonical_mask].sort_values("Lx")
         c_key = panel_c[panel_c["witness"] == key]
         ylim = _padded_ylim(
             *b_raw["value"].to_numpy(dtype=float),
@@ -426,7 +462,12 @@ def _draw_qdm_b_c(
         for row in b_raw.itertuples(index=False):
             _bar_point(axb, x=float(row.Lx) - 0.10, y=float(row.value), color=RAW_COLOR)
         for row in b_can.itertuples(index=False):
-            _bar_point(axb, x=float(row.Lx) + 0.10, y=float(row.value), color=CANONICAL_COLOR)
+            _bar_point(
+                axb,
+                x=float(row.Lx) + 0.10,
+                y=float(row.value),
+                color=CANONICAL_COLOR,
+            )
         typicality = b_can[b_can["method"] == "canonical_typicality"]
         if not typicality.empty and float(typicality.iloc[0]["stderr"]) > 0.0:
             axb.errorbar(
@@ -447,13 +488,23 @@ def _draw_qdm_b_c(
         axb.set_xticks([4, 8, 12])
         if index == 0:
             axb.tick_params(labelbottom=False)
-            axb.text(0.98, 0.88, rf"$\varphi_\star={phase:g}$", transform=axb.transAxes,
-                     ha="right", va="top", fontsize=7.6)
+            axb.text(
+                0.98,
+                0.88,
+                rf"$\varphi_\star={phase:g}$",
+                transform=axb.transAxes,
+                ha="right",
+                va="top",
+                fontsize=7.6,
+            )
         else:
             axb.set_xlabel(r"Strip length $L_x$")
 
         axc = axes_c[index]
-        styles = (("raw_microcanonical", RAW_COLOR, -0.10), ("canonical", CANONICAL_COLOR, 0.10))
+        styles = (
+            ("raw_microcanonical", RAW_COLOR, -0.10),
+            ("canonical", CANONICAL_COLOR, 0.10),
+        )
         for ensemble, color, offset in styles:
             frame = c_key[c_key["ensemble"] == ensemble].sort_values("Lx")
             for row in frame.itertuples(index=False):
@@ -520,7 +571,9 @@ def render_qdm_figure9(
         raise RuntimeError("No verified raw thermal size has matching ETH-scatter data")
     largest = int(common[-1])
     scatter_largest = scatter[scatter["Lx"].astype(int) == largest].copy()
-    representative_row = representative_raw[representative_raw["Lx"].astype(int) == largest].iloc[-1]
+    representative_row = representative_raw[
+        representative_raw["Lx"].astype(int) == largest
+    ].iloc[-1]
 
     panel_b = _base._qdm_panel_b(
         raw=raw,
@@ -557,15 +610,36 @@ def render_qdm_figure9(
     outer = _base._outer_grid(fig)
     gsa = outer[0, 0].subgridspec(2, 1, hspace=0.08)
     axes_a = [fig.add_subplot(gsa[index]) for index in range(2)]
-    lower = representative_row.cage_energy_density - representative_row.window_energy_density_half_width
-    upper = representative_row.cage_energy_density + representative_row.window_energy_density_half_width
+    lower = (
+        representative_row.cage_energy_density
+        - representative_row.window_energy_density_half_width
+    )
+    upper = (
+        representative_row.cage_energy_density
+        + representative_row.window_energy_density_half_width
+    )
     for index, (key, column) in enumerate((("A", "Q_A"), ("Z", "Q_Z"))):
         ax = axes_a[index]
         ax.axvspan(lower, upper, color="0.5", alpha=0.10, zorder=0)
-        ax.scatter(scatter_largest["energy_density"], scatter_largest[column], s=9, alpha=0.42,
-                   color="0.35", linewidths=0, rasterized=True)
-        ax.scatter([representative_row.cage_energy_density], [0.0], marker="*", s=76,
-                   color=STAR_COLOR, edgecolors="black", linewidths=0.4, zorder=8)
+        ax.scatter(
+            scatter_largest["energy_density"],
+            scatter_largest[column],
+            s=9,
+            alpha=0.42,
+            color="0.35",
+            linewidths=0,
+            rasterized=True,
+        )
+        ax.scatter(
+            [representative_row.cage_energy_density],
+            [0.0],
+            marker="*",
+            s=76,
+            color=STAR_COLOR,
+            edgecolors="black",
+            linewidths=0.4,
+            zorder=8,
+        )
         ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_n$")
         ax.grid(alpha=0.13)
         if index == 0:
@@ -578,7 +652,13 @@ def render_qdm_figure9(
     axes_b = [fig.add_subplot(gsb[index]) for index in range(2)]
     gsc = outer[1, 0].subgridspec(2, 1, hspace=0.10)
     axes_c = [fig.add_subplot(gsc[index]) for index in range(2)]
-    _draw_qdm_b_c(axes_b=axes_b, axes_c=axes_c, panel_b=panel_b, panel_c=panel_c, phase=phase)
+    _draw_qdm_b_c(
+        axes_b=axes_b,
+        axes_c=axes_c,
+        panel_b=panel_b,
+        panel_c=panel_c,
+        phase=phase,
+    )
     handles = _qdm_ensemble_handles()
     legend_kwargs = {
         "handles": handles,
@@ -590,34 +670,76 @@ def render_qdm_figure9(
         "fontsize": 7.2,
     }
     axes_b[0].legend(**legend_kwargs)
-    axes_b[0].text(0.98, 1.02, r"$L_x=12$: canonical typicality", transform=axes_b[0].transAxes,
-                   ha="right", va="bottom", fontsize=7.2)
+    axes_b[0].text(
+        0.98,
+        1.02,
+        r"$L_x=12$: canonical typicality",
+        transform=axes_b[0].transAxes,
+        ha="right",
+        va="bottom",
+        fontsize=7.2,
+    )
     axes_c[0].legend(**legend_kwargs)
-    axes_c[0].text(0.98, 0.88, r"bars/whiskers: representative value / sampled $\varphi$ range",
-                   transform=axes_c[0].transAxes, ha="right", va="top", fontsize=7.0)
+    axes_c[0].text(
+        0.98,
+        0.88,
+        r"bars/whiskers: representative value / sampled $\varphi$ range",
+        transform=axes_c[0].transAxes,
+        ha="right",
+        va="top",
+        fontsize=7.0,
+    )
     add_panel_label_margin(axes_b[0], "(b)")
     add_panel_label_margin(axes_c[0], "(c)")
 
     axd = fig.add_subplot(outer[1, 1])
     if not panel_d.empty:
-        axd.plot(panel_d["Lx"], panel_d["w_star"], color=RAW_COLOR, linewidth=GUIDE_LINE_WIDTH,
-                 linestyle="--", alpha=0.72, zorder=1)
+        axd.plot(
+            panel_d["Lx"],
+            panel_d["w_star"],
+            color=RAW_COLOR,
+            linewidth=GUIDE_LINE_WIDTH,
+            linestyle="--",
+            alpha=0.72,
+            zorder=1,
+        )
     for row in panel_d.itertuples(index=False):
-        _sampled_whisker(axd, x=float(row.Lx), center=float(row.w_star),
-                         minimum=float(row.w_min), maximum=float(row.w_max), color=RAW_COLOR)
+        _sampled_whisker(
+            axd,
+            x=float(row.Lx),
+            center=float(row.w_star),
+            minimum=float(row.w_min),
+            maximum=float(row.w_max),
+            color=RAW_COLOR,
+        )
     axd.set_xlabel(r"Strip length $L_x$")
     axd.set_ylabel(r"$w_{L_x}^{\rm raw}$")
     axd.set_ylim(bottom=0.0)
     axd.grid(alpha=0.13)
     use_integer_ticks(axd, axis="x")
     axd.set_xticks(sorted(set(panel_d["Lx"].astype(int))))
-    axd.text(0.98, 0.92, r"bars/whiskers: representative value / sampled $\varphi$ range",
-             transform=axd.transAxes, ha="right", va="top", fontsize=7.0)
+    axd.text(
+        0.98,
+        0.92,
+        r"bars/whiskers: representative value / sampled $\varphi$ range",
+        transform=axd.transAxes,
+        ha="right",
+        va="top",
+        fontsize=7.0,
+    )
     add_panel_label_margin(axd, "(d)")
 
     written: list[Path] = []
     for stem in ("qdm_checkerboard_figure7_combined", "qdm_checkerboard_figure9_prx"):
-        written.extend(save_prx_figure(fig, stem, directory=figures, formats=formats, close=False))
+        written.extend(
+            save_prx_figure(
+                fig,
+                stem,
+                directory=figures,
+                formats=formats,
+                close=False,
+            )
+        )
     preview = figures / "qdm_checkerboard_figure9_prx_preview.png"
     fig.savefig(preview, dpi=300, bbox_inches=None, pad_inches=0.0)
     written.append(preview)
