@@ -74,5 +74,5 @@ def test_spin1_appendix_figures_are_horizontal_full_width() -> None:
 def test_fig15_remains_one_code_generated_horizontal_asset() -> None:
     source = APPENDIX_RENDERER.read_text(encoding="utf-8")
     assert "_qdm_locality_scaling_figure" in source
-    assert 'fig = plt.figure(figsize=(PRX_TEXT_WIDTH, 3.05))' in source
+    assert "fig = plt.figure(figsize=(PRX_TEXT_WIDTH, 3.05))" in source
     assert '"qdm_appendix_locality_scaling_certificates"' in source
