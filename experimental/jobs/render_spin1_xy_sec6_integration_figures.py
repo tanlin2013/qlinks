@@ -78,8 +78,7 @@ def _read_current(path: Path) -> pd.DataFrame:
     conventions = set(frame[EXCHANGE_CONVENTION_METADATA_KEY].dropna().astype(str))
     if conventions != {CURRENT_EXCHANGE_CONVENTION}:
         raise ValueError(
-            f"Spin-1 figure-data convention mismatch in {path}: "
-            f"{sorted(conventions)!r}"
+            f"Spin-1 figure-data convention mismatch in {path}: {sorted(conventions)!r}"
         )
     return frame
 
@@ -191,12 +190,8 @@ def _appendix_beta0(data: Path, figures: Path) -> list[str]:
     ax0 = fig.add_subplot(grid[0])
     ax1 = fig.add_subplot(grid[1], sharex=ax0)
     bridge_labels = {
-        "mc_to_beta0_resolved": (
-            r"$\rho_{\rm mc}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{(M,k)}$"
-        ),
-        "beta0_resolved_to_fixedM": (
-            r"$\rho_{\beta=0}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{M}$"
-        ),
+        "mc_to_beta0_resolved": (r"$\rho_{\rm mc}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{(M,k)}$"),
+        "beta0_resolved_to_fixedM": (r"$\rho_{\beta=0}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{M}$"),
     }
     for bridge, group in frame.groupby("bridge", sort=True):
         group = group.sort_values("L")
@@ -214,9 +209,7 @@ def _appendix_beta0(data: Path, figures: Path) -> list[str]:
     ax0.tick_params(labelbottom=False)
     ax0.grid(alpha=0.18, which="both")
 
-    first = frame[
-        frame["bridge"].astype(str) == "mc_to_beta0_resolved"
-    ].sort_values("L")
+    first = frame[frame["bridge"].astype(str) == "mc_to_beta0_resolved"].sort_values("L")
     for key, spec in _legacy.WITNESS_SPECS.items():
         column = f"abs_delta_tau_{key}"
         if column in first.columns:
@@ -266,20 +259,12 @@ def _write_audit(data: Path, figures: Path, written: list[str]) -> None:
     markdown_path = figures / "spin1_xy_figure6_prx_audit.md"
     with markdown_path.open("a", encoding="utf-8") as handle:
         handle.write(f"- Exchange convention: `{CURRENT_EXCHANGE_CONVENTION}`.\n")
+        handle.write("- Window labels: $\\Delta E=(J/2)L^{1/4}$ and $\\Delta E=J/2$.\n")
         handle.write(
-            "- Window labels: $\\Delta E=(J/2)L^{1/4}$ and $\\Delta E=J/2$.\n"
+            "- Energy density is consumed from mapped figure data without a second rescaling.\n"
         )
-        handle.write(
-            "- Energy density is consumed from mapped figure data without a "
-            "second rescaling.\n"
-        )
-        handle.write(
-            "- Fig. 6(c,d) whiskers are sampled deformation min/max ranges, "
-            "not errors.\n"
-        )
-        handle.write(
-            "- No interpolation or L=14 deformation whisker is introduced.\n"
-        )
+        handle.write("- Fig. 6(c,d) whiskers are sampled deformation min/max ranges, not errors.\n")
+        handle.write("- No interpolation or L=14 deformation whisker is introduced.\n")
 
 
 _legacy._write_audit = _write_audit
