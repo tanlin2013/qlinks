@@ -194,12 +194,8 @@ def _appendix_beta0(data: Path, figures: Path) -> list[str]:
     ax0 = fig.add_subplot(grid[0, 0])
     ax1 = fig.add_subplot(grid[0, 1])
     bridge_labels = {
-        "mc_to_beta0_resolved": (
-            r"$\rho_{\rm mc}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{(M,k)}$"
-        ),
-        "beta0_resolved_to_fixedM": (
-            r"$\rho_{\beta=0}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{M}$"
-        ),
+        "mc_to_beta0_resolved": (r"$\rho_{\rm mc}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{(M,k)}$"),
+        "beta0_resolved_to_fixedM": (r"$\rho_{\beta=0}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{M}$"),
     }
     for bridge, group in frame.groupby("bridge", sort=True):
         group = group.sort_values("L")
@@ -275,8 +271,7 @@ def _write_audit(data: Path, figures: Path, written: list[str]) -> None:
         )
         handle.write("- Fig. 6(c,d) whiskers are sampled deformation min/max ranges, not errors.\n")
         handle.write(
-            "- Fig. 6(b,c) use unconnected representative bars; "
-            "Fig. 6(d) uses a dashed guide.\n"
+            "- Fig. 6(b,c) use unconnected representative bars; Fig. 6(d) uses a dashed guide.\n"
         )
         handle.write("- No interpolation or L=14 deformation whisker is introduced.\n")
         handle.write("- Figs. 10 and 11 are final-width horizontal 1x2 figures.\n")
