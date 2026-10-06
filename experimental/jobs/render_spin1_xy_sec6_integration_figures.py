@@ -18,12 +18,11 @@ import pandas as pd
 import render_spin1_xy_sec6_integration_figures_legacy as _legacy
 import spin1_exchange_convention as _convention
 from helpers import (
-    PRX_COLUMN_WIDTH,
     PRX_TEXT_WIDTH,
     save_prx_figure,
     write_figure_manifest,
 )
-from prx_main_thermal_figure_redesign import render_spin1_figure6
+from prx_main_thermal_figure_polish import render_spin1_figure6
 
 _ORIGINAL_READ = _legacy._read
 _ORIGINAL_RENDER = _legacy.render
@@ -116,22 +115,23 @@ _legacy._figure6 = _figure6
 
 
 def _appendix_concentration(data: Path, figures: Path) -> list[str]:
+    """Render Fig. 11 as a final-width horizontal two-panel figure."""
+
     source = data / "spin1_xy_kappa0p1_concentration_common_windows.csv"
     concentration = _read_current(source)
     raw = concentration[concentration["variant"].astype(str) == "raw"].copy()
-    fig = _legacy.plt.figure(figsize=(PRX_COLUMN_WIDTH, 4.55))
+    fig = _legacy.plt.figure(figsize=(PRX_TEXT_WIDTH, 2.72))
     grid = fig.add_gridspec(
-        2,
         1,
-        height_ratios=(3.0, 2.0),
-        left=0.22,
-        right=0.97,
-        bottom=0.11,
-        top=0.98,
-        hspace=0.30,
+        2,
+        left=0.09,
+        right=0.985,
+        bottom=0.21,
+        top=0.91,
+        wspace=0.34,
     )
-    ax0 = fig.add_subplot(grid[0])
-    ax1 = fig.add_subplot(grid[1], sharex=ax0)
+    ax0 = fig.add_subplot(grid[0, 0])
+    ax1 = fig.add_subplot(grid[0, 1])
     labels = {
         PRIMARY_WINDOW_PROTOCOL: r"$\Delta E=(J/2)L^{1/4}$",
         FIXED_WINDOW_PROTOCOL: r"$\Delta E=J/2$",
@@ -156,13 +156,15 @@ def _appendix_concentration(data: Path, figures: Path) -> list[str]:
                 markersize=_legacy.MARKER_SIZE,
                 linewidth=_legacy.LINE_WIDTH,
                 color=line.get_color(),
+                label=label,
             )
+    ax0.set_xlabel(r"System size $L$")
     ax0.set_ylabel(r"$w_L^{\rm raw}$")
     ax0.set_ylim(bottom=0.0)
-    ax0.legend(frameon=False, fontsize=8.0, loc="best")
-    ax0.tick_params(labelbottom=False)
+    ax0.legend(frameon=False, fontsize=7.6, loc="best")
     ax1.set_xlabel(r"System size $L$")
     ax1.set_ylabel(r"$\log N_{\rm win}/L$")
+    ax1.legend(frameon=False, fontsize=7.6, loc="best")
     for axis in (ax0, ax1):
         _legacy.use_integer_ticks(axis, axis="x")
         axis.set_xticks(sorted(set(raw["L"].astype(int))))
@@ -176,19 +178,21 @@ _legacy._appendix_concentration = _appendix_concentration
 
 
 def _appendix_beta0(data: Path, figures: Path) -> list[str]:
+    """Render Fig. 10 as a final-width horizontal two-panel figure."""
+
     frame = _read_current(data / "spin1_xy_appendix_beta0_bridges_data.csv")
-    fig = _legacy.plt.figure(figsize=(PRX_COLUMN_WIDTH, 4.75))
+    fig = _legacy.plt.figure(figsize=(PRX_TEXT_WIDTH, 2.72))
     grid = fig.add_gridspec(
-        2,
         1,
-        left=0.22,
-        right=0.97,
-        bottom=0.11,
-        top=0.98,
-        hspace=0.30,
+        2,
+        left=0.09,
+        right=0.985,
+        bottom=0.21,
+        top=0.91,
+        wspace=0.34,
     )
-    ax0 = fig.add_subplot(grid[0])
-    ax1 = fig.add_subplot(grid[1], sharex=ax0)
+    ax0 = fig.add_subplot(grid[0, 0])
+    ax1 = fig.add_subplot(grid[0, 1])
     bridge_labels = {
         "mc_to_beta0_resolved": (r"$\rho_{\rm mc}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{(M,k)}$"),
         "beta0_resolved_to_fixedM": (r"$\rho_{\beta=0}^{(M,k)}\leftrightarrow\rho_{\beta=0}^{M}$"),
@@ -204,9 +208,9 @@ def _appendix_beta0(data: Path, figures: Path) -> list[str]:
             label=bridge_labels.get(str(bridge), str(bridge)),
         )
     ax0.set_yscale("log")
+    ax0.set_xlabel(r"System size $L$")
     ax0.set_ylabel("Two-site RDM distance")
-    ax0.legend(frameon=False, fontsize=7.5, loc="best")
-    ax0.tick_params(labelbottom=False)
+    ax0.legend(frameon=False, fontsize=7.4, loc="best")
     ax0.grid(alpha=0.18, which="both")
 
     first = frame[frame["bridge"].astype(str) == "mc_to_beta0_resolved"].sort_values("L")
@@ -253,6 +257,8 @@ def _write_audit(data: Path, figures: Path, written: list[str]) -> None:
     )
     audit["deformation_ranges_are_statistical_errors"] = False
     audit["deformation_ranges_use_interpolation"] = False
+    audit["fig10_layout"] = "horizontal_1x2_full_text_width"
+    audit["fig11_layout"] = "horizontal_1x2_full_text_width"
     json_text = json.dumps(audit, indent=2, sort_keys=True) + "\n"
     json_path.write_text(json_text, encoding="utf-8")
 
@@ -264,7 +270,9 @@ def _write_audit(data: Path, figures: Path, written: list[str]) -> None:
             "- Energy density is consumed from mapped figure data without a second rescaling.\n"
         )
         handle.write("- Fig. 6(c,d) whiskers are sampled deformation min/max ranges, not errors.\n")
+        handle.write("- Fig. 6(b,c) use unconnected representative bars; Fig. 6(d) uses a dashed guide.\n")
         handle.write("- No interpolation or L=14 deformation whisker is introduced.\n")
+        handle.write("- Figs. 10 and 11 are final-width horizontal 1x2 figures.\n")
 
 
 _legacy._write_audit = _write_audit
