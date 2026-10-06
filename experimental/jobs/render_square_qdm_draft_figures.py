@@ -22,7 +22,7 @@ sys.path[:0] = [
 ]
 
 from helpers import set_revtex_matplotlib_style, write_figure_manifest  # noqa: E402
-from prx_main_thermal_figure_redesign import render_qdm_figure9  # noqa: E402
+from prx_main_thermal_figure_polish import render_qdm_figure9  # noqa: E402
 
 MANUSCRIPT_STEMS = (
     "qdm_checkerboard_figure7_combined",
