@@ -442,12 +442,8 @@ def _draw_qdm_b_c(
     phase: float,
 ) -> None:
     for index, key in enumerate(("A", "Z")):
-        raw_mask = (panel_b["witness"] == key) & (
-            panel_b["ensemble"] == "raw_microcanonical"
-        )
-        canonical_mask = (panel_b["witness"] == key) & (
-            panel_b["ensemble"] == "canonical"
-        )
+        raw_mask = (panel_b["witness"] == key) & (panel_b["ensemble"] == "raw_microcanonical")
+        canonical_mask = (panel_b["witness"] == key) & (panel_b["ensemble"] == "canonical")
         b_raw = panel_b[raw_mask].sort_values("Lx")
         b_can = panel_b[canonical_mask].sort_values("Lx")
         c_key = panel_c[panel_c["witness"] == key]
@@ -571,9 +567,9 @@ def render_qdm_figure9(
         raise RuntimeError("No verified raw thermal size has matching ETH-scatter data")
     largest = int(common[-1])
     scatter_largest = scatter[scatter["Lx"].astype(int) == largest].copy()
-    representative_row = representative_raw[
-        representative_raw["Lx"].astype(int) == largest
-    ].iloc[-1]
+    representative_row = representative_raw[representative_raw["Lx"].astype(int) == largest].iloc[
+        -1
+    ]
 
     panel_b = _base._qdm_panel_b(
         raw=raw,
@@ -611,12 +607,10 @@ def render_qdm_figure9(
     gsa = outer[0, 0].subgridspec(2, 1, hspace=0.08)
     axes_a = [fig.add_subplot(gsa[index]) for index in range(2)]
     lower = (
-        representative_row.cage_energy_density
-        - representative_row.window_energy_density_half_width
+        representative_row.cage_energy_density - representative_row.window_energy_density_half_width
     )
     upper = (
-        representative_row.cage_energy_density
-        + representative_row.window_energy_density_half_width
+        representative_row.cage_energy_density + representative_row.window_energy_density_half_width
     )
     for index, (key, column) in enumerate((("A", "Q_A"), ("Z", "Q_Z"))):
         ax = axes_a[index]
