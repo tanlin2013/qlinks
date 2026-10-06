@@ -38,9 +38,7 @@ def main() -> None:
     args = parser.parse_args()
 
     data = args.data_dir.resolve()
-    formats = tuple(
-        value.strip() for value in args.figure_formats.split(",") if value.strip()
-    )
+    formats = tuple(value.strip() for value in args.figure_formats.split(",") if value.strip())
     set_revtex_matplotlib_style(base_font_size=9.0, prefer_tex=args.use_tex)
     if args.use_tex and not bool(plt.rcParams.get("text.usetex", False)):
         raise RuntimeError(
