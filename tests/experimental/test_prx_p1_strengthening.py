@@ -52,9 +52,7 @@ def test_resolved_entropy_run_uses_even_tower_sequence(tmp_path: Path) -> None:
     assert set(frame["L"].astype(int)) == {4, 6, 8}
     selected = frame[frame["is_selected_tower_momentum"].astype(bool)]
     assert selected.groupby("L").size().to_dict() == {4: 1, 6: 1, 8: 1}
-    summary = (tmp_path / "spin1_resolved_sector_entropy.md").read_text(
-        encoding="utf-8"
-    )
+    summary = (tmp_path / "spin1_resolved_sector_entropy.md").read_text(encoding="utf-8")
     assert "ordinary inversion is broken" in summary
 
 
@@ -274,15 +272,9 @@ def test_qdm_renderer_ignores_unverified_optional_l12(tmp_path: Path) -> None:
     )
 
     assert (tmp_path / "figures" / "qdm_checkerboard_figure9_prx.svg").is_file()
-    panel_b = pd.read_csv(
-        tmp_path / "figures" / "qdm_checkerboard_figure9_panel_b_plot.csv"
-    )
-    raw_lengths = set(
-        panel_b[panel_b["ensemble"] == "raw_microcanonical"]["Lx"].astype(int)
-    )
-    canonical_lengths = set(
-        panel_b[panel_b["ensemble"] == "canonical"]["Lx"].astype(int)
-    )
+    panel_b = pd.read_csv(tmp_path / "figures" / "qdm_checkerboard_figure9_panel_b_plot.csv")
+    raw_lengths = set(panel_b[panel_b["ensemble"] == "raw_microcanonical"]["Lx"].astype(int))
+    canonical_lengths = set(panel_b[panel_b["ensemble"] == "canonical"]["Lx"].astype(int))
     assert raw_lengths == {4, 8}
     assert canonical_lengths == {4, 8, 12}
     manifest = (tmp_path / "figure_manifest.json").read_text(encoding="utf-8")
