@@ -42,47 +42,79 @@ def test_qdm_canonical_l12_ignores_nonfinite_length_rows(tmp_path: Path) -> None
     assert float(selected.iloc[0]["tau_A_target"]) == 0.11
 
 
-def test_main_figure_polish_uses_points_boxes_and_clean_annotations() -> None:
+def test_spin1_merged_panel_keeps_large_size_without_inventing_range() -> None:
+    module = _load(POLISH, "prx_main_thermal_figure_polish_spin1_merge_test")
+    representative = pd.DataFrame(
+        [
+            {"L": 12, "witness": "A", "tau_mc_raw": 0.12},
+            {"L": 14, "witness": "A", "tau_mc_raw": 0.11},
+        ]
+    )
+    ranges = pd.DataFrame(
+        [
+            {
+                "L": 12,
+                "witness": "A",
+                "tau_star": 0.12,
+                "tau_min": 0.119,
+                "tau_max": 0.121,
+            }
+        ]
+    )
+
+    merged = module._spin1_panel_b_merged(representative, ranges)
+    row14 = merged[merged["L"] == 14].iloc[0]
+    assert float(row14["tau_star"]) == 0.11
+    assert pd.isna(row14["tau_min"])
+    assert pd.isna(row14["tau_max"])
+    assert not bool(row14["sampled_range_available"])
+
+
+def test_qdm_deformation_scan_uses_largest_sampled_raw_size() -> None:
+    module = _load(POLISH, "prx_main_thermal_figure_polish_qdm_scan_test")
+    rows = []
+    for lx in (4, 8):
+        for phase in (0.025, 0.05, 0.075):
+            rows.append(
+                {
+                    "Lx": lx,
+                    "phase": phase,
+                    "tau_A_mc": 0.05,
+                    "tau_Z_mc": 0.10,
+                    "tau_A_reference": 0.06,
+                    "tau_Z_reference": 0.12,
+                }
+            )
+    scan, length = module._qdm_deformation_scan(pd.DataFrame(rows))
+    assert length == 8
+    assert set(scan["Lx"].astype(int)) == {8}
+    assert set(scan["ensemble"]) == {"raw_microcanonical", "canonical"}
+    assert set(scan["witness"]) == {"A", "Z"}
+
+
+def test_main_figure_roles_and_literal_range_contract() -> None:
     source = POLISH.read_text(encoding="utf-8")
-    assert 'marker="o"' in source
-    assert "Rectangle(" in source
-    assert '"panel_b_marker": "circle"' in source
-    assert '"panel_c_marker": "range_box_with_representative_line"' in source
-    assert '"panel_d_marker": "range_box_with_representative_line"' in source
-    assert '"panel_d_guide_line": "dashed"' in source
-    assert '"in_panel_encoding_text": False' in source
-    assert "bars/whiskers:" not in source
-    assert "tau_{{{key}}}" not in source
     assert 'STAR_COLOR = "#E69F00"' in source
-    assert '"A": "#0072B2"' in source
-    assert '"Z": "#009E73"' in source
-    assert '"Y": "#CC79A7"' in source
+    assert '"panel_b_role": "finite size plus compatible-kappa range"' in source
+    assert '"panel_c_role": "witness versus compatible kappa"' in source
+    assert '"panel_b_role": "finite size plus compatible-phase range"' in source
+    assert '"panel_c_role": "witness versus compatible phase"' in source
+    assert '"range_display_floor": False' in source
+    assert '"panel_d_box_width": 0.34' in source
+    assert "float(maximum) - float(minimum)" in source
+    assert "display floor" not in source.lower()
     assert 'rf"\\textbf{{{label}}}"' in source
 
 
-def test_qdm_uses_witness_color_and_no_horizontal_ensemble_offset() -> None:
+def test_qdm_has_short_ensemble_legends_and_no_horizontal_offset() -> None:
     source = POLISH.read_text(encoding="utf-8")
-    assert "color = WITNESS_COLORS[key]" in source
-    assert 'markerfacecolor=color if filled else "white"' in source
-    assert '("raw_microcanonical", True, "-")' in source
-    assert '("canonical", False, "--")' in source
+    assert "_qdm_ensemble_box_handles" in source
+    assert "_qdm_scan_handles" in source
+    assert 'label="raw MC"' in source
+    assert 'label="canonical"' in source
     assert '"panel_b_horizontal_displacement": False' in source
-    assert '"panel_c_horizontal_displacement": False' in source
     assert "x=float(row.Lx) - 0.10" not in source
     assert "x=float(row.Lx) + 0.10" not in source
-
-
-def test_qdm_panel_c_has_range_legend_without_range_inflation() -> None:
-    qdm = QDM_RENDERER.read_text(encoding="utf-8")
-    polish = POLISH.read_text(encoding="utf-8")
-    assert "_qdm_range_legend_handles" in qdm
-    assert "_install_qdm_panel_c_legend" in qdm
-    assert "handles=_qdm_range_legend_handles()" in qdm
-    assert "facecolor=neutral" in qdm
-    assert 'facecolor="none"' in qdm
-    assert "height = float(maximum) - float(minimum)" in polish
-    assert "minimum display" not in polish.lower()
-    assert "display floor" not in polish.lower()
 
 
 def test_qdm_panel_d_keeps_zero_floor_with_data_driven_ceiling() -> None:
@@ -97,6 +129,7 @@ def test_renderers_use_followup_polish_module() -> None:
     qdm = QDM_RENDERER.read_text(encoding="utf-8")
     assert "from prx_main_thermal_figure_polish import render_spin1_figure6" in spin1
     assert "from prx_main_thermal_figure_polish import render_qdm_figure9" in qdm
+    assert "_install_qdm_panel_c_legend" not in qdm
 
 
 def test_spin1_witness_support_notation_is_explicit() -> None:
