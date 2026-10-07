@@ -62,22 +62,19 @@ def test_main_figure_polish_uses_points_boxes_and_clean_annotations() -> None:
 
 def test_qdm_uses_witness_color_and_no_horizontal_ensemble_offset() -> None:
     source = POLISH.read_text(encoding="utf-8")
-    assert 'color = WITNESS_COLORS[key]' in source
+    assert "color = WITNESS_COLORS[key]" in source
     assert 'markerfacecolor=color if filled else "white"' in source
     assert '("raw_microcanonical", True, "-")' in source
     assert '("canonical", False, "--")' in source
     assert '"panel_b_horizontal_displacement": False' in source
     assert '"panel_c_horizontal_displacement": False' in source
-    assert 'x=float(row.Lx) - 0.10' not in source
-    assert 'x=float(row.Lx) + 0.10' not in source
+    assert "x=float(row.Lx) - 0.10" not in source
+    assert "x=float(row.Lx) + 0.10" not in source
 
 
 def test_qdm_panel_d_keeps_zero_floor_with_data_driven_ceiling() -> None:
     source = POLISH.read_text(encoding="utf-8")
-    ceiling = (
-        "upper_limit = 1.0 if finite_upper.size == 0 else "
-        "1.08 * float(np.max(finite_upper))"
-    )
+    ceiling = "upper_limit = 1.0 if finite_upper.size == 0 else 1.08 * float(np.max(finite_upper))"
     assert ceiling in source
     assert "axd.set_ylim(0.0, upper_limit)" in source
 
