@@ -66,9 +66,7 @@ def _padded_ylim(*values: float) -> tuple[float, float]:
 def _clean_y_ticks(ax, *, nbins: int = 3) -> None:
     """Use a small set of plain, non-offset ticks on compact stacked axes."""
 
-    ax.yaxis.set_major_locator(
-        MaxNLocator(nbins=nbins, steps=[1, 2, 5, 10], min_n_ticks=2)
-    )
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=nbins, steps=[1, 2, 5, 10], min_n_ticks=2))
     formatter = ScalarFormatter(useOffset=False)
     formatter.set_scientific(False)
     ax.yaxis.set_major_formatter(formatter)
@@ -304,9 +302,7 @@ def _draw_spin1_panel_b(axes: list, panel_b: pd.DataFrame) -> None:
         else:
             ax.set_xlabel(r"System size $L$")
     handles = _range_semantics_handles(r"$\kappa_\star$", r"$\kappa$ scan")
-    handles.append(
-        Line2D([0], [0], color=TARGET_COLOR, ls="--", lw=0.9, label=r"$\beta=0$")
-    )
+    handles.append(Line2D([0], [0], color=TARGET_COLOR, ls="--", lw=0.9, label=r"$\beta=0$"))
     _top_legend(axes[0], handles=handles, ncol=3)
 
 
