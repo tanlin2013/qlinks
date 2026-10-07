@@ -19,6 +19,7 @@ import prx_main_thermal_figure_redesign as _base
 from helpers import add_panel_label_margin, save_prx_figure, use_integer_ticks
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
+from matplotlib.ticker import MaxNLocator, ScalarFormatter
 
 FULL_WIDTH_IN = _base.FULL_WIDTH_IN
 FIG_HEIGHT_IN = _base.FIG_HEIGHT_IN
@@ -62,10 +63,47 @@ def _padded_ylim(*values: float) -> tuple[float, float]:
     return lo - pad, hi + pad
 
 
+def _clean_y_ticks(ax, *, nbins: int = 3) -> None:
+    """Use a small set of plain, non-offset ticks on compact stacked axes."""
+
+    ax.yaxis.set_major_locator(
+        MaxNLocator(nbins=nbins, steps=[1, 2, 5, 10], min_n_ticks=2)
+    )
+    formatter = ScalarFormatter(useOffset=False)
+    formatter.set_scientific(False)
+    ax.yaxis.set_major_formatter(formatter)
+
+
 def _panel_label(ax, label: str) -> None:
     """Use manuscript-style bold panel labels without moving their anchor."""
 
     add_panel_label_margin(ax, rf"\textbf{{{label}}}")
+
+
+def _top_legend(
+    ax,
+    *,
+    handles: list,
+    ncol: int,
+    title: str | None = None,
+) -> None:
+    """Place a compact marker key above a panel instead of over its data."""
+
+    kwargs = {
+        "handles": handles,
+        "loc": "lower left",
+        "bbox_to_anchor": (0.0, 1.02),
+        "borderaxespad": 0.0,
+        "frameon": False,
+        "fontsize": 6.8,
+        "handletextpad": 0.45,
+        "columnspacing": 0.9,
+        "ncol": ncol,
+    }
+    if title is not None:
+        kwargs["title"] = title
+        kwargs["title_fontsize"] = 6.8
+    ax.legend(**kwargs)
 
 
 def _range_box(
@@ -120,15 +158,43 @@ def _range_box(
     )
 
 
-def _range_semantics_handles(star_label: str, scan_label: str) -> list:
+def _center_marker(
+    ax,
+    *,
+    x: float,
+    y: float,
+    color: str,
+    filled: bool,
+) -> None:
+    """Make coincident raw/canonical range centers distinguishable in Fig. 9(b)."""
+
+    ax.plot(
+        [x],
+        [y],
+        linestyle="none",
+        marker="o",
+        markersize=POINT_MARKER_SIZE - 0.5,
+        markerfacecolor=color if filled else "white",
+        markeredgecolor=color,
+        markeredgewidth=POINT_EDGE_WIDTH,
+        color=color,
+        zorder=10,
+    )
+
+
+def _range_semantics_handles(
+    star_label: str,
+    scan_label: str,
+    *,
+    color: str = "0.35",
+) -> list:
     """Compact legend handles for representative value versus sampled span."""
 
-    neutral = "0.35"
     return [
         Line2D(
             [0],
             [0],
-            color=neutral,
+            color=color,
             linewidth=RANGE_BOX_CENTER_WIDTH,
             label=star_label,
         ),
@@ -136,8 +202,8 @@ def _range_semantics_handles(star_label: str, scan_label: str) -> list:
             (0, 0),
             1,
             1,
-            facecolor=neutral,
-            edgecolor=neutral,
+            facecolor=color,
+            edgecolor=color,
             alpha=RANGE_BOX_FACE_ALPHA,
             linewidth=RANGE_BOX_EDGE_WIDTH,
             label=scan_label,
@@ -229,6 +295,7 @@ def _draw_spin1_panel_b(axes: list, panel_b: pd.DataFrame) -> None:
         ax.axhline(target, color=TARGET_COLOR, ls="--", lw=0.9, zorder=2)
         ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_{{\rm mc}}$")
         ax.set_ylim(*ylim)
+        _clean_y_ticks(ax)
         ax.grid(alpha=0.13)
         use_integer_ticks(ax, axis="x")
         ax.set_xticks([8, 10, 12, 14])
@@ -236,15 +303,11 @@ def _draw_spin1_panel_b(axes: list, panel_b: pd.DataFrame) -> None:
             ax.tick_params(labelbottom=False)
         else:
             ax.set_xlabel(r"System size $L$")
-    axes[0].legend(
-        handles=_range_semantics_handles(r"$\kappa_\star$", r"$\kappa$ scan"),
-        loc="upper right",
-        frameon=False,
-        fontsize=6.8,
-        handletextpad=0.45,
-        borderaxespad=0.3,
-        ncol=2,
+    handles = _range_semantics_handles(r"$\kappa_\star$", r"$\kappa$ scan")
+    handles.append(
+        Line2D([0], [0], color=TARGET_COLOR, ls="--", lw=0.9, label=r"$\beta=0$")
     )
+    _top_legend(axes[0], handles=handles, ncol=3)
 
 
 def _draw_spin1_panel_c(axes: list, scan: pd.DataFrame, length: int) -> None:
@@ -266,21 +329,19 @@ def _draw_spin1_panel_c(axes: list, scan: pd.DataFrame, length: int) -> None:
         ax.axhline(target, color=TARGET_COLOR, ls="--", lw=0.9, zorder=2)
         ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_{{\rm mc}}$")
         ax.set_ylim(*ylim)
+        _clean_y_ticks(ax)
         ax.grid(alpha=0.13)
         if index < 2:
             ax.tick_params(labelbottom=False)
         else:
             ax.set_xlabel(r"Compatible deformation $\kappa/J$")
-    axes[0].legend(
+    _top_legend(
+        axes[0],
         handles=[
             Line2D([0], [0], color="0.35", marker="o", lw=0.9, label=rf"$L={length}$"),
             Line2D([0], [0], color=TARGET_COLOR, ls="--", lw=0.9, label=r"$\beta=0$"),
         ],
-        loc="upper right",
-        frameon=False,
-        fontsize=6.8,
-        handletextpad=0.45,
-        borderaxespad=0.3,
+        ncol=2,
     )
 
 
@@ -384,7 +445,11 @@ def render_spin1_figure6(
     axd.set_xticks([8, 10, 12, 14])
     axd.grid(alpha=0.13)
     axd.legend(
-        handles=_range_semantics_handles(r"$\kappa_\star$", r"$\kappa$ scan"),
+        handles=_range_semantics_handles(
+            r"$\kappa_\star$",
+            r"$\kappa$ scan",
+            color=WITNESS_COLORS["A"],
+        ),
         loc="upper right",
         frameon=False,
         fontsize=6.8,
@@ -400,8 +465,11 @@ def render_spin1_figure6(
         "witness_colors": WITNESS_COLORS,
         "panel_b_role": "finite size plus compatible-kappa range",
         "panel_b_includes_L14_representative_without_range": True,
+        "panel_b_legend": "above axes; kappa_star, kappa scan, beta=0",
         "panel_c_role": "witness versus compatible kappa",
         "panel_c_scan_L": scan_length,
+        "panel_c_legend": "above axes",
+        "panel_d_legend_color": WITNESS_COLORS["A"],
         "panel_d_marker": "literal_range_box_with_representative_line",
         "panel_d_guide_line": "dashed",
         "range_encoding": "box height = sampled min/max; internal line = representative value",
@@ -546,27 +614,31 @@ def _qdm_deformation_scan(raw: pd.DataFrame) -> tuple[pd.DataFrame, int]:
     return pd.DataFrame(records), length
 
 
-def _qdm_ensemble_box_handles() -> list[Rectangle]:
+def _qdm_ensemble_box_handles() -> list[Line2D]:
+    """Use line style plus fill state so the ensemble key stays visible when ranges are tiny."""
+
     neutral = "0.35"
     return [
-        Rectangle(
-            (0, 0),
-            1,
-            1,
-            facecolor=neutral,
-            edgecolor=neutral,
-            alpha=RANGE_BOX_FACE_ALPHA,
-            linewidth=RANGE_BOX_EDGE_WIDTH,
+        Line2D(
+            [0],
+            [0],
+            color=neutral,
+            marker="o",
+            markerfacecolor=neutral,
+            markeredgecolor=neutral,
+            linestyle="-",
+            lw=RANGE_BOX_CENTER_WIDTH,
             label="raw MC",
         ),
-        Rectangle(
-            (0, 0),
-            1,
-            1,
-            facecolor="none",
-            edgecolor=neutral,
+        Line2D(
+            [0],
+            [0],
+            color=neutral,
+            marker="o",
+            markerfacecolor="white",
+            markeredgecolor=neutral,
             linestyle="--",
-            linewidth=RANGE_BOX_EDGE_WIDTH,
+            lw=RANGE_BOX_CENTER_WIDTH,
             label="canonical",
         ),
     ]
@@ -626,6 +698,13 @@ def _draw_qdm_panel_b(axes: list, panel_b: pd.DataFrame) -> None:
                     filled=filled,
                     linestyle=linestyle,
                 )
+                _center_marker(
+                    ax,
+                    x=float(row.Lx),
+                    y=float(row.value),
+                    color=color,
+                    filled=filled,
+                )
         typicality = frame[
             (frame["ensemble"] == "canonical") & (frame["method"] == "canonical_typicality")
         ]
@@ -643,6 +722,7 @@ def _draw_qdm_panel_b(axes: list, panel_b: pd.DataFrame) -> None:
             )
         ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle$")
         ax.set_ylim(*ylim)
+        _clean_y_ticks(ax)
         ax.grid(alpha=0.13)
         use_integer_ticks(ax, axis="x")
         ax.set_xticks([4, 8, 12])
@@ -650,14 +730,7 @@ def _draw_qdm_panel_b(axes: list, panel_b: pd.DataFrame) -> None:
             ax.tick_params(labelbottom=False)
         else:
             ax.set_xlabel(r"Strip length $L_x$")
-    axes[0].legend(
-        handles=_qdm_ensemble_box_handles(),
-        loc="upper right",
-        frameon=False,
-        fontsize=6.8,
-        handletextpad=0.45,
-        borderaxespad=0.3,
-    )
+    _top_legend(axes[0], handles=_qdm_ensemble_box_handles(), ncol=2)
 
 
 def _draw_qdm_panel_c(axes: list, scan: pd.DataFrame, length: int) -> None:
@@ -685,20 +758,17 @@ def _draw_qdm_panel_c(axes: list, scan: pd.DataFrame, length: int) -> None:
             )
         ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle$")
         ax.set_ylim(*ylim)
+        _clean_y_ticks(ax)
         ax.grid(alpha=0.13)
         if index == 0:
             ax.tick_params(labelbottom=False)
         else:
             ax.set_xlabel(r"Compatible deformation $\varphi$")
-    axes[0].legend(
+    _top_legend(
+        axes[0],
         handles=_qdm_scan_handles(),
+        ncol=2,
         title=rf"$L_x={length}$",
-        loc="upper right",
-        frameon=False,
-        fontsize=6.8,
-        title_fontsize=6.8,
-        handletextpad=0.45,
-        borderaxespad=0.3,
     )
 
 
@@ -872,7 +942,11 @@ def render_qdm_figure9(
     use_integer_ticks(axd, axis="x")
     axd.set_xticks(sorted(set(panel_d["Lx"].astype(int))))
     axd.legend(
-        handles=_range_semantics_handles(r"$\varphi_\star$", r"$\varphi$ scan"),
+        handles=_range_semantics_handles(
+            r"$\varphi_\star$",
+            r"$\varphi$ scan",
+            color=WITNESS_COLORS["A"],
+        ),
         loc="upper right",
         frameon=False,
         fontsize=6.8,
@@ -905,14 +979,17 @@ def render_qdm_figure9(
         "star_color": STAR_COLOR,
         "witness_colors": {"A": WITNESS_COLORS["A"], "Z": WITNESS_COLORS["Z"]},
         "panel_b_role": "finite size plus compatible-phase range",
-        "panel_b_ensemble_encoding": "raw filled; canonical open dashed",
+        "panel_b_ensemble_encoding": "raw filled solid circle; canonical open dashed circle",
         "panel_b_horizontal_displacement": False,
+        "panel_b_legend": "above axes",
         "panel_c_role": "witness versus compatible phase",
         "panel_c_scan_Lx": scan_length,
         "panel_c_ensemble_encoding": "raw filled solid; canonical open dashed",
+        "panel_c_legend": "above axes",
         "panel_d_marker": "literal_range_box_with_representative_line",
         "panel_d_box_width": 0.34,
         "panel_d_guide_line": "dashed",
+        "panel_d_legend_color": WITNESS_COLORS["A"],
         "range_encoding": "box height = sampled min/max; internal line = representative value",
         "range_display_floor": False,
         "raw_12x4_plotted": False,
