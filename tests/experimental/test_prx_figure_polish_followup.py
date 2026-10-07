@@ -1,4 +1,4 @@
-"""Regression contracts for the Oct. 6 PRX figure-polish follow-up."""
+"""Regression contracts for the Oct. 6-7 PRX figure-polish follow-up."""
 
 from __future__ import annotations
 
@@ -42,18 +42,41 @@ def test_qdm_canonical_l12_ignores_nonfinite_length_rows(tmp_path: Path) -> None
     assert float(selected.iloc[0]["tau_A_target"]) == 0.11
 
 
-def test_main_figure_polish_uses_bar_whiskers_and_no_bc_connecting_lines() -> None:
+def test_main_figure_polish_uses_points_boxes_and_clean_annotations() -> None:
     source = POLISH.read_text(encoding="utf-8")
-    assert 'marker="_"' in source
-    assert "WHISKER_CAP_SIZE = 5.0" in source
-    assert "WHISKER_LINE_WIDTH = 1.4" in source
-    assert '"panel_b_connecting_lines": False' in source
-    assert '"panel_c_connecting_lines": False' in source
+    assert 'marker="o"' in source
+    assert "Rectangle(" in source
+    assert '"panel_b_marker": "circle"' in source
+    assert '"panel_c_marker": "range_box_with_representative_line"' in source
+    assert '"panel_d_marker": "range_box_with_representative_line"' in source
     assert '"panel_d_guide_line": "dashed"' in source
+    assert '"in_panel_encoding_text": False' in source
+    assert "bars/whiskers:" not in source
+    assert "tau_{{{key}}}" not in source
     assert 'STAR_COLOR = "#E69F00"' in source
     assert '"A": "#0072B2"' in source
     assert '"Z": "#009E73"' in source
     assert '"Y": "#CC79A7"' in source
+    assert 'rf"\\textbf{{{label}}}"' in source
+
+
+def test_qdm_uses_witness_color_and_no_horizontal_ensemble_offset() -> None:
+    source = POLISH.read_text(encoding="utf-8")
+    assert "color = WITNESS_COLORS[key]" in source
+    assert 'markerfacecolor=color if filled else "white"' in source
+    assert '("raw_microcanonical", True, "-")' in source
+    assert '("canonical", False, "--")' in source
+    assert '"panel_b_horizontal_displacement": False' in source
+    assert '"panel_c_horizontal_displacement": False' in source
+    assert "x=float(row.Lx) - 0.10" not in source
+    assert "x=float(row.Lx) + 0.10" not in source
+
+
+def test_qdm_panel_d_keeps_zero_floor_with_data_driven_ceiling() -> None:
+    source = POLISH.read_text(encoding="utf-8")
+    ceiling = "upper_limit = 1.0 if finite_upper.size == 0 else 1.08 * float(np.max(finite_upper))"
+    assert ceiling in source
+    assert "axd.set_ylim(0.0, upper_limit)" in source
 
 
 def test_renderers_use_followup_polish_module() -> None:
