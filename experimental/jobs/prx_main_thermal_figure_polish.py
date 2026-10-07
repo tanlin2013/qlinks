@@ -1,11 +1,11 @@
-"""Follow-up render-only polish for PRX Figs. 6 and 9.
+"""Final render-only polish for PRX Figs. 6 and 9.
 
 This module sits on top of :mod:`prx_main_thermal_figure_redesign` and keeps its
-frozen-evidence table construction.  It changes only presentation and input
-robustness: caged-state stars use the manuscript orange, witness rows use
-stable colors, representative values use horizontal-bar glyphs, sampled ranges
-use visually explicit capped whiskers, panels (b,c) do not connect points, and
-panel (d) uses a subordinate dashed guide.  No solver or interpolation is used.
+frozen-evidence table construction.  It changes only presentation and persisted
+input robustness.  Panel (b) uses ordinary point markers, sampled ranges in
+panels (c,d) use compact range boxes with a representative-value line, panel
+labels are bold, and nonessential explanatory text is deferred to the caption.
+No solver or interpolation is used.
 """
 
 from __future__ import annotations
@@ -19,30 +19,30 @@ import pandas as pd
 import prx_main_thermal_figure_redesign as _base
 from helpers import add_panel_label_margin, save_prx_figure, use_integer_ticks
 from matplotlib.lines import Line2D
+from matplotlib.patches import Rectangle
 
 FULL_WIDTH_IN = _base.FULL_WIDTH_IN
 FIG_HEIGHT_IN = _base.FIG_HEIGHT_IN
 REPRESENTATIVE_KAPPA_OVER_J = _base.REPRESENTATIVE_KAPPA_OVER_J
-RAW_COLOR = _base.RAW_COLOR
-CANONICAL_COLOR = _base.CANONICAL_COLOR
 TARGET_COLOR = _base.TARGET_COLOR
 WITNESS_TARGETS = _base.WITNESS_TARGETS
-WITNESS_TARGET_LABELS = _base.WITNESS_TARGET_LABELS
 
-# Okabe-Ito-like witness palette; the star keeps the warm orange used in the
-# earlier manuscript artwork and is deliberately not reused for a witness.
+# Stable witness palette.  Witness identity, rather than ensemble identity, is
+# the color channel in both main figures.  The caged-state star remains orange.
 WITNESS_COLORS = {
     "A": "#0072B2",
     "Z": "#009E73",
     "Y": "#CC79A7",
 }
 STAR_COLOR = "#E69F00"
-BAR_MARKER_SIZE = 10.0
-BAR_MARKER_EDGE_WIDTH = 1.45
-WHISKER_CAP_SIZE = 5.0
-WHISKER_LINE_WIDTH = 1.4
-WHISKER_CAP_THICK = 1.25
+POINT_MARKER_SIZE = 4.6
+POINT_EDGE_WIDTH = 1.0
+RANGE_BOX_FACE_ALPHA = 0.16
+RANGE_BOX_EDGE_WIDTH = 1.05
+RANGE_BOX_CENTER_WIDTH = 1.55
 GUIDE_LINE_WIDTH = 0.85
+TYPICALITY_CAP_SIZE = 3.5
+TYPICALITY_LINE_WIDTH = 1.0
 
 
 def _numeric(series: pd.Series) -> pd.Series:
@@ -52,14 +52,7 @@ def _numeric(series: pd.Series) -> pd.Series:
 
 
 def _padded_ylim(*values: float) -> tuple[float, float]:
-    """Tight but readable limits around data and reference values.
-
-    The previous positive-from-zero scale visually collapsed the small
-    separation between finite-size data and the reference lines.  These limits
-    retain all displayed values while reserving explicit headroom around the
-    full span.  A minimum scale-dependent span prevents nearly coincident data
-    from producing a singular-looking axis.
-    """
+    """Tight but readable limits around data and reference values."""
 
     finite = np.asarray([float(value) for value in values if np.isfinite(value)], dtype=float)
     if finite.size == 0:
@@ -72,27 +65,38 @@ def _padded_ylim(*values: float) -> tuple[float, float]:
     return lo - pad, hi + pad
 
 
-def _bar_point(
+def _panel_label(ax, label: str) -> None:
+    """Use manuscript-style bold panel labels without moving their anchor."""
+
+    add_panel_label_margin(ax, rf"\textbf{{{label}}}")
+
+
+def _point_marker(
     ax,
     *,
     x: float,
     y: float,
     color: str,
-    zorder: float = 6,
+    filled: bool = True,
+    zorder: float = 7,
 ) -> None:
+    """Draw a compact representative-value point for a no-range panel."""
+
     ax.plot(
         [x],
         [y],
         linestyle="none",
-        marker="_",
-        markersize=BAR_MARKER_SIZE,
-        markeredgewidth=BAR_MARKER_EDGE_WIDTH,
+        marker="o",
+        markersize=POINT_MARKER_SIZE,
+        markerfacecolor=color if filled else "white",
+        markeredgecolor=color,
+        markeredgewidth=POINT_EDGE_WIDTH,
         color=color,
         zorder=zorder,
     )
 
 
-def _sampled_whisker(
+def _range_box(
     ax,
     *,
     x: float,
@@ -100,7 +104,18 @@ def _sampled_whisker(
     minimum: float | None,
     maximum: float | None,
     color: str,
+    width: float,
+    filled: bool = True,
+    linestyle: str = "-",
+    zorder: float = 7,
 ) -> None:
+    """Draw a sampled min/max box with a line at the representative value.
+
+    The box height is the actual sampled range.  The horizontal line inside the
+    box is the representative point.  When no nonzero sampled range is
+    available, only the representative-value line is drawn.
+    """
+
     finite_range = (
         minimum is not None
         and maximum is not None
@@ -112,22 +127,33 @@ def _sampled_whisker(
         and float(maximum) + 1.0e-15 >= center >= float(minimum) - 1.0e-15
         and float(maximum) - float(minimum) > 1.0e-14
     )
-    yerr = None
+
+    left = x - 0.5 * width
+    right = x + 0.5 * width
     if has_range:
-        yerr = _base._asymmetric_yerr(center, float(minimum), float(maximum))
-    ax.errorbar(
-        [x],
-        [center],
-        yerr=yerr,
-        fmt="_",
+        bottom = float(minimum)
+        height = float(maximum) - float(minimum)
+        patch = Rectangle(
+            (left, bottom),
+            width,
+            height,
+            facecolor=color if filled else "none",
+            edgecolor=color,
+            linewidth=RANGE_BOX_EDGE_WIDTH,
+            linestyle=linestyle,
+            alpha=RANGE_BOX_FACE_ALPHA if filled else 1.0,
+            zorder=zorder,
+        )
+        ax.add_patch(patch)
+
+    ax.hlines(
+        center,
+        left,
+        right,
         color=color,
-        markersize=BAR_MARKER_SIZE,
-        markeredgewidth=BAR_MARKER_EDGE_WIDTH,
-        linewidth=0.0,
-        capsize=WHISKER_CAP_SIZE if has_range else 0.0,
-        capthick=WHISKER_CAP_THICK,
-        elinewidth=WHISKER_LINE_WIDTH,
-        zorder=7,
+        linewidth=RANGE_BOX_CENTER_WIDTH,
+        linestyle=linestyle,
+        zorder=zorder + 1,
     )
 
 
@@ -150,19 +176,12 @@ def _draw_spin1_finite_size_panels(
             *c["tau_max"].to_numpy(dtype=float),
         )
 
+        # Panel (b) is a representative-value panel, so ordinary points are
+        # clearer than the range glyph used below.
         axb = axes_b[index]
         for row in b.itertuples(index=False):
-            _bar_point(axb, x=float(row.L), y=float(row.tau_mc_raw), color=color)
+            _point_marker(axb, x=float(row.L), y=float(row.tau_mc_raw), color=color)
         axb.axhline(target, color=TARGET_COLOR, ls="--", lw=0.9, zorder=2)
-        axb.text(
-            0.98,
-            0.88,
-            rf"$\tau_{{{key}}}^{{\beta=0}}={WITNESS_TARGET_LABELS[key]}$",
-            transform=axb.transAxes,
-            ha="right",
-            va="top",
-            fontsize=7.6,
-        )
         axb.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_{{\rm mc}}$")
         axb.set_ylim(*ylim)
         axb.grid(alpha=0.13)
@@ -173,15 +192,18 @@ def _draw_spin1_finite_size_panels(
         else:
             axb.set_xlabel(r"System size $L$")
 
+        # Panel (c) reports the actual sampled deformation span.  The range box
+        # carries that meaning directly; the caption explains the encoding.
         axc = axes_c[index]
         for row in c.itertuples(index=False):
-            _sampled_whisker(
+            _range_box(
                 axc,
                 x=float(row.L),
                 center=float(row.tau_star),
                 minimum=float(row.tau_min),
                 maximum=float(row.tau_max),
                 color=color,
+                width=0.26,
             )
         axc.axhline(target, color=TARGET_COLOR, ls="--", lw=0.9, zorder=2)
         axc.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_{{\rm mc}}$")
@@ -250,7 +272,7 @@ def render_spin1_figure6(
             ax.tick_params(labelbottom=False)
         else:
             ax.set_xlabel(r"Energy density $e=E/L$")
-    add_panel_label_margin(axes_a[0], "(a)")
+    _panel_label(axes_a[0], "(a)")
 
     gsb = outer[0, 1].subgridspec(3, 1, hspace=0.10)
     axes_b = [fig.add_subplot(gsb[index]) for index in range(3)]
@@ -262,17 +284,8 @@ def render_spin1_figure6(
         panel_b=panel_b,
         panel_c=panel_c,
     )
-    axes_c[0].text(
-        0.98,
-        0.88,
-        r"bars/whiskers: representative value / sampled $\kappa/J$ range",
-        transform=axes_c[0].transAxes,
-        ha="right",
-        va="top",
-        fontsize=7.2,
-    )
-    add_panel_label_margin(axes_b[0], "(b)")
-    add_panel_label_margin(axes_c[0], "(c)")
+    _panel_label(axes_b[0], "(b)")
+    _panel_label(axes_c[0], "(c)")
 
     axd = fig.add_subplot(outer[1, 1])
     axd.plot(
@@ -287,13 +300,14 @@ def render_spin1_figure6(
     for row in panel_d.itertuples(index=False):
         minimum = None if pd.isna(row.w_min) else float(row.w_min)
         maximum = None if pd.isna(row.w_max) else float(row.w_max)
-        _sampled_whisker(
+        _range_box(
             axd,
             x=float(row.L),
             center=float(row.w_star),
             minimum=minimum,
             maximum=maximum,
             color=WITNESS_COLORS["A"],
+            width=0.28,
         )
     axd.set_xlabel(r"System size $L$")
     axd.set_ylabel(r"$w_L^{\rm raw}$")
@@ -301,32 +315,7 @@ def render_spin1_figure6(
     use_integer_ticks(axd, axis="x")
     axd.set_xticks([8, 10, 12, 14])
     axd.grid(alpha=0.13)
-    marker_handle = Line2D(
-        [0],
-        [0],
-        color=WITNESS_COLORS["A"],
-        marker="_",
-        linestyle="none",
-        markersize=BAR_MARKER_SIZE,
-        markeredgewidth=BAR_MARKER_EDGE_WIDTH,
-        label=r"$\kappa_\star/J=0.1$",
-    )
-    whisker_handle = Line2D(
-        [0],
-        [0],
-        color=WITNESS_COLORS["A"],
-        marker="|",
-        markersize=11,
-        lw=WHISKER_LINE_WIDTH,
-        label="sampled range",
-    )
-    axd.legend(
-        handles=[marker_handle, whisker_handle],
-        loc="upper right",
-        frameon=False,
-        fontsize=7.6,
-    )
-    add_panel_label_margin(axd, "(d)")
+    _panel_label(axd, "(d)")
 
     manifest = {
         "figure": "Fig. 6",
@@ -334,10 +323,13 @@ def render_spin1_figure6(
         "star_color": STAR_COLOR,
         "witness_colors": WITNESS_COLORS,
         "panel_b_connecting_lines": False,
+        "panel_b_marker": "circle",
         "panel_c_connecting_lines": False,
-        "panel_c_marker": "horizontal_bar",
+        "panel_c_marker": "range_box_with_representative_line",
+        "panel_d_marker": "range_box_with_representative_line",
         "panel_d_guide_line": "dashed",
-        "whiskers": "sampled min/max only; enlarged caps and stems",
+        "range_encoding": "box height = sampled min/max; internal line = representative value",
+        "in_panel_encoding_text": False,
         "deformation_source": grid_path.name,
         "no_interpolated_deformation_values": True,
         "expensive_recomputation": False,
@@ -409,26 +401,31 @@ def _sanitize_length_column(frame: pd.DataFrame) -> pd.DataFrame:
 
 
 def _qdm_ensemble_handles() -> list[Line2D]:
+    """Encode ensemble identity with fill state, leaving color for witnesses."""
+
+    neutral = "0.35"
     return [
         Line2D(
             [0],
             [0],
-            color=RAW_COLOR,
-            marker="_",
+            color=neutral,
+            marker="o",
             linestyle="none",
-            markersize=BAR_MARKER_SIZE,
-            markeredgewidth=BAR_MARKER_EDGE_WIDTH,
-            label="raw microcanonical",
+            markersize=POINT_MARKER_SIZE,
+            markerfacecolor=neutral,
+            markeredgecolor=neutral,
+            label="raw MC",
         ),
         Line2D(
             [0],
             [0],
-            color=CANONICAL_COLOR,
-            marker="_",
+            color=neutral,
+            marker="o",
             linestyle="none",
-            markersize=BAR_MARKER_SIZE,
-            markeredgewidth=BAR_MARKER_EDGE_WIDTH,
-            label="energy-matched canonical",
+            markersize=POINT_MARKER_SIZE,
+            markerfacecolor="white",
+            markeredgecolor=neutral,
+            label="canonical",
         ),
     ]
 
@@ -439,9 +436,9 @@ def _draw_qdm_b_c(
     axes_c: list,
     panel_b: pd.DataFrame,
     panel_c: pd.DataFrame,
-    phase: float,
 ) -> None:
     for index, key in enumerate(("A", "Z")):
+        color = WITNESS_COLORS[key]
         raw_mask = (panel_b["witness"] == key) & (panel_b["ensemble"] == "raw_microcanonical")
         canonical_mask = (panel_b["witness"] == key) & (panel_b["ensemble"] == "canonical")
         b_raw = panel_b[raw_mask].sort_values("Lx")
@@ -454,27 +451,36 @@ def _draw_qdm_b_c(
             *c_key["value_max"].to_numpy(dtype=float),
         )
 
+        # Both ensembles sit at the same physical Lx.  Fill state, rather than
+        # an artificial horizontal displacement, distinguishes them.
         axb = axes_b[index]
         for row in b_raw.itertuples(index=False):
-            _bar_point(axb, x=float(row.Lx) - 0.10, y=float(row.value), color=RAW_COLOR)
-        for row in b_can.itertuples(index=False):
-            _bar_point(
+            _point_marker(
                 axb,
-                x=float(row.Lx) + 0.10,
+                x=float(row.Lx),
                 y=float(row.value),
-                color=CANONICAL_COLOR,
+                color=color,
+                filled=True,
+            )
+        for row in b_can.itertuples(index=False):
+            _point_marker(
+                axb,
+                x=float(row.Lx),
+                y=float(row.value),
+                color=color,
+                filled=False,
             )
         typicality = b_can[b_can["method"] == "canonical_typicality"]
         if not typicality.empty and float(typicality.iloc[0]["stderr"]) > 0.0:
             axb.errorbar(
-                typicality["Lx"] + 0.10,
+                typicality["Lx"],
                 typicality["value"],
                 yerr=typicality["stderr"],
                 fmt="none",
-                color=CANONICAL_COLOR,
-                capsize=WHISKER_CAP_SIZE,
-                capthick=WHISKER_CAP_THICK,
-                elinewidth=WHISKER_LINE_WIDTH,
+                color=color,
+                capsize=TYPICALITY_CAP_SIZE,
+                capthick=TYPICALITY_LINE_WIDTH,
+                elinewidth=TYPICALITY_LINE_WIDTH,
                 zorder=6,
             )
         axb.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle$")
@@ -484,33 +490,27 @@ def _draw_qdm_b_c(
         axb.set_xticks([4, 8, 12])
         if index == 0:
             axb.tick_params(labelbottom=False)
-            axb.text(
-                0.98,
-                0.88,
-                rf"$\varphi_\star={phase:g}$",
-                transform=axb.transAxes,
-                ha="right",
-                va="top",
-                fontsize=7.6,
-            )
         else:
             axb.set_xlabel(r"Strip length $L_x$")
 
         axc = axes_c[index]
         styles = (
-            ("raw_microcanonical", RAW_COLOR, -0.10),
-            ("canonical", CANONICAL_COLOR, 0.10),
+            ("raw_microcanonical", True, "-"),
+            ("canonical", False, "--"),
         )
-        for ensemble, color, offset in styles:
+        for ensemble, filled, linestyle in styles:
             frame = c_key[c_key["ensemble"] == ensemble].sort_values("Lx")
             for row in frame.itertuples(index=False):
-                _sampled_whisker(
+                _range_box(
                     axc,
-                    x=float(row.Lx) + offset,
+                    x=float(row.Lx),
                     center=float(row.value_star),
                     minimum=float(row.value_min),
                     maximum=float(row.value_max),
                     color=color,
+                    width=0.48,
+                    filled=filled,
+                    linestyle=linestyle,
                 )
         axc.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle$")
         axc.set_ylim(*ylim)
@@ -613,14 +613,15 @@ def render_qdm_figure9(
         representative_row.cage_energy_density + representative_row.window_energy_density_half_width
     )
     for index, (key, column) in enumerate((("A", "Q_A"), ("Z", "Q_Z"))):
+        color = WITNESS_COLORS[key]
         ax = axes_a[index]
         ax.axvspan(lower, upper, color="0.5", alpha=0.10, zorder=0)
         ax.scatter(
             scatter_largest["energy_density"],
             scatter_largest[column],
             s=9,
-            alpha=0.42,
-            color="0.35",
+            alpha=0.38,
+            color=color,
             linewidths=0,
             rasterized=True,
         )
@@ -640,7 +641,7 @@ def render_qdm_figure9(
             ax.tick_params(labelbottom=False)
         else:
             ax.set_xlabel(r"Energy density $e=E/(4L_x)$")
-    add_panel_label_margin(axes_a[0], "(a)")
+    _panel_label(axes_a[0], "(a)")
 
     gsb = outer[0, 1].subgridspec(2, 1, hspace=0.10)
     axes_b = [fig.add_subplot(gsb[index]) for index in range(2)]
@@ -651,77 +652,60 @@ def render_qdm_figure9(
         axes_c=axes_c,
         panel_b=panel_b,
         panel_c=panel_c,
-        phase=phase,
     )
-    handles = _qdm_ensemble_handles()
-    legend_kwargs = {
-        "handles": handles,
-        "loc": "lower left",
-        "bbox_to_anchor": (0.0, 1.015),
-        "borderaxespad": 0.0,
-        "frameon": False,
-        "ncol": 2,
-        "fontsize": 7.2,
-    }
-    axes_b[0].legend(**legend_kwargs)
-    axes_b[0].text(
-        0.98,
-        1.02,
-        r"$L_x=12$: canonical typicality",
-        transform=axes_b[0].transAxes,
-        ha="right",
-        va="bottom",
-        fontsize=7.2,
-    )
-    axes_c[0].legend(**legend_kwargs)
-    axes_c[0].text(
-        0.98,
-        0.88,
-        r"bars/whiskers: representative value / sampled $\varphi$ range",
-        transform=axes_c[0].transAxes,
-        ha="right",
-        va="top",
+
+    # One compact ensemble key in panel (b) is enough; phase, typicality, and
+    # range semantics are left to the caption to avoid crowding the data.
+    axes_b[0].legend(
+        handles=_qdm_ensemble_handles(),
+        loc="upper right",
+        frameon=False,
         fontsize=7.0,
+        handletextpad=0.5,
+        borderaxespad=0.35,
     )
-    add_panel_label_margin(axes_b[0], "(b)")
-    add_panel_label_margin(axes_c[0], "(c)")
+    _panel_label(axes_b[0], "(b)")
+    _panel_label(axes_c[0], "(c)")
 
     axd = fig.add_subplot(outer[1, 1])
     if not panel_d.empty:
         axd.plot(
             panel_d["Lx"],
             panel_d["w_star"],
-            color=RAW_COLOR,
+            color=WITNESS_COLORS["A"],
             linewidth=GUIDE_LINE_WIDTH,
             linestyle="--",
             alpha=0.72,
             zorder=1,
         )
     for row in panel_d.itertuples(index=False):
-        _sampled_whisker(
+        _range_box(
             axd,
             x=float(row.Lx),
             center=float(row.w_star),
             minimum=float(row.w_min),
             maximum=float(row.w_max),
-            color=RAW_COLOR,
+            color=WITNESS_COLORS["A"],
+            width=0.50,
         )
     axd.set_xlabel(r"Strip length $L_x$")
     axd.set_ylabel(r"$w_{L_x}^{\rm raw}$")
-    axd.set_ylim(bottom=0.0)
+    if not panel_d.empty:
+        upper_values = np.concatenate(
+            [
+                panel_d["w_star"].to_numpy(dtype=float),
+                panel_d["w_max"].to_numpy(dtype=float),
+            ]
+        )
+        finite_upper = upper_values[np.isfinite(upper_values)]
+        upper_limit = 1.0 if finite_upper.size == 0 else 1.08 * float(np.max(finite_upper))
+        axd.set_ylim(0.0, upper_limit)
+    else:
+        axd.set_ylim(bottom=0.0)
     axd.grid(alpha=0.13)
     use_integer_ticks(axd, axis="x")
     axd.set_xticks(sorted(set(panel_d["Lx"].astype(int))))
-    axd.text(
-        0.98,
-        0.92,
-        r"bars/whiskers: representative value / sampled $\varphi$ range",
-        transform=axd.transAxes,
-        ha="right",
-        va="top",
-        fontsize=7.0,
-    )
-    add_panel_label_margin(axd, "(d)")
+    _panel_label(axd, "(d)")
 
     written: list[Path] = []
     for stem in ("qdm_checkerboard_figure7_combined", "qdm_checkerboard_figure9_prx"):
@@ -745,11 +729,17 @@ def render_qdm_figure9(
         "representative_phase": phase,
         "primary_window_prefactor": prefactor,
         "star_color": STAR_COLOR,
+        "witness_colors": {"A": WITNESS_COLORS["A"], "Z": WITNESS_COLORS["Z"]},
         "panel_b_connecting_lines": False,
+        "panel_b_marker": "circle; raw filled, canonical open",
+        "panel_b_horizontal_displacement": False,
         "panel_c_connecting_lines": False,
-        "panel_c_marker": "horizontal_bar",
+        "panel_c_marker": "range_box_with_representative_line",
+        "panel_c_horizontal_displacement": False,
+        "panel_d_marker": "range_box_with_representative_line",
         "panel_d_guide_line": "dashed",
-        "whiskers": "sampled min/max only; enlarged caps and stems",
+        "range_encoding": "box height = sampled min/max; internal line = representative value",
+        "in_panel_encoding_text": False,
         "raw_12x4_plotted": False,
         "canonical_12x4_plotted": True,
         "dedicated_Delta_panel_removed": True,
