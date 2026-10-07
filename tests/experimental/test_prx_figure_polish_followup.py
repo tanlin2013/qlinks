@@ -72,9 +72,25 @@ def test_qdm_uses_witness_color_and_no_horizontal_ensemble_offset() -> None:
     assert "x=float(row.Lx) + 0.10" not in source
 
 
+def test_qdm_panel_c_has_range_legend_without_range_inflation() -> None:
+    qdm = QDM_RENDERER.read_text(encoding="utf-8")
+    polish = POLISH.read_text(encoding="utf-8")
+    assert "_qdm_range_legend_handles" in qdm
+    assert "_install_qdm_panel_c_legend" in qdm
+    assert "handles=_qdm_range_legend_handles()" in qdm
+    assert 'facecolor=neutral' in qdm
+    assert 'facecolor="none"' in qdm
+    assert "height = float(maximum) - float(minimum)" in polish
+    assert "minimum display" not in polish.lower()
+    assert "display floor" not in polish.lower()
+
+
 def test_qdm_panel_d_keeps_zero_floor_with_data_driven_ceiling() -> None:
     source = POLISH.read_text(encoding="utf-8")
-    ceiling = "upper_limit = 1.0 if finite_upper.size == 0 else 1.08 * float(np.max(finite_upper))"
+    ceiling = (
+        "upper_limit = 1.0 if finite_upper.size == 0 else "
+        "1.08 * float(np.max(finite_upper))"
+    )
     assert ceiling in source
     assert "axd.set_ylim(0.0, upper_limit)" in source
 
