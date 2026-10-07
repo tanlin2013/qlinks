@@ -106,15 +106,36 @@ def test_main_figure_roles_and_literal_range_contract() -> None:
     assert 'rf"\\textbf{{{label}}}"' in source
 
 
-def test_qdm_has_short_ensemble_legends_and_no_horizontal_offset() -> None:
+def test_legends_are_outside_and_compact_panel_ticks_are_cleaned() -> None:
+    source = POLISH.read_text(encoding="utf-8")
+    assert '"bbox_to_anchor": (0.0, 1.02)' in source
+    assert "from matplotlib.ticker import MaxNLocator, ScalarFormatter" in source
+    assert "MaxNLocator(nbins=nbins, steps=[1, 2, 5, 10], min_n_ticks=2)" in source
+    assert source.count("_clean_y_ticks(ax)") >= 4
+    assert 'label=r"$\\beta=0$"' in source
+    assert '"panel_b_legend": "above axes; kappa_star, kappa scan, beta=0"' in source
+    assert '"panel_c_legend": "above axes"' in source
+
+
+def test_qdm_has_clear_ensemble_markers_and_no_horizontal_offset() -> None:
     source = POLISH.read_text(encoding="utf-8")
     assert "_qdm_ensemble_box_handles" in source
     assert "_qdm_scan_handles" in source
+    assert "_center_marker(" in source
+    assert 'markerfacecolor=color if filled else "white"' in source
     assert 'label="raw MC"' in source
     assert 'label="canonical"' in source
     assert '"panel_b_horizontal_displacement": False' in source
+    assert '"panel_b_ensemble_encoding": "raw filled solid circle; canonical open dashed circle"' in source
     assert "x=float(row.Lx) - 0.10" not in source
     assert "x=float(row.Lx) + 0.10" not in source
+
+
+def test_panel_d_legends_use_plotted_blue_and_qdm_width_stays_narrow() -> None:
+    source = POLISH.read_text(encoding="utf-8")
+    assert source.count('color=WITNESS_COLORS["A"]') >= 6
+    assert source.count('"panel_d_legend_color": WITNESS_COLORS["A"]') == 2
+    assert '"panel_d_box_width": 0.34' in source
 
 
 def test_qdm_panel_d_keeps_zero_floor_with_data_driven_ceiling() -> None:
