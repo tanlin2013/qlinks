@@ -126,7 +126,11 @@ def test_qdm_has_clear_ensemble_markers_and_no_horizontal_offset() -> None:
     assert 'label="raw MC"' in source
     assert 'label="canonical"' in source
     assert '"panel_b_horizontal_displacement": False' in source
-    assert '"panel_b_ensemble_encoding": "raw filled solid circle; canonical open dashed circle"' in source
+    encoding = (
+        '"panel_b_ensemble_encoding": '
+        '"raw filled solid circle; canonical open dashed circle"'
+    )
+    assert encoding in source
     assert "x=float(row.Lx) - 0.10" not in source
     assert "x=float(row.Lx) + 0.10" not in source
 
