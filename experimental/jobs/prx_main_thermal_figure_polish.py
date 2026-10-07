@@ -1,11 +1,10 @@
 """Final render-only polish for PRX Figs. 6 and 9.
 
-This module sits on top of :mod:`prx_main_thermal_figure_redesign` and keeps its
-frozen-evidence table construction.  It changes only presentation and persisted
-input robustness.  Panel (b) uses ordinary point markers, sampled ranges in
-panels (c,d) use compact range boxes with a representative-value line, panel
-labels are bold, and nonessential explanatory text is deferred to the caption.
-No solver or interpolation is used.
+The module consumes only frozen evidence.  Panels (b) combine the representative
+finite-size comparison with the sampled compatible-deformation span, while
+panels (c) show the witness values directly across the sampled compatible
+deformation.  Panel (d) keeps the concentration/scaling diagnostic.  No solver,
+interpolation, or artificial range inflation is used.
 """
 
 from __future__ import annotations
@@ -27,8 +26,6 @@ REPRESENTATIVE_KAPPA_OVER_J = _base.REPRESENTATIVE_KAPPA_OVER_J
 TARGET_COLOR = _base.TARGET_COLOR
 WITNESS_TARGETS = _base.WITNESS_TARGETS
 
-# Stable witness palette.  Witness identity, rather than ensemble identity, is
-# the color channel in both main figures.  The caged-state star remains orange.
 WITNESS_COLORS = {
     "A": "#0072B2",
     "Z": "#009E73",
@@ -71,31 +68,6 @@ def _panel_label(ax, label: str) -> None:
     add_panel_label_margin(ax, rf"\textbf{{{label}}}")
 
 
-def _point_marker(
-    ax,
-    *,
-    x: float,
-    y: float,
-    color: str,
-    filled: bool = True,
-    zorder: float = 7,
-) -> None:
-    """Draw a compact representative-value point for a no-range panel."""
-
-    ax.plot(
-        [x],
-        [y],
-        linestyle="none",
-        marker="o",
-        markersize=POINT_MARKER_SIZE,
-        markerfacecolor=color if filled else "white",
-        markeredgecolor=color,
-        markeredgewidth=POINT_EDGE_WIDTH,
-        color=color,
-        zorder=zorder,
-    )
-
-
 def _range_box(
     ax,
     *,
@@ -109,12 +81,7 @@ def _range_box(
     linestyle: str = "-",
     zorder: float = 7,
 ) -> None:
-    """Draw a sampled min/max box with a line at the representative value.
-
-    The box height is the actual sampled range.  The horizontal line inside the
-    box is the representative point.  When no nonzero sampled range is
-    available, only the representative-value line is drawn.
-    """
+    """Draw the literal sampled min/max box and its representative-value line."""
 
     finite_range = (
         minimum is not None
@@ -127,16 +94,13 @@ def _range_box(
         and float(maximum) + 1.0e-15 >= center >= float(minimum) - 1.0e-15
         and float(maximum) - float(minimum) > 1.0e-14
     )
-
     left = x - 0.5 * width
     right = x + 0.5 * width
     if has_range:
-        bottom = float(minimum)
-        height = float(maximum) - float(minimum)
         patch = Rectangle(
-            (left, bottom),
+            (left, float(minimum)),
             width,
-            height,
+            float(maximum) - float(minimum),
             facecolor=color if filled else "none",
             edgecolor=color,
             linewidth=RANGE_BOX_EDGE_WIDTH,
@@ -145,7 +109,6 @@ def _range_box(
             zorder=zorder,
         )
         ax.add_patch(patch)
-
     ax.hlines(
         center,
         left,
@@ -157,64 +120,168 @@ def _range_box(
     )
 
 
-def _draw_spin1_finite_size_panels(
-    *,
-    axes_b: list,
-    axes_c: list,
-    panel_b: pd.DataFrame,
-    panel_c: pd.DataFrame,
-) -> None:
+def _range_semantics_handles(star_label: str, scan_label: str) -> list:
+    """Compact legend handles for representative value versus sampled span."""
+
+    neutral = "0.35"
+    return [
+        Line2D(
+            [0],
+            [0],
+            color=neutral,
+            linewidth=RANGE_BOX_CENTER_WIDTH,
+            label=star_label,
+        ),
+        Rectangle(
+            (0, 0),
+            1,
+            1,
+            facecolor=neutral,
+            edgecolor=neutral,
+            alpha=RANGE_BOX_FACE_ALPHA,
+            linewidth=RANGE_BOX_EDGE_WIDTH,
+            label=scan_label,
+        ),
+    ]
+
+
+def _spin1_panel_b_merged(
+    representative: pd.DataFrame,
+    ranges: pd.DataFrame,
+) -> pd.DataFrame:
+    records: list[dict] = []
+    for row in representative.itertuples(index=False):
+        match = ranges[
+            (ranges["L"].astype(int) == int(row.L))
+            & (ranges["witness"].astype(str) == str(row.witness))
+        ]
+        if len(match) == 1:
+            sample = match.iloc[0]
+            center = float(sample["tau_star"])
+            minimum = float(sample["tau_min"])
+            maximum = float(sample["tau_max"])
+            sampled = True
+        else:
+            center = float(row.tau_mc_raw)
+            minimum = maximum = np.nan
+            sampled = False
+        records.append(
+            {
+                "L": int(row.L),
+                "witness": str(row.witness),
+                "tau_star": center,
+                "tau_min": minimum,
+                "tau_max": maximum,
+                "sampled_range_available": sampled,
+                "kappa_star_over_J": REPRESENTATIVE_KAPPA_OVER_J,
+                "target_beta0": WITNESS_TARGETS[str(row.witness)],
+            }
+        )
+    return pd.DataFrame(records).sort_values(["witness", "L"])
+
+
+def _spin1_deformation_scan(grid: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    valid_lengths: list[int] = []
+    for length, group in grid.groupby(grid["L"].astype(int)):
+        if group["kappa_over_J"].nunique() >= 2:
+            valid_lengths.append(int(length))
+    if not valid_lengths:
+        raise ValueError("Fig. 6(c) requires at least two sampled compatible kappa values")
+    length = max(valid_lengths)
+    group = grid[grid["L"].astype(int) == length].sort_values("kappa_over_J")
+    records: list[dict] = []
+    for row in group.itertuples(index=False):
+        for key in ("A", "Z", "Y"):
+            records.append(
+                {
+                    "L": length,
+                    "kappa_over_J": float(row.kappa_over_J),
+                    "witness": key,
+                    "value": float(getattr(row, f"tau_{key}_mc_raw")),
+                    "target_beta0": WITNESS_TARGETS[key],
+                }
+            )
+    return pd.DataFrame(records), length
+
+
+def _draw_spin1_panel_b(axes: list, panel_b: pd.DataFrame) -> None:
     for index, key in enumerate(("A", "Z", "Y")):
+        frame = panel_b[panel_b["witness"] == key].sort_values("L")
         color = WITNESS_COLORS[key]
-        b = panel_b[panel_b["witness"].astype(str) == key].sort_values("L")
-        c = panel_c[panel_c["witness"].astype(str) == key].sort_values("L")
         target = WITNESS_TARGETS[key]
         ylim = _padded_ylim(
             target,
-            *b["tau_mc_raw"].to_numpy(dtype=float),
-            *c["tau_min"].to_numpy(dtype=float),
-            *c["tau_max"].to_numpy(dtype=float),
+            *frame["tau_star"].to_numpy(dtype=float),
+            *frame["tau_min"].dropna().to_numpy(dtype=float),
+            *frame["tau_max"].dropna().to_numpy(dtype=float),
         )
-
-        # Panel (b) is a representative-value panel, so ordinary points are
-        # clearer than the range glyph used below.
-        axb = axes_b[index]
-        for row in b.itertuples(index=False):
-            _point_marker(axb, x=float(row.L), y=float(row.tau_mc_raw), color=color)
-        axb.axhline(target, color=TARGET_COLOR, ls="--", lw=0.9, zorder=2)
-        axb.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_{{\rm mc}}$")
-        axb.set_ylim(*ylim)
-        axb.grid(alpha=0.13)
-        use_integer_ticks(axb, axis="x")
-        axb.set_xticks([8, 10, 12, 14])
-        if index < 2:
-            axb.tick_params(labelbottom=False)
-        else:
-            axb.set_xlabel(r"System size $L$")
-
-        # Panel (c) reports the actual sampled deformation span.  The range box
-        # carries that meaning directly; the caption explains the encoding.
-        axc = axes_c[index]
-        for row in c.itertuples(index=False):
+        ax = axes[index]
+        for row in frame.itertuples(index=False):
             _range_box(
-                axc,
+                ax,
                 x=float(row.L),
                 center=float(row.tau_star),
-                minimum=float(row.tau_min),
-                maximum=float(row.tau_max),
+                minimum=None if pd.isna(row.tau_min) else float(row.tau_min),
+                maximum=None if pd.isna(row.tau_max) else float(row.tau_max),
                 color=color,
                 width=0.26,
             )
-        axc.axhline(target, color=TARGET_COLOR, ls="--", lw=0.9, zorder=2)
-        axc.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_{{\rm mc}}$")
-        axc.set_ylim(*ylim)
-        axc.grid(alpha=0.13)
-        use_integer_ticks(axc, axis="x")
-        axc.set_xticks([8, 10, 12])
+        ax.axhline(target, color=TARGET_COLOR, ls="--", lw=0.9, zorder=2)
+        ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_{{\rm mc}}$")
+        ax.set_ylim(*ylim)
+        ax.grid(alpha=0.13)
+        use_integer_ticks(ax, axis="x")
+        ax.set_xticks([8, 10, 12, 14])
         if index < 2:
-            axc.tick_params(labelbottom=False)
+            ax.tick_params(labelbottom=False)
         else:
-            axc.set_xlabel(r"System size $L$")
+            ax.set_xlabel(r"System size $L$")
+    axes[0].legend(
+        handles=_range_semantics_handles(r"$\kappa_\star$", r"$\kappa$ scan"),
+        loc="upper right",
+        frameon=False,
+        fontsize=6.8,
+        handletextpad=0.45,
+        borderaxespad=0.3,
+        ncol=2,
+    )
+
+
+def _draw_spin1_panel_c(axes: list, scan: pd.DataFrame, length: int) -> None:
+    for index, key in enumerate(("A", "Z", "Y")):
+        frame = scan[scan["witness"] == key].sort_values("kappa_over_J")
+        color = WITNESS_COLORS[key]
+        target = WITNESS_TARGETS[key]
+        ylim = _padded_ylim(target, *frame["value"].to_numpy(dtype=float))
+        ax = axes[index]
+        ax.plot(
+            frame["kappa_over_J"],
+            frame["value"],
+            color=color,
+            marker="o",
+            markersize=POINT_MARKER_SIZE,
+            markeredgewidth=POINT_EDGE_WIDTH,
+            linewidth=0.9,
+        )
+        ax.axhline(target, color=TARGET_COLOR, ls="--", lw=0.9, zorder=2)
+        ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_{{\rm mc}}$")
+        ax.set_ylim(*ylim)
+        ax.grid(alpha=0.13)
+        if index < 2:
+            ax.tick_params(labelbottom=False)
+        else:
+            ax.set_xlabel(r"Compatible deformation $\kappa/J$")
+    axes[0].legend(
+        handles=[
+            Line2D([0], [0], color="0.35", marker="o", lw=0.9, label=rf"$L={length}$"),
+            Line2D([0], [0], color=TARGET_COLOR, ls="--", lw=0.9, label=r"$\beta=0$"),
+        ],
+        loc="upper right",
+        frameon=False,
+        fontsize=6.8,
+        handletextpad=0.45,
+        borderaxespad=0.3,
+    )
 
 
 def render_spin1_figure6(
@@ -225,14 +292,20 @@ def render_spin1_figure6(
     read_csv: Callable[[Path], pd.DataFrame],
     save_figure: Callable[..., list[str]],
 ) -> list[str]:
-    """Render polished Fig. 6 from the frozen handoff tables."""
+    """Render Fig. 6 from frozen evidence with merged finite-size/range panel."""
 
     del allow_incomplete
-    panel_a, panel_b, panel_c, panel_d, grid_path = _base._spin1_tables(
+    panel_a, representative_b, ranges_b, panel_d, grid_path = _base._spin1_tables(
         data=data,
         figures=figures,
         read_csv=read_csv,
     )
+    grid = read_csv(grid_path)
+    panel_b = _spin1_panel_b_merged(representative_b, ranges_b)
+    panel_c, scan_length = _spin1_deformation_scan(grid)
+    _base._write_csv(figures / "spin1_xy_figure6_panel_b_plot.csv", panel_b)
+    _base._write_csv(figures / "spin1_xy_figure6_panel_c_plot.csv", panel_c)
+
     fig = plt.figure(figsize=(FULL_WIDTH_IN, FIG_HEIGHT_IN))
     outer = _base._outer_grid(fig)
 
@@ -240,7 +313,7 @@ def render_spin1_figure6(
     axes_a = [fig.add_subplot(gsa[index]) for index in range(3)]
     tower = panel_a["is_tower_state"].fillna(False).astype(bool).to_numpy()
     background = panel_a[~tower]
-    l12 = panel_b[panel_b["L"].astype(int) == 12]
+    l12 = representative_b[representative_b["L"].astype(int) == 12]
     half = float(l12.iloc[0]["window_energy_density_half_width"])
     for index, key in enumerate(("A", "Z", "Y")):
         ax = axes_a[index]
@@ -276,15 +349,12 @@ def render_spin1_figure6(
 
     gsb = outer[0, 1].subgridspec(3, 1, hspace=0.10)
     axes_b = [fig.add_subplot(gsb[index]) for index in range(3)]
+    _draw_spin1_panel_b(axes_b, panel_b)
+    _panel_label(axes_b[0], "(b)")
+
     gsc = outer[1, 0].subgridspec(3, 1, hspace=0.10)
     axes_c = [fig.add_subplot(gsc[index]) for index in range(3)]
-    _draw_spin1_finite_size_panels(
-        axes_b=axes_b,
-        axes_c=axes_c,
-        panel_b=panel_b,
-        panel_c=panel_c,
-    )
-    _panel_label(axes_b[0], "(b)")
+    _draw_spin1_panel_c(axes_c, panel_c, scan_length)
     _panel_label(axes_c[0], "(c)")
 
     axd = fig.add_subplot(outer[1, 1])
@@ -298,14 +368,12 @@ def render_spin1_figure6(
         zorder=1,
     )
     for row in panel_d.itertuples(index=False):
-        minimum = None if pd.isna(row.w_min) else float(row.w_min)
-        maximum = None if pd.isna(row.w_max) else float(row.w_max)
         _range_box(
             axd,
             x=float(row.L),
             center=float(row.w_star),
-            minimum=minimum,
-            maximum=maximum,
+            minimum=None if pd.isna(row.w_min) else float(row.w_min),
+            maximum=None if pd.isna(row.w_max) else float(row.w_max),
             color=WITNESS_COLORS["A"],
             width=0.28,
         )
@@ -315,6 +383,14 @@ def render_spin1_figure6(
     use_integer_ticks(axd, axis="x")
     axd.set_xticks([8, 10, 12, 14])
     axd.grid(alpha=0.13)
+    axd.legend(
+        handles=_range_semantics_handles(r"$\kappa_\star$", r"$\kappa$ scan"),
+        loc="upper right",
+        frameon=False,
+        fontsize=6.8,
+        handletextpad=0.45,
+        borderaxespad=0.3,
+    )
     _panel_label(axd, "(d)")
 
     manifest = {
@@ -322,14 +398,14 @@ def render_spin1_figure6(
         "source_evidence_directory": str(data),
         "star_color": STAR_COLOR,
         "witness_colors": WITNESS_COLORS,
-        "panel_b_connecting_lines": False,
-        "panel_b_marker": "circle",
-        "panel_c_connecting_lines": False,
-        "panel_c_marker": "range_box_with_representative_line",
-        "panel_d_marker": "range_box_with_representative_line",
+        "panel_b_role": "finite size plus compatible-kappa range",
+        "panel_b_includes_L14_representative_without_range": True,
+        "panel_c_role": "witness versus compatible kappa",
+        "panel_c_scan_L": scan_length,
+        "panel_d_marker": "literal_range_box_with_representative_line",
         "panel_d_guide_line": "dashed",
         "range_encoding": "box height = sampled min/max; internal line = representative value",
-        "in_panel_encoding_text": False,
+        "range_display_floor": False,
         "deformation_source": grid_path.name,
         "no_interpolated_deformation_values": True,
         "expensive_recomputation": False,
@@ -400,9 +476,103 @@ def _sanitize_length_column(frame: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
-def _qdm_ensemble_handles() -> list[Line2D]:
-    """Encode ensemble identity with fill state, leaving color for witnesses."""
+def _qdm_panel_b_merged(panel_b: pd.DataFrame, ranges: pd.DataFrame) -> pd.DataFrame:
+    records: list[dict] = []
+    for row in panel_b.itertuples(index=False):
+        match = ranges[
+            (ranges["Lx"].astype(int) == int(row.Lx))
+            & (ranges["witness"] == row.witness)
+            & (ranges["ensemble"] == row.ensemble)
+        ]
+        if len(match) == 1:
+            sample = match.iloc[0]
+            minimum = float(sample["value_min"])
+            maximum = float(sample["value_max"])
+            phase_grid = sample["sampled_phase_grid"]
+        else:
+            minimum = maximum = np.nan
+            phase_grid = "[]"
+        records.append(
+            {
+                "Lx": int(row.Lx),
+                "witness": str(row.witness),
+                "ensemble": str(row.ensemble),
+                "phase_star": float(row.phase),
+                "value": float(row.value),
+                "value_min": minimum,
+                "value_max": maximum,
+                "sampled_phase_grid": phase_grid,
+                "stderr": float(row.stderr),
+                "method": str(row.method),
+                "source_file": str(row.source_file),
+            }
+        )
+    return pd.DataFrame(records).sort_values(["witness", "ensemble", "Lx"])
 
+
+def _qdm_deformation_scan(raw: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    positive = raw[raw["phase"] > 0].copy()
+    valid_lengths = [
+        int(length)
+        for length, group in positive.groupby(positive["Lx"].astype(int))
+        if group["phase"].nunique() >= 2
+    ]
+    if not valid_lengths:
+        raise ValueError("Fig. 9(c) requires at least two sampled compatible phases")
+    length = max(valid_lengths)
+    group = positive[positive["Lx"].astype(int) == length].sort_values("phase")
+    records: list[dict] = []
+    for row in group.itertuples(index=False):
+        for key in ("A", "Z"):
+            ref_col = _base._qdm_reference_column(group, key)
+            records.extend(
+                [
+                    {
+                        "Lx": length,
+                        "phase": float(row.phase),
+                        "witness": key,
+                        "ensemble": "raw_microcanonical",
+                        "value": float(getattr(row, f"tau_{key}_mc")),
+                    },
+                    {
+                        "Lx": length,
+                        "phase": float(row.phase),
+                        "witness": key,
+                        "ensemble": "canonical",
+                        "value": float(getattr(row, ref_col)),
+                    },
+                ]
+            )
+    return pd.DataFrame(records), length
+
+
+def _qdm_ensemble_box_handles() -> list[Rectangle]:
+    neutral = "0.35"
+    return [
+        Rectangle(
+            (0, 0),
+            1,
+            1,
+            facecolor=neutral,
+            edgecolor=neutral,
+            alpha=RANGE_BOX_FACE_ALPHA,
+            linewidth=RANGE_BOX_EDGE_WIDTH,
+            label="raw MC",
+        ),
+        Rectangle(
+            (0, 0),
+            1,
+            1,
+            facecolor="none",
+            edgecolor=neutral,
+            linestyle="--",
+            linewidth=RANGE_BOX_EDGE_WIDTH,
+            label="canonical",
+        ),
+    ]
+
+
+def _qdm_scan_handles() -> list[Line2D]:
     neutral = "0.35"
     return [
         Line2D(
@@ -410,10 +580,9 @@ def _qdm_ensemble_handles() -> list[Line2D]:
             [0],
             color=neutral,
             marker="o",
-            linestyle="none",
-            markersize=POINT_MARKER_SIZE,
             markerfacecolor=neutral,
             markeredgecolor=neutral,
+            lw=0.9,
             label="raw MC",
         ),
         Line2D(
@@ -421,58 +590,47 @@ def _qdm_ensemble_handles() -> list[Line2D]:
             [0],
             color=neutral,
             marker="o",
-            linestyle="none",
-            markersize=POINT_MARKER_SIZE,
             markerfacecolor="white",
             markeredgecolor=neutral,
+            linestyle="--",
+            lw=0.9,
             label="canonical",
         ),
     ]
 
 
-def _draw_qdm_b_c(
-    *,
-    axes_b: list,
-    axes_c: list,
-    panel_b: pd.DataFrame,
-    panel_c: pd.DataFrame,
-) -> None:
+def _draw_qdm_panel_b(axes: list, panel_b: pd.DataFrame) -> None:
     for index, key in enumerate(("A", "Z")):
         color = WITNESS_COLORS[key]
-        raw_mask = (panel_b["witness"] == key) & (panel_b["ensemble"] == "raw_microcanonical")
-        canonical_mask = (panel_b["witness"] == key) & (panel_b["ensemble"] == "canonical")
-        b_raw = panel_b[raw_mask].sort_values("Lx")
-        b_can = panel_b[canonical_mask].sort_values("Lx")
-        c_key = panel_c[panel_c["witness"] == key]
+        frame = panel_b[panel_b["witness"] == key]
         ylim = _padded_ylim(
-            *b_raw["value"].to_numpy(dtype=float),
-            *b_can["value"].to_numpy(dtype=float),
-            *c_key["value_min"].to_numpy(dtype=float),
-            *c_key["value_max"].to_numpy(dtype=float),
+            *frame["value"].to_numpy(dtype=float),
+            *frame["value_min"].dropna().to_numpy(dtype=float),
+            *frame["value_max"].dropna().to_numpy(dtype=float),
         )
-
-        # Both ensembles sit at the same physical Lx.  Fill state, rather than
-        # an artificial horizontal displacement, distinguishes them.
-        axb = axes_b[index]
-        for row in b_raw.itertuples(index=False):
-            _point_marker(
-                axb,
-                x=float(row.Lx),
-                y=float(row.value),
-                color=color,
-                filled=True,
-            )
-        for row in b_can.itertuples(index=False):
-            _point_marker(
-                axb,
-                x=float(row.Lx),
-                y=float(row.value),
-                color=color,
-                filled=False,
-            )
-        typicality = b_can[b_can["method"] == "canonical_typicality"]
+        ax = axes[index]
+        for ensemble, filled, linestyle in (
+            ("raw_microcanonical", True, "-"),
+            ("canonical", False, "--"),
+        ):
+            selected = frame[frame["ensemble"] == ensemble].sort_values("Lx")
+            for row in selected.itertuples(index=False):
+                _range_box(
+                    ax,
+                    x=float(row.Lx),
+                    center=float(row.value),
+                    minimum=None if pd.isna(row.value_min) else float(row.value_min),
+                    maximum=None if pd.isna(row.value_max) else float(row.value_max),
+                    color=color,
+                    width=0.42,
+                    filled=filled,
+                    linestyle=linestyle,
+                )
+        typicality = frame[
+            (frame["ensemble"] == "canonical") & (frame["method"] == "canonical_typicality")
+        ]
         if not typicality.empty and float(typicality.iloc[0]["stderr"]) > 0.0:
-            axb.errorbar(
+            ax.errorbar(
                 typicality["Lx"],
                 typicality["value"],
                 yerr=typicality["stderr"],
@@ -481,46 +639,67 @@ def _draw_qdm_b_c(
                 capsize=TYPICALITY_CAP_SIZE,
                 capthick=TYPICALITY_LINE_WIDTH,
                 elinewidth=TYPICALITY_LINE_WIDTH,
-                zorder=6,
+                zorder=8,
             )
-        axb.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle$")
-        axb.set_ylim(*ylim)
-        axb.grid(alpha=0.13)
-        use_integer_ticks(axb, axis="x")
-        axb.set_xticks([4, 8, 12])
+        ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle$")
+        ax.set_ylim(*ylim)
+        ax.grid(alpha=0.13)
+        use_integer_ticks(ax, axis="x")
+        ax.set_xticks([4, 8, 12])
         if index == 0:
-            axb.tick_params(labelbottom=False)
+            ax.tick_params(labelbottom=False)
         else:
-            axb.set_xlabel(r"Strip length $L_x$")
+            ax.set_xlabel(r"Strip length $L_x$")
+    axes[0].legend(
+        handles=_qdm_ensemble_box_handles(),
+        loc="upper right",
+        frameon=False,
+        fontsize=6.8,
+        handletextpad=0.45,
+        borderaxespad=0.3,
+    )
 
-        axc = axes_c[index]
-        styles = (
+
+def _draw_qdm_panel_c(axes: list, scan: pd.DataFrame, length: int) -> None:
+    for index, key in enumerate(("A", "Z")):
+        color = WITNESS_COLORS[key]
+        frame = scan[scan["witness"] == key]
+        ylim = _padded_ylim(*frame["value"].to_numpy(dtype=float))
+        ax = axes[index]
+        for ensemble, filled, linestyle in (
             ("raw_microcanonical", True, "-"),
             ("canonical", False, "--"),
-        )
-        for ensemble, filled, linestyle in styles:
-            frame = c_key[c_key["ensemble"] == ensemble].sort_values("Lx")
-            for row in frame.itertuples(index=False):
-                _range_box(
-                    axc,
-                    x=float(row.Lx),
-                    center=float(row.value_star),
-                    minimum=float(row.value_min),
-                    maximum=float(row.value_max),
-                    color=color,
-                    width=0.48,
-                    filled=filled,
-                    linestyle=linestyle,
-                )
-        axc.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle$")
-        axc.set_ylim(*ylim)
-        axc.grid(alpha=0.13)
-        use_integer_ticks(axc, axis="x")
-        axc.set_xticks([4, 8, 12])
+        ):
+            selected = frame[frame["ensemble"] == ensemble].sort_values("phase")
+            ax.plot(
+                selected["phase"],
+                selected["value"],
+                color=color,
+                marker="o",
+                markersize=POINT_MARKER_SIZE,
+                markerfacecolor=color if filled else "white",
+                markeredgecolor=color,
+                markeredgewidth=POINT_EDGE_WIDTH,
+                linestyle=linestyle,
+                linewidth=0.9,
+            )
+        ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle$")
+        ax.set_ylim(*ylim)
+        ax.grid(alpha=0.13)
         if index == 0:
-            axc.tick_params(labelbottom=False)
+            ax.tick_params(labelbottom=False)
         else:
-            axc.set_xlabel(r"Strip length $L_x$")
+            ax.set_xlabel(r"Compatible deformation $\varphi$")
+    axes[0].legend(
+        handles=_qdm_scan_handles(),
+        title=rf"$L_x={length}$",
+        loc="upper right",
+        frameon=False,
+        fontsize=6.8,
+        title_fontsize=6.8,
+        handletextpad=0.45,
+        borderaxespad=0.3,
+    )
 
 
 def render_qdm_figure9(
@@ -528,9 +707,8 @@ def render_qdm_figure9(
     data: Path,
     formats: tuple[str, ...] = ("pdf", "svg"),
 ) -> list[Path]:
-    """Render polished Fig. 9 with robust persisted-table parsing."""
+    """Render Fig. 9 with merged finite-size/range and direct phase-scan panels."""
 
-    # Make base helpers used by its table builders robust to nullable strip lengths.
     _base._qdm_gate_raw = _qdm_gate_raw_safe
 
     figures = data / "figures"
@@ -571,21 +749,23 @@ def render_qdm_figure9(
         -1
     ]
 
-    panel_b = _base._qdm_panel_b(
+    representative_b = _base._qdm_panel_b(
         raw=raw,
         canonical_l12=canonical_l12,
         thermal_path=thermal_path,
         canonical_path=canonical_path,
         phase=phase,
     )
-    panel_c = _base._qdm_panel_c(
+    ranges_b = _base._qdm_panel_c(
         raw=raw,
-        panel_b=panel_b,
+        panel_b=representative_b,
         thermal_path=thermal_path,
         phase_check=phase_check,
         phase_check_path=phase_check_path,
         phase=phase,
     )
+    panel_b = _qdm_panel_b_merged(representative_b, ranges_b)
+    panel_c, scan_length = _qdm_deformation_scan(raw)
     panel_d = _base._qdm_panel_d(
         concentration=concentration,
         concentration_path=concentration_path,
@@ -645,26 +825,12 @@ def render_qdm_figure9(
 
     gsb = outer[0, 1].subgridspec(2, 1, hspace=0.10)
     axes_b = [fig.add_subplot(gsb[index]) for index in range(2)]
+    _draw_qdm_panel_b(axes_b, panel_b)
+    _panel_label(axes_b[0], "(b)")
+
     gsc = outer[1, 0].subgridspec(2, 1, hspace=0.10)
     axes_c = [fig.add_subplot(gsc[index]) for index in range(2)]
-    _draw_qdm_b_c(
-        axes_b=axes_b,
-        axes_c=axes_c,
-        panel_b=panel_b,
-        panel_c=panel_c,
-    )
-
-    # One compact ensemble key in panel (b) is enough; phase, typicality, and
-    # range semantics are left to the caption to avoid crowding the data.
-    axes_b[0].legend(
-        handles=_qdm_ensemble_handles(),
-        loc="upper right",
-        frameon=False,
-        fontsize=7.0,
-        handletextpad=0.5,
-        borderaxespad=0.35,
-    )
-    _panel_label(axes_b[0], "(b)")
+    _draw_qdm_panel_c(axes_c, panel_c, scan_length)
     _panel_label(axes_c[0], "(c)")
 
     axd = fig.add_subplot(outer[1, 1])
@@ -686,7 +852,7 @@ def render_qdm_figure9(
             minimum=float(row.w_min),
             maximum=float(row.w_max),
             color=WITNESS_COLORS["A"],
-            width=0.50,
+            width=0.34,
         )
     axd.set_xlabel(r"Strip length $L_x$")
     axd.set_ylabel(r"$w_{L_x}^{\rm raw}$")
@@ -705,6 +871,14 @@ def render_qdm_figure9(
     axd.grid(alpha=0.13)
     use_integer_ticks(axd, axis="x")
     axd.set_xticks(sorted(set(panel_d["Lx"].astype(int))))
+    axd.legend(
+        handles=_range_semantics_handles(r"$\varphi_\star$", r"$\varphi$ scan"),
+        loc="upper right",
+        frameon=False,
+        fontsize=6.8,
+        handletextpad=0.45,
+        borderaxespad=0.3,
+    )
     _panel_label(axd, "(d)")
 
     written: list[Path] = []
@@ -730,20 +904,19 @@ def render_qdm_figure9(
         "primary_window_prefactor": prefactor,
         "star_color": STAR_COLOR,
         "witness_colors": {"A": WITNESS_COLORS["A"], "Z": WITNESS_COLORS["Z"]},
-        "panel_b_connecting_lines": False,
-        "panel_b_marker": "circle; raw filled, canonical open",
+        "panel_b_role": "finite size plus compatible-phase range",
+        "panel_b_ensemble_encoding": "raw filled; canonical open dashed",
         "panel_b_horizontal_displacement": False,
-        "panel_c_connecting_lines": False,
-        "panel_c_marker": "range_box_with_representative_line",
-        "panel_c_horizontal_displacement": False,
-        "panel_d_marker": "range_box_with_representative_line",
+        "panel_c_role": "witness versus compatible phase",
+        "panel_c_scan_Lx": scan_length,
+        "panel_c_ensemble_encoding": "raw filled solid; canonical open dashed",
+        "panel_d_marker": "literal_range_box_with_representative_line",
+        "panel_d_box_width": 0.34,
         "panel_d_guide_line": "dashed",
         "range_encoding": "box height = sampled min/max; internal line = representative value",
-        "in_panel_encoding_text": False,
+        "range_display_floor": False,
         "raw_12x4_plotted": False,
         "canonical_12x4_plotted": True,
-        "dedicated_Delta_panel_removed": True,
-        "heatmap_removed": True,
         "no_interpolated_deformation_values": True,
         "expensive_recomputation": False,
     }
