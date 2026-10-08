@@ -108,8 +108,7 @@ def _complete_spectrum(
 def _unitarity(operator: np.ndarray) -> float:
     identity = np.eye(operator.shape[0], dtype=np.complex128)
     return float(
-        np.linalg.norm(operator.conj().T @ operator - identity)
-        / math.sqrt(operator.shape[0])
+        np.linalg.norm(operator.conj().T @ operator - identity) / math.sqrt(operator.shape[0])
     )
 
 
@@ -145,16 +144,10 @@ def _symmetry_audit(*, length: int, kappa: float) -> dict[str, Any]:
                 "name": name,
                 "unitarity_residual": _unitarity(operator),
                 "commute_residual": float(
-                    np.linalg.norm(
-                        operator @ hamiltonian @ operator.conj().T - hamiltonian
-                    )
-                    / norm
+                    np.linalg.norm(operator @ hamiltonian @ operator.conj().T - hamiltonian) / norm
                 ),
                 "anticommute_residual": float(
-                    np.linalg.norm(
-                        operator @ hamiltonian @ operator.conj().T + hamiltonian
-                    )
-                    / norm
+                    np.linalg.norm(operator @ hamiltonian @ operator.conj().T + hamiltonian) / norm
                 ),
             }
         )
@@ -173,9 +166,7 @@ def _symmetry_audit(*, length: int, kappa: float) -> dict[str, Any]:
             {
                 "name": name,
                 "commute_residual": float(np.linalg.norm(transformed - hamiltonian) / norm),
-                "reflection_residual": float(
-                    np.linalg.norm(transformed + hamiltonian) / norm
-                ),
+                "reflection_residual": float(np.linalg.norm(transformed + hamiltonian) / norm),
                 "square_plus_one_residual": float(
                     np.linalg.norm(square - identity) / math.sqrt(dimension)
                 ),
@@ -188,8 +179,7 @@ def _symmetry_audit(*, length: int, kappa: float) -> dict[str, Any]:
     hidden = [
         row["name"]
         for row in unitary_rows
-        if row["unitarity_residual"] <= SYMMETRY_TOL
-        and row["commute_residual"] <= SYMMETRY_TOL
+        if row["unitarity_residual"] <= SYMMETRY_TOL and row["commute_residual"] <= SYMMETRY_TOL
     ]
     plus = [
         row["name"]
@@ -283,24 +273,15 @@ def _level_rows(
                 **_bootstrap(
                     ratios,
                     samples=bootstrap_samples,
-                    seed=(
-                        BOOTSTRAP_SEED
-                        + 100 * length
-                        + int(round(100 * kappa))
-                        + len(half)
-                    ),
+                    seed=(BOOTSTRAP_SEED + 100 * length + int(round(100 * kappa)) + len(half)),
                 ),
                 "expected_ensemble": rmt_class,
                 "expected_mean_r": expected,
                 "poisson_mean_r": float(report.expected_poisson),
                 "distance_to_expected": (
-                    float(abs(report.mean_ratio - expected))
-                    if np.isfinite(expected)
-                    else math.nan
+                    float(abs(report.mean_ratio - expected)) if np.isfinite(expected) else math.nan
                 ),
-                "distance_to_poisson": float(
-                    abs(report.mean_ratio - report.expected_poisson)
-                ),
+                "distance_to_poisson": float(abs(report.mean_ratio - report.expected_poisson)),
                 "checkpoint_path": str(source),
                 "exchange_convention": metadata.get(
                     convention.EXCHANGE_CONVENTION_METADATA_KEY,
@@ -333,9 +314,7 @@ def _plot(
     with backend_pdf.PdfPages(output / "spin1_level_statistics.pdf") as pdf:
         fig, ax = plt.subplots(figsize=(helpers.PRX_TEXT_WIDTH, 3.2))
         if not frame.empty:
-            for (kappa, half), group in frame.groupby(
-                ["kappa_over_J", "energy_half"]
-            ):
+            for (kappa, half), group in frame.groupby(["kappa_over_J", "energy_half"]):
                 ax.errorbar(
                     group["L"],
                     group["mean_r"],
@@ -450,9 +429,7 @@ def _verdict(frame: pd.DataFrame, audits: list[dict[str, Any]]) -> tuple[str, st
         return "hidden symmetry/block mixing found", "unresolved_unitary_block"
     if frame.empty:
         return "ambiguous at accessible sizes", "undetermined"
-    mandatory = frame[
-        np.isclose(frame["kappa_over_J"].to_numpy(dtype=float), MANDATORY_KAPPA)
-    ]
+    mandatory = frame[np.isclose(frame["kappa_over_J"].to_numpy(dtype=float), MANDATORY_KAPPA)]
     if mandatory.empty:
         return "ambiguous at accessible sizes", "undetermined"
     classes = set(mandatory["expected_ensemble"].astype(str))
@@ -461,9 +438,7 @@ def _verdict(frame: pd.DataFrame, audits: list[dict[str, Any]]) -> tuple[str, st
         return "ambiguous at accessible sizes", rmt_class
 
     largest = mandatory[mandatory["L"] == mandatory["L"].max()]
-    closer = bool(
-        (largest["distance_to_expected"] < largest["distance_to_poisson"]).all()
-    )
+    closer = bool((largest["distance_to_expected"] < largest["distance_to_poisson"]).all())
     close = bool((largest["distance_to_expected"] < 0.08).all())
     halves = math.inf
     if len(largest) > 1:
