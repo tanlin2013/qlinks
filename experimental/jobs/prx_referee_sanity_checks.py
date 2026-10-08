@@ -137,7 +137,8 @@ def _write_readme(
     lines = [
         "# PRX referee sanity checks",
         "",
-        "Bounded validation run for the 2026-10-08 referee handoff. It does not edit manuscript prose.",
+        "Bounded validation run for the 2026-10-08 referee handoff. It does not edit "
+        "manuscript prose.",
         "",
         "## Exact command",
         "",
@@ -176,7 +177,8 @@ def _write_readme(
         f"- heavy new run required: `{verdict['heavy_new_run_required']}`",
         "",
         "The spin-1 diagnostic is supporting evidence for a numerically nonintegrable background;",
-        "it is not a proof of strong ETH. The QDM result is restricted to the finite 8x4 raw sector.",
+        "it is not a proof of strong ETH. The QDM result is restricted to the finite 8x4 "
+        "raw sector.",
     ]
     if spin1_followup is not None:
         lines += [
