@@ -12,10 +12,11 @@ import matplotlib.backends.backend_pdf as backend_pdf
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import qlinks.caging.analysis.spectral as spectral
 import scipy.sparse as sp
 import spin1_exchange_convention as convention
 import spin1_sec6_common_windows as cache
+
+import qlinks.caging.analysis.spectral as spectral
 import spin1_sec6_provisioning as core
 
 TOTAL_SZ = -2
