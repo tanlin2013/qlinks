@@ -25,7 +25,7 @@ from qdm_checkerboard_large_strip import (
     project_sparse_operator_to_sector,
     translation_permutation_from_binary_basis,
 )
-from qdm_checkerboard_symmetry import checkerboard_fully_resolved_sector
+from qdm_checkerboard_symmetry import checkerboard_translation_sector
 from scipy.optimize import brentq
 
 from qlinks.basis.configs import basis_configs_from_build_result
@@ -255,7 +255,10 @@ def build_context(
     phase: float = REPRESENTATIVE_PHASE,
     symmetry_chunk_size: int = 16384,
 ) -> Sec7Context:
-    """Build the fully resolved checkerboard sector without an eigensolve."""
+    """Build the legacy translation sector for existing fixed-window caches.
+
+    S_y remains unresolved; use the parity follow-up before generating new
+    symmetry-resolved manuscript evidence.  Legacy dimensions stay unchanged."""
 
     instance = checkerboard_instance(reference, repeats, phase)
     model = instance.model
@@ -267,7 +270,7 @@ def build_context(
     )
     basis = build.basis
     packed_index = packed_binary_basis_index(basis)
-    resolved_sector, symmetry_permutations = checkerboard_fully_resolved_sector(
+    resolved_sector, symmetry_permutations = checkerboard_translation_sector(
         model,
         basis,
         packed_index=packed_index,
