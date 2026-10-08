@@ -13,12 +13,13 @@ import numpy as np
 import pandas as pd
 import qdm_checkerboard_symmetry as qdm_symmetry
 import qdm_sec7_fixed_o1 as qdm_fixed
-import qlinks.caging.analysis.spectral as spectral
 import scipy.linalg as la
 import scipy.optimize as optimize
 import scipy.sparse as sp
 import scipy.sparse.csgraph as csgraph
 import scipy.stats as stats
+
+import qlinks.caging.analysis.spectral as spectral
 
 QDM_LX = 8
 QDM_LY = 4
@@ -471,7 +472,9 @@ def _provenance(frame: pd.DataFrame, data_dir: Path) -> dict[str, Any]:
     rhs = frame[columns].to_numpy(dtype=float)
     difference = np.abs(lhs - rhs)
     result["max_abs_difference"] = float(np.max(difference, initial=0.0))
-    result["population_matches"] = bool(np.allclose(lhs, rhs, rtol=MATCH_TOL, atol=MATCH_TOL))
+    result["population_matches"] = bool(
+        np.allclose(lhs, rhs, rtol=MATCH_TOL, atol=MATCH_TOL)
+    )
     return result
 
 
@@ -529,16 +532,16 @@ def _write_audit(
 def _plot(output: Path, frame: pd.DataFrame) -> None:
     fig, axes = plt.subplots(2, 1, figsize=(helpers.PRX_TEXT_WIDTH, 4.6), sharex=True)
     color = frame["total_flippability"].to_numpy(dtype=float)
-    for ax, witness in zip(axes, ("Q_A", "Q_Z"), strict=True):
-        scatter = ax.scatter(
+    for axis, witness in zip(axes, ("Q_A", "Q_Z"), strict=True):
+        scatter = axis.scatter(
             frame["energy_density"],
             frame[witness],
             c=color,
             s=10,
             alpha=0.7,
         )
-        ax.grid(alpha=0.18)
-        fig.colorbar(scatter, ax=ax, label="total flippability")
+        axis.grid(alpha=0.18)
+        fig.colorbar(scatter, ax=axis, label="total flippability")
     axes[0].set_ylabel(r"$\langle \widehat Q_R^A\rangle_n$")
     axes[1].set_ylabel(r"$\langle \widehat Q_R^Z\rangle_n$")
     axes[1].set_xlabel(r"Energy density $e=E/(4L_x)$")
