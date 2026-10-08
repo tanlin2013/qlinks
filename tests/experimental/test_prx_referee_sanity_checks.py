@@ -68,8 +68,8 @@ def test_qdm_dense_fallback_is_restricted_to_8x4_small_sector() -> None:
 def test_docker_runner_mounts_only_data_writable() -> None:
     source = RUNNER.read_text(encoding="utf-8")
     assert "tanlin2013/qlinks:notebook" in source
-    assert '${REPO_ROOT}:/workspace/qlinks:ro' in source
-    data_mount = '${REPO_ROOT}/experimental/data:/workspace/qlinks/experimental/data'
+    assert "${REPO_ROOT}:/workspace/qlinks:ro" in source
+    data_mount = "${REPO_ROOT}/experimental/data:/workspace/qlinks/experimental/data"
     assert data_mount in source
     assert "MPLBACKEND=Agg" in source
     assert "prx_referee_sanity_checks.py" in source
