@@ -7,22 +7,16 @@ import math
 from pathlib import Path
 from typing import Any
 
+import helpers
+import matplotlib.backends.backend_pdf as backend_pdf
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import qlinks.caging.analysis.spectral as spectral
 import scipy.sparse as sp
-from matplotlib.backends.backend_pdf import PdfPages
-
 import spin1_exchange_convention as convention
 import spin1_sec6_common_windows as cache
 import spin1_sec6_provisioning as core
-from helpers import PRX_TEXT_WIDTH
-from qlinks.caging.analysis.spectral import (
-    adjacent_gap_ratio_report,
-    basis_permutation_from_variable_permutation,
-    permutation_matrix,
-    project_operator_to_sector,
-)
 
 TOTAL_SZ = -2
 MANDATORY_KAPPA = 0.10
@@ -72,14 +66,20 @@ def _looks_complete(directory: Path) -> bool:
 
 
 def _complete_spectrum(
-    roots: tuple[Path, ...], *, length: int, kappa: float
+    roots: tuple[Path, ...],
+    *,
+    length: int,
+    kappa: float,
 ) -> tuple[np.ndarray, np.ndarray, dict[str, Any], Path] | None:
     candidates = cache.discover_checkpoint_directories(
-        roots, length=int(length), kappa_over_j=float(kappa)
+        roots,
+        length=int(length),
+        kappa_over_j=float(kappa),
     )
     complete = [directory for directory in candidates if _looks_complete(directory)]
     if not complete:
         return None
+
     context = core._point_context(length=int(length), kappa_over_j=float(kappa))
     for directory in complete:
         try:
@@ -92,7 +92,8 @@ def _complete_spectrum(
             )
         except cache.CachedSpectrumUnavailableError:
             continue
-        if energies.size != context["h_sector"].shape[0] or vectors.shape[1] != energies.size:
+        dimension = int(context["h_sector"].shape[0])
+        if energies.size != dimension or vectors.shape != (dimension, dimension):
             continue
         return (
             np.asarray(energies, dtype=np.float64),
@@ -106,58 +107,74 @@ def _complete_spectrum(
 def _unitarity(operator: np.ndarray) -> float:
     identity = np.eye(operator.shape[0], dtype=np.complex128)
     return float(
-        np.linalg.norm(operator.conj().T @ operator - identity) / math.sqrt(operator.shape[0])
+        np.linalg.norm(operator.conj().T @ operator - identity)
+        / math.sqrt(operator.shape[0])
     )
 
 
 def _symmetry_audit(*, length: int, kappa: float) -> dict[str, Any]:
     context = core._point_context(length=int(length), kappa_over_j=float(kappa))
-    h = np.asarray(context["h_sector"].toarray(), dtype=np.complex128)
+    hamiltonian = np.asarray(context["h_sector"].toarray(), dtype=np.complex128)
     configs = np.asarray(context["configs"], dtype=np.int64)
     sector = context["sector"]
-    dimension = int(h.shape[0])
-    norm = max(float(np.linalg.norm(h)), np.finfo(float).tiny)
+    dimension = int(hamiltonian.shape[0])
+    norm = max(float(np.linalg.norm(hamiltonian)), np.finfo(float).tiny)
 
     variables = np.mod(-np.arange(int(length), dtype=np.int64), int(length))
-    permutation = basis_permutation_from_variable_permutation(configs, variables)
+    permutation = spectral.basis_permutation_from_variable_permutation(configs, variables)
     inversion = np.asarray(
-        project_operator_to_sector(permutation_matrix(permutation), sector), dtype=np.complex128
+        spectral.project_operator_to_sector(
+            spectral.permutation_matrix(permutation),
+            sector,
+        ),
+        dtype=np.complex128,
     )
     even = np.arange(0, int(length), 2, dtype=np.int64)
     exponent = np.sum(configs[:, even] + 1, axis=1, dtype=np.int64)
     ca_full = sp.diags(np.where(exponent % 2 == 0, 1.0, -1.0), format="csr")
-    ca = np.asarray(project_operator_to_sector(ca_full, sector), dtype=np.complex128)
+    ca = np.asarray(
+        spectral.project_operator_to_sector(ca_full, sector),
+        dtype=np.complex128,
+    )
 
-    unitary_rows = []
+    unitary_rows: list[dict[str, Any]] = []
     for name, operator in (("inversion", inversion), ("C_A", ca)):
         unitary_rows.append(
             {
                 "name": name,
                 "unitarity_residual": _unitarity(operator),
                 "commute_residual": float(
-                    np.linalg.norm(operator @ h @ operator.conj().T - h) / norm
+                    np.linalg.norm(
+                        operator @ hamiltonian @ operator.conj().T - hamiltonian
+                    )
+                    / norm
                 ),
                 "anticommute_residual": float(
-                    np.linalg.norm(operator @ h @ operator.conj().T + h) / norm
+                    np.linalg.norm(
+                        operator @ hamiltonian @ operator.conj().T + hamiltonian
+                    )
+                    / norm
                 ),
             }
         )
 
     identity = np.eye(dimension, dtype=np.complex128)
-    antiunitary_rows = []
+    antiunitary_rows: list[dict[str, Any]] = []
     for name, unitary in (
         ("K", identity),
         ("inversion K", inversion),
         ("C_A K", ca),
         ("inversion C_A K", inversion @ ca),
     ):
-        transformed = unitary @ h.conjugate() @ unitary.conj().T
+        transformed = unitary @ hamiltonian.conjugate() @ unitary.conj().T
         square = unitary @ unitary.conjugate()
         antiunitary_rows.append(
             {
                 "name": name,
-                "commute_residual": float(np.linalg.norm(transformed - h) / norm),
-                "reflection_residual": float(np.linalg.norm(transformed + h) / norm),
+                "commute_residual": float(np.linalg.norm(transformed - hamiltonian) / norm),
+                "reflection_residual": float(
+                    np.linalg.norm(transformed + hamiltonian) / norm
+                ),
                 "square_plus_one_residual": float(
                     np.linalg.norm(square - identity) / math.sqrt(dimension)
                 ),
@@ -185,15 +202,14 @@ def _symmetry_audit(*, length: int, kappa: float) -> dict[str, Any]:
         if row["commute_residual"] <= SYMMETRY_TOL
         and row["square_minus_one_residual"] <= SYMMETRY_TOL
     ]
-    rmt_class = (
-        "unresolved_unitary_block"
-        if hidden
-        else "gse_or_symplectic"
-        if minus
-        else "goe"
-        if plus
-        else "gue"
-    )
+    if hidden:
+        rmt_class = "unresolved_unitary_block"
+    elif minus:
+        rmt_class = "gse_or_symplectic"
+    elif plus:
+        rmt_class = "goe"
+    else:
+        rmt_class = "gue"
     return {
         "L": int(length),
         "kappa_over_J": float(kappa),
@@ -233,18 +249,20 @@ def _level_rows(
 ) -> tuple[list[dict[str, Any]], dict[str, np.ndarray]]:
     values = np.sort(np.asarray(energies, dtype=np.float64))
     scale = max(float(np.max(np.abs(values), initial=1.0)), 1.0)
-    zero_tol = max(DEGENERACY_TOL, 1.0e-12 * scale)
+    zero_tolerance = max(DEGENERACY_TOL, 1.0e-12 * scale)
     halves = {
-        "negative": values[values < -zero_tol],
-        "positive": values[values > zero_tol],
+        "negative": values[values < -zero_tolerance],
+        "positive": values[values > zero_tolerance],
     }
     rows: list[dict[str, Any]] = []
     ratios_by_half: dict[str, np.ndarray] = {}
     for half, levels in halves.items():
         if levels.size < 3:
             continue
-        report = adjacent_gap_ratio_report(
-            levels, trim_fraction=0.0, degeneracy_tolerance=DEGENERACY_TOL
+        report = spectral.adjacent_gap_ratio_report(
+            levels,
+            trim_fraction=0.0,
+            degeneracy_tolerance=DEGENERACY_TOL,
         )
         ratios = np.asarray(report.ratios, dtype=np.float64)
         ratios_by_half[half] = ratios
@@ -264,15 +282,24 @@ def _level_rows(
                 **_bootstrap(
                     ratios,
                     samples=bootstrap_samples,
-                    seed=BOOTSTRAP_SEED + 100 * length + int(round(100 * kappa)) + len(half),
+                    seed=(
+                        BOOTSTRAP_SEED
+                        + 100 * length
+                        + int(round(100 * kappa))
+                        + len(half)
+                    ),
                 ),
                 "expected_ensemble": rmt_class,
                 "expected_mean_r": expected,
                 "poisson_mean_r": float(report.expected_poisson),
                 "distance_to_expected": (
-                    float(abs(report.mean_ratio - expected)) if np.isfinite(expected) else math.nan
+                    float(abs(report.mean_ratio - expected))
+                    if np.isfinite(expected)
+                    else math.nan
                 ),
-                "distance_to_poisson": float(abs(report.mean_ratio - report.expected_poisson)),
+                "distance_to_poisson": float(
+                    abs(report.mean_ratio - report.expected_poisson)
+                ),
                 "checkpoint_path": str(source),
                 "exchange_convention": metadata.get(
                     convention.EXCHANGE_CONVENTION_METADATA_KEY,
@@ -302,18 +329,26 @@ def _plot(
     frame: pd.DataFrame,
     ratios: dict[tuple[int, float], dict[str, np.ndarray]],
 ) -> None:
-    with PdfPages(output / "spin1_level_statistics.pdf") as pdf:
-        fig, ax = plt.subplots(figsize=(PRX_TEXT_WIDTH, 3.2))
-        for (kappa, half), group in frame.groupby(["kappa_over_J", "energy_half"]):
-            ax.errorbar(
-                group["L"],
-                group["mean_r"],
-                yerr=group["bootstrap_std"],
-                marker="o" if half == "positive" else "s",
-                label=rf"$\kappa/J={kappa:g}$, {half}",
-            )
-        for y, label, style in ((0.38629, "Poisson", ":"), (0.5307, "GOE", "--"), (0.5996, "GUE", "-.")):
-            ax.axhline(y, ls=style, lw=0.9, label=label)
+    with backend_pdf.PdfPages(output / "spin1_level_statistics.pdf") as pdf:
+        fig, ax = plt.subplots(figsize=(helpers.PRX_TEXT_WIDTH, 3.2))
+        if not frame.empty:
+            for (kappa, half), group in frame.groupby(
+                ["kappa_over_J", "energy_half"]
+            ):
+                ax.errorbar(
+                    group["L"],
+                    group["mean_r"],
+                    yerr=group["bootstrap_std"],
+                    marker="o" if half == "positive" else "s",
+                    label=rf"$\kappa/J={kappa:g}$, {half}",
+                )
+        reference_lines = (
+            (0.38629, "Poisson", ":"),
+            (0.5307, "GOE", "--"),
+            (0.5996, "GUE", "-."),
+        )
+        for value, label, style in reference_lines:
+            ax.axhline(value, ls=style, lw=0.9, label=label)
         ax.set(xlabel="System size $L$", ylabel=r"$\langle r\rangle$")
         ax.grid(alpha=0.2)
         ax.legend(fontsize=6.3, ncol=2)
@@ -322,16 +357,25 @@ def _plot(
         plt.close(fig)
 
         for (length, kappa), half_data in sorted(ratios.items()):
-            subset = frame[(frame["L"] == length) & np.isclose(frame["kappa_over_J"], kappa)]
+            subset = frame[
+                (frame["L"] == length)
+                & np.isclose(frame["kappa_over_J"].to_numpy(dtype=float), kappa)
+            ]
             if subset.empty:
                 continue
             wd = str(subset.iloc[0]["expected_ensemble"])
             wd = wd if wd in {"goe", "gue"} else "goe"
             xp, pp, cp = _theory("poisson")
             xw, pw, cw = _theory(wd)
-            fig, axes = plt.subplots(1, 2, figsize=(PRX_TEXT_WIDTH, 2.8))
+            fig, axes = plt.subplots(1, 2, figsize=(helpers.PRX_TEXT_WIDTH, 2.8))
             for half, data in half_data.items():
-                axes[0].hist(data, bins=np.linspace(0, 1, 21), density=True, histtype="step", label=half)
+                axes[0].hist(
+                    data,
+                    bins=np.linspace(0, 1, 21),
+                    density=True,
+                    histtype="step",
+                    label=half,
+                )
                 ordered = np.sort(data)
                 axes[1].step(
                     ordered,
@@ -343,12 +387,16 @@ def _plot(
             axes[0].plot(xw, pw, "--", label=wd.upper())
             axes[1].plot(xp, cp, ":", label="Poisson")
             axes[1].plot(xw, cw, "--", label=wd.upper())
-            axes[0].set(xlabel="$r$", ylabel="Density", title=rf"$L={length}$, $\kappa/J={kappa:g}$")
+            axes[0].set(
+                xlabel="$r$",
+                ylabel="Density",
+                title=rf"$L={length}$, $\kappa/J={kappa:g}$",
+            )
             axes[1].set(xlabel="$r$", ylabel="CDF")
-            for ax in axes:
-                ax.set_xlim(0.0, 1.0)
-                ax.grid(alpha=0.2)
-                ax.legend(fontsize=6.3)
+            for axis in axes:
+                axis.set_xlim(0.0, 1.0)
+                axis.grid(alpha=0.2)
+                axis.legend(fontsize=6.3)
             fig.tight_layout()
             pdf.savefig(fig)
             plt.close(fig)
@@ -374,7 +422,8 @@ def _write_audit(output: Path, audits: list[dict[str, Any]]) -> None:
         for row in audit["unitary_candidates"]:
             lines.append(
                 f"| {row['name']} | {row['unitarity_residual']:.3e} | "
-                f"{row['commute_residual']:.3e} | {row['anticommute_residual']:.3e} |"
+                f"{row['commute_residual']:.3e} | "
+                f"{row['anticommute_residual']:.3e} |"
             )
         lines += [
             "",
@@ -384,39 +433,51 @@ def _write_audit(output: Path, audits: list[dict[str, Any]]) -> None:
         for row in audit["antiunitary_candidates"]:
             lines.append(
                 f"| {row['name']} | {row['commute_residual']:.3e} | "
-                f"{row['reflection_residual']:.3e} | {row['square_plus_one_residual']:.3e} | "
+                f"{row['reflection_residual']:.3e} | "
+                f"{row['square_plus_one_residual']:.3e} | "
                 f"{row['square_minus_one_residual']:.3e} |"
             )
         lines.append("")
     (output / "spin1_symmetry_class_audit.md").write_text(
-        "\n".join(lines) + "\n", encoding="utf-8"
+        "\n".join(lines) + "\n",
+        encoding="utf-8",
     )
 
 
 def _verdict(frame: pd.DataFrame, audits: list[dict[str, Any]]) -> tuple[str, str]:
     if any(audit["hidden_commuting_unitaries"] for audit in audits):
         return "hidden symmetry/block mixing found", "unresolved_unitary_block"
-    mandatory = frame[np.isclose(frame["kappa_over_J"], MANDATORY_KAPPA)]
+    if frame.empty:
+        return "ambiguous at accessible sizes", "undetermined"
+    mandatory = frame[
+        np.isclose(frame["kappa_over_J"].to_numpy(dtype=float), MANDATORY_KAPPA)
+    ]
     if mandatory.empty:
         return "ambiguous at accessible sizes", "undetermined"
     classes = set(mandatory["expected_ensemble"].astype(str))
-    rmt = next(iter(classes)) if len(classes) == 1 else "mixed_or_undetermined"
-    if rmt not in {"goe", "gue"}:
-        return "ambiguous at accessible sizes", rmt
+    rmt_class = next(iter(classes)) if len(classes) == 1 else "mixed_or_undetermined"
+    if rmt_class not in {"goe", "gue"}:
+        return "ambiguous at accessible sizes", rmt_class
+
     largest = mandatory[mandatory["L"] == mandatory["L"].max()]
-    closer = bool((largest["distance_to_expected"] < largest["distance_to_poisson"]).all())
+    closer = bool(
+        (largest["distance_to_expected"] < largest["distance_to_poisson"]).all()
+    )
     close = bool((largest["distance_to_expected"] < 0.08).all())
-    halves = float(largest["mean_r"].max() - largest["mean_r"].min()) if len(largest) > 1 else math.inf
+    halves = math.inf
+    if len(largest) > 1:
+        halves = float(largest["mean_r"].max() - largest["mean_r"].min())
     if closer and close and halves < 0.08:
-        return (
+        verdict = (
             "supports generic Wigner-Dyson/nonintegrable background"
             if mandatory["L"].nunique() >= 3
-            else "finite-size but compatible with Wigner-Dyson",
-            rmt,
+            else "finite-size but compatible with Wigner-Dyson"
         )
-    if bool((largest["distance_to_poisson"] + 0.03 < largest["distance_to_expected"]).all()):
-        return "Poisson/integrable-like signature found", rmt
-    return "ambiguous at accessible sizes", rmt
+        return verdict, rmt_class
+    poisson_closer = largest["distance_to_poisson"] + 0.03 < largest["distance_to_expected"]
+    if bool(poisson_closer.all()):
+        return "Poisson/integrable-like signature found", rmt_class
+    return "ambiguous at accessible sizes", rmt_class
 
 
 def analyze_spin1(
@@ -437,12 +498,17 @@ def analyze_spin1(
             spectrum = _complete_spectrum(roots, length=length, kappa=kappa)
             if spectrum is None:
                 inventory.append(
-                    {"L": length, "kappa_over_J": kappa, "status": "CACHE_MISSING_OR_INCOMPLETE"}
+                    {
+                        "L": length,
+                        "kappa_over_J": kappa,
+                        "status": "CACHE_MISSING_OR_INCOMPLETE",
+                    }
                 )
                 if math.isclose(kappa, MANDATORY_KAPPA, abs_tol=1.0e-12):
                     missing_mandatory.append(length)
                 continue
-            energies, _, metadata, source = spectrum
+
+            energies, _vectors, metadata, source = spectrum
             audit = _symmetry_audit(length=length, kappa=kappa)
             audits.append(audit)
             inventory.append(
@@ -471,10 +537,10 @@ def analyze_spin1(
     frame.to_csv(output / "spin1_level_statistics.csv", index=False)
     _write_audit(output, audits)
     _plot(output, frame, ratio_data)
-    verdict, rmt = _verdict(frame, audits)
+    verdict, rmt_class = _verdict(frame, audits)
     return {
         "verdict": verdict,
-        "rmt_class": rmt,
+        "rmt_class": rmt_class,
         "inventory": inventory,
         "missing_mandatory_lengths": sorted(set(missing_mandatory)),
     }
