@@ -157,8 +157,7 @@ def _spectrum(
 def _unitarity(operator: np.ndarray) -> float:
     identity = np.eye(operator.shape[0], dtype=np.complex128)
     return float(
-        np.linalg.norm(operator.conj().T @ operator - identity)
-        / math.sqrt(operator.shape[0])
+        np.linalg.norm(operator.conj().T @ operator - identity) / math.sqrt(operator.shape[0])
     )
 
 
@@ -189,9 +188,7 @@ def _symmetry_audit(context: Any) -> dict[str, Any]:
     compressed: dict[str, np.ndarray] = {}
     for name, permutation in permutations.items():
         operator = sp.csr_array(spectral.permutation_matrix(permutation))
-        full_residual = float(
-            sp.linalg.norm(operator @ h_full - h_full @ operator) / norm_full
-        )
+        full_residual = float(sp.linalg.norm(operator @ h_full - h_full @ operator) / norm_full)
         sector_operator = _compress(operator, context.sector)
         compressed[name] = sector_operator
         preservation = _unitarity(sector_operator)
@@ -236,8 +233,7 @@ def _symmetry_audit(context: Any) -> dict[str, Any]:
             transformed = operator @ h_sector.conjugate() @ operator.conj().T
             residual = float(np.linalg.norm(transformed - h_sector) / norm_sector)
             square = float(
-                np.linalg.norm(operator @ operator.conjugate() - identity)
-                / math.sqrt(dimension)
+                np.linalg.norm(operator @ operator.conjugate() - identity) / math.sqrt(dimension)
             )
         antiunitary_rows.append(
             {
@@ -394,9 +390,7 @@ def _correlations(frame: pd.DataFrame, classifier: dict[str, Any]) -> dict[str, 
             "spearman_p": float(spearman.pvalue),
             "branch_0_mean": means[0],
             "branch_1_mean": means[1],
-            "branch_mean_difference_over_global_std": float(
-                (means[1] - means[0]) / denominator
-            ),
+            "branch_mean_difference_over_global_std": float((means[1] - means[0]) / denominator),
         }
     return output
 
@@ -472,9 +466,7 @@ def _provenance(frame: pd.DataFrame, data_dir: Path) -> dict[str, Any]:
     rhs = frame[columns].to_numpy(dtype=float)
     difference = np.abs(lhs - rhs)
     result["max_abs_difference"] = float(np.max(difference, initial=0.0))
-    result["population_matches"] = bool(
-        np.allclose(lhs, rhs, rtol=MATCH_TOL, atol=MATCH_TOL)
-    )
+    result["population_matches"] = bool(np.allclose(lhs, rhs, rtol=MATCH_TOL, atol=MATCH_TOL))
     return result
 
 
@@ -575,9 +567,7 @@ def analyze_qdm(
     provenance = _provenance(frame, Path(data_dir))
     frame.to_csv(output / "qdm_fig9a_branch_audit.csv", index=False)
     serializable = {
-        key: value
-        for key, value in classifier.items()
-        if key not in {"score", "labels"}
+        key: value for key, value in classifier.items() if key not in {"score", "labels"}
     }
     (output / "qdm_fig9a_branch_correlations.json").write_text(
         json.dumps(serializable, indent=2, sort_keys=True) + "\n",
