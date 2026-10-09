@@ -80,7 +80,7 @@ def _select_optional_microcanonical_window(
     )
 
 
-def _joint_dark_all(
+def joint_dark_energy_subspace(
     energies: np.ndarray,
     vectors: np.ndarray,
     q_all,
@@ -198,7 +198,7 @@ def run(
             name: np.real(np.einsum("ij,ij->j", vectors.conj(), operator @ vectors))
             for name, operator in context.projected_q.items()
         }
-        exceptional, dark_blocks = _joint_dark_all(
+        exceptional, dark_blocks = joint_dark_energy_subspace(
             energies,
             vectors,
             context.q_all,

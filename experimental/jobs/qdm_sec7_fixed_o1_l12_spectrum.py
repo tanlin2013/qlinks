@@ -21,6 +21,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from qdm_checkerboard_large_strip import folded_spectrum_partial_spectrum
+from qdm_parity_protocol import PROTOCOL, require_parity_protocol
 from qdm_resumable_spectrum import make_resumable_folded_solver
 from qdm_sec7_fixed_o1 import (
     REPRESENTATIVE_PHASE,
@@ -239,15 +240,28 @@ def run(
     tolerance: float,
     residual_tolerance: float,
     max_budget: int,
+    sy_character: int | str | None = None,
 ) -> pd.DataFrame:
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
-    _, half_width, estimate = _load_recommendation(output)
+    recommendation, half_width, estimate = _load_recommendation(output)
+    if sy_character is not None:
+        if sy_character not in (-1, 1, "target"):
+            raise ValueError("production evidence requires a measured target irrep")
+        require_parity_protocol(recommendation, description="window protocol")
+    elif "symmetry_protocol" in recommendation:
+        raise ValueError("parity protocol requires explicit --sy-character target")
+    primary_half_width = half_width
+    if sy_character is not None:
+        # Cover all prespecified controls before the expensive solver-free pass.
+        half_width = max([half_width, *map(float, recommendation.get("neighbor_controls", []))])
     budgets = _parse_budgets(budgets_raw, estimate=estimate, maximum=int(max_budget))
     _configure_cache(cache_root)
 
     reference = recover_reference_geometry()
-    context = build_context(reference=reference, repeats=3, phase=REPRESENTATIVE_PHASE)
+    context = build_context(
+        reference=reference, repeats=3, phase=REPRESENTATIVE_PHASE, sy_character=sy_character
+    )
     original = folded_spectrum_partial_spectrum
     solver = (
         original
@@ -258,6 +272,11 @@ def run(
     convergence_path = output / CONVERGENCE_NAME
     frame = pd.read_csv(convergence_path) if convergence_path.is_file() else pd.DataFrame()
     if not frame.empty:
+        if sy_character is not None:
+            if "symmetry_protocol" not in frame or not frame.symmetry_protocol.eq(PROTOCOL).all():
+                raise ValueError("legacy convergence rows cannot enter a parity run")
+        elif "Sy" in frame and frame.Sy.notna().any():
+            raise ValueError("parity convergence rows cannot enter a legacy run")
         existing_widths = pd.to_numeric(frame["window_half_width"], errors="coerce").dropna()
         if not np.all(np.isclose(existing_widths, half_width, atol=1.0e-12)):
             raise RuntimeError(
@@ -309,6 +328,7 @@ def run(
             "target_energy": context.tower_energy,
             "window_protocol": "fixed_O1_total_energy",
             "window_half_width": half_width,
+            "primary_window_half_width": primary_half_width,
             "requested_subspace_size": int(budget),
             "returned_eigenpairs": int(partial.energies.size),
             "solver_tolerance": float(tolerance),
@@ -324,6 +344,13 @@ def run(
             "partial_maximum_residual": float(partial.maximum_residual),
             **coverage,
         }
+        if sy_character is not None:
+            row.update(
+                Sy=context.sector.labels["Sy_character"],
+                symmetry_protocol=PROTOCOL,
+                parity_policy="measured_target",
+                fully_symmetry_resolved=True,
+            )
         frame = _merge_row(convergence_path, row)
         atomic_write_json(
             output / "fixed_O1_spectral_stages" / f"budget_{int(budget):08d}.json",
@@ -338,11 +365,19 @@ def run(
     acceptance.update(
         {
             "requested_budget_schedule": list(map(int, budgets)),
+            "primary_window_half_width": primary_half_width,
             "pilot_estimated_budget": estimate,
             "maximum_configured_budget": int(max_budget),
             "observables_requested_extension": _observables_request_extension(output),
         }
     )
+    if sy_character is not None:
+        acceptance.update(
+            Sy=context.sector.labels["Sy_character"],
+            symmetry_protocol=PROTOCOL,
+            parity_policy="measured_target",
+            fully_symmetry_resolved=True,
+        )
     atomic_write_json(output / ACCEPTANCE_NAME, acceptance)
     if not acceptance["closed"]:
         raise RuntimeError(
@@ -364,6 +399,7 @@ def main() -> None:
         default=DEFAULT_RESIDUAL_TOLERANCE,
     )
     parser.add_argument("--max-budget", type=int, default=DEFAULT_MAX_BUDGET)
+    parser.add_argument("--sy-character", choices=("target",))
     args = parser.parse_args()
     frame = run(
         output_dir=args.output_dir,
@@ -372,6 +408,7 @@ def main() -> None:
         tolerance=args.tolerance,
         residual_tolerance=args.residual_tolerance,
         max_budget=args.max_budget,
+        sy_character=args.sy_character,
     )
     print(frame.to_string(index=False), flush=True)
 

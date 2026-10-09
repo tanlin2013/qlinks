@@ -25,6 +25,12 @@ from evidence_cache import (
     load_spectral_checkpoint,
 )
 from helpers import projector_deleted_block_covariance, projector_deleted_observable_moments
+from qdm_parity_protocol import (
+    PROTOCOL,
+    require_parity_protocol,
+    validate_partial_eigensystem,
+    window_controls_stable,
+)
 from qdm_resumable_spectrum import folded_problem_description
 from qdm_sec7_fixed_o1 import (
     DARK_TOL,
@@ -75,7 +81,9 @@ def _load_recommendation(output_dir: Path) -> tuple[dict[str, Any], float, tuple
     return payload, primary, widths
 
 
-def _canonical_target(primme_data_dir: Path) -> dict[str, float]:
+def _canonical_target(
+    primme_data_dir: Path, *, sy_character: int | str | None = None
+) -> dict[str, float]:
     path = Path(primme_data_dir) / CANONICAL_NAME
     if not path.is_file():
         raise FileNotFoundError(
@@ -85,13 +93,33 @@ def _canonical_target(primme_data_dir: Path) -> dict[str, float]:
     if "Lx" not in frame.columns:
         raise RuntimeError(f"{path} has no Lx column")
     rows = frame[frame["Lx"].astype(int) == 12].copy()
+    if sy_character is not None:
+        acceptance = json.loads(
+            (Path(primme_data_dir) / "qdm_parity_canonical_acceptance.json").read_text()
+        )
+        require_parity_protocol(acceptance, description="canonical acceptance")
+        if acceptance.get("Sy") != sy_character:
+            raise ValueError("canonical acceptance has the wrong target parity")
+        if not acceptance.get("closed"):
+            raise ValueError("parity canonical convergence is not closed")
+        for column in ("Sy", "symmetry_protocol", "phase"):
+            if column not in rows:
+                raise ValueError(f"parity canonical source is missing {column}")
+        rows = rows[
+            rows.Sy.eq(sy_character)
+            & rows.symmetry_protocol.eq(PROTOCOL)
+            & np.isclose(rows.phase, REPRESENTATIVE_PHASE, atol=1e-12, rtol=0)
+        ]
+    elif "Sy" in rows and rows.Sy.notna().any():
+        raise ValueError("parity canonical rows cannot enter a legacy run")
     if "phase" in rows.columns:
         phase = pd.to_numeric(rows["phase"], errors="coerce")
         selected = rows[np.isclose(phase, REPRESENTATIVE_PHASE, atol=1e-12)]
-        if not selected.empty:
-            rows = selected
+        rows = selected
     if rows.empty:
         raise RuntimeError(f"{path} has no Lx=12 canonical row")
+    if sy_character is not None and len(rows) != 1:
+        raise ValueError("parity canonical target must be one accepted row")
     row = rows.iloc[-1]
     required = ("beta_star", "tau_A_target", "tau_Z_target")
     missing = [name for name in required if name not in rows.columns or pd.isna(row[name])]
@@ -266,6 +294,12 @@ def _evaluate_width(
             f"{residual_tolerance:.3e}"
         )
     vectors = np.asarray(checkpoint.eigenvectors[:, checkpoint_indices], dtype=np.complex128)
+    validation = validate_partial_eigensystem(
+        context.h_sector, energies, vectors, tolerance=residual_tolerance
+    )
+    target_weight = float(np.linalg.norm(vectors.conj().T @ context.tower) ** 2)
+    if abs(target_weight - 1.0) > residual_tolerance:
+        raise RuntimeError(f"covered window does not contain the complete target: {target_weight=}")
     indices = np.arange(energies.size, dtype=int)
     block_tolerance = max(ENERGY_BLOCK_TOL, 20.0 * window_residual, 10.0 * solver_tolerance)
     exceptional, block_rows = _joint_dark_subspace(
@@ -316,6 +350,8 @@ def _evaluate_width(
         "Lx": context.lx,
         "Ly": 4,
         "phase": context.phase,
+        **validation,
+        "cage_window_projector_weight": target_weight,
         "sector_dimension": context.sector.sector_dimension,
         "window_protocol": "fixed_O1_total_energy",
         "window_half_width": float(width),
@@ -438,15 +474,24 @@ def run(
     cache_root: Path,
     residual_tolerance: float,
     observable_budget_tolerance: float,
+    sy_character: int | str | None = None,
 ) -> pd.DataFrame:
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
-    _, primary_width, widths = _load_recommendation(output)
-    canonical = _canonical_target(primme_data_dir)
+    recommendation, primary_width, widths = _load_recommendation(output)
+    if sy_character is not None:
+        require_parity_protocol(recommendation, description="window protocol")
+    elif "symmetry_protocol" in recommendation:
+        raise ValueError("parity protocol requires explicit --sy-character target")
     _configure_cache(cache_root)
 
     reference = recover_reference_geometry()
-    context = build_context(reference=reference, repeats=3, phase=REPRESENTATIVE_PHASE)
+    context = build_context(
+        reference=reference, repeats=3, phase=REPRESENTATIVE_PHASE, sy_character=sy_character
+    )
+    canonical = _canonical_target(
+        primme_data_dir, sy_character=context.sector.labels.get("Sy_character")
+    )
     covered = _load_covered_checkpoints(
         context=context,
         cache_root=cache_root,
@@ -493,6 +538,14 @@ def run(
                 residual_tolerance=residual_tolerance,
             )
             row["is_primary_window"] = bool(math.isclose(width, primary_width, abs_tol=1e-12))
+            if sy_character is not None:
+                row.update(
+                    Sy=context.sector.labels["Sy_character"],
+                    symmetry_protocol=PROTOCOL,
+                    parity_policy="measured_target",
+                    fully_symmetry_resolved=True,
+                    window_energy_density_half_width=float(width) / (4 * context.lx),
+                )
             systematics_rows.append(row)
             block_rows.extend(blocks)
             worst_rows.extend(worst)
@@ -543,6 +596,17 @@ def run(
             ),
         }
     )
+    if sy_character is not None:
+        acceptance["checks"]["primary_and_neighbor_controls_stable"] = window_controls_stable(
+            pd.DataFrame(systematics_rows), widths=widths, tolerance=observable_budget_tolerance
+        )
+        acceptance["closed"] = all(acceptance["checks"].values())
+        acceptance.update(
+            Sy=context.sector.labels["Sy_character"],
+            symmetry_protocol=PROTOCOL,
+            parity_policy="measured_target",
+            fully_symmetry_resolved=True,
+        )
     atomic_write_json(output / ACCEPTANCE_NAME, acceptance)
     if not acceptance["closed"]:
         raise RuntimeError(
@@ -558,6 +622,7 @@ def main() -> None:
     parser.add_argument("--cache-root", type=Path, required=True)
     parser.add_argument("--residual-tolerance", type=float, default=1.0e-6)
     parser.add_argument("--observable-budget-tolerance", type=float, default=5.0e-5)
+    parser.add_argument("--sy-character", choices=("target",))
     args = parser.parse_args()
     frame = run(
         primme_data_dir=args.primme_data_dir,
@@ -565,6 +630,7 @@ def main() -> None:
         cache_root=args.cache_root,
         residual_tolerance=args.residual_tolerance,
         observable_budget_tolerance=args.observable_budget_tolerance,
+        sy_character=args.sy_character,
     )
     print(frame.to_string(index=False), flush=True)
 

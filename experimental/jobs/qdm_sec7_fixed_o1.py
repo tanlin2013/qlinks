@@ -25,7 +25,11 @@ from qdm_checkerboard_large_strip import (
     project_sparse_operator_to_sector,
     translation_permutation_from_binary_basis,
 )
-from qdm_checkerboard_symmetry import checkerboard_translation_sector
+from qdm_checkerboard_symmetry import (
+    checkerboard_fully_resolved_sector,
+    checkerboard_target_sector,
+    checkerboard_translation_sector,
+)
 from scipy.optimize import brentq
 
 from qlinks.basis.configs import basis_configs_from_build_result
@@ -254,11 +258,17 @@ def build_context(
     repeats: int,
     phase: float = REPRESENTATIVE_PHASE,
     symmetry_chunk_size: int = 16384,
+    sy_character: int | str | None = None,
 ) -> Sec7Context:
-    """Build the legacy translation sector for existing fixed-window caches.
+    """Build legacy cache coordinates or an explicitly selected S_y irrep.
 
-    S_y remains unresolved; use the parity follow-up before generating new
-    symmetry-resolved manuscript evidence.  Legacy dimensions stay unchanged."""
+    Omitting parity retains legacy provenance. New evidence passes "target".
+    The positive-phase family excludes the enhanced-symmetry uniform point.
+    """
+    if sy_character is not None and (
+        sy_character not in (-1, 1, "target") or not 0 < phase < np.pi
+    ):
+        raise ValueError("parity evidence requires Sy=+/-1 or target and 0 < phase < pi")
 
     instance = checkerboard_instance(reference, repeats, phase)
     model = instance.model
@@ -270,12 +280,23 @@ def build_context(
     )
     basis = build.basis
     packed_index = packed_binary_basis_index(basis)
-    resolved_sector, symmetry_permutations = checkerboard_translation_sector(
+    cage_full = materialize_periodic_product_state_from_basis(instance, basis)
+    constructor = (
+        checkerboard_translation_sector
+        if sy_character is None
+        else checkerboard_fully_resolved_sector
+    )
+    parity_options = {} if sy_character is None else {"sy_character": sy_character}
+    if sy_character == "target":
+        constructor = checkerboard_target_sector
+        parity_options = {"target_state": cage_full}
+    resolved_sector, symmetry_permutations = constructor(
         model,
         basis,
         packed_index=packed_index,
         repeats=int(repeats),
         chunk_size=int(symmetry_chunk_size),
+        **parity_options,
     )
     sector = resolved_sector.sector
     del symmetry_permutations
@@ -285,7 +306,6 @@ def build_context(
     else:
         configs = basis_configs_from_build_result(build)
 
-    cage_full = materialize_periodic_product_state_from_basis(instance, basis)
     tower = project_state_to_sector(cage_full, sector)
     projection_norm = float(np.linalg.norm(tower))
     if projection_norm <= TOL:
@@ -325,11 +345,16 @@ def build_context(
     tower_residual = float(np.linalg.norm(h_sector @ tower - tower_energy * tower))
 
     expected = EXPECTED_SECTOR_DIMENSIONS.get(int(model.lx))
-    if expected is not None and int(sector.sector_dimension) != expected:
+    if sy_character is None and expected is not None and int(sector.sector_dimension) != expected:
         raise RuntimeError(
             f"selected sector dimension changed at Lx={model.lx}: "
             f"expected {expected}, got {sector.sector_dimension}"
         )
+    parity_dimensions = {4: {1: 14, -1: 1}, 8: {1: 875, -1: 250}, 12: {1: 74816, -1: 39667}}
+    if sy_character is not None and int(model.lx) in parity_dimensions:
+        expected_parity = parity_dimensions[int(model.lx)][sector.labels["Sy_character"]]
+        if sector.sector_dimension != expected_parity:
+            raise RuntimeError("constructed irrep disagrees with integer character count")
     if abs(tower_energy - float(model.lx)) > 1.0e-8:
         raise RuntimeError(
             f"checkerboard cage energy changed: expected {model.lx}, got {tower_energy}"
@@ -677,9 +702,11 @@ def stripe_algebra(
         "projected_operator_dimension": len(projected),
         "projected_null_dimension": len(projected_raw) - len(projected),
         "projected_map_min_nonzero_gram_eigenvalue": float(
-            np.min(quotient_eigenvalues, initial=np.nan)
+            np.min(quotient_eigenvalues) if quotient_eigenvalues.size else np.nan
         ),
-        "projected_map_max_gram_eigenvalue": float(np.max(quotient_eigenvalues, initial=np.nan)),
+        "projected_map_max_gram_eigenvalue": float(
+            np.max(quotient_eigenvalues) if quotient_eigenvalues.size else np.nan
+        ),
         "operator_normalization": "local_HS_quotient_kernel_of_P_O_P",
     }
     return (

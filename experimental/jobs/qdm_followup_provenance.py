@@ -34,6 +34,7 @@ def compare_populations(source, candidate, *, tolerance=TOL):
         return {
             "status": "source_missing",
             "population_matches": None,
+            "invariant_population_matches": None,
             "interpretation": "Old scatter bytes are required; no cause is inferred.",
         }
     a = source[columns].to_numpy(float)
@@ -45,6 +46,7 @@ def compare_populations(source, candidate, *, tolerance=TOL):
         return {
             **result,
             "population_matches": False,
+            "invariant_population_matches": False,
             "interpretation": "population_count_mismatch",
         }
     a = a[np.argsort(a[:, 0], kind="stable")]
@@ -52,7 +54,12 @@ def compare_populations(source, candidate, *, tolerance=TOL):
     energy_error = float(np.max(np.abs(a[:, 0] - b[:, 0]), initial=0))
     result["sorted_energy_max_abs_difference"] = energy_error
     if energy_error > tolerance:
-        return {**result, "population_matches": False, "interpretation": "spectrum_mismatch"}
+        return {
+            **result,
+            "population_matches": False,
+            "invariant_population_matches": False,
+            "interpretation": "spectrum_mismatch",
+        }
     boundaries = np.r_[0, np.flatnonzero(np.diff(a[:, 0]) > 1.0e-9) + 1, len(a)]
     largest_row_error = 0.0
     largest_trace_error = 0.0
@@ -73,6 +80,8 @@ def compare_populations(source, candidate, *, tolerance=TOL):
     return {
         **result,
         "population_matches": matches,
+        "invariant_population_matches": trace_matches,
+        "invariant_scope": "energy multiplicities and Q_A/Q_Z block traces; not vector equivalence",
         "max_row_abs_difference": largest_row_error,
         "max_energy_block_witness_trace_difference": largest_trace_error,
         "energy_block_traces_match": trace_matches,
