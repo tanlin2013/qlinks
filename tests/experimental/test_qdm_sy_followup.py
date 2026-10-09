@@ -53,6 +53,7 @@ def test_shifted_reflection_blocks_complete_tiny_torus_translation_irrep():
         dims.append(c.shape[1])
         projector += c @ c.conj().T
     assert sum(dims) == b.shape[1]
+    assert dims == [14, 1]
     assert all(dims)
     assert float(sp.linalg.norm(projector - b @ b.conj().T)) < 1.0e-12
     assert legacy.sector.labels["fully_symmetry_resolved"] is False
@@ -69,9 +70,12 @@ def test_degenerate_population_rotation_is_distinguished_from_changed_operator()
     )
     result = compare_populations(source, rotated)
     assert result["population_matches"] is False
+    assert result["invariant_population_matches"] is True
     assert result["interpretation"] == "compatible_with_degenerate_basis_rotation"
     rotated.loc[0, "Q_A"] += 0.1
-    assert compare_populations(source, rotated)["interpretation"] == "witness_or_exclusion_mismatch"
+    changed = compare_populations(source, rotated)
+    assert changed["invariant_population_matches"] is False
+    assert changed["interpretation"] == "witness_or_exclusion_mismatch"
     rotated.loc[0, "energy"] += 0.1
     assert compare_populations(source, rotated)["interpretation"] == "spectrum_mismatch"
     assert compare_populations(None, source)["population_matches"] is None

@@ -40,7 +40,7 @@ from qdm_checkerboard_large_strip import (
 )
 
 from qlinks.basis import Basis
-from qlinks.caging.analysis.spectral import SymmetrySectorBasis
+from qlinks.caging.analysis.spectral import SymmetrySectorBasis, project_state_to_sector
 from qlinks.encoded import BinaryEncodedBasis
 
 
@@ -368,6 +368,10 @@ def checkerboard_fully_resolved_sector(
     legacy, permutations = checkerboard_translation_sector(
         model, basis, packed_index=packed_index, repeats=repeats, chunk_size=chunk_size
     )
+    return _resolve_sy(legacy, permutations, sy_character), permutations
+
+
+def _resolve_sy(legacy, permutations, sy_character):
     names = (*legacy.generator_names, "Sy")
     chars = (*legacy.generator_characters, complex(sy_character))
     labels = dict(legacy.sector.labels)
@@ -375,14 +379,40 @@ def checkerboard_fully_resolved_sector(
     sector = character_sector_basis_from_generators(
         tuple(permutations[name] for name in names), chars, labels=labels
     )
-    return (
-        CheckerboardResolvedSector(
-            sector=sector,
-            generator_names=names,
-            generator_characters=chars,
-            generator_orders=(*legacy.generator_orders, 2),
-            translation_group_size=legacy.translation_group_size,
-            point_group_little_group=legacy.point_group_little_group,
-        ),
-        permutations,
+    return CheckerboardResolvedSector(
+        sector=sector,
+        generator_names=names,
+        generator_characters=chars,
+        generator_orders=(*legacy.generator_orders, 2),
+        translation_group_size=legacy.translation_group_size,
+        point_group_little_group=legacy.point_group_little_group,
     )
+
+
+def checkerboard_target_sector(
+    model, basis, *, packed_index, repeats, target_state, chunk_size=32768
+):
+    """Measure target parity in the translation irrep, then select that irrep.
+
+    Parity is a size-dependent property of the compact target. No alternating
+    parity formula or band classifier is used to select it.
+    """
+    legacy, permutations = checkerboard_translation_sector(
+        model, basis, packed_index=packed_index, repeats=repeats, chunk_size=chunk_size
+    )
+    target = project_state_to_sector(target_state, legacy.sector)
+    norm = np.linalg.norm(target)
+    if norm < 1e-10:
+        raise ValueError("target has zero translation-sector weight")
+    lifted = np.asarray(legacy.sector.basis @ (target / norm)).reshape(-1)
+    reflected = lifted[np.argsort(permutations["Sy"])]
+    expectation = np.vdot(lifted, reflected)
+    parity = 1 if expectation.real > 0 else -1
+    residual = float(np.linalg.norm(reflected - parity * lifted))
+    if residual > 1e-8:
+        raise ValueError(f"target is not a single Sy irrep: expectation={expectation}, {residual=}")
+    resolved = _resolve_sy(legacy, permutations, parity)
+    resolved.sector.labels.update(
+        target_Sy_expectation=float(expectation.real), target_Sy_residual=residual
+    )
+    return resolved, permutations

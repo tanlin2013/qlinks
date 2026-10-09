@@ -54,7 +54,7 @@ def _table(context, energies, vectors, *, parity=None, target=None):
     frame = pd.DataFrame(
         {
             "energy": e,
-            "energy_density": e / 32.0,
+            "energy_density": e / (context.lx * 4.0),
             "Q_A": sanity._expectation(context.projected_q["A"], v),
             "Q_Z": sanity._expectation(context.projected_q["Z"], v),
             "potential_energy": sanity._expectation(potential, v),
@@ -63,7 +63,7 @@ def _table(context, energies, vectors, *, parity=None, target=None):
     )
     frame["kinetic_energy"] = frame.energy - frame.potential_energy
     frame["Sy"] = parity
-    frame["Lx"], frame["Ly"], frame["phase"] = 8, 4, context.phase
+    frame["Lx"], frame["Ly"], frame["phase"] = context.lx, 4, context.phase
     frame["background_variant"] = "raw_target_excluded"
     return frame
 
@@ -321,7 +321,15 @@ def run(args):
         "branch_parity_best_label_agreement": agreement,
         "branch_classifier_is_quantum_number": False,
         "heavy_new_run_required": False,
-        "source_provenance_resolved": provenance["source_vs_legacy"].get("population_matches")
+        "source_invariant_provenance_resolved": provenance["source_vs_legacy"].get(
+            "invariant_population_matches"
+        )
+        is True,
+        "source_row_multiset_matches": provenance["source_vs_legacy"].get("population_matches")
+        is True,
+        "source_provenance_resolved": provenance["source_vs_legacy"].get(
+            "invariant_population_matches"
+        )
         is True,
         "production_update_authorized_by_this_diagnostic": False,
         "stripe_concentration_status": "bounded_8x4_fixed_window_compared",

@@ -16,6 +16,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from qdm_parity_protocol import PROTOCOL, require_parity_protocol
 from qdm_sec7_fixed_o1 import atomic_write_csv, atomic_write_json
 from qdm_sec7_fixed_o1_l12_observables import (
     ACCEPTANCE_NAME as OBSERVABLES_ACCEPTANCE_NAME,
@@ -117,6 +118,20 @@ def _sequence_row(source: pd.Series, *, lx: int, width: float) -> dict[str, Any]
 
 
 def _fit_rows(sequence: pd.DataFrame) -> pd.DataFrame:
+    if "scaling_eligible" in sequence:
+        sequence = sequence[sequence.scaling_eligible]
+        if len(sequence) < 3:
+            return pd.DataFrame(
+                columns=[
+                    "metric",
+                    "model",
+                    "intercept",
+                    "slope",
+                    "rmse",
+                    "n_sizes",
+                    "selected_model",
+                ]
+            )
     sizes = sequence["Lx"].astype(float).to_numpy()
     metrics = ("tau_A_mc_raw", "tau_Z_mc_raw", "matching_distance_raw", "w_raw")
     rows: list[dict[str, Any]] = []
@@ -152,10 +167,14 @@ def _fit_rows(sequence: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def run(*, output_dir: Path) -> pd.DataFrame:
+def run(*, output_dir: Path, sy_character: int | str | None = None) -> pd.DataFrame:
     output = Path(output_dir)
     width = _primary_width(output)
     acceptance = _load_json(output / OBSERVABLES_ACCEPTANCE_NAME)
+    if sy_character is not None:
+        require_parity_protocol(acceptance, description="L12 observable acceptance")
+    elif "Sy" in acceptance:
+        raise ValueError("parity sequence requires explicit --sy-character target")
     if not bool(acceptance.get("closed")):
         raise RuntimeError("Lx=12 fixed-O(1) observable acceptance is not closed")
 
@@ -168,25 +187,62 @@ def run(*, output_dir: Path) -> pd.DataFrame:
     pilot = pd.read_csv(pilot_path)
     l12 = pd.read_csv(l12_path)
 
+    if sy_character is not None:
+        for name, frame in (("pilot", pilot), ("L12", l12)):
+            if (
+                "Sy" not in frame
+                or "symmetry_protocol" not in frame
+                or not frame.Sy.isin([-1, 1]).all()
+                or not frame.symmetry_protocol.eq(PROTOCOL).all()
+            ):
+                raise ValueError(f"{name} rows are not homogeneous target-parity evidence")
     rows = [
         _sequence_row(_pick_pilot_row(pilot, lx=4, width=width), lx=4, width=width),
         _sequence_row(_pick_pilot_row(pilot, lx=8, width=width), lx=8, width=width),
         _sequence_row(_pick_l12_row(l12, width=width), lx=12, width=width),
     ]
     sequence = pd.DataFrame(rows).sort_values("Lx").reset_index(drop=True)
+    if sy_character is not None:
+        sequence["Sy"] = [
+            int(_pick_pilot_row(pilot, lx=4, width=width)["Sy"]),
+            int(_pick_pilot_row(pilot, lx=8, width=width)["Sy"]),
+            int(_pick_l12_row(l12, width=width)["Sy"]),
+        ]
+        sequence["symmetry_protocol"] = PROTOCOL
+        sequence["window_energy_density_half_width"] = width / (4 * sequence.Lx)
+        selected_sources = [
+            _pick_pilot_row(pilot, lx=4, width=width),
+            _pick_pilot_row(pilot, lx=8, width=width),
+            _pick_l12_row(l12, width=width),
+        ]
+        sequence["sector_dimension"] = [int(row["sector_dimension"]) for row in selected_sources]
+        sequence["scaling_eligible"] = (sequence.sector_dimension > 1) & (
+            sequence.raw_window_state_count > 1
+        )
     atomic_write_csv(output / SEQUENCE_NAME, sequence)
     diagnostics = _fit_rows(sequence)
     atomic_write_csv(output / FIT_NAME, diagnostics)
     atomic_write_json(
         output / STATUS_NAME,
         {
+            **(
+                {"parity_policy": "measured_target", "symmetry_protocol": PROTOCOL}
+                if sy_character is not None
+                else {}
+            ),
             "schema_version": 1,
             "closed": True,
             "window_half_width": width,
             "sizes": [4, 8, 12],
+            "nontrivial_sizes": sequence.loc[sequence.scaling_eligible, "Lx"].tolist()
+            if "scaling_eligible" in sequence
+            else [4, 8, 12],
+            "fit_status": "insufficient_nontrivial_sizes"
+            if diagnostics.empty
+            else "descriptive_only",
             "raw_window_state_counts": sequence["raw_window_state_count"].astype(int).tolist(),
             "claim_boundary": (
-                "Three-size fits are descriptive diagnostics only. No model is selected, "
+                "Trivial target-only sectors are excluded from fits. No model is selected, "
                 "no scaling exponent is reported, and no thermodynamic asymptote is claimed."
             ),
         },
@@ -197,8 +253,9 @@ def run(*, output_dir: Path) -> pd.DataFrame:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--sy-character", choices=("target",))
     args = parser.parse_args()
-    frame = run(output_dir=args.output_dir)
+    frame = run(output_dir=args.output_dir, sy_character=args.sy_character)
     print(frame.to_string(index=False), flush=True)
 
 
