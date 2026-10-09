@@ -225,7 +225,9 @@ def _symmetry_audit(context: Any) -> dict[str, Any]:
 
     antiunitary_rows: list[dict[str, Any]] = []
     for name in ("Rx", "Ry", "Sx", "Sy", "C2"):
-        operator = compressed[name]
+        full_operator = sp.csr_array(spectral.permutation_matrix(permutations[name]))
+        basis = context.sector.basis
+        operator = (basis.conj().T @ full_operator @ basis.conjugate()).toarray()
         preservation = _unitarity(operator)
         residual = math.nan
         square = math.nan
