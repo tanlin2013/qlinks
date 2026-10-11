@@ -16,7 +16,7 @@ RUN_ID="${QLINKS_EVIDENCE_RUN_ID:-qdm_parity_evidence_$(date -u +%Y%m%dT%H%M%SZ)
 [[ "${RUN_ID}" =~ ^[A-Za-z0-9_-]+$ ]] || { echo "invalid run id" >&2; exit 2; }
 DATA_DIR="${QLINKS_DATA_DIR:-${REPO_ROOT}/experimental/data}"
 case "${STAGE}" in
-    L12-spectrum|L12-observables|sequence)
+    L12-spectrum|L12-reconstruct|L12-observables|sequence)
         PROTOCOL_FILE="${DATA_DIR}/evidence_jobs/${RUN_ID}/qdm_checkerboard_fixed_O1_window_recommendation.json"
         if [[ ! -f "${PROTOCOL_FILE}" ]]; then
             echo "Missing parity window protocol: ${PROTOCOL_FILE}" >&2
@@ -40,13 +40,16 @@ case "${STAGE}" in
     L12-canonical|L12-matrix-preflight)
         MEMORY="${QLINKS_DOCKER_MEMORY_LIMIT:-128g}"
         ;;
-    L12-spectrum)
+    L12-spectrum|L12-reconstruct)
         MEMORY="${QLINKS_DOCKER_MEMORY_LIMIT:-128g}"
         IMAGE="${QLINKS_DOCKER_IMAGE:-tanlin2013/qlinks:notebook-primme}"
         COMMAND=(python experimental/jobs/qdm_sec7_fixed_o1_l12_spectrum.py
           --output-dir "${OUTPUT}" --cache-root "${CACHE}" --sy-character target
           --budgets "${QLINKS_QDM_PARITY_BUDGETS:-768,1024,1536,2048,3072,4096}"
           --tolerance 1e-8 --residual-tolerance 1e-6 --max-budget 8192)
+        if [[ "${STAGE}" == "L12-reconstruct" ]]; then
+            COMMAND+=(--reconstruct-cached-only --budgets "${QLINKS_QDM_PARITY_BUDGETS:-4096}")
+        fi
         ;;
     L12-observables)
         MEMORY="${QLINKS_DOCKER_MEMORY_LIMIT:-128g}"

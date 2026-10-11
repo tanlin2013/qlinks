@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 from qdm_checkerboard_large_strip import folded_spectrum_partial_spectrum
 from qdm_parity_protocol import PROTOCOL, require_parity_protocol
-from qdm_resumable_spectrum import make_resumable_folded_solver
+from qdm_resumable_spectrum import make_resumable_folded_solver, reconstruct_cached_spectrum
 from qdm_sec7_fixed_o1 import (
     REPRESENTATIVE_PHASE,
     atomic_write_csv,
@@ -36,6 +36,7 @@ RECOMMENDATION_NAME = "qdm_checkerboard_fixed_O1_window_recommendation.json"
 CONVERGENCE_NAME = "qdm_checkerboard_L12_fixed_O1_spectral_convergence.csv"
 ACCEPTANCE_NAME = "qdm_checkerboard_L12_fixed_O1_spectral_acceptance.json"
 OBSERVABLES_ACCEPTANCE_NAME = "qdm_checkerboard_L12_fixed_O1_observables_acceptance.json"
+RECONSTRUCTION_ACCEPTANCE_NAME = "qdm_checkerboard_L12_fixed_O1_reconstruction_acceptance.json"
 DEFAULT_TOLERANCE = 1.0e-8
 DEFAULT_RESIDUAL_TOLERANCE = 1.0e-6
 DEFAULT_MAX_BUDGET = 8192
@@ -249,6 +250,7 @@ def run(
     residual_tolerance: float,
     max_budget: int,
     sy_character: int | str | None = None,
+    reconstruct_cached_only: bool = False,
 ) -> pd.DataFrame:
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
@@ -293,13 +295,26 @@ def run(
                 "existing spectral-convergence rows use a different fixed window; "
                 "start a new evidence run instead of mixing protocols"
             )
+    if reconstruct_cached_only:
+        # Reconstructed populations require fresh downstream evidence. Preserve
+        # old reports, and fail closed even if this process is interrupted.
+        for name in (ACCEPTANCE_NAME, OBSERVABLES_ACCEPTANCE_NAME):
+            path = output / name
+            if path.is_file():
+                payload = json.loads(path.read_text(encoding="utf-8"))
+                backup = output / "reconstruction_source_reports" / name
+                if not backup.exists():
+                    atomic_write_json(backup, payload)
+                payload.update(closed=False, cached_reconstruction_requires_reevaluation=True)
+                atomic_write_json(path, payload)
+    reconstruction_rows = []
     for budget in budgets:
         existing_budgets = (
             set(frame["requested_subspace_size"].astype(int))
             if not frame.empty and "requested_subspace_size" in frame.columns
             else set()
         )
-        if int(budget) in existing_budgets:
+        if int(budget) in existing_budgets and not reconstruct_cached_only:
             continue
 
         spectrum_closed = bool(
@@ -309,19 +324,32 @@ def run(
                 residual_tolerance=residual_tolerance,
             )["closed"]
         )
-        if spectrum_closed and not _observables_request_extension(output):
+        if (
+            spectrum_closed
+            and not reconstruct_cached_only
+            and not _observables_request_extension(output)
+        ):
             break
 
         started = time.perf_counter()
-        partial = solver(
-            context.h_sector,
-            target_energy=context.tower_energy,
-            subspace_size=int(budget),
-            tolerance=float(tolerance),
-            maxiter=None,
-            ncv_factor=2.05,
-            random_seed=20260921 + int(budget),
-        )
+        reconstruction_details = None
+        if reconstruct_cached_only:
+            partial, reconstruction_details = reconstruct_cached_spectrum(
+                context.h_sector,
+                target_energy=context.tower_energy,
+                budget=int(budget),
+                cache_root=cache_root,
+            )
+        else:
+            partial = solver(
+                context.h_sector,
+                target_energy=context.tower_energy,
+                subspace_size=int(budget),
+                tolerance=float(tolerance),
+                maxiter=None,
+                ncv_factor=2.05,
+                random_seed=20260921 + int(budget),
+            )
         elapsed = time.perf_counter() - started
         coverage = coverage_metrics(
             partial.energies,
@@ -361,6 +389,22 @@ def run(
                 parity_policy="measured_target",
                 fully_symmetry_resolved=True,
             )
+        if reconstruction_details is not None:
+            archive = output / "reconstruction_source_rows" / f"budget_{int(budget):08d}.json"
+            if int(budget) in existing_budgets and not archive.exists():
+                previous = frame[frame.requested_subspace_size.astype(int).eq(int(budget))]
+                atomic_write_json(archive, previous.iloc[-1].to_dict())
+            row.update(
+                solver_status="reconstructed_saved_subspace",
+                solver_tolerance=float(
+                    reconstruction_details["source_checkpoint_metadata"]["solver_tolerance"]
+                ),
+                reconstruction_orthogonality_residual=float(
+                    reconstruction_details["full_orthogonality_frobenius_residual"]
+                ),
+                reconstruction_source_checkpoint=reconstruction_details["source_checkpoint"],
+            )
+            reconstruction_rows.append(row)
         frame = _merge_row(convergence_path, row)
         atomic_write_json(
             output / "fixed_O1_spectral_stages" / f"budget_{int(budget):08d}.json",
@@ -388,6 +432,59 @@ def run(
             parity_policy="measured_target",
             fully_symmetry_resolved=True,
         )
+    if reconstruct_cached_only:
+        quality = bool(reconstruction_rows) and all(
+            row["partial_maximum_residual"] <= residual_tolerance
+            and row["reconstruction_orthogonality_residual"] <= residual_tolerance
+            for row in reconstruction_rows
+        )
+        acceptance["checks"]["cached_reconstruction_quality"] = quality
+        acceptance["closed"] = bool(acceptance["closed"] and quality)
+        atomic_write_json(output / ACCEPTANCE_NAME, acceptance)
+        report = {
+            "schema_version": 1,
+            "closed": quality,
+            "reconstructed_budgets": [
+                row["requested_subspace_size"] for row in reconstruction_rows
+            ],
+            "residual_acceptance_tolerance": float(residual_tolerance),
+            "checks": {
+                "all_H_residuals_acceptable": all(
+                    row["partial_maximum_residual"] <= residual_tolerance
+                    for row in reconstruction_rows
+                ),
+                "window_H_residuals_acceptable": all(
+                    row["window_maximum_residual"] <= residual_tolerance
+                    for row in reconstruction_rows
+                ),
+                "full_orthogonality_acceptable": all(
+                    row["reconstruction_orthogonality_residual"] <= residual_tolerance
+                    for row in reconstruction_rows
+                ),
+            },
+            "spectral_acceptance_closed": acceptance["closed"],
+            "iterative_solver_called": False,
+            "original_checkpoints_preserved": True,
+            "rows": reconstruction_rows,
+            "claim_boundary": (
+                "Reconstruction quality only; two covered budgets and observable "
+                "checks remain required."
+            ),
+        }
+        atomic_write_json(output / RECONSTRUCTION_ACCEPTANCE_NAME, report)
+        if not quality:
+            raise RuntimeError(
+                "saved subspace reconstruction still fails H-residual or full-Gram quality; "
+                f"no iterative solve was started. See {output / RECONSTRUCTION_ACCEPTANCE_NAME}"
+            )
+        print(
+            {
+                "reconstruction_quality_closed": True,
+                "spectral_acceptance_closed": acceptance["closed"],
+            },
+            flush=True,
+        )
+        return frame
     atomic_write_json(output / ACCEPTANCE_NAME, acceptance)
     if not acceptance["closed"]:
         raise RuntimeError(
@@ -410,6 +507,7 @@ def main() -> None:
     )
     parser.add_argument("--max-budget", type=int, default=DEFAULT_MAX_BUDGET)
     parser.add_argument("--sy-character", choices=("target",))
+    parser.add_argument("--reconstruct-cached-only", action="store_true")
     args = parser.parse_args()
     frame = run(
         output_dir=args.output_dir,
@@ -419,6 +517,7 @@ def main() -> None:
         residual_tolerance=args.residual_tolerance,
         max_budget=args.max_budget,
         sy_character=args.sy_character,
+        reconstruct_cached_only=args.reconstruct_cached_only,
     )
     print(frame.to_string(index=False), flush=True)
 

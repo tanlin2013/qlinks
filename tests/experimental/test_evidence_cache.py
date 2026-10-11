@@ -287,7 +287,7 @@ def test_primme_backend_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
     matrix = sp.csr_array(np.diag(np.arange(12.0, dtype=float)))
     result = solver(matrix, target_energy=5.25, subspace_size=4, tolerance=1.0e-8)
     assert result.energies.size == 4
-    assert result.method == "folded_spectrum_primme"
+    assert result.method == "folded_spectrum_primme_full_ritz"
     np.testing.assert_allclose(
         np.sort(np.abs(result.energies - 5.25)),
         np.sort(np.array([0.25, 0.75, 1.25, 1.75])),

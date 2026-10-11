@@ -24,7 +24,9 @@ def _run(stage, data_dir, *, run_id=None):
     )
 
 
-@pytest.mark.parametrize("stage", ["L12-spectrum", "L12-canonical", "L12-observables", "gate"])
+@pytest.mark.parametrize(
+    "stage", ["L12-spectrum", "L12-reconstruct", "L12-canonical", "L12-observables", "gate"]
+)
 def test_followup_without_run_id_fails_before_creating_a_folder(tmp_path, stage):
     data = tmp_path / "data"
     result = _run(stage, data)
@@ -65,3 +67,15 @@ def test_exact_stage_can_still_initialize_a_run(tmp_path):
     assert "docker run" in result.stdout
     assert "Reuse in every SSH session" in result.stdout
     assert len(list((data / "evidence_jobs").iterdir())) == 1
+
+
+def test_reconstruction_runner_requests_only_the_saved_4096_budget(tmp_path):
+    data = tmp_path / "data"
+    protocol = data / "evidence_jobs" / "existing_run" / PROTOCOL_NAME
+    protocol.parent.mkdir(parents=True)
+    protocol.write_text("{}")
+    result = _run("L12-reconstruct", data, run_id="existing_run")
+    assert result.returncode == 0
+    assert "--reconstruct-cached-only --budgets 4096" in result.stdout
+    assert "qdm_sec7_fixed_o1_l12_spectrum.py" in result.stdout
+    assert "L12-reconstruct.log" not in result.stdout  # Dry run starts no process.
