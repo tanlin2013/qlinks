@@ -6,9 +6,27 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd -P)"
 cd "${REPO_ROOT}"
 STAGE="${1:-exact}"
 if (($#)); then shift; fi
+if [[ "${STAGE}" != "exact" && -z "${QLINKS_EVIDENCE_RUN_ID:-}" ]]; then
+    echo "${STAGE} requires QLINKS_EVIDENCE_RUN_ID from the completed exact stage." >&2
+    echo "Set it again in this SSH session: export QLINKS_EVIDENCE_RUN_ID=YOUR_EXISTING_RUN_ID" >&2
+    echo "No container was started and no new evidence folder was created." >&2
+    exit 2
+fi
 RUN_ID="${QLINKS_EVIDENCE_RUN_ID:-qdm_parity_evidence_$(date -u +%Y%m%dT%H%M%SZ)}"
 [[ "${RUN_ID}" =~ ^[A-Za-z0-9_-]+$ ]] || { echo "invalid run id" >&2; exit 2; }
 DATA_DIR="${QLINKS_DATA_DIR:-${REPO_ROOT}/experimental/data}"
+case "${STAGE}" in
+    L12-spectrum|L12-observables|sequence)
+        PROTOCOL_FILE="${DATA_DIR}/evidence_jobs/${RUN_ID}/qdm_checkerboard_fixed_O1_window_recommendation.json"
+        if [[ ! -f "${PROTOCOL_FILE}" ]]; then
+            echo "Missing parity window protocol: ${PROTOCOL_FILE}" >&2
+            echo "Reuse the completed exact-stage run ID, or run the exact stage with this same ID:" >&2
+            printf '  QLINKS_EVIDENCE_RUN_ID=%q scripts/docker/docker_run_qdm_parity_evidence.sh exact\n' "${RUN_ID}" >&2
+            echo "No container was started." >&2
+            exit 2
+        fi
+        ;;
+esac
 mkdir -p "${DATA_DIR}/evidence_jobs/${RUN_ID}" "${DATA_DIR}/evidence_cache/qdm_target_parity_v1"
 DATA_DIR="$(cd "${DATA_DIR}" && pwd -P)"
 OUTPUT="/workspace/qlinks/experimental/data/evidence_jobs/${RUN_ID}"
@@ -57,6 +75,7 @@ DOCKER_COMMAND=(docker run --rm --init
   --volume "${DATA_DIR}:/workspace/qlinks/experimental/data"
   --workdir /workspace/qlinks "${IMAGE}" "${COMMAND[@]}" "$@")
 printf 'Run id: %s\nStage: %s\nOutput: %s\n' "${RUN_ID}" "${STAGE}" "${DATA_DIR}/evidence_jobs/${RUN_ID}"
+printf 'Reuse in every SSH session: export QLINKS_EVIDENCE_RUN_ID=%q\n' "${RUN_ID}"
 if [[ "${QLINKS_DOCKER_DRY_RUN:-0}" == "1" ]]; then
     printf '%q ' "${DOCKER_COMMAND[@]}"
     printf '\n'
