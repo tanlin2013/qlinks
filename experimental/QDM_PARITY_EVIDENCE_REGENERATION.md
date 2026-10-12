@@ -86,6 +86,12 @@ At Lx=8, phi=0.05:
 
 ## Server sequence and submission gate
 
+Set `QLINKS_EVIDENCE_RUN_ID` again after opening a new SSH session; shell exports
+do not carry over to another session. Only `exact` may generate a new timestamped
+run ID. All follow-up stages require an explicit ID, and spectrum/observables/
+sequence check the window-protocol file on the host before launching Docker.
+The runner prints the export command to reuse its exact-stage folder.
+
 Use a single explicit run id across all stages, after this PR is merged:
 
 ```bash
@@ -98,6 +104,20 @@ scripts/docker/docker_run_qdm_parity_evidence.sh L12-observables
 scripts/docker/docker_run_qdm_parity_evidence.sh sequence
 scripts/docker/docker_run_qdm_parity_evidence.sh gate
 ```
+
+For a long stage, launch it in the background with redirected input/output:
+
+```bash
+QLINKS_EVIDENCE_RUN_ID=qdm_parity_submission_20261009 \
+nohup scripts/docker/docker_run_qdm_parity_evidence.sh L12-spectrum \
+  > L12-spectrum-launch.log 2>&1 < /dev/null &
+```
+
+This runs the existing foreground Docker wrapper under `nohup`. The wrapper's
+stage log also persists in its evidence folder. The same inline run-ID assignment
+works for later stages; wait for each prerequisite to finish successfully.
+If a protocol file is missing, use the existing parity run folder rather than
+copying a legacy pilot's recommendation into a new folder.
 
 The exact and cheap preflight stages default to the existing notebook image
 and 32g memory. Matrix/canonical/spectrum/observable stages default to 128g;

@@ -52,9 +52,17 @@ def _configure_cache(cache_root: Path) -> None:
     os.environ.setdefault("QLINKS_QDM_PRIMME_WARM_START_VECTORS", "512")
 
 
-def _load_recommendation(output_dir: Path) -> tuple[dict[str, Any], float, float | None]:
+def _load_recommendation(
+    output_dir: Path, *, parity_evidence: bool = False
+) -> tuple[dict[str, Any], float, float | None]:
     path = Path(output_dir) / RECOMMENDATION_NAME
     if not path.is_file():
+        if parity_evidence:
+            raise FileNotFoundError(
+                f"parity window protocol is missing: {path}. "
+                "Reuse the completed exact-stage QLINKS_EVIDENCE_RUN_ID, or run "
+                "scripts/docker/docker_run_qdm_parity_evidence.sh exact with that same ID."
+            )
         raise FileNotFoundError(
             f"fixed-O(1) pilot recommendation is missing: {path}. Run --stage fixed-O1-pilot first."
         )
@@ -244,7 +252,9 @@ def run(
 ) -> pd.DataFrame:
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
-    recommendation, half_width, estimate = _load_recommendation(output)
+    recommendation, half_width, estimate = _load_recommendation(
+        output, parity_evidence=sy_character is not None
+    )
     if sy_character is not None:
         if sy_character not in (-1, 1, "target"):
             raise ValueError("production evidence requires a measured target irrep")
