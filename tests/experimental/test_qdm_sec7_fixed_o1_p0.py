@@ -194,7 +194,6 @@ def test_l12_observables_stage_is_solver_free_and_uses_cached_checkpoints() -> N
     assert "make_resumable_folded_solver" not in source
     assert "primme.eigsh" not in source
     assert 'checkpoint.metadata.get("backend", "")' in source
-    assert '!= "primme"' in source
     assert "by_budget" in source
 
 

@@ -8,6 +8,11 @@ on:
       - ".github/workflows/primme-smoke.yml"
       - "experimental/jobs/qdm_folded_backend_comparison.py"
       - "experimental/jobs/qdm_resumable_spectrum.py"
+      - "experimental/jobs/qdm_ritz_reconstruction.py"
+      - "experimental/jobs/qdm_parity_backend_worker.py"
+      - "experimental/jobs/qdm_parity_evidence.py"
+      - "experimental/jobs/qdm_sec7_fixed_o1.py"
+      - "experimental/jobs/qdm_checkerboard_symmetry.py"
       - "experimental/jobs/qdm_resume_site/**"
       - "scripts/docker/build_primme_evidence_image.sh"
       - "scripts/docker/verify_optional_environment.py"
@@ -20,6 +25,11 @@ on:
       - ".github/workflows/primme-smoke.yml"
       - "experimental/jobs/qdm_folded_backend_comparison.py"
       - "experimental/jobs/qdm_resumable_spectrum.py"
+      - "experimental/jobs/qdm_ritz_reconstruction.py"
+      - "experimental/jobs/qdm_parity_backend_worker.py"
+      - "experimental/jobs/qdm_parity_evidence.py"
+      - "experimental/jobs/qdm_sec7_fixed_o1.py"
+      - "experimental/jobs/qdm_checkerboard_symmetry.py"
       - "experimental/jobs/qdm_resume_site/**"
       - "scripts/docker/build_primme_evidence_image.sh"
       - "scripts/docker/verify_optional_environment.py"
@@ -71,7 +81,7 @@ jobs:
               python scripts/docker/verify_primme_evidence_runtime.py
             '
 
-      - name: Compare ARPACK and PRIMME on physical 4x4 and 8x4 QDM
+      - name: Validate 4x4 parity and compare ARPACK/PRIMME on 8x4 QDM
         run: |
           rm -rf output/primme-qdm-compare
           docker run --rm \
@@ -92,6 +102,8 @@ jobs:
           if-no-files-found: warn
           path: |
             output/primme-qdm-compare/summary.json
+            output/primme-qdm-compare/parity_preflight/qdm_parity_exact_audit.json
+            output/primme-qdm-compare/parity_preflight/qdm_parity_phase_window_systematics.csv
             output/primme-qdm-compare/qdm_folded_backend_comparison.csv
             output/primme-qdm-compare/arpack/qdm_checkerboard_L12_spectral_convergence.csv
             output/primme-qdm-compare/primme/qdm_checkerboard_L12_spectral_convergence.csv

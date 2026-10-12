@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 """Compare ARPACK and PRIMME on the same small physical square-QDM problems.
 
-This is a solver-validation job, not production evidence. It executes the
-canonical square-QDM notebook twice on 4x4 and 8x4 strips with identical folded
-operators, targets, and subspace budgets. Cache reuse is disabled for the timed
-solves and each backend receives a separate cache root.
-
-The notebook's normal P0 preflight is intentionally left enabled. In
-particular, the small-system thermal/concentration and dark-manifold checks must
-complete before the notebook enters its folded-spectrum lane; the comparison
-must not bypass a scientific safety gate just to exercise an eigensolver.
+This is a solver-validation job, not production evidence. A mandatory exact
+parity preflight checks complete eigensystems, thermal witnesses and joint-dark
+covariance on 4x4 and 8x4 at phi=0.05. Timed solves then use the same measured
+target irreps, Hamiltonians and budgets in isolated workers. Cache reuse is
+disabled. The one-dimensional 4x4 irrep is a dense symmetry check; the 8x4 irrep
+exercises ARPACK and PRIMME. No legacy notebook or unresolved parity is used.
 
 The raw eigensolver tolerances are backend-specific because the Python PRIMME
 wrapper interprets ``tol`` relative to an estimate of the folded-operator norm,
@@ -30,12 +27,20 @@ import numpy as np
 import pandas as pd
 from evidence_job_utils import find_repo_root
 
-KEY_COLUMNS = ("repeats", "requested_subspace_size", "window_prefactor")
+KEY_COLUMNS = (
+    "repeats",
+    "requested_subspace_size",
+    "window_half_width",
+    "Sy",
+    "sector_dimension",
+    "symmetry_protocol",
+)
 COMPARISON_COLUMNS = (
     "returned_eigenpairs",
     "partial_min_energy",
     "partial_max_energy",
     "partial_maximum_residual",
+    "full_Gram_residual",
     "transformed_maximum_residual",
     "joint_dark_rank",
     "peak_rss_gib",
@@ -71,47 +76,19 @@ def _run_backend(
     folded_tolerance = RAW_FOLDED_TOLERANCE[backend]
     command = [
         sys.executable,
-        str(repo_root / "experimental" / "jobs" / "run_square_qdm_draft_evidence.py"),
-        "--stage",
-        "compute",
-        "--profile",
-        "smoke",
-        "--data-dir",
-        str(data_dir),
-        "--transport-repeats",
-        "1",
-        "--ed-repeats",
-        "1",
-        "--dark-classification-repeats",
-        "1",
-        "--thermal-protocol",
-        "finite-beta",
-        "--window-prefactors",
-        "0.50",
-        "--primary-window-prefactor",
-        "0.50",
-        "--run-large-strip",
-        "--large-strip-repeats",
-        repeats,
-        "--large-strip-spectral-method",
-        "folded",
-        "--large-strip-folded-backend",
+        str(repo_root / "experimental/jobs/qdm_parity_backend_worker.py"),
+        "--backend",
         backend,
-        "--large-strip-subspace-budgets",
-        budgets,
-        "--large-strip-folded-tolerance",
-        f"{folded_tolerance:.1e}",
-        "--large-strip-convergence-tolerance",
-        "1e-4",
-        "--finite-beta-samples",
-        "2",
-        "--finite-beta-beta-points",
-        "9",
-        "--no-resume-cache",
-        "--evidence-cache-root",
+        "--output",
+        str(data_dir),
+        "--cache-root",
         str(cache_root),
-        "--timeout",
-        str(timeout),
+        "--repeats",
+        repeats,
+        "--budgets",
+        budgets,
+        "--tolerance",
+        f"{folded_tolerance:.1e}",
     ]
     print(
         {
@@ -122,7 +99,7 @@ def _run_backend(
         },
         flush=True,
     )
-    subprocess.run(command, cwd=repo_root, check=True)
+    subprocess.run(command, cwd=repo_root, check=True, timeout=timeout)
     return data_dir
 
 
@@ -142,9 +119,14 @@ def _load_convergence(data_dir: Path, backend: str) -> pd.DataFrame:
             "folded_spectrum_lanczos",
             "folded_spectrum_lanczos_partial_arpack",
         },
-        "primme": {"folded_spectrum_primme"},
+        "primme": {"folded_spectrum_primme", "folded_spectrum_primme_full_ritz"},
     }
     methods = set(frame["spectral_method"].astype(str))
+    if "dense_eigh_small_sector" in methods:
+        dense = frame[frame.spectral_method.eq("dense_eigh_small_sector")]
+        if not dense.sector_dimension.le(2).all():
+            raise RuntimeError("dense fallback is allowed only for the tiny symmetry check")
+        methods.remove("dense_eigh_small_sector")
     unexpected = methods - allowed_methods[backend]
     if unexpected:
         raise RuntimeError(
@@ -241,6 +223,21 @@ def main() -> None:
 
     output_root = args.output_root.expanduser().resolve(strict=False)
     output_root.mkdir(parents=True, exist_ok=True)
+    repo_root = find_repo_root()
+    preflight = output_root / "parity_preflight"
+    subprocess.run(
+        [
+            sys.executable,
+            str(repo_root / "experimental/jobs/qdm_parity_backend_worker.py"),
+            "--backend",
+            "preflight",
+            "--output",
+            str(preflight),
+        ],
+        cwd=repo_root,
+        check=True,
+        timeout=args.timeout,
+    )
     arpack_dir = _run_backend(
         "arpack",
         output_root=output_root,
@@ -263,6 +260,9 @@ def main() -> None:
 
     summary = {
         "status": "passed",
+        "parity_preflight_audit": str(preflight / "qdm_parity_exact_audit.json"),
+        "four_by_four_role": "one-dimensional dense symmetry check",
+        "window_half_width": 0.5,
         "repeats": args.repeats,
         "budgets": args.budgets,
         "rows": int(len(comparison)),

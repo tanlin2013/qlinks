@@ -138,6 +138,60 @@ acceptance. Set `QLINKS_QDM_PARITY_BUDGETS` to extend it up to 8192 if needed.
 Completed compatible budgets are checkpointed and reused. The primary window
 remains DeltaE=0.25; the spectral solve covers the widest control up front.
 
+### Recovering inaccurate folded-spectrum eigenvectors
+
+A small residual for `(H-E*)^2` does not ensure a small residual for `H`.
+The folded problem can mix states on opposite sides of the target energy,
+including near-degenerate pairs whose splitting exceeds the old scalar-cluster
+threshold. PRIMME's `tol` is relative to the folded operator's estimated norm.
+The new PRIMME postprocessing solves the full generalized projected problem
+`(V† H V)c = E (V† V)c`; the Gram metric also handles small input orthogonality
+errors. It retains every returned direction and rejects rank deficiency rather
+than silently deleting states. Actual H and folded residuals are recomputed for
+every reconstructed vector; full output Gram error is measured in Frobenius norm,
+which bounds the spectral norm. Solver and evidence tolerances are unchanged.
+
+For an existing failed 4096-vector parity checkpoint, after merging the recovery
+PR and updating the checkout, use:
+
+```bash
+QLINKS_EVIDENCE_RUN_ID=qdm_parity_submission_20261009 \
+nohup scripts/docker/docker_run_qdm_parity_evidence.sh L12-reconstruct \
+  > L12-reconstruct-launch.log 2>&1 < /dev/null &
+```
+
+This stage defaults to **only budget 4096**. `QLINKS_QDM_PARITY_BUDGETS` can select
+other saved original PRIMME budgets. It rebuilds the same parity Hamiltonian
+and verifies its matrix fingerprint, but calls no iterative eigensolver. Sparse
+Hamiltonian products and dense k-by-k projected diagonalization still take time;
+there is no measured 12x4 reconstruction runtime yet. Matrix construction still
+requires the server's production resources. The routine has O(n k^2 + k^3)
+work and O(n k + k^2) storage; it never diagonalizes the full n-by-n Hamiltonian.
+
+Original `primme/budget_*` checkpoints are preserved byte for byte. Reconstructed
+payloads are saved under `primme_full_ritz_v1/budget_*`, with original source
+metadata, reconstruction timing, and full Gram error recorded. The original
+convergence row is archived under `reconstruction_source_rows/` before its
+replacement. Existing spectral and observable acceptance reports are archived
+and invalidated before replacing diagnostics, so downstream evidence must be
+regenerated and an interrupted repair cannot retain a stale pass. Repeating recovery reuses the versioned result for the same source.
+Future PRIMME solves also use full-subspace reconstruction and the new backend;
+cache reuse, warm starts, and observable processing recognize those results.
+
+Read `qdm_checkerboard_L12_fixed_O1_reconstruction_acceptance.json` in the same
+run folder. A successful recovery requires **all** returned H residuals and full
+Gram error at most 1e-6, matching the cache quality required by observables.
+Window residuals and edge coverage are also reported separately. Recovery can
+fail when the saved subspace has missing components; a small folded residual is
+not a promise that reconstruction will pass. Failed candidates remain available
+for diagnosis and the original checkpoint remains intact.
+
+A recovery success with one covered budget exits successfully while reporting
+`spectral_acceptance_closed=false`: it is not another independent budget.
+Only after examining the recovered residuals and count should a new budget be
+chosen (for example 5120 if coverage remains adequate), followed by observables,
+sequence, and the submission gate. No residual tolerance or window is relaxed.
+
 The canonical stage regenerates the 12x4 Sy=-1 trace rather than importing
 translation-union canonical means. It compares independent 8/16-sample scans
 and a same-seed 41/81-point beta-grid refinement on [0,0.25]. Its recorded

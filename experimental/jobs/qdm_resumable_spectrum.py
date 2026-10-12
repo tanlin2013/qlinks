@@ -17,6 +17,7 @@ import importlib.util
 import os
 import time
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -32,6 +33,7 @@ from evidence_cache import (
     spectral_checkpoint_directory,
 )
 from qdm_checkerboard_large_strip import PartialSpectrum, process_peak_rss_gib
+from qdm_ritz_reconstruction import REFINED_BACKEND, reconstruct_hamiltonian_ritz_pairs
 
 CACHE_NAMESPACE = "qdm/checkerboard_large_strip"
 
@@ -122,8 +124,17 @@ def _load_exact_checkpoint(
     candidates = iter_spectral_checkpoints(namespace=CACHE_NAMESPACE, problem=problem)
     exact = [path for path in candidates if path.name == f"budget_{int(budget):08d}"]
     if not allow_cross_backend:
-        exact = [path for path in exact if path.parent.name == preferred_backend]
-    exact.sort(key=lambda path: (path.parent.name != preferred_backend, str(path)))
+        accepted_backends = {preferred_backend}
+        if preferred_backend == "primme":
+            accepted_backends.add(REFINED_BACKEND)
+        exact = [path for path in exact if path.parent.name in accepted_backends]
+    exact.sort(
+        key=lambda path: (
+            path.parent.name != REFINED_BACKEND,
+            path.parent.name != preferred_backend,
+            str(path),
+        )
+    )
     for path in exact:
         checkpoint = load_spectral_checkpoint(
             path,
@@ -186,7 +197,14 @@ def _load_warm_start(
         ranked.append((previous_budget, checkpoint))
     if not ranked:
         return None
-    _, checkpoint = max(ranked, key=lambda item: item[0])
+    _, checkpoint = max(
+        ranked,
+        key=lambda item: (
+            item[0],
+            item[1].status is CacheValidationStatus.VALID_FINAL,
+            -float(np.max(item[1].residuals, initial=0.0)),
+        ),
+    )
     target = float(problem["target_energy"])
     order = np.argsort(np.abs(np.asarray(checkpoint.energies) - target))
     take = order[: min(max_vectors, order.size)]
@@ -202,82 +220,6 @@ def _load_warm_start(
         flush=True,
     )
     return np.asarray(checkpoint.eigenvectors[:, take])
-
-
-def _postprocess_folded_vectors(
-    hamiltonian: sp.csr_array,
-    shifted: sp.csr_array,
-    *,
-    target_energy: float,
-    folded_values: np.ndarray,
-    vectors: np.ndarray,
-    tolerance: float,
-    cluster_tolerance: float | None,
-    requested_subspace_size: int,
-    method: str,
-) -> PartialSpectrum:
-    folded_values = np.asarray(np.real(folded_values), dtype=np.float64)
-    vectors = np.asarray(vectors, dtype=np.complex128)
-    if folded_values.size == 0 or vectors.shape[1] == 0:
-        raise RuntimeError(f"{method} returned no folded-spectrum eigenpairs")
-    order = np.argsort(folded_values)
-    folded_values = folded_values[order]
-    vectors = vectors[:, order]
-    k = int(folded_values.size)
-
-    if cluster_tolerance is None:
-        cluster_tolerance = max(1.0e-11, 50.0 * float(tolerance))
-
-    def folded_matmat(matrix: np.ndarray) -> np.ndarray:
-        return shifted @ (shifted @ matrix)
-
-    energies_out: list[np.ndarray] = []
-    vectors_out: list[np.ndarray] = []
-    transformed_residuals_out: list[np.ndarray] = []
-    begin = 0
-    while begin < k:
-        end = begin + 1
-        reference = float(folded_values[begin])
-        scale = max(1.0, abs(reference))
-        while (
-            end < k
-            and abs(float(folded_values[end]) - reference) <= float(cluster_tolerance) * scale
-        ):
-            end += 1
-        block = vectors[:, begin:end]
-        h_block = hamiltonian @ block
-        compressed = block.conj().T @ h_block
-        compressed = 0.5 * (compressed + compressed.conj().T)
-        local_energies, rotation = np.linalg.eigh(compressed)
-        rotated = block @ rotation
-        folded_residual = np.linalg.norm(
-            folded_matmat(block) - block * folded_values[None, begin:end], axis=0
-        )
-        energies_out.append(np.asarray(local_energies, dtype=np.float64))
-        vectors_out.append(np.asarray(rotated, dtype=np.complex128))
-        transformed_residuals_out.append(np.asarray(folded_residual, dtype=np.float64))
-        begin = end
-
-    energies = np.concatenate(energies_out)
-    eigenvectors = np.column_stack(vectors_out)
-    transformed_residuals = np.concatenate(transformed_residuals_out)
-    energy_order = np.argsort(energies)
-    energies = energies[energy_order]
-    eigenvectors = eigenvectors[:, energy_order]
-    transformed_residuals = transformed_residuals[energy_order]
-    residual_matrix = hamiltonian @ eigenvectors - eigenvectors * energies[None, :]
-    residuals = np.linalg.norm(residual_matrix, axis=0)
-    return PartialSpectrum(
-        energies=np.asarray(energies, dtype=np.float64),
-        eigenvectors=np.asarray(eigenvectors, dtype=np.complex128),
-        residuals=np.asarray(residuals, dtype=np.float64),
-        sigma=float(target_energy),
-        target_energy=float(target_energy),
-        method=method,
-        requested_subspace_size=int(requested_subspace_size),
-        transformed_residuals=np.asarray(transformed_residuals, dtype=np.float64),
-        peak_rss_gib=process_peak_rss_gib(),
-    )
 
 
 def _primme_folded_spectrum(
@@ -348,16 +290,17 @@ def _primme_folded_spectrum(
     started = time.perf_counter()
     folded_values, vectors, stats = primme.eigsh(folded, **kwargs)
     elapsed = time.perf_counter() - started
-    partial = _postprocess_folded_vectors(
+    if len(folded_values) != np.asarray(vectors).shape[1]:
+        raise RuntimeError("PRIMME folded eigenvalue/vector counts do not agree")
+    # Scalar clustering is insufficient for near-degenerate folded pairs:
+    # PRIMME's stopping test is scaled by the norm of the folded operator.
+    # Keep cluster_tolerance in the drop-in signature, but resolve the full span.
+    del cluster_tolerance
+    partial, reconstruction_metadata = reconstruct_hamiltonian_ritz_pairs(
         h,
-        shifted,
+        np.asarray(vectors),
         target_energy=target_energy,
-        folded_values=np.asarray(folded_values),
-        vectors=np.asarray(vectors),
-        tolerance=tolerance,
-        cluster_tolerance=cluster_tolerance,
         requested_subspace_size=subspace_size,
-        method="folded_spectrum_primme",
     )
 
     def scalar_stat(name: str):
@@ -374,8 +317,95 @@ def _primme_folded_spectrum(
         "method": kwargs["method"],
         "warm_start_vectors": int(v0.shape[1]),
         "returned_eigenpairs": int(partial.energies.size),
+        "reconstruction_source_commit": os.environ.get("QLINKS_EVIDENCE_SOURCE_COMMIT"),
+        **reconstruction_metadata,
     }
     return partial, solver_metadata
+
+
+def reconstruct_cached_spectrum(
+    hamiltonian: sp.spmatrix | sp.sparray,
+    *,
+    target_energy: float,
+    budget: int,
+    cache_root: Path,
+) -> tuple[PartialSpectrum, dict[str, Any]]:
+    """Reconstruct an original PRIMME checkpoint without an iterative solve.
+
+    Original payloads stay immutable. Reconstructed payloads live under a
+    versioned backend beside them, with the source metadata recorded in full.
+    Poor-quality results are saved for diagnosis, never promoted by this helper.
+    """
+
+    problem = folded_problem_description(hamiltonian, target_energy=target_energy)
+    source = spectral_checkpoint_directory(
+        namespace=CACHE_NAMESPACE,
+        problem=problem,
+        budget=budget,
+        backend="primme",
+        cache_root=cache_root,
+    )
+    checkpoint = load_spectral_checkpoint(
+        source,
+        expected_problem=problem,
+        hamiltonian=hamiltonian,
+        sample_vectors=8,
+    )
+    if checkpoint is None or checkpoint.status is CacheValidationStatus.INCOMPATIBLE:
+        raise RuntimeError(
+            f"no compatible original PRIMME checkpoint for budget {budget}: {source}"
+        )
+    if int(checkpoint.metadata.get("requested_budget", -1)) != budget:
+        raise RuntimeError(f"checkpoint requested budget does not match {budget}: {source}")
+    destination = spectral_checkpoint_directory(
+        namespace=CACHE_NAMESPACE,
+        problem=problem,
+        budget=budget,
+        backend=REFINED_BACKEND,
+        cache_root=cache_root,
+    )
+    existing = load_spectral_checkpoint(
+        destination,
+        expected_problem=problem,
+        hamiltonian=hamiltonian,
+        sample_vectors=8,
+    )
+    if existing is not None and existing.status is not CacheValidationStatus.INCOMPATIBLE:
+        details = existing.metadata.get("solver", {})
+        if details.get("source_checkpoint_metadata") == checkpoint.metadata:
+            print({"reconstruction": "reused", "path": str(destination)}, flush=True)
+            return _checkpoint_to_partial(existing), details
+
+    started = time.perf_counter()
+    partial, reconstruction_details = reconstruct_hamiltonian_ritz_pairs(
+        hamiltonian,
+        checkpoint.eigenvectors,
+        target_energy=target_energy,
+        requested_subspace_size=budget,
+    )
+    details: dict[str, Any] = dict(reconstruction_details)
+    details.update(
+        reconstruction_elapsed_seconds=float(time.perf_counter() - started),
+        reconstruction_source_commit=os.environ.get("QLINKS_EVIDENCE_SOURCE_COMMIT"),
+        source_checkpoint=str(source),
+        source_checkpoint_metadata=checkpoint.metadata,
+        source_maximum_H_residual=float(np.max(checkpoint.residuals, initial=0.0)),
+        source_maximum_folded_residual=checkpoint.metadata.get("maximum_transformed_residual"),
+    )
+    save_spectral_checkpoint(
+        destination,
+        energies=partial.energies,
+        eigenvectors=partial.eigenvectors,
+        residuals=partial.residuals,
+        transformed_residuals=partial.transformed_residuals,
+        problem=problem,
+        backend=REFINED_BACKEND,
+        requested_budget=budget,
+        solver_tolerance=float(checkpoint.metadata["solver_tolerance"]),
+        solver_metadata=details,
+    )
+    print({"reconstruction": "checkpoint_written", "path": str(destination), **details}, flush=True)
+    return partial, details
 
 
 def make_resumable_folded_solver(original_solver: Callable[..., PartialSpectrum]):
@@ -467,11 +497,12 @@ def make_resumable_folded_solver(original_solver: Callable[..., PartialSpectrum]
             }
 
         if write_cache:
+            cache_backend = REFINED_BACKEND if backend == "primme" else backend
             target = spectral_checkpoint_directory(
                 namespace=CACHE_NAMESPACE,
                 problem=problem,
                 budget=budget,
-                backend=backend,
+                backend=cache_backend,
                 cache_root=default_cache_root(),
             )
             metadata = save_spectral_checkpoint(
@@ -481,7 +512,7 @@ def make_resumable_folded_solver(original_solver: Callable[..., PartialSpectrum]
                 residuals=partial.residuals,
                 transformed_residuals=partial.transformed_residuals,
                 problem=problem,
-                backend=backend,
+                backend=cache_backend,
                 requested_budget=budget,
                 solver_tolerance=tolerance,
                 solver_metadata=solver_metadata,
