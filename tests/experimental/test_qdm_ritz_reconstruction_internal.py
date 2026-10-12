@@ -156,6 +156,57 @@ def test_observable_loader_accepts_the_reconstructed_backend(tmp_path):
     assert covered[0][2]["window_state_count"] == 2
 
 
+@pytest.mark.integration
+def test_physical_comparison_marks_the_tiny_parity_irrep_as_a_dense_symmetry_check(
+    tmp_path,
+    monkeypatch,
+):
+    import qdm_parity_backend_worker as worker
+    from qdm_folded_backend_comparison import _load_convergence, compare_frames
+
+    context = SimpleNamespace(
+        h_sector=sp.csr_array([[4.0]]),
+        tower_energy=4,
+        lx=4,
+        sector=SimpleNamespace(sector_dimension=1, labels={"Sy_character": -1}),
+    )
+
+    def build(**kwargs):
+        assert kwargs["sy_character"] == "target"
+        return context
+
+    monkeypatch.setattr(worker, "recover_reference_geometry", lambda: None)
+    monkeypatch.setattr(worker, "build_context", build)
+    # The production worker is process-isolated; restore its cache environment
+    # when exercising it in the same interpreter as the other cache tests.
+    for name, value in {
+        "QLINKS_QDM_FOLDED_BACKEND": "arpack",
+        "QLINKS_EVIDENCE_CACHE_ROOT": str(tmp_path / "cache"),
+        "QLINKS_EVIDENCE_CACHE_RESUME": "1",
+        "QLINKS_EVIDENCE_CACHE_FORCE_RECOMPUTE": "0",
+        "QLINKS_EVIDENCE_CACHE_WRITE": "1",
+    }.items():
+        monkeypatch.setenv(name, value)
+    output = tmp_path / "arpack"
+    frame = worker.compare_backend(
+        "arpack",
+        output=output,
+        cache_root=tmp_path / "cache",
+        repeats=[1],
+        budgets=[16, 32],
+        tolerance=1e-8,
+    )
+    assert frame.comparison_role.eq("dense_symmetry_check").all()
+    assert frame.returned_eigenpairs.eq(1).all()
+    assert frame.Sy.eq(-1).all()
+    loaded = _load_convergence(output, "arpack")
+    assert len(compare_frames(loaded, loaded.copy())) == 2
+    invalid = frame.assign(sector_dimension=875)
+    invalid.to_csv(output / "qdm_checkerboard_L12_spectral_convergence.csv", index=False)
+    with pytest.raises(RuntimeError, match="dense fallback"):
+        _load_convergence(output, "arpack")
+
+
 def test_primme_wrapper_reconstructs_then_reuses_the_versioned_cache(tmp_path, monkeypatch):
     h, vectors = _mixed_pair()
     calls = []
