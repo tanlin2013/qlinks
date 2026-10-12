@@ -203,9 +203,42 @@ tolerance (default 1e-11 instead of 1e-8). All H/Gram acceptance thresholds rema
 ```bash
 QLINKS_EVIDENCE_RUN_ID=qdm_parity_submission_20261009 \
 QLINKS_QDM_PARITY_BUDGETS=4096 \
-nohup scripts/docker/docker_run_qdm_parity_evidence.sh L12-refine \
-  > L12-refine-launch.log 2>&1 < /dev/null &
+QLINKS_DOCKER_DETACH=1 \
+scripts/docker/docker_run_qdm_parity_evidence.sh L12-refine
 ```
+
+For long SSH runs, `QLINKS_DOCKER_DETACH=1` uses Docker's detached lifecycle;
+no `nohup` or shell backgrounding is needed. Launch success does **not** mean
+the numerical job has finished. The named container is retained after exit,
+including its logs, exit code, and OOM flag. The runner prints monitoring commands
+and records its ID in the evidence folder. After reconnecting:
+
+```bash
+QDM_OUTPUT=experimental/data/evidence_jobs/qdm_parity_submission_20261009
+QDM_CONTAINER=$(cat "${QDM_OUTPUT}/L12-refine.container-id")
+docker logs -f "${QDM_CONTAINER}"
+docker inspect --format '{{json .State}}' "${QDM_CONTAINER}"
+```
+
+PRIMME is silent during its iterative solve; a quiet log after `warm_start`
+does not establish completion. Check `.State.Running`, `.State.ExitCode`, and
+`.State.OOMKilled`, then the refinement report. Exit 129 is consistent with
+SIGHUP (128+1), but does not identify who sent the signal. The foreground runner
+can proxy signals to the container, so `nohup` alone is not the preferred SSH
+lifecycle. Foreground remains the default and now prints its Docker exit code.
+Detached runs do not automatically copy Docker logs into the stage `.log` file.
+After exit, save logs and inspect the reports before removing the container:
+
+```bash
+docker logs "${QDM_CONTAINER}" > "${QDM_OUTPUT}/L12-refine.log" 2>&1
+# Only after preserving diagnostics:
+docker rm "${QDM_CONTAINER}"
+```
+
+Use the same run ID and cache for a retry. An interrupted iterative solve has no
+new result checkpoint until it returns; the original reconstructed 4096-vector
+checkpoint remains available. Docker detach prevents terminal-dependent signal
+forwarding; it does not protect against explicit signals or host/daemon failures.
 
 The stage bypasses the completed-row skip only for the explicitly requested
 budgets. It requires a compatible reconstructed checkpoint with every requested
@@ -238,8 +271,8 @@ also use the tighter raw tolerance, for example:
 QLINKS_EVIDENCE_RUN_ID=qdm_parity_submission_20261009 \
 QLINKS_QDM_PARITY_BUDGETS=5120 \
 QLINKS_QDM_PRIMME_WARM_START_VECTORS=4096 \
-nohup scripts/docker/docker_run_qdm_parity_evidence.sh L12-spectrum --tolerance 1e-11 \
-  > L12-spectrum-5120-launch.log 2>&1 < /dev/null &
+QLINKS_DOCKER_DETACH=1 \
+scripts/docker/docker_run_qdm_parity_evidence.sh L12-spectrum --tolerance 1e-11
 ```
 
 The runner now honors the optional warm-start cap override; its normal default
