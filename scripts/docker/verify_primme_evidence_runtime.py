@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 import tempfile
@@ -17,7 +18,7 @@ if str(JOBS) not in sys.path:
     sys.path.insert(0, str(JOBS))
 
 from qdm_resumable_spectrum import make_resumable_folded_solver  # noqa: E402
-from qdm_ritz_reconstruction import REFINED_BACKEND  # noqa: E402
+from qdm_ritz_reconstruction import REFINED_BACKEND, refinement_backend  # noqa: E402
 
 
 def _no_arpack_fallback(*args, **kwargs):
@@ -69,12 +70,40 @@ def main() -> None:
             raise AssertionError(cached.method)
         _assert_spectrum(cached, np.array([0.25, 0.75, 1.25, 1.75]))
 
+        original = next(
+            Path(tmp).glob(f"qdm/checkerboard_large_strip/*/{REFINED_BACKEND}/budget_00000004")
+        )
+        preserved = {path.name: path.read_bytes() for path in original.iterdir()}
+        refined = solver(
+            matrix,
+            target_energy=5.25,
+            subspace_size=4,
+            tolerance=1e-11,
+            refine_existing_budget=True,
+        )
+        _assert_spectrum(refined, np.array([0.25, 0.75, 1.25, 1.75]))
+        destination = next(
+            Path(tmp).glob(
+                f"qdm/checkerboard_large_strip/*/{refinement_backend(1e-11)}/budget_00000004"
+            )
+        )
+        metadata = json.loads((destination / "metadata.json").read_text())
+        if metadata["solver"]["warm_start_vectors"] != 4:
+            raise AssertionError(
+                "same-budget refinement did not consume the complete saved subspace"
+            )
+        if not metadata["solver"]["same_budget_warm_start"]:
+            raise AssertionError("refinement must resume the same budget")
+        if {path.name: path.read_bytes() for path in original.iterdir()} != preserved:
+            raise AssertionError("refinement changed the original full-Ritz checkpoint")
+
         print(
             {
                 "primme_version": getattr(primme, "__version__", "unknown"),
                 "first_method": first.method,
                 "warm_start_method": second.method,
                 "cached_method": cached.method,
+                "refinement_method": refined.method,
                 "maximum_residual": float(max(first.maximum_residual, second.maximum_residual)),
             }
         )

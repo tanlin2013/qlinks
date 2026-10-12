@@ -65,6 +65,7 @@ class PartialSpectrum:
     requested_subspace_size: int | None = None
     transformed_residuals: npt.NDArray[np.float64] | None = None
     peak_rss_gib: float | None = None
+    full_orthogonality_residual: float | None = None
 
     @property
     def min_energy(self) -> float:

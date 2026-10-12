@@ -37,6 +37,7 @@ CONVERGENCE_NAME = "qdm_checkerboard_L12_fixed_O1_spectral_convergence.csv"
 ACCEPTANCE_NAME = "qdm_checkerboard_L12_fixed_O1_spectral_acceptance.json"
 OBSERVABLES_ACCEPTANCE_NAME = "qdm_checkerboard_L12_fixed_O1_observables_acceptance.json"
 RECONSTRUCTION_ACCEPTANCE_NAME = "qdm_checkerboard_L12_fixed_O1_reconstruction_acceptance.json"
+REFINEMENT_ACCEPTANCE_NAME = "qdm_checkerboard_L12_fixed_O1_refinement_acceptance.json"
 DEFAULT_TOLERANCE = 1.0e-8
 DEFAULT_RESIDUAL_TOLERANCE = 1.0e-6
 DEFAULT_MAX_BUDGET = 8192
@@ -251,7 +252,14 @@ def run(
     max_budget: int,
     sy_character: int | str | None = None,
     reconstruct_cached_only: bool = False,
+    refine_cached_budget: bool = False,
 ) -> pd.DataFrame:
+    if reconstruct_cached_only and refine_cached_budget:
+        raise ValueError("select reconstruction or iterative refinement, not both")
+    if refine_cached_budget and not (0 < tolerance < DEFAULT_TOLERANCE):
+        raise ValueError("same-budget refinement requires a tighter positive folded tolerance")
+    special_mode = reconstruct_cached_only or refine_cached_budget
+    special_kind = "refinement" if refine_cached_budget else "reconstruction"
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     recommendation, half_width, estimate = _load_recommendation(
@@ -295,14 +303,14 @@ def run(
                 "existing spectral-convergence rows use a different fixed window; "
                 "start a new evidence run instead of mixing protocols"
             )
-    if reconstruct_cached_only:
+    if special_mode:
         # Reconstructed populations require fresh downstream evidence. Preserve
         # old reports, and fail closed even if this process is interrupted.
         for name in (ACCEPTANCE_NAME, OBSERVABLES_ACCEPTANCE_NAME):
             path = output / name
             if path.is_file():
                 payload = json.loads(path.read_text(encoding="utf-8"))
-                backup = output / "reconstruction_source_reports" / name
+                backup = output / f"{special_kind}_source_reports" / name
                 if not backup.exists():
                     atomic_write_json(backup, payload)
                 payload.update(closed=False, cached_reconstruction_requires_reevaluation=True)
@@ -314,7 +322,7 @@ def run(
             if not frame.empty and "requested_subspace_size" in frame.columns
             else set()
         )
-        if int(budget) in existing_budgets and not reconstruct_cached_only:
+        if int(budget) in existing_budgets and not special_mode:
             continue
 
         spectrum_closed = bool(
@@ -324,11 +332,7 @@ def run(
                 residual_tolerance=residual_tolerance,
             )["closed"]
         )
-        if (
-            spectrum_closed
-            and not reconstruct_cached_only
-            and not _observables_request_extension(output)
-        ):
+        if spectrum_closed and not special_mode and not _observables_request_extension(output):
             break
 
         started = time.perf_counter()
@@ -349,6 +353,7 @@ def run(
                 maxiter=None,
                 ncv_factor=2.05,
                 random_seed=20260921 + int(budget),
+                **({"refine_existing_budget": True} if refine_cached_budget else {}),
             )
         elapsed = time.perf_counter() - started
         coverage = coverage_metrics(
@@ -389,11 +394,15 @@ def run(
                 parity_policy="measured_target",
                 fully_symmetry_resolved=True,
             )
-        if reconstruction_details is not None:
-            archive = output / "reconstruction_source_rows" / f"budget_{int(budget):08d}.json"
+        if special_mode:
+            suffix = f"_tol_{tolerance:.17g}" if refine_cached_budget else ""
+            archive = (
+                output / f"{special_kind}_source_rows" / f"budget_{int(budget):08d}{suffix}.json"
+            )
             if int(budget) in existing_budgets and not archive.exists():
                 previous = frame[frame.requested_subspace_size.astype(int).eq(int(budget))]
                 atomic_write_json(archive, previous.iloc[-1].to_dict())
+        if reconstruction_details is not None:
             row.update(
                 solver_status="reconstructed_saved_subspace",
                 solver_tolerance=float(
@@ -404,6 +413,16 @@ def run(
                 ),
                 reconstruction_source_checkpoint=reconstruction_details["source_checkpoint"],
             )
+        if refine_cached_budget:
+            row.update(
+                solver_status="refined_saved_subspace",
+                reconstruction_orthogonality_residual=(
+                    float(partial.full_orthogonality_residual)
+                    if partial.full_orthogonality_residual is not None
+                    else math.inf
+                ),
+            )
+        if special_mode:
             reconstruction_rows.append(row)
         frame = _merge_row(convergence_path, row)
         atomic_write_json(
@@ -432,19 +451,25 @@ def run(
             parity_policy="measured_target",
             fully_symmetry_resolved=True,
         )
-    if reconstruct_cached_only:
+    if special_mode:
         quality = bool(reconstruction_rows) and all(
             row["partial_maximum_residual"] <= residual_tolerance
             and row["reconstruction_orthogonality_residual"] <= residual_tolerance
             for row in reconstruction_rows
         )
-        acceptance["checks"]["cached_reconstruction_quality"] = quality
+        budget_complete = all(
+            row["returned_eigenpairs"] == row["requested_subspace_size"]
+            for row in reconstruction_rows
+        )
+        if refine_cached_budget:
+            quality = quality and budget_complete
+        acceptance["checks"][f"cached_{special_kind}_quality"] = quality
         acceptance["closed"] = bool(acceptance["closed"] and quality)
         atomic_write_json(output / ACCEPTANCE_NAME, acceptance)
         report = {
             "schema_version": 1,
             "closed": quality,
-            "reconstructed_budgets": [
+            ("refined_budgets" if refine_cached_budget else "reconstructed_budgets"): [
                 row["requested_subspace_size"] for row in reconstruction_rows
             ],
             "residual_acceptance_tolerance": float(residual_tolerance),
@@ -463,23 +488,36 @@ def run(
                 ),
             },
             "spectral_acceptance_closed": acceptance["closed"],
-            "iterative_solver_called": False,
+            "iterative_solver_called": bool(
+                refine_cached_budget
+                and any(
+                    not str(row["spectrum_method"]).startswith("folded_spectrum_cache_")
+                    for row in reconstruction_rows
+                )
+            ),
             "original_checkpoints_preserved": True,
             "rows": reconstruction_rows,
             "claim_boundary": (
-                "Reconstruction quality only; two covered budgets and observable "
+                "Same-budget quality only; two covered budgets and observable "
                 "checks remain required."
             ),
         }
-        atomic_write_json(output / RECONSTRUCTION_ACCEPTANCE_NAME, report)
+        if refine_cached_budget:
+            report["checks"]["refinement_returned_budget_complete"] = budget_complete
+        report_name = (
+            REFINEMENT_ACCEPTANCE_NAME if refine_cached_budget else RECONSTRUCTION_ACCEPTANCE_NAME
+        )
+        atomic_write_json(output / report_name, report)
         if not quality:
             raise RuntimeError(
-                "saved subspace reconstruction still fails H-residual or full-Gram quality; "
-                f"no iterative solve was started. See {output / RECONSTRUCTION_ACCEPTANCE_NAME}"
+                f"saved subspace {special_kind} still fails H-residual, full-Gram, "
+                "or returned-budget quality; "
+                f"iterative_solver_called={report['iterative_solver_called']}. "
+                f"See {output / report_name}"
             )
         print(
             {
-                "reconstruction_quality_closed": True,
+                f"{special_kind}_quality_closed": True,
                 "spectral_acceptance_closed": acceptance["closed"],
             },
             flush=True,
@@ -507,7 +545,9 @@ def main() -> None:
     )
     parser.add_argument("--max-budget", type=int, default=DEFAULT_MAX_BUDGET)
     parser.add_argument("--sy-character", choices=("target",))
-    parser.add_argument("--reconstruct-cached-only", action="store_true")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--reconstruct-cached-only", action="store_true")
+    modes.add_argument("--refine-cached-budget", action="store_true")
     args = parser.parse_args()
     frame = run(
         output_dir=args.output_dir,
@@ -518,6 +558,7 @@ def main() -> None:
         max_budget=args.max_budget,
         sy_character=args.sy_character,
         reconstruct_cached_only=args.reconstruct_cached_only,
+        refine_cached_budget=args.refine_cached_budget,
     )
     print(frame.to_string(index=False), flush=True)
 

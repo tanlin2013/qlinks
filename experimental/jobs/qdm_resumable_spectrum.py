@@ -33,7 +33,12 @@ from evidence_cache import (
     spectral_checkpoint_directory,
 )
 from qdm_checkerboard_large_strip import PartialSpectrum, process_peak_rss_gib
-from qdm_ritz_reconstruction import REFINED_BACKEND, reconstruct_hamiltonian_ritz_pairs
+from qdm_ritz_reconstruction import (
+    REFINED_BACKEND,
+    is_primme_checkpoint_backend,
+    reconstruct_hamiltonian_ritz_pairs,
+    refinement_backend,
+)
 
 CACHE_NAMESPACE = "qdm/checkerboard_large_strip"
 
@@ -109,7 +114,22 @@ def _checkpoint_to_partial(checkpoint) -> PartialSpectrum:
             else np.asarray(checkpoint.transformed_residuals)
         ),
         peak_rss_gib=process_peak_rss_gib(),
+        full_orthogonality_residual=metadata.get("solver", {}).get(
+            "full_orthogonality_frobenius_residual"
+        ),
     )
+
+
+def _full_orthogonality_acceptable(checkpoint) -> bool:
+    try:
+        gram = float(
+            checkpoint.metadata.get("solver", {}).get(
+                "full_orthogonality_frobenius_residual", float("inf")
+            )
+        )
+    except (TypeError, ValueError):
+        return False
+    return bool(np.isfinite(gram) and 0 <= gram <= 1e-6)
 
 
 def _load_exact_checkpoint(
@@ -120,17 +140,27 @@ def _load_exact_checkpoint(
     hamiltonian: sp.spmatrix | sp.sparray,
     preferred_backend: str,
     allow_cross_backend: bool,
+    require_full_orthogonality: bool = False,
 ):
     candidates = iter_spectral_checkpoints(namespace=CACHE_NAMESPACE, problem=problem)
     exact = [path for path in candidates if path.name == f"budget_{int(budget):08d}"]
     if not allow_cross_backend:
-        accepted_backends = {preferred_backend}
-        if preferred_backend == "primme":
-            accepted_backends.add(REFINED_BACKEND)
-        exact = [path for path in exact if path.parent.name in accepted_backends]
+        exact = [
+            path
+            for path in exact
+            if (
+                is_primme_checkpoint_backend(path.parent.name)
+                if preferred_backend == "primme"
+                else path.parent.name == preferred_backend
+            )
+        ]
     exact.sort(
         key=lambda path: (
-            path.parent.name != REFINED_BACKEND,
+            not (
+                preferred_backend == "primme"
+                and path.parent.name != "primme"
+                and is_primme_checkpoint_backend(path.parent.name)
+            ),
             path.parent.name != preferred_backend,
             str(path),
         )
@@ -144,6 +174,8 @@ def _load_exact_checkpoint(
             sample_vectors=8,
         )
         if checkpoint is None or checkpoint.status is not CacheValidationStatus.VALID_FINAL:
+            continue
+        if require_full_orthogonality and not _full_orthogonality_acceptable(checkpoint):
             continue
         if int(checkpoint.metadata.get("requested_budget", -1)) != int(budget):
             continue
@@ -170,10 +202,13 @@ def _load_warm_start(
     budget: int,
     tolerance: float,
     hamiltonian: sp.spmatrix | sp.sparray,
-) -> np.ndarray | None:
+    same_budget: bool = False,
+) -> tuple[np.ndarray | None, dict[str, Any]]:
     max_vectors = int(os.environ.get("QLINKS_QDM_PRIMME_WARM_START_VECTORS", "256"))
+    if same_budget:
+        max_vectors = int(budget)
     if max_vectors <= 0:
-        return None
+        return None, {}
     candidates = iter_spectral_checkpoints(namespace=CACHE_NAMESPACE, problem=problem)
     ranked: list[tuple[int, Any]] = []
     for path in candidates:
@@ -181,7 +216,12 @@ def _load_warm_start(
             previous_budget = int(path.name.removeprefix("budget_"))
         except ValueError:
             continue
-        if previous_budget >= int(budget):
+        eligible = previous_budget == int(budget) if same_budget else previous_budget < int(budget)
+        if not eligible:
+            continue
+        if same_budget and (
+            path.parent.name == "primme" or not is_primme_checkpoint_backend(path.parent.name)
+        ):
             continue
         checkpoint = load_spectral_checkpoint(
             path,
@@ -194,9 +234,16 @@ def _load_warm_start(
             continue
         if checkpoint.energies.size == 0:
             continue
+        if same_budget:
+            if (
+                checkpoint.energies.size != int(budget)
+                or int(checkpoint.metadata.get("requested_budget", -1)) != int(budget)
+                or not _full_orthogonality_acceptable(checkpoint)
+            ):
+                continue
         ranked.append((previous_budget, checkpoint))
     if not ranked:
-        return None
+        return None, {}
     _, checkpoint = max(
         ranked,
         key=lambda item: (
@@ -219,7 +266,11 @@ def _load_warm_start(
         },
         flush=True,
     )
-    return np.asarray(checkpoint.eigenvectors[:, take])
+    return np.asarray(checkpoint.eigenvectors[:, take]), {
+        "warm_start_source_checkpoint": str(checkpoint.directory),
+        "warm_start_source_metadata": checkpoint.metadata,
+        "same_budget_warm_start": bool(same_budget),
+    }
 
 
 def _primme_folded_spectrum(
@@ -232,6 +283,7 @@ def _primme_folded_spectrum(
     random_seed: int,
     cluster_tolerance: float | None,
     warm_start: np.ndarray | None,
+    max_basis_size: int | None = None,
 ) -> tuple[PartialSpectrum, dict[str, Any]]:
     import primme
 
@@ -275,6 +327,8 @@ def _primme_folded_spectrum(
         "return_stats": True,
         "raise_for_unconverged": False,
     }
+    if max_basis_size is not None:
+        kwargs["ncv"] = int(max_basis_size)
     if maxiter is not None:
         kwargs["maxiter"] = int(maxiter)
     max_block_size = int(os.environ.get("QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE", "0"))
@@ -421,13 +475,18 @@ def make_resumable_folded_solver(original_solver: Callable[..., PartialSpectrum]
         ncv_factor: float = 2.05,
         random_seed: int = 20260811,
         cluster_tolerance: float | None = None,
+        refine_existing_budget: bool = False,
     ) -> PartialSpectrum:
         requested_backend = _requested_backend()
         backend = _backend()
         h = sp.csr_array(hamiltonian, dtype=np.complex128)
         n = int(h.shape[0])
+        if refine_existing_budget and backend != "primme":
+            raise ValueError("same-budget refinement requires the PRIMME backend")
         budget = min(int(subspace_size), n - 2)
         if budget <= 0:
+            if refine_existing_budget:
+                raise ValueError("same-budget refinement requires a nontrivial sector")
             return original_solver(
                 h,
                 target_energy=target_energy,
@@ -451,22 +510,30 @@ def make_resumable_folded_solver(original_solver: Callable[..., PartialSpectrum]
                 hamiltonian=h,
                 preferred_backend=backend,
                 allow_cross_backend=requested_backend == "auto",
+                require_full_orthogonality=refine_existing_budget,
             )
             if checkpoint is not None:
                 return _checkpoint_to_partial(checkpoint)
 
         solver_metadata: dict[str, Any]
         if backend == "primme":
-            warm_start = (
+            warm_start, warm_metadata = (
                 _load_warm_start(
                     problem=problem,
                     budget=budget,
                     tolerance=tolerance,
                     hamiltonian=h,
+                    same_budget=refine_existing_budget,
                 )
                 if resume and not force
-                else None
+                else (None, {})
             )
+            if refine_existing_budget and warm_start is None:
+                raise RuntimeError(
+                    "no compatible full, orthonormal reconstructed checkpoint "
+                    f"for budget {budget}; "
+                    "no cold iterative solve was started"
+                )
             partial, solver_metadata = _primme_folded_spectrum(
                 h,
                 target_energy=target_energy,
@@ -476,7 +543,13 @@ def make_resumable_folded_solver(original_solver: Callable[..., PartialSpectrum]
                 random_seed=random_seed,
                 cluster_tolerance=cluster_tolerance,
                 warm_start=warm_start,
+                max_basis_size=(
+                    min(n, max(budget + 2, int(np.ceil(ncv_factor * budget))))
+                    if refine_existing_budget
+                    else None
+                ),
             )
+            solver_metadata.update(warm_metadata)
         else:
             started = time.perf_counter()
             partial = original_solver(
@@ -497,7 +570,13 @@ def make_resumable_folded_solver(original_solver: Callable[..., PartialSpectrum]
             }
 
         if write_cache:
-            cache_backend = REFINED_BACKEND if backend == "primme" else backend
+            cache_backend = (
+                refinement_backend(tolerance)
+                if refine_existing_budget
+                else REFINED_BACKEND
+                if backend == "primme"
+                else backend
+            )
             target = spectral_checkpoint_directory(
                 namespace=CACHE_NAMESPACE,
                 problem=problem,

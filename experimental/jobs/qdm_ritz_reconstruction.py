@@ -16,6 +16,26 @@ from qdm_checkerboard_large_strip import PartialSpectrum, process_peak_rss_gib
 
 RECONSTRUCTION = "full_subspace_generalized_rayleigh_ritz_v1"
 REFINED_BACKEND = "primme_full_ritz_v1"
+REFINEMENT_PREFIX = "primme_full_ritz_refinement_v1_"
+
+
+def refinement_backend(tolerance: float) -> str:
+    """Keep distinct raw tolerances in distinct refinement checkpoints."""
+    if not np.isfinite(tolerance) or tolerance <= 0:
+        raise ValueError("refinement tolerance must be finite and positive")
+    return f"{REFINEMENT_PREFIX}{float(tolerance):.17g}"
+
+
+def is_primme_checkpoint_backend(name: str) -> bool:
+    if name in {"primme", REFINED_BACKEND}:
+        return True
+    if not name.startswith(REFINEMENT_PREFIX):
+        return False
+    try:
+        tolerance = float(name.removeprefix(REFINEMENT_PREFIX))
+        return name == refinement_backend(tolerance)
+    except ValueError:
+        return False
 
 
 def reconstruct_hamiltonian_ritz_pairs(
@@ -109,6 +129,7 @@ def reconstruct_hamiltonian_ritz_pairs(
         requested_subspace_size=int(requested_subspace_size),
         transformed_residuals=transformed,
         peak_rss_gib=process_peak_rss_gib(),
+        full_orthogonality_residual=orthogonality,
     )
     return partial, {
         "reconstruction": RECONSTRUCTION,

@@ -26,7 +26,9 @@ from qdm_resumable_spectrum import (  # noqa: E402
 )
 from qdm_ritz_reconstruction import (  # noqa: E402
     REFINED_BACKEND,
+    is_primme_checkpoint_backend,
     reconstruct_hamiltonian_ritz_pairs,
+    refinement_backend,
 )
 
 
@@ -234,10 +236,115 @@ def test_primme_wrapper_reconstructs_then_reuses_the_versioned_cache(tmp_path, m
     assert REFINED_BACKEND in second.method
 
 
+def test_same_budget_refinement_uses_all_vectors_and_preserves_both_sources(tmp_path, monkeypatch):
+    h, vectors = _mixed_pair()
+    h = h.astype(np.complex128)
+    vectors[2, 0] = 1e-4  # A sane Gram matrix with genuine off-subspace error.
+    raw = _save_original(tmp_path, h, vectors)
+    reconstructed, _ = reconstruct_cached_spectrum(
+        h, target_energy=12, budget=2, cache_root=tmp_path
+    )
+    assert reconstructed.maximum_residual > 1e-6
+    old = raw.parent.parent / REFINED_BACKEND / raw.name
+    preserved = {path: path.read_bytes() for root in (raw, old) for path in root.iterdir()}
+    calls = []
+
+    def fake_eigsh(operator, **kwargs):
+        calls.append(kwargs)
+        assert kwargs["v0"].shape == (6, 2)
+        assert kwargs["tol"] == 1e-11
+        assert kwargs["ncv"] >= 4
+        assert "lock" not in kwargs
+        return np.array([0.04, 0.200004**2]), np.eye(6, dtype=complex)[:, :2], {}
+
+    monkeypatch.setitem(
+        sys.modules,
+        "primme",
+        SimpleNamespace(
+            eigsh=fake_eigsh,
+            __spec__=importlib.machinery.ModuleSpec("primme", loader=None),
+        ),
+    )
+    for name, value in {
+        "QLINKS_QDM_FOLDED_BACKEND": "primme",
+        "QLINKS_EVIDENCE_CACHE_ROOT": str(tmp_path),
+        "QLINKS_EVIDENCE_CACHE_RESUME": "1",
+        "QLINKS_EVIDENCE_CACHE_FORCE_RECOMPUTE": "0",
+        "QLINKS_EVIDENCE_CACHE_WRITE": "1",
+        "QLINKS_QDM_PRIMME_WARM_START_VECTORS": "1",
+    }.items():
+        monkeypatch.setenv(name, value)
+    solver = make_resumable_folded_solver(
+        lambda *args, **kwargs: pytest.fail("cold ARPACK fallback")
+    )
+    refined = solver(
+        h, target_energy=12, subspace_size=2, tolerance=1e-11, refine_existing_budget=True
+    )
+    assert refined.maximum_residual < 1e-12
+    assert refined.full_orthogonality_residual < 1e-12
+    assert all(path.read_bytes() == content for path, content in preserved.items())
+    destination = raw.parent.parent / refinement_backend(1e-11) / raw.name
+    metadata = json.loads((destination / "metadata.json").read_text())
+    assert metadata["solver"]["warm_start_vectors"] == 2  # Overrides the ordinary cap of one.
+    assert metadata["solver"]["same_budget_warm_start"]
+    cached = solver(
+        h, target_energy=12, subspace_size=2, tolerance=1e-11, refine_existing_budget=True
+    )
+    assert len(calls) == 1
+    assert refinement_backend(1e-11) in cached.method
+    assert cached.full_orthogonality_residual < 1e-12
+    assert is_primme_checkpoint_backend(metadata["backend"])
+    assert refinement_backend(1e-11) != refinement_backend(1.5e-11)
+
+
+@pytest.mark.parametrize("fault", ["missing", "bad_gram", "incomplete", "wrong_problem"])
+def test_refinement_without_a_suitable_full_checkpoint_never_starts_a_cold_solve(
+    tmp_path,
+    monkeypatch,
+    fault,
+):
+    h, vectors = _mixed_pair()
+    if fault != "missing":
+        if fault == "incomplete":
+            vectors = vectors[:, :1]
+        raw = _save_original(tmp_path, h, vectors)
+        reconstruct_cached_spectrum(h, target_energy=12, budget=2, cache_root=tmp_path)
+        if fault == "bad_gram":
+            path = raw.parent.parent / REFINED_BACKEND / raw.name / "metadata.json"
+            metadata = json.loads(path.read_text())
+            metadata["solver"]["full_orthogonality_frobenius_residual"] = 1.0
+            path.write_text(json.dumps(metadata))
+        if fault == "wrong_problem":
+            h.data[0] += 0.1
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("no iterative solve may start without the full compatible checkpoint")
+
+    monkeypatch.setitem(
+        sys.modules,
+        "primme",
+        SimpleNamespace(
+            eigsh=forbidden,
+            __spec__=importlib.machinery.ModuleSpec("primme", loader=None),
+        ),
+    )
+    for name, value in {
+        "QLINKS_QDM_FOLDED_BACKEND": "primme",
+        "QLINKS_EVIDENCE_CACHE_ROOT": str(tmp_path),
+        "QLINKS_EVIDENCE_CACHE_RESUME": "1",
+        "QLINKS_EVIDENCE_CACHE_FORCE_RECOMPUTE": "0",
+    }.items():
+        monkeypatch.setenv(name, value)
+    solver = make_resumable_folded_solver(forbidden)
+    with pytest.raises(RuntimeError, match="no cold iterative solve"):
+        solver(h, target_energy=12, subspace_size=2, tolerance=1e-11, refine_existing_budget=True)
+
+
 @pytest.mark.integration
+@pytest.mark.parametrize("refinement", [False, True])
 @pytest.mark.parametrize("missing_partner", [False, True])
 def test_recovery_stage_reports_quality_without_closing_one_budget(
-    tmp_path, monkeypatch, missing_partner
+    tmp_path, monkeypatch, missing_partner, refinement
 ):
     import qdm_sec7_fixed_o1_l12_spectrum as stage
     from qdm_parity_protocol import PROTOCOL
@@ -273,7 +380,29 @@ def test_recovery_stage_reports_quality_without_closing_one_budget(
     def forbidden_solver(*args, **kwargs):
         raise AssertionError("recovery must not start an iterative solver")
 
-    monkeypatch.setattr(stage, "make_resumable_folded_solver", lambda original: forbidden_solver)
+    calls = []
+
+    def refined_solver(*args, **kwargs):
+        # This test isolates workflow state; numerical refinement is tested
+        # separately on the six-dimensional leaking subspace above.
+        assert kwargs["refine_existing_budget"]
+        calls.append(kwargs)
+        count = kwargs["subspace_size"]
+        return SimpleNamespace(
+            energies=np.linspace(11.4, 12.6, count),
+            residuals=np.full(count, 0.2 if missing_partner else 1e-12),
+            method="folded_spectrum_primme_full_ritz",
+            full_orthogonality_residual=1e-13,
+            transformed_residuals=np.full(count, 1e-13),
+            peak_rss_gib=0.1,
+            maximum_residual=0.2 if missing_partner else 1e-12,
+        )
+
+    monkeypatch.setattr(
+        stage,
+        "make_resumable_folded_solver",
+        lambda original: refined_solver if refinement else forbidden_solver,
+    )
     # Preserve the failed cluster reconstruction row when replacing its diagnostics.
     import pandas as pd
 
@@ -294,25 +423,32 @@ def test_recovery_stage_reports_quality_without_closing_one_budget(
         output_dir=output,
         cache_root=cache,
         budgets_raw="768",
-        tolerance=1e-8,
+        tolerance=1e-11 if refinement else 1e-8,
         residual_tolerance=1e-6,
         max_budget=8192,
         sy_character="target",
-        reconstruct_cached_only=True,
+        reconstruct_cached_only=not refinement,
+        refine_cached_budget=refinement,
     )
     if missing_partner:
         with pytest.raises(RuntimeError, match="still fails H-residual"):
             stage.run(**kwargs)
     else:
         stage.run(**kwargs)
-    report = json.loads((output / stage.RECONSTRUCTION_ACCEPTANCE_NAME).read_text())
+    report_name = (
+        stage.REFINEMENT_ACCEPTANCE_NAME if refinement else stage.RECONSTRUCTION_ACCEPTANCE_NAME
+    )
+    report = json.loads((output / report_name).read_text())
     assert report["closed"] is not missing_partner
     assert report["spectral_acceptance_closed"] is False
-    assert report["iterative_solver_called"] is False
+    assert report["iterative_solver_called"] is refinement
+    assert len(calls) == (1 if refinement else 0)  # Existing CSV row never blocks refinement.
     stale = json.loads((output / stage.OBSERVABLES_ACCEPTANCE_NAME).read_text())
     assert stale["closed"] is False
-    original_report = output / "reconstruction_source_reports" / stage.OBSERVABLES_ACCEPTANCE_NAME
+    kind = "refinement" if refinement else "reconstruction"
+    original_report = output / f"{kind}_source_reports" / stage.OBSERVABLES_ACCEPTANCE_NAME
     assert json.loads(original_report.read_text())["closed"] is True
     assert source.exists()
-    archived = json.loads((output / "reconstruction_source_rows/budget_00000768.json").read_text())
+    archived_path = next((output / f"{kind}_source_rows").glob("budget_00000768*.json"))
+    archived = json.loads(archived_path.read_text())
     assert archived["window_maximum_residual"] == 0.2

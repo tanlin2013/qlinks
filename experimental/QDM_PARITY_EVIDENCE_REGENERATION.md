@@ -192,6 +192,60 @@ Only after examining the recovered residuals and count should a new budget be
 chosen (for example 5120 if coverage remains adequate), followed by observables,
 sequence, and the submission gate. No residual tolerance or window is relaxed.
 
+### Iterative refinement of a saved budget
+
+When reconstruction passes full-Gram quality but H residuals remain too large,
+rotation within the saved span cannot remove the remaining off-subspace error.
+`L12-refine` explicitly revisits the same budget with a tighter raw folded
+tolerance (default 1e-11 instead of 1e-8). All H/Gram acceptance thresholds remain
+1e-6 and the prescribed windows remain unchanged.
+
+```bash
+QLINKS_EVIDENCE_RUN_ID=qdm_parity_submission_20261009 \
+QLINKS_QDM_PARITY_BUDGETS=4096 \
+nohup scripts/docker/docker_run_qdm_parity_evidence.sh L12-refine \
+  > L12-refine-launch.log 2>&1 < /dev/null &
+```
+
+The stage bypasses the completed-row skip only for the explicitly requested
+budgets. It requires a compatible reconstructed checkpoint with every requested
+vector and a recorded full-Gram error at most 1e-6. It uses **all 4096 vectors**
+as PRIMME initial guesses, rather than the ordinary 512-vector cap. These are
+guesses, not locked approximate eigenvectors. The PRIMME maximum basis is
+explicitly sized to accommodate the full initial subspace (2.05 times the budget,
+capped by the sector dimension). Missing/incompatible/incomplete or poorly
+orthogonal checkpoints fail before any cold iterative solve starts.
+
+Raw `primme` and reconstructed `primme_full_ritz_v1` checkpoints stay untouched.
+Refinement results use a separate backend keyed by the exact raw tolerance;
+distinct tolerances cannot overwrite each other's candidates. Source checkpoint
+metadata and full warm-start vector count are recorded. Existing spectral and
+observable reports are invalidated, and replaced CSV rows are archived. Repeated
+refinement at the same tolerance can update that refinement candidate or reuse
+it if its stored tolerance, H residuals, and Gram quality already pass.
+
+Inspect `qdm_checkerboard_L12_fixed_O1_refinement_acceptance.json` afterward.
+Passing requires all requested eigenpairs to be returned, all H residuals at
+most 1e-6, and complete Gram error at most 1e-6. A successful same-budget
+refinement is one budget point; it does not supply the second independent
+coverage/count check. Tighter folded tolerance is not a guarantee of physical-H
+acceptance, and production refinement runtime has not been measured.
+
+After inspecting a successful 4096 refinement, a subsequent new budget must
+also use the tighter raw tolerance, for example:
+
+```bash
+QLINKS_EVIDENCE_RUN_ID=qdm_parity_submission_20261009 \
+QLINKS_QDM_PARITY_BUDGETS=5120 \
+QLINKS_QDM_PRIMME_WARM_START_VECTORS=4096 \
+nohup scripts/docker/docker_run_qdm_parity_evidence.sh L12-spectrum --tolerance 1e-11 \
+  > L12-spectrum-5120-launch.log 2>&1 < /dev/null &
+```
+
+The runner now honors the optional warm-start cap override; its normal default
+remains 512. Use a new budget only after evaluating the refinement report and
+its coverage/count. Observable, sequence, and submission gates remain mandatory.
+
 The canonical stage regenerates the 12x4 Sy=-1 trace rather than importing
 translation-union canonical means. It compares independent 8/16-sample scans
 and a same-seed 41/81-point beta-grid refinement on [0,0.25]. Its recorded

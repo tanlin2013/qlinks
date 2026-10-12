@@ -32,7 +32,7 @@ from qdm_parity_protocol import (
     window_controls_stable,
 )
 from qdm_resumable_spectrum import folded_problem_description
-from qdm_ritz_reconstruction import REFINED_BACKEND
+from qdm_ritz_reconstruction import is_primme_checkpoint_backend
 from qdm_sec7_fixed_o1 import (
     DARK_TOL,
     ENERGY_BLOCK_TOL,
@@ -229,7 +229,7 @@ def _load_covered_checkpoints(
         )
         if checkpoint is None or checkpoint.status is not CacheValidationStatus.VALID_FINAL:
             continue
-        if str(checkpoint.metadata.get("backend", "")).lower() not in {"primme", REFINED_BACKEND}:
+        if not is_primme_checkpoint_backend(str(checkpoint.metadata.get("backend", "")).lower()):
             continue
         tolerance = float(checkpoint.metadata.get("solver_tolerance", 1.0e-8))
         coverage = coverage_metrics(
