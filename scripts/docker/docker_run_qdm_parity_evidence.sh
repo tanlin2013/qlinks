@@ -16,7 +16,7 @@ RUN_ID="${QLINKS_EVIDENCE_RUN_ID:-qdm_parity_evidence_$(date -u +%Y%m%dT%H%M%SZ)
 [[ "${RUN_ID}" =~ ^[A-Za-z0-9_-]+$ ]] || { echo "invalid run id" >&2; exit 2; }
 DATA_DIR="${QLINKS_DATA_DIR:-${REPO_ROOT}/experimental/data}"
 case "${STAGE}" in
-    L12-spectrum|L12-reconstruct|L12-observables|sequence)
+    L12-spectrum|L12-reconstruct|L12-refine|L12-observables|sequence)
         PROTOCOL_FILE="${DATA_DIR}/evidence_jobs/${RUN_ID}/qdm_checkerboard_fixed_O1_window_recommendation.json"
         if [[ ! -f "${PROTOCOL_FILE}" ]]; then
             echo "Missing parity window protocol: ${PROTOCOL_FILE}" >&2
@@ -40,7 +40,7 @@ case "${STAGE}" in
     L12-canonical|L12-matrix-preflight)
         MEMORY="${QLINKS_DOCKER_MEMORY_LIMIT:-128g}"
         ;;
-    L12-spectrum|L12-reconstruct)
+    L12-spectrum|L12-reconstruct|L12-refine)
         MEMORY="${QLINKS_DOCKER_MEMORY_LIMIT:-128g}"
         IMAGE="${QLINKS_DOCKER_IMAGE:-tanlin2013/qlinks:notebook-primme}"
         COMMAND=(python experimental/jobs/qdm_sec7_fixed_o1_l12_spectrum.py
@@ -49,6 +49,9 @@ case "${STAGE}" in
           --tolerance 1e-8 --residual-tolerance 1e-6 --max-budget 8192)
         if [[ "${STAGE}" == "L12-reconstruct" ]]; then
             COMMAND+=(--reconstruct-cached-only --budgets "${QLINKS_QDM_PARITY_BUDGETS:-4096}")
+        elif [[ "${STAGE}" == "L12-refine" ]]; then
+            COMMAND+=(--refine-cached-budget --budgets "${QLINKS_QDM_PARITY_BUDGETS:-4096}"
+              --tolerance 1e-11)
         fi
         ;;
     L12-observables)
@@ -71,7 +74,7 @@ DOCKER_COMMAND=(docker run --rm --init
   --env PYTHONPATH=/workspace/qlinks:/workspace/qlinks/experimental/jobs:/workspace/qlinks/experimental/notebooks
   --env QLINKS_EVIDENCE_RUN_ID="${RUN_ID}" --env QLINKS_EVIDENCE_SOURCE_COMMIT="${COMMIT}"
   --env QLINKS_EVIDENCE_CACHE_ROOT="${CACHE}" --env QLINKS_QDM_FOLDED_BACKEND=primme
-  --env QLINKS_QDM_PRIMME_WARM_START_VECTORS=512
+  --env QLINKS_QDM_PRIMME_WARM_START_VECTORS="${QLINKS_QDM_PRIMME_WARM_START_VECTORS:-512}"
   --env OMP_NUM_THREADS="${THREADS}" --env OPENBLAS_NUM_THREADS="${THREADS}"
   --env MKL_NUM_THREADS="${THREADS}"
   --volume "${REPO_ROOT}:/workspace/qlinks:ro"

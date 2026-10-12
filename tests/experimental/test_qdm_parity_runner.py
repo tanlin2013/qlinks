@@ -25,7 +25,8 @@ def _run(stage, data_dir, *, run_id=None):
 
 
 @pytest.mark.parametrize(
-    "stage", ["L12-spectrum", "L12-reconstruct", "L12-canonical", "L12-observables", "gate"]
+    "stage",
+    ["L12-spectrum", "L12-reconstruct", "L12-refine", "L12-canonical", "L12-observables", "gate"],
 )
 def test_followup_without_run_id_fails_before_creating_a_folder(tmp_path, stage):
     data = tmp_path / "data"
@@ -79,3 +80,14 @@ def test_reconstruction_runner_requests_only_the_saved_4096_budget(tmp_path):
     assert "--reconstruct-cached-only --budgets 4096" in result.stdout
     assert "qdm_sec7_fixed_o1_l12_spectrum.py" in result.stdout
     assert "L12-reconstruct.log" not in result.stdout  # Dry run starts no process.
+
+
+def test_refinement_runner_tightens_only_the_folded_tolerance(tmp_path):
+    data = tmp_path / "data"
+    protocol = data / "evidence_jobs" / "existing_run" / PROTOCOL_NAME
+    protocol.parent.mkdir(parents=True)
+    protocol.write_text("{}")
+    result = _run("L12-refine", data, run_id="existing_run")
+    assert result.returncode == 0
+    assert "--refine-cached-budget --budgets 4096 --tolerance 1e-11" in result.stdout
+    assert "--residual-tolerance 1e-6" in result.stdout
