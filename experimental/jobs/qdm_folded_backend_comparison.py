@@ -142,7 +142,7 @@ def _load_convergence(data_dir: Path, backend: str) -> pd.DataFrame:
             "folded_spectrum_lanczos",
             "folded_spectrum_lanczos_partial_arpack",
         },
-        "primme": {"folded_spectrum_primme"},
+        "primme": {"folded_spectrum_primme", "folded_spectrum_primme_full_ritz"},
     }
     methods = set(frame["spectral_method"].astype(str))
     unexpected = methods - allowed_methods[backend]
