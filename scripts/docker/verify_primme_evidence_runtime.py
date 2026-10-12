@@ -17,6 +17,7 @@ if str(JOBS) not in sys.path:
     sys.path.insert(0, str(JOBS))
 
 from qdm_resumable_spectrum import make_resumable_folded_solver  # noqa: E402
+from qdm_ritz_reconstruction import REFINED_BACKEND  # noqa: E402
 
 
 def _no_arpack_fallback(*args, **kwargs):
@@ -29,6 +30,10 @@ def _assert_spectrum(result, expected_distances: np.ndarray) -> None:
     np.testing.assert_allclose(distances, np.sort(expected_distances), atol=1.0e-6)
     if result.maximum_residual > 1.0e-6:
         raise AssertionError(f"physical residual too large: {result.maximum_residual:.3e}")
+    vectors = np.asarray(result.eigenvectors)
+    gram_error = np.linalg.norm(vectors.conj().T @ vectors - np.eye(vectors.shape[1]), ord=2)
+    if gram_error > 1.0e-6:
+        raise AssertionError(f"full Gram residual too large: {gram_error:.3e}")
 
 
 def main() -> None:
@@ -47,20 +52,20 @@ def main() -> None:
 
         # The first solve exercises PRIMME's single-vector initial subspace.
         first = solver(matrix, target_energy=5.25, subspace_size=3, tolerance=1.0e-8)
-        if first.method != "folded_spectrum_primme":
+        if first.method != "folded_spectrum_primme_full_ritz":
             raise AssertionError(first.method)
         _assert_spectrum(first, np.array([0.25, 0.75, 1.25]))
 
         # The larger budget must consume the validated lower-budget checkpoint
         # as a matrix-valued warm start and still recover the correct spectrum.
         second = solver(matrix, target_energy=5.25, subspace_size=4, tolerance=1.0e-8)
-        if second.method != "folded_spectrum_primme":
+        if second.method != "folded_spectrum_primme_full_ritz":
             raise AssertionError(second.method)
         _assert_spectrum(second, np.array([0.25, 0.75, 1.25, 1.75]))
 
         # A repeated request should be served from the stable evidence cache.
         cached = solver(matrix, target_energy=5.25, subspace_size=4, tolerance=1.0e-8)
-        if cached.method != "folded_spectrum_cache_primme":
+        if cached.method != f"folded_spectrum_cache_{REFINED_BACKEND}":
             raise AssertionError(cached.method)
         _assert_spectrum(cached, np.array([0.25, 0.75, 1.25, 1.75]))
 
