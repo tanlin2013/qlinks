@@ -13,12 +13,14 @@ RUNNER = ROOT / "scripts/docker/docker_run_qdm_parity_evidence.sh"
 PROTOCOL_NAME = "qdm_checkerboard_fixed_O1_window_recommendation.json"
 
 
-def _run(stage, data_dir, *, run_id=None):
+def _run(stage, data_dir, *, run_id=None, extra_env=None):
     env = os.environ.copy()
     env.pop("QLINKS_EVIDENCE_RUN_ID", None)
+    env.pop("QLINKS_DOCKER_DETACH", None)
     env.update(QLINKS_DATA_DIR=str(data_dir), QLINKS_DOCKER_DRY_RUN="1")
     if run_id is not None:
         env["QLINKS_EVIDENCE_RUN_ID"] = run_id
+    env.update(extra_env or {})
     return subprocess.run(
         ["bash", str(RUNNER), stage], cwd=ROOT, env=env, capture_output=True, text=True
     )
@@ -91,3 +93,63 @@ def test_refinement_runner_tightens_only_the_folded_tolerance(tmp_path):
     assert result.returncode == 0
     assert "--refine-cached-budget --budgets 4096 --tolerance 1e-11" in result.stdout
     assert "--residual-tolerance 1e-6" in result.stdout
+
+
+@pytest.mark.parametrize("mode", ["detached", "launch_failure", "signal_exit"])
+def test_container_lifecycle_retains_diagnostics_and_reports_failure(tmp_path, mode):
+    data = tmp_path / "data"
+    output = data / "evidence_jobs" / "existing_run"
+    output.mkdir(parents=True)
+    (output / PROTOCOL_NAME).write_text("{}")
+    # The launcher is exercised against an executable Docker stand-in; no
+    # numerical job or real container is needed to test lifecycle semantics.
+    docker = tmp_path / "docker"
+    docker.write_text(
+        '#!/bin/bash\nprintf "%s\\n" "$@" > "$FAKE_DOCKER_ARGS"\n'
+        'printf "fake-container-id\\n"\nexit "$FAKE_DOCKER_EXIT"\n'
+    )
+    docker.chmod(0o755)
+    args_path = tmp_path / "docker-args"
+    id_file = output / "L12-refine.container-id"
+    id_file.write_text("previous-container-id\n")
+    exit_code = {"detached": 0, "launch_failure": 125, "signal_exit": 129}[mode]
+    result = _run(
+        "L12-refine",
+        data,
+        run_id="existing_run",
+        extra_env={
+            "PATH": f"{tmp_path}{os.pathsep}{os.environ['PATH']}",
+            "QLINKS_DOCKER_DRY_RUN": "0",
+            "QLINKS_DOCKER_DETACH": "0" if mode == "signal_exit" else "1",
+            "FAKE_DOCKER_ARGS": str(args_path),
+            "FAKE_DOCKER_EXIT": str(exit_code),
+        },
+    )
+    assert result.returncode == exit_code
+    args = args_path.read_text().splitlines()
+    assert "--refine-cached-budget" in args
+    assert args[args.index("--cache-root") + 1].endswith("qdm_target_parity_v1")
+    if mode == "signal_exit":
+        assert "--rm" in args and "--detach" not in args
+        assert "Container exit code: 129" in result.stdout
+        assert "Container exit code: 129" in (output / "L12-refine.log").read_text()
+    else:
+        assert "--detach" in args and "--rm" not in args
+        assert "--name" in args
+    if mode == "detached":
+        assert id_file.read_text() == "fake-container-id\n"
+        assert "numerical completion and acceptance are not yet established" in result.stdout
+        assert "docker logs -f fake-container-id" in result.stdout
+        assert "{{json .State}}" in result.stdout
+        assert not (output / "L12-refine.log").exists()  # Read via Docker until explicitly saved.
+    else:
+        assert id_file.read_text() == "previous-container-id\n"
+        assert "Launch succeeded" not in result.stdout
+
+
+def test_invalid_detach_mode_fails_before_creating_output(tmp_path):
+    data = tmp_path / "data"
+    result = _run("exact", data, extra_env={"QLINKS_DOCKER_DETACH": "yes"})
+    assert result.returncode == 2
+    assert "QLINKS_DOCKER_DETACH must be 0 or 1" in result.stderr
+    assert not data.exists()

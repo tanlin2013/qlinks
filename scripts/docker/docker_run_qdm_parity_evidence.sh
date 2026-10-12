@@ -14,6 +14,10 @@ if [[ "${STAGE}" != "exact" && -z "${QLINKS_EVIDENCE_RUN_ID:-}" ]]; then
 fi
 RUN_ID="${QLINKS_EVIDENCE_RUN_ID:-qdm_parity_evidence_$(date -u +%Y%m%dT%H%M%SZ)}"
 [[ "${RUN_ID}" =~ ^[A-Za-z0-9_-]+$ ]] || { echo "invalid run id" >&2; exit 2; }
+DETACH="${QLINKS_DOCKER_DETACH:-0}"
+[[ "${DETACH}" == "0" || "${DETACH}" == "1" ]] || {
+    echo "QLINKS_DOCKER_DETACH must be 0 or 1" >&2; exit 2;
+}
 DATA_DIR="${QLINKS_DATA_DIR:-${REPO_ROOT}/experimental/data}"
 case "${STAGE}" in
     L12-spectrum|L12-reconstruct|L12-refine|L12-observables|sequence)
@@ -68,7 +72,13 @@ case "${STAGE}" in
     *) echo "unknown stage: ${STAGE}" >&2; exit 2 ;;
 esac
 COMMIT="$(git rev-parse HEAD)"
-DOCKER_COMMAND=(docker run --rm --init
+LIFECYCLE=(--rm)
+if [[ "${DETACH}" == "1" ]]; then
+    CONTAINER_NAME="qlinks-parity-${RUN_ID}-${STAGE}-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+    # Retain an exited container so its logs, exit code and OOM flag survive.
+    LIFECYCLE=(--detach --name "${CONTAINER_NAME}")
+fi
+DOCKER_COMMAND=(docker run "${LIFECYCLE[@]}" --init
   --cpus "${QLINKS_DOCKER_CPUS:-${THREADS}}" --memory "${MEMORY}"
   --env MPLBACKEND=Agg --env PYTHONUNBUFFERED=1
   --env PYTHONPATH=/workspace/qlinks:/workspace/qlinks/experimental/jobs:/workspace/qlinks/experimental/notebooks
@@ -85,6 +95,26 @@ printf 'Reuse in every SSH session: export QLINKS_EVIDENCE_RUN_ID=%q\n' "${RUN_I
 if [[ "${QLINKS_DOCKER_DRY_RUN:-0}" == "1" ]]; then
     printf '%q ' "${DOCKER_COMMAND[@]}"
     printf '\n'
+elif [[ "${DETACH}" == "1" ]]; then
+    CONTAINER_ID="$("${DOCKER_COMMAND[@]}")"
+    ID_FILE="${DATA_DIR}/evidence_jobs/${RUN_ID}/${STAGE}.container-id"
+    printf '%s\n' "${CONTAINER_ID}" > "${ID_FILE}.$$.tmp"
+    mv -- "${ID_FILE}.$$.tmp" "${ID_FILE}"
+    printf 'Container: %s\nContainer id file: %s\n' "${CONTAINER_NAME}" "${ID_FILE}"
+    echo "Launch succeeded; numerical completion and acceptance are not yet established."
+    printf 'Follow logs: docker logs -f %q\n' "${CONTAINER_ID}"
+    printf "Inspect status: docker inspect --format '{{json .State}}' %q\n" "${CONTAINER_ID}"
+    printf 'Save logs: docker logs %q > %q 2>&1\n' "${CONTAINER_ID}" \
+      "${DATA_DIR}/evidence_jobs/${RUN_ID}/${STAGE}.log"
+    echo "The container runs independently of this SSH session and is retained after exit."
 else
+    # Report native/signal exits even when Python cannot write a traceback.
+    set +e
     "${DOCKER_COMMAND[@]}" 2>&1 | tee -a "${DATA_DIR}/evidence_jobs/${RUN_ID}/${STAGE}.log"
+    STATUS=("${PIPESTATUS[@]}")
+    set -e
+    printf 'Container exit code: %s; log writer exit code: %s\n' "${STATUS[0]}" "${STATUS[1]}" \
+      | tee -a "${DATA_DIR}/evidence_jobs/${RUN_ID}/${STAGE}.log"
+    if [[ "${STATUS[0]}" != "0" ]]; then exit "${STATUS[0]}"; fi
+    exit "${STATUS[1]}"
 fi
