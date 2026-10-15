@@ -5,18 +5,28 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.lines import Line2D
-from matplotlib.ticker import MaxNLocator
 from qdm_parity_protocol import PROTOCOL
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path[:0] = [str(ROOT / "experimental" / "notebooks"), str(ROOT)]
+
+import prx_main_thermal_figure_polish as style  # noqa: E402
+from helpers import (  # noqa: E402
+    add_panel_label_margin,
+    save_prx_figure,
+    set_revtex_matplotlib_style,
+    write_figure_manifest,
+)
 
 PHASES = (0.025, 0.05, 0.075, 0.10)
 WIDTHS = (0.10, 0.20, 0.25, 0.50)
-COLORS = {"A": "#0072B2", "Z": "#009E73"}
+COLORS = {name: style.WITNESS_COLORS[name] for name in ("A", "Z")}
 
 
 def load_evidence(data: Path):
@@ -96,179 +106,166 @@ def load_evidence(data: Path):
     return scatter, table, sources
 
 
-def render(data: Path, output: Path):
+def render(
+    data: Path,
+    output: Path,
+    *,
+    use_tex: bool = False,
+    formats: tuple[str, ...] = ("pdf", "svg", "png"),
+):
+    """Feed target-parity evidence into the pre-PR157 Fig. 9 presentation."""
     scatter, table, sources = load_evidence(data)
-    plt.rcParams.update(
-        {
-            "font.family": "serif",
-            "font.size": 8,
-            "axes.labelsize": 9,
-            "legend.fontsize": 7,
-            "xtick.labelsize": 7,
-            "ytick.labelsize": 7,
-            "pdf.fonttype": 42,
-            "svg.fonttype": "none",
-            "axes.linewidth": 0.7,
-        }
-    )
-    fig = plt.figure(figsize=(7.1, 4.9))
-    grid = fig.add_gridspec(
-        2, 2, left=0.095, right=0.985, bottom=0.105, top=0.94, hspace=0.47, wspace=0.42
-    )
-    agrid, bgrid = (
-        grid[0, 0].subgridspec(2, 1, hspace=0.10),
-        grid[0, 1].subgridspec(2, 1, hspace=0.14),
-    )
-    axes_a, axes_b = [], []
-    representative = table.loc[np.isclose(table.phase, 0.05)].sort_values("window_half_width")
+    set_revtex_matplotlib_style(base_font_size=9.0, prefer_tex=use_tex)
+    if use_tex and not plt.rcParams["text.usetex"]:
+        raise RuntimeError("--use-tex requires LaTeX; refusing a font substitution")
     primary = table.loc[np.isclose(table.window_half_width, 0.25)].sort_values("phase")
-    background = scatter.loc[np.isclose(scatter.phase, 0.05) & ~scatter.is_tower_state]
+    representative = primary.loc[np.isclose(primary.phase, 0.05)].iloc[0]
+    background = scatter.loc[np.isclose(scatter.phase, 0.05)]
+    records_b, records_c = [], []
+    for name in COLORS:
+        for ensemble, source in (("raw_microcanonical", "mc_raw"), ("canonical", "can_raw")):
+            values = primary[f"tau_{name}_{source}"]
+            records_b.append(
+                {
+                    "Lx": 8,
+                    "witness": name,
+                    "ensemble": ensemble,
+                    "value": float(representative[f"tau_{name}_{source}"]),
+                    "value_min": float(values.min()),
+                    "value_max": float(values.max()),
+                    "method": "exact_target_parity",
+                    "stderr": 0.0,
+                }
+            )
+            records_c.extend(
+                {
+                    "Lx": 8,
+                    "witness": name,
+                    "ensemble": ensemble,
+                    "phase": float(row.phase),
+                    "value": float(getattr(row, f"tau_{name}_{source}")),
+                }
+                for row in primary.itertuples()
+            )
+    panel_b, panel_c = pd.DataFrame(records_b), pd.DataFrame(records_c)
+    panel_d = pd.DataFrame(
+        [
+            {
+                "Lx": 8,
+                "w_star": float(representative.w_raw),
+                "w_min": float(primary.w_raw.min()),
+                "w_max": float(primary.w_raw.max()),
+            }
+        ]
+    )
+
+    fig = plt.figure(figsize=(style.FULL_WIDTH_IN, style.FIG_HEIGHT_IN))
+    outer = style._base._outer_grid(fig)
+    gsa = outer[0, 0].subgridspec(2, 1, hspace=0.08)
+    axes_a = [fig.add_subplot(gsa[index]) for index in range(2)]
     for index, name in enumerate(COLORS):
-        color = COLORS[name]
-        ax = fig.add_subplot(agrid[index])
-        axes_a.append(ax)
-        ax.axvspan((8 - 0.25) / 32, (8 + 0.25) / 32, color="0.5", alpha=0.15)
+        ax = axes_a[index]
+        ax.axvspan((8 - 0.25) / 32, (8 + 0.25) / 32, color="0.5", alpha=0.10, zorder=0)
         ax.scatter(
             background.energy_density,
             background[f"Q_{name}"],
-            s=6,
-            alpha=0.42,
-            color=color,
+            s=9,
+            alpha=0.38,
+            color=COLORS[name],
             linewidths=0,
             rasterized=True,
         )
         ax.scatter(
             [0.25],
-            [0],
+            [0.0],
             marker="*",
-            s=65,
-            color="#E69F00",
+            s=76,
+            color=style.STAR_COLOR,
             edgecolors="black",
             linewidths=0.4,
-            zorder=5,
+            zorder=8,
         )
-        ax.set_ylabel(rf"$\langle\widehat Q_R^{{{name}}}\rangle_n$")
-        ax.set_ylim(bottom=-0.008)
-        ax.yaxis.set_major_locator(MaxNLocator(3))
-        ax.grid(alpha=0.12)
+        ax.set_ylabel(rf"$\langle \widehat Q_R^{{{name}}}\rangle_n$")
+        ax.grid(alpha=0.13)
         if index == 0:
             ax.tick_params(labelbottom=False)
-            ax.text(
-                0.98,
-                0.94,
-                r"$8\times4,\ S_y=+1$",
-                ha="right",
-                va="top",
-                transform=ax.transAxes,
-                fontsize=7,
-            )
         else:
-            ax.set_xlabel(r"Energy density $e/J=E/(32J)$")
-        bx = fig.add_subplot(bgrid[index])
-        axes_b.append(bx)
-        bx.plot(
-            primary.phase,
-            primary[f"tau_{name}_mc_raw"],
-            "o-",
-            color=color,
-            markersize=4,
-            linewidth=1,
-        )
-        bx.plot(
-            primary.phase,
-            primary[f"tau_{name}_can_raw"],
-            "o--",
-            color=color,
-            markerfacecolor="white",
-            markersize=4,
-            linewidth=1,
-        )
-        bx.set_ylabel(rf"$\tau_{{{name},8}}$")
-        bx.yaxis.set_major_locator(MaxNLocator(3))
-        bx.grid(alpha=0.12)
-        if index == 0:
-            bx.tick_params(labelbottom=False)
-        else:
-            bx.set_xlabel(r"Checkerboard phase $\varphi$")
-            bx.set_xticks(PHASES)
-    axes_b[0].legend(
+            ax.set_xlabel(r"Energy density $e=E/(4L_x)$")
+
+    gsb = outer[0, 1].subgridspec(2, 1, hspace=0.10)
+    axes_b = [fig.add_subplot(gsb[index]) for index in range(2)]
+    style._draw_qdm_panel_b(axes_b, panel_b)
+    # Only one nontrivial completed target-parity thermal size remains.
+    # Keep the original size axes and range glyph widths without inventing points.
+    for ax in axes_b:
+        ax.set_xticks([8])
+        ax.set_xlim(6, 10)
+    style._top_legend(
+        axes_b[0],
         handles=[
-            Line2D([], [], color="0.2", marker="o", label="Raw mc"),
-            Line2D(
-                [],
-                [],
-                color="0.2",
-                marker="o",
-                markerfacecolor="white",
-                linestyle="--",
-                label="Matched canonical",
-            ),
+            *style._qdm_ensemble_box_handles(),
+            *style._range_semantics_handles(r"$\varphi_\star$", r"$\varphi$ scan"),
         ],
-        loc="lower right",
-        bbox_to_anchor=(1.02, 1.06),
-        ncol=2,
-        frameon=False,
-        handlelength=1.8,
-        columnspacing=1,
+        ncol=4,
     )
-    lower_axes = []
-    for column, (key, ylabel, color) in enumerate(
-        [
-            ("matching_distance_raw", r"Ensemble mismatch $\Delta_8$", "#7B3294"),
-            ("w_raw", r"Raw stripe width $w_8^{\rm raw}$", COLORS["A"]),
-        ]
-    ):
-        ax = fig.add_subplot(grid[1, column])
-        lower_axes.append(ax)
-        grouped = table.groupby("window_half_width")[key]
-        low, high = grouped.min().reindex(WIDTHS), grouped.max().reindex(WIDTHS)
-        values = representative[key].to_numpy()
-        ax.axvline(0.25, color="0.6", linestyle=":", linewidth=0.8, zorder=0)
-        ax.plot(WIDTHS, values, color=color, linestyle=":", linewidth=0.8, zorder=1)
-        ax.errorbar(
-            WIDTHS,
-            values,
-            yerr=np.maximum(0, np.vstack([values - low, high - values])),
-            fmt="o",
-            color=color,
-            markersize=4.5,
-            capsize=4,
-            elinewidth=1.2,
-            zorder=3,
-        )
-        ax.set_xlabel(r"Total-energy half-width $\Delta E/J$")
-        ax.set_ylabel(ylabel)
-        ax.set_xticks(WIDTHS)
-        ax.set_ylim(0, float(high.max()) * 1.18)
-        ax.grid(alpha=0.12)
-        ax.legend(
-            handles=[
-                Line2D(
-                    [], [], color=color, marker="o", linestyle="none", label=r"$\varphi_\star=0.05$"
-                ),
-                Line2D(
-                    [],
-                    [],
-                    color=color,
-                    marker="|",
-                    markersize=10,
-                    linestyle="none",
-                    label=r"Sampled $\varphi$ range",
-                ),
-            ],
-            loc="lower left",
-            frameon=False,
-        )
+
+    gsc = outer[1, 0].subgridspec(2, 1, hspace=0.10)
+    axes_c = [fig.add_subplot(gsc[index]) for index in range(2)]
+    style._draw_qdm_panel_c(axes_c, panel_c, 8)
+    for ax in axes_c:
+        # Keep the original grid while accommodating the new three-decimal ticks.
+        ax.yaxis.labelpad = 0
+
+    axd = fig.add_subplot(outer[1, 1])
+    row = panel_d.iloc[0]
+    style._range_box(
+        axd,
+        x=8,
+        center=float(row.w_star),
+        minimum=float(row.w_min),
+        maximum=float(row.w_max),
+        color=COLORS["A"],
+        width=0.34,
+    )
+    axd.set_xlabel(r"Strip length $L_x$")
+    axd.set_ylabel(r"$w_{L_x}^{\rm raw}$")
+    axd.set_xticks([8])
+    axd.set_xlim(6, 10)
+    axd.set_ylim(0.0, 1.08 * float(row.w_max))
+    axd.grid(alpha=0.13)
+    axd.legend(
+        handles=style._range_semantics_handles(
+            r"$\varphi_\star$",
+            r"$\varphi$ scan",
+            color=COLORS["A"],
+        ),
+        loc="upper right",
+        frameon=False,
+        fontsize=6.8,
+        handletextpad=0.45,
+        borderaxespad=0.3,
+    )
     for ax, label in zip(
-        [axes_a[0], axes_b[0], *lower_axes], ["(a)", "(b)", "(c)", "(d)"], strict=True
+        [axes_a[0], axes_b[0], axes_c[0], axd], ["(a)", "(b)", "(c)", "(d)"], strict=True
     ):
-        ax.text(
-            -0.18, 1.06, label, transform=ax.transAxes, fontweight="bold", fontsize=10, va="bottom"
-        )
+        if use_tex:
+            style._panel_label(ax, label)
+        else:
+            add_panel_label_margin(ax, label)
+
     output.mkdir(parents=True, exist_ok=True)
-    for suffix in ("pdf", "svg", "png"):
-        fig.savefig(output / f"qdm_checkerboard_figure9_target_parity_8x4.{suffix}", dpi=300)
-    plt.close(fig)
+    save_prx_figure(
+        fig,
+        "qdm_checkerboard_figure9_prx",
+        directory=output,
+        formats=formats,
+        close=True,
+    )
+    write_figure_manifest(output / "figure_manifest.json")
+    background.to_csv(output / "qdm_checkerboard_figure9_panel_a_plot.csv", index=False)
+    panel_b.to_csv(output / "qdm_checkerboard_figure9_panel_b_plot.csv", index=False)
+    panel_c.to_csv(output / "qdm_checkerboard_figure9_panel_c_plot.csv", index=False)
+    panel_d.to_csv(output / "qdm_checkerboard_figure9_panel_d_plot.csv", index=False)
     scatter.to_csv(output / "figure9_scatter_source.csv", index=False)
     table.to_csv(output / "figure9_thermal_source.csv", index=False)
     report = {
@@ -289,9 +286,17 @@ def render(data: Path, output: Path):
         "size_fit_performed": False,
         "eigensolver_called": False,
         "source_means_reconciled": True,
-        "primary_values": representative.loc[np.isclose(representative.window_half_width, 0.25)]
-        .iloc[0]
-        .to_dict(),
+        "primary_values": representative.to_dict(),
+        "presentation_source": "pre-PR157 prx_main_thermal_figure_polish.py",
+        "canvas_inches": [style.FULL_WIDTH_IN, style.FIG_HEIGHT_IN],
+        "panel_roles": {
+            "a": "8x4 eigenstate A/Z scatter",
+            "b": "raw/canonical A/Z means versus Lx (8 only)",
+            "c": "raw/canonical A/Z means versus phase",
+            "d": "raw stripe width versus Lx (8 only)",
+        },
+        "size_axes_are_single_points": True,
+        "native_tex": bool(plt.rcParams["text.usetex"]),
         "claim_boundary": (
             "Finite-size local witness mismatch and phase/window checks; "
             "no thermodynamic extrapolation."
@@ -305,5 +310,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--use-tex", action="store_true")
+    parser.add_argument("--figure-formats", default="pdf,svg,png")
     args = parser.parse_args()
-    print(json.dumps(render(args.data, args.output), indent=2))
+    formats = tuple(value.strip() for value in args.figure_formats.split(",") if value.strip())
+    if not formats or not set(formats).issubset({"pdf", "svg", "png"}):
+        parser.error("--figure-formats must select pdf, svg and/or png")
+    print(
+        json.dumps(render(args.data, args.output, use_tex=args.use_tex, formats=formats), indent=2)
+    )
