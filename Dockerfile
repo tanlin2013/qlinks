@@ -53,6 +53,9 @@ RUN apt-get update && \
         libxslt1-dev \
         pkg-config \
         zlib1g-dev && \
+    if printf ' %s ' "${QLINKS_EXTRAS}" | grep -q ' primme '; then \
+        apt-get install -y --no-install-recommends libopenblas-pthread-dev; \
+    fi && \
     if printf ' %s ' "${QLINKS_EXTRAS}" | grep -q ' notebook '; then \
         apt-get install -y --no-install-recommends \
             cm-super \
@@ -102,7 +105,10 @@ RUN set -- --no-default-groups && \
         python -c 'import sys; raise SystemExit(0 if sys.version_info < (3, 14) else "primme evidence images currently require Python <3.14; build with --build-arg PYTHON_VERSION=3.13")'; \
         uv pip install --python /opt/qlinks-venv/bin/python "primme==${PRIMME_VERSION}"; \
     fi && \
-    python scripts/docker/verify_optional_environment.py --extras "${QLINKS_EXTRAS}"
+    python scripts/docker/verify_optional_environment.py --extras "${QLINKS_EXTRAS}" && \
+    if printf ' %s ' "${QLINKS_EXTRAS}" | grep -q ' primme '; then \
+        python scripts/docker/verify_primme_blas_runtime.py --require-openblas; \
+    fi
 
 # PyCharm can use /opt/qlinks-venv/bin/python directly.
 CMD ["python"]
