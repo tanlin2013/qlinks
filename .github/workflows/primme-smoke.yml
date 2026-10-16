@@ -5,6 +5,8 @@ on:
     branches: ["main"]
     paths:
       - "Dockerfile"
+      - "pyproject.toml"
+      - "uv.lock"
       - ".github/workflows/primme-smoke.yml"
       - "experimental/jobs/qdm_folded_backend_comparison.py"
       - "experimental/jobs/qdm_resumable_spectrum.py"
@@ -24,6 +26,8 @@ on:
     branches: ["main"]
     paths:
       - "Dockerfile"
+      - "pyproject.toml"
+      - "uv.lock"
       - ".github/workflows/primme-smoke.yml"
       - "experimental/jobs/qdm_folded_backend_comparison.py"
       - "experimental/jobs/qdm_resumable_spectrum.py"
@@ -67,11 +71,15 @@ jobs:
           cache-to: type=gha,mode=max,scope=docker-primme-smoke
           push: false
           load: true
+          platforms: linux/amd64
           build-args: |
             PYTHON_VERSION=3.13
             QLINKS_EXTRAS=notebook primme
             PRIMME_VERSION=3.2.3
           tags: qlinks:ci-primme
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Verify PRIMME import, solve, warm start, and cache reuse
         run: |
@@ -98,6 +106,41 @@ jobs:
               --repeats 1,2 \
               --budgets 16,32 \
               --timeout 600
+
+      # Publish the exact local image that passed both numerical checks above.
+      # Pull requests never receive registry credentials or publish image tags.
+      - name: Login to DockerHub for tested PRIMME publication
+        if: >-
+          success() && github.ref == 'refs/heads/main' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publish tested PRIMME image
+        if: >-
+          success() && github.ref == 'refs/heads/main' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          REGISTRY_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/qlinks
+        run: |
+          set -euo pipefail
+          revision_tag="${REGISTRY_IMAGE}:sha-${GITHUB_SHA}-notebook-primme"
+          floating_tag="${REGISTRY_IMAGE}:notebook-primme"
+          docker tag qlinks:ci-primme "${revision_tag}"
+          docker tag qlinks:ci-primme "${floating_tag}"
+          docker push "${revision_tag}"
+          docker push "${floating_tag}"
+          digest_ref="$(docker image inspect "${revision_tag}" --format '{{index .RepoDigests 0}}')"
+          {
+            echo '### Tested PRIMME image published (linux/amd64)'
+            echo "- Revision tag: \`${revision_tag}\`"
+            echo "- Floating tag: \`${floating_tag}\`"
+            echo "- Source commit: \`${GITHUB_SHA}\`"
+            echo "- Digest reference: \`${digest_ref}\`"
+            echo 'The provider audit, cache/refinement smoke test and physical QDM comparison passed.'
+          } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Upload physical comparison summary
         if: always()

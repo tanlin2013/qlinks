@@ -108,8 +108,53 @@ The existing numerical smoke test still checks physical residuals and cache
 preservation. Provider selection is not a performance benchmark or a promise of
 parallel scaling; some LAPACK phases remain serial.
 
-Build and verify a candidate image under a separate tag, while retaining the
-current container and all checkpoints:
+### Pull the tested PRIMME image from CI
+
+The `PRIMME smoke` workflow publishes the **same** linux/amd64 image that passed
+its provider audit, numerical cache/refinement smoke test and physical QDM
+comparison. Publication runs only on successful matching pushes to `main`, or a
+manual dispatch on `main`. Pull-request runs test locally without publishing or
+accessing Docker Hub credentials. Dockerfile and dependency-lock changes also
+trigger the workflow. The ordinary notebook image is not a PRIMME runtime.
+
+After that workflow succeeds on the updated `main`, pull and verify the runtime
+on the server instead of rebuilding it:
+
+```bash
+export QLINKS_DOCKER_IMAGE=tanlin2013/qlinks:notebook-primme
+docker pull "${QLINKS_DOCKER_IMAGE}" &&
+docker run --rm "${QLINKS_DOCKER_IMAGE}" \
+  python scripts/docker/verify_primme_blas_runtime.py --require-openblas &&
+docker run --rm "${QLINKS_DOCKER_IMAGE}" \
+  python scripts/docker/verify_primme_evidence_runtime.py
+```
+
+The launcher uses this exported image with the existing run ID and cache:
+
+```bash
+QLINKS_EVIDENCE_RUN_ID=qdm_parity_submission_20261009 \
+QLINKS_QDM_PARITY_BUDGETS=4096 \
+QLINKS_NUM_THREADS=4 \
+QLINKS_DOCKER_MEMORY_LIMIT=128g \
+QLINKS_DOCKER_DETACH=1 \
+scripts/docker/docker_run_qdm_parity_evidence.sh L12-refine
+```
+
+Retire any old writer of this run/cache before launching its replacement.
+The workflow summary also records the commit-specific tag
+`tanlin2013/qlinks:sha-<FULL_MAIN_COMMIT_SHA>-notebook-primme`; it can be used as
+`QLINKS_DOCKER_IMAGE` instead of the moving `notebook-primme` tag. For an exact
+runtime pin, use the summary's `tanlin2013/qlinks@sha256:...` digest reference;
+rerunning CI can rebuild a commit-specific tag with updated base packages.
+The tag names a runtime build, not a completed 12x4 solve. Pulling a new tag does not change an
+existing container. Earlier CI runs with `push: false` did not export a reusable
+image, so they cannot be pulled retroactively.
+
+### Build a local candidate when needed
+
+For Dockerfile experiments or when a published runtime is unavailable, build and
+verify a candidate under a separate tag, retaining the current container and all
+checkpoints:
 
 ```bash
 QLINKS_PRIMME_DOCKER_IMAGE=qlinks:primme-openblas \
