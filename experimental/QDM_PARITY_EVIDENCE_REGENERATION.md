@@ -86,6 +86,65 @@ At Lx=8, phi=0.05:
 
 ## Server sequence and submission gate
 
+### Diagnosing PRIMME's linear algebra runtime
+
+PRIMME's extension can link to system BLAS/LAPACK independently of NumPy's and
+SciPy's bundled OpenBLAS. A long run sampled in system `zlarfx_`, with the bundled
+OpenBLAS workers idle, suggests a dense linear algebra bottleneck but does not
+prove how the entire run spent its time or how much convergence remains. Inspect
+the actual providers before diagnosing the lattice size as infeasible:
+
+```bash
+QDM_CONTAINER=$(cat experimental/data/evidence_jobs/qdm_parity_submission_20261009/L12-refine.container-id)
+docker exec "${QDM_CONTAINER}" python scripts/docker/verify_primme_blas_runtime.py
+```
+
+The report resolves the extension's BLAS/LAPACK dependencies through `ldd` and
+canonical filesystem paths. The PRIMME image now installs Debian's pthread
+OpenBLAS implementation and refuses a build if its actual providers remain
+reference BLAS/LAPACK. NumPy/SciPy imports alone do not satisfy this gate. Default
+images without the PRIMME feature do not acquire this extra system dependency.
+The existing numerical smoke test still checks physical residuals and cache
+preservation. Provider selection is not a performance benchmark or a promise of
+parallel scaling; some LAPACK phases remain serial.
+
+Build and verify a candidate image under a separate tag, while retaining the
+current container and all checkpoints:
+
+```bash
+QLINKS_PRIMME_DOCKER_IMAGE=qlinks:primme-openblas \
+scripts/docker/build_primme_evidence_image.sh
+docker run --rm qlinks:primme-openblas \
+  python scripts/docker/verify_primme_blas_runtime.py --require-openblas
+docker run --rm qlinks:primme-openblas \
+  python scripts/docker/verify_primme_evidence_runtime.py
+```
+
+Do not modify shared-library files or alternatives inside the running solver.
+Changing the checkout/image does not instrument an already executing solve.
+Only after examining the provider report and validating the replacement image
+should a retry be considered; stop only the selected parity container if doing
+so, preserve its logs, and retain both original checkpoint backends. No new
+production retry is launched by the build or validation commands above.
+
+Future solves print their dimension, budget, raw tolerance, initial-vector count,
+and basis cap before entering PRIMME, and print a return marker before full-Ritz
+reconstruction. Native `printLevel=2` reports converged/locked folded pairs and
+their residuals; these are not physical-H acceptance results. Level 3 also
+prints outer iterations and may produce substantial output. Set
+`QLINKS_QDM_PRIMME_PRINT_LEVEL` to adjust verbosity; the Docker runner forwards it.
+Matrix callbacks emit elapsed time, matrix-product/outer-iteration counters and
+PRIMME's accumulated matrix-product/orthogonalization/dense timings every 300
+seconds (`QLINKS_QDM_PRIMME_PROGRESS_SECONDS`, forwarded by the runner, zero disables). This callback
+reporting is not an independent timer: no callbacks occur during a long native
+LAPACK operation. It does not save intermediate vectors or predict an ETA.
+
+If 12x4 remains outside the production budget, the exact 8x4 target-parity
+results remain usable for a finite-size thermal comparison. The 4x4 target
+sector is one-dimensional, so it is not a second thermal-background scaling
+point. Do not close the existing 12x4 submission gate or claim thermodynamic
+extrapolation by dropping its missing rows.
+
 Set `QLINKS_EVIDENCE_RUN_ID` again after opening a new SSH session; shell exports
 do not carry over to another session. Only `exact` may generate a new timestamped
 run ID. All follow-up stages require an explicit ID, and spectrum/observables/

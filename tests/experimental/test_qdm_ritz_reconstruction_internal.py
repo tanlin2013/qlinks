@@ -39,6 +39,52 @@ def _mixed_pair():
     return h, vectors
 
 
+@pytest.mark.parametrize("interval", ["0", "1e-12"])
+def test_solver_reports_progress_without_changing_the_spectral_problem(
+    tmp_path, monkeypatch, capsys, interval
+):
+    h, _ = _mixed_pair()
+
+    def fake_eigsh(operator, **kwargs):
+        assert kwargs["printLevel"] == 2
+        assert kwargs["tol"] == 1e-11
+        assert "monitor" not in kwargs and "return_history" not in kwargs
+        vectors = np.eye(6, dtype=complex)[:, :2]
+        action = operator.matmat(vectors)
+        np.testing.assert_allclose(action, vectors * np.array([0.2**2, 0.200004**2]))
+        return np.array([0.2**2, 0.200004**2]), vectors, {}
+
+    monkeypatch.setitem(
+        sys.modules,
+        "primme",
+        SimpleNamespace(
+            eigsh=fake_eigsh,
+            get_eigsh_param=lambda field: 12 if field == "stats_numMatvecs" else 3,
+            __spec__=importlib.machinery.ModuleSpec("primme", loader=None),
+        ),
+    )
+    for name, value in {
+        "QLINKS_QDM_FOLDED_BACKEND": "primme",
+        "QLINKS_EVIDENCE_CACHE_ROOT": str(tmp_path),
+        "QLINKS_EVIDENCE_CACHE_RESUME": "0",
+        "QLINKS_EVIDENCE_CACHE_WRITE": "0",
+        "QLINKS_QDM_PRIMME_PROGRESS_SECONDS": interval,
+        "QLINKS_QDM_PRIMME_PRINT_LEVEL": "2",
+    }.items():
+        monkeypatch.setenv(name, value)
+    result = make_resumable_folded_solver(lambda *a, **kw: pytest.fail("cold fallback"))(
+        h, target_energy=12, subspace_size=2, tolerance=1e-11
+    )
+    np.testing.assert_allclose(result.energies, [11.8, 12.200004])
+    assert result.maximum_residual < 1e-12
+    output = capsys.readouterr().out
+    assert "'primme': 'starting'" in output and "'primme': 'returned'" in output
+    assert ("matrix_callback_progress" in output) == (interval != "0")
+    if interval != "0":
+        assert "'stats_numMatvecs': 12" in output
+        assert "stats_timeDense" in output
+
+
 @pytest.mark.parametrize("nonorthogonal", [False, True])
 def test_near_folded_pair_is_resolved_across_the_complete_span(nonorthogonal):
     h, vectors = _mixed_pair()

@@ -18,6 +18,7 @@ on:
       - "scripts/docker/build_primme_evidence_image.sh"
       - "scripts/docker/verify_optional_environment.py"
       - "scripts/docker/verify_primme_evidence_runtime.py"
+      - "scripts/docker/verify_primme_blas_runtime.py"
       - "tests/experimental/test_evidence_cache.py"
   pull_request:
     branches: ["main"]
@@ -36,6 +37,7 @@ on:
       - "scripts/docker/build_primme_evidence_image.sh"
       - "scripts/docker/verify_optional_environment.py"
       - "scripts/docker/verify_primme_evidence_runtime.py"
+      - "scripts/docker/verify_primme_blas_runtime.py"
       - "tests/experimental/test_evidence_cache.py"
   workflow_dispatch:
 
@@ -80,6 +82,7 @@ jobs:
             bash -c '
               set -euo pipefail
               python scripts/docker/verify_optional_environment.py --extras "notebook primme"
+              python scripts/docker/verify_primme_blas_runtime.py --require-openblas
               python scripts/docker/verify_primme_evidence_runtime.py
             '
 

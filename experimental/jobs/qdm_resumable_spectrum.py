@@ -287,15 +287,45 @@ def _primme_folded_spectrum(
 ) -> tuple[PartialSpectrum, dict[str, Any]]:
     import primme
 
+    started = time.perf_counter()
+    last_report = started
+    report_interval = float(os.environ.get("QLINKS_QDM_PRIMME_PROGRESS_SECONDS", "300"))
+    if not np.isfinite(report_interval) or report_interval < 0:
+        raise ValueError("QLINKS_QDM_PRIMME_PROGRESS_SECONDS must be finite and nonnegative")
+
+    def report_callback_progress():
+        # PRIMME 3.2.3 exposes live counters from within matrix callbacks.
+        # This is not a background heartbeat: a long native LAPACK phase
+        # can remain silent until PRIMME requests another matrix product.
+        nonlocal last_report
+        now = time.perf_counter()
+        if report_interval == 0 or now - last_report < report_interval:
+            return
+        last_report = now
+        report = {"primme": "matrix_callback_progress", "elapsed_seconds": now - started}
+        getter = getattr(primme, "get_eigsh_param", None)
+        if getter is not None:
+            for field in (
+                "stats_numMatvecs",
+                "stats_numOuterIterations",
+                "stats_timeMatvec",
+                "stats_timeOrtho",
+                "stats_timeDense",
+            ):
+                report[field] = getter(field)
+        print(report, flush=True)
+
     h = sp.csr_array(hamiltonian, dtype=np.complex128)
     n = int(h.shape[0])
     k = min(int(subspace_size), n - 2)
     shifted = h - float(target_energy) * sp.eye(n, dtype=np.complex128, format="csr")
 
     def folded_matvec(vector):
+        report_callback_progress()
         return shifted @ (shifted @ vector)
 
     def folded_matmat(matrix):
+        report_callback_progress()
         return shifted @ (shifted @ matrix)
 
     folded = spla.LinearOperator(
@@ -326,7 +356,11 @@ def _primme_folded_spectrum(
         "method": os.environ.get("QLINKS_QDM_PRIMME_METHOD", "PRIMME_DYNAMIC"),
         "return_stats": True,
         "raise_for_unconverged": False,
+        # Level 2 prints convergence/locking events, including residuals.
+        "printLevel": int(os.environ.get("QLINKS_QDM_PRIMME_PRINT_LEVEL", "2")),
     }
+    if not 0 <= kwargs["printLevel"] <= 5:
+        raise ValueError("QLINKS_QDM_PRIMME_PRINT_LEVEL must be between 0 and 5")
     if max_basis_size is not None:
         kwargs["ncv"] = int(max_basis_size)
     if maxiter is not None:
@@ -341,9 +375,22 @@ def _primme_folded_spectrum(
     if max_prev_retain > 0:
         kwargs["maxPrevRetain"] = max_prev_retain
 
-    started = time.perf_counter()
+    print(
+        {
+            "primme": "starting",
+            "dimension": n,
+            "requested_eigenpairs": k,
+            "warm_start_vectors": int(v0.shape[1]),
+            "raw_tolerance": float(tolerance),
+            "max_basis_size": max_basis_size,
+            "print_level": kwargs["printLevel"],
+            "matrix_callback_report_seconds": report_interval,
+        },
+        flush=True,
+    )
     folded_values, vectors, stats = primme.eigsh(folded, **kwargs)
     elapsed = time.perf_counter() - started
+    print({"primme": "returned", "elapsed_seconds": elapsed}, flush=True)
     if len(folded_values) != np.asarray(vectors).shape[1]:
         raise RuntimeError("PRIMME folded eigenvalue/vector counts do not agree")
     # Scalar clustering is insufficient for near-degenerate folded pairs:
