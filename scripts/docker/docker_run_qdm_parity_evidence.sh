@@ -18,6 +18,16 @@ DETACH="${QLINKS_DOCKER_DETACH:-0}"
 [[ "${DETACH}" == "0" || "${DETACH}" == "1" ]] || {
     echo "QLINKS_DOCKER_DETACH must be 0 or 1" >&2; exit 2;
 }
+WALLTIME="${QLINKS_QDM_PRIMME_WALLTIME_SECONDS:-}"
+if [[ -n "${WALLTIME}" ]]; then
+    [[ "${WALLTIME}" =~ ^[1-9][0-9]*$ ]] || {
+        echo "QLINKS_QDM_PRIMME_WALLTIME_SECONDS must be a positive integer" >&2; exit 2;
+    }
+    case "${STAGE}" in
+        L12-spectrum|L12-refine) ;;
+        *) echo "PRIMME walltime applies only to L12-spectrum or L12-refine" >&2; exit 2 ;;
+    esac
+fi
 DATA_DIR="${QLINKS_DATA_DIR:-${REPO_ROOT}/experimental/data}"
 case "${STAGE}" in
     L12-spectrum|L12-reconstruct|L12-refine|L12-observables|sequence)
@@ -71,6 +81,11 @@ case "${STAGE}" in
         ;;
     *) echo "unknown stage: ${STAGE}" >&2; exit 2 ;;
 esac
+if [[ -n "${WALLTIME}" ]]; then
+    # Run the limit inside Docker: an SSH disconnect or a client-side timeout
+    # must not leave a supposedly bounded native solver running indefinitely.
+    COMMAND=(timeout --signal=TERM --kill-after=30s "${WALLTIME}s" "${COMMAND[@]}")
+fi
 COMMIT="$(git rev-parse HEAD)"
 LIFECYCLE=(--rm)
 if [[ "${DETACH}" == "1" ]]; then
@@ -78,6 +93,16 @@ if [[ "${DETACH}" == "1" ]]; then
     # Retain an exited container so its logs, exit code and OOM flag survive.
     LIFECYCLE=(--detach --name "${CONTAINER_NAME}")
 fi
+# Preserve the solver's defaults unless a tuning override was explicitly set.
+# Host environment variables do not otherwise reach the Docker process.
+PRIMME_OVERRIDES=()
+for VARIABLE in QLINKS_QDM_PRIMME_METHOD QLINKS_QDM_PRIMME_MAX_BASIS_SIZE \
+    QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE \
+    QLINKS_QDM_PRIMME_MIN_RESTART_SIZE QLINKS_QDM_PRIMME_MAX_PREV_RETAIN; do
+    if [[ -n "${!VARIABLE:-}" ]]; then
+        PRIMME_OVERRIDES+=(--env "${VARIABLE}=${!VARIABLE}")
+    fi
+done
 DOCKER_COMMAND=(docker run "${LIFECYCLE[@]}" --init
   --cpus "${QLINKS_DOCKER_CPUS:-${THREADS}}" --memory "${MEMORY}"
   --env MPLBACKEND=Agg --env PYTHONUNBUFFERED=1
@@ -87,6 +112,7 @@ DOCKER_COMMAND=(docker run "${LIFECYCLE[@]}" --init
   --env QLINKS_QDM_PRIMME_WARM_START_VECTORS="${QLINKS_QDM_PRIMME_WARM_START_VECTORS:-512}"
   --env QLINKS_QDM_PRIMME_PRINT_LEVEL="${QLINKS_QDM_PRIMME_PRINT_LEVEL:-2}"
   --env QLINKS_QDM_PRIMME_PROGRESS_SECONDS="${QLINKS_QDM_PRIMME_PROGRESS_SECONDS:-300}"
+  "${PRIMME_OVERRIDES[@]}"
   --env OMP_NUM_THREADS="${THREADS}" --env OPENBLAS_NUM_THREADS="${THREADS}"
   --env MKL_NUM_THREADS="${THREADS}"
   --volume "${REPO_ROOT}:/workspace/qlinks:ro"

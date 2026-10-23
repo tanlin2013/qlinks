@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -17,6 +18,7 @@ def _run(stage, data_dir, *, run_id=None, extra_env=None):
     env = os.environ.copy()
     env.pop("QLINKS_EVIDENCE_RUN_ID", None)
     env.pop("QLINKS_DOCKER_DETACH", None)
+    env.pop("QLINKS_QDM_PRIMME_WALLTIME_SECONDS", None)
     env.update(QLINKS_DATA_DIR=str(data_dir), QLINKS_DOCKER_DRY_RUN="1")
     if run_id is not None:
         env["QLINKS_EVIDENCE_RUN_ID"] = run_id
@@ -93,6 +95,68 @@ def test_refinement_runner_tightens_only_the_folded_tolerance(tmp_path):
     assert result.returncode == 0
     assert "--refine-cached-budget --budgets 4096 --tolerance 1e-11" in result.stdout
     assert "--residual-tolerance 1e-6" in result.stdout
+
+
+def test_solver_tuning_overrides_reach_the_container_without_changing_acceptance(tmp_path):
+    data = tmp_path / "data"
+    protocol = data / "evidence_jobs" / "existing_run" / PROTOCOL_NAME
+    protocol.parent.mkdir(parents=True)
+    protocol.write_text("{}")
+    overrides = {
+        "QLINKS_QDM_PRIMME_METHOD": "PRIMME_GD_plusK",
+        "QLINKS_QDM_PRIMME_MAX_BASIS_SIZE": "512",
+        "QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE": "32",
+        "QLINKS_QDM_PRIMME_MIN_RESTART_SIZE": "128",
+        "QLINKS_QDM_PRIMME_MAX_PREV_RETAIN": "8",
+    }
+    result = _run("L12-refine", data, run_id="existing_run", extra_env=overrides)
+    assert result.returncode == 0
+    command = shlex.split(result.stdout.splitlines()[-1])
+    environment = [command[i + 1] for i, arg in enumerate(command) if arg == "--env"]
+    for name, value in overrides.items():
+        assert f"{name}={value}" in environment
+    assert "--refine-cached-budget --budgets 4096 --tolerance 1e-11" in result.stdout
+    assert "--residual-tolerance 1e-6" in result.stdout
+
+
+def test_trial_walltime_is_enforced_inside_the_container(tmp_path):
+    data = tmp_path / "data"
+    protocol = data / "evidence_jobs" / "existing_run" / PROTOCOL_NAME
+    protocol.parent.mkdir(parents=True)
+    protocol.write_text("{}")
+    result = _run(
+        "L12-refine",
+        data,
+        run_id="existing_run",
+        extra_env={
+            "QLINKS_QDM_PRIMME_WALLTIME_SECONDS": "7200",
+            "QLINKS_DOCKER_IMAGE": "tested-primme-image",
+        },
+    )
+    assert result.returncode == 0
+    command = shlex.split(result.stdout.splitlines()[-1])
+    image_index = command.index("tested-primme-image")
+    assert command[image_index + 1 : image_index + 6] == [
+        "timeout",
+        "--signal=TERM",
+        "--kill-after=30s",
+        "7200s",
+        "python",
+    ]
+
+
+@pytest.mark.parametrize("walltime", ["0", "-1", "2h", "1.5"])
+def test_invalid_trial_walltime_fails_before_creating_output(tmp_path, walltime):
+    data = tmp_path / "data"
+    result = _run(
+        "L12-refine",
+        data,
+        run_id="existing_run",
+        extra_env={"QLINKS_QDM_PRIMME_WALLTIME_SECONDS": walltime},
+    )
+    assert result.returncode == 2
+    assert "must be a positive integer" in result.stderr
+    assert not data.exists()
 
 
 @pytest.mark.parametrize("mode", ["detached", "launch_failure", "signal_exit"])

@@ -40,8 +40,9 @@ def _mixed_pair():
 
 
 @pytest.mark.parametrize("interval", ["0", "1e-12"])
+@pytest.mark.parametrize("tuned", [False, True])
 def test_solver_reports_progress_without_changing_the_spectral_problem(
-    tmp_path, monkeypatch, capsys, interval
+    tmp_path, monkeypatch, capsys, interval, tuned
 ):
     h, _ = _mixed_pair()
 
@@ -49,6 +50,11 @@ def test_solver_reports_progress_without_changing_the_spectral_problem(
         assert kwargs["printLevel"] == 2
         assert kwargs["tol"] == 1e-11
         assert "monitor" not in kwargs and "return_history" not in kwargs
+        if tuned:
+            assert kwargs["method"] == "PRIMME_GD_plusK"
+            assert kwargs["maxBlockSize"] == 2
+            assert kwargs["minRestartSize"] == 3
+            assert kwargs["maxPrevRetain"] == 1
         vectors = np.eye(6, dtype=complex)[:, :2]
         action = operator.matmat(vectors)
         np.testing.assert_allclose(action, vectors * np.array([0.2**2, 0.200004**2]))
@@ -72,6 +78,16 @@ def test_solver_reports_progress_without_changing_the_spectral_problem(
         "QLINKS_QDM_PRIMME_PRINT_LEVEL": "2",
     }.items():
         monkeypatch.setenv(name, value)
+    for name, value in {
+        "QLINKS_QDM_PRIMME_METHOD": "PRIMME_GD_plusK",
+        "QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE": "2",
+        "QLINKS_QDM_PRIMME_MIN_RESTART_SIZE": "3",
+        "QLINKS_QDM_PRIMME_MAX_PREV_RETAIN": "1",
+    }.items():
+        if tuned:
+            monkeypatch.setenv(name, value)
+        else:
+            monkeypatch.delenv(name, raising=False)
     result = make_resumable_folded_solver(lambda *a, **kw: pytest.fail("cold fallback"))(
         h, target_energy=12, subspace_size=2, tolerance=1e-11
     )
@@ -79,6 +95,7 @@ def test_solver_reports_progress_without_changing_the_spectral_problem(
     assert result.maximum_residual < 1e-12
     output = capsys.readouterr().out
     assert "'primme': 'starting'" in output and "'primme': 'returned'" in output
+    assert f"'max_block_size': {2 if tuned else None}" in output
     assert ("matrix_callback_progress" in output) == (interval != "0")
     if interval != "0":
         assert "'stats_numMatvecs': 12" in output
@@ -282,7 +299,10 @@ def test_primme_wrapper_reconstructs_then_reuses_the_versioned_cache(tmp_path, m
     assert REFINED_BACKEND in second.method
 
 
-def test_same_budget_refinement_uses_all_vectors_and_preserves_both_sources(tmp_path, monkeypatch):
+@pytest.mark.parametrize("basis_override", [None, 3])
+def test_same_budget_refinement_uses_all_vectors_and_preserves_both_sources(
+    tmp_path, monkeypatch, basis_override
+):
     h, vectors = _mixed_pair()
     h = h.astype(np.complex128)
     vectors[2, 0] = 1e-4  # A sane Gram matrix with genuine off-subspace error.
@@ -299,7 +319,10 @@ def test_same_budget_refinement_uses_all_vectors_and_preserves_both_sources(tmp_
         calls.append(kwargs)
         assert kwargs["v0"].shape == (6, 2)
         assert kwargs["tol"] == 1e-11
-        assert kwargs["ncv"] >= 4
+        if basis_override:
+            assert kwargs["ncv"] == basis_override
+        else:
+            assert kwargs["ncv"] >= 4
         assert "lock" not in kwargs
         return np.array([0.04, 0.200004**2]), np.eye(6, dtype=complex)[:, :2], {}
 
@@ -320,6 +343,10 @@ def test_same_budget_refinement_uses_all_vectors_and_preserves_both_sources(tmp_
         "QLINKS_QDM_PRIMME_WARM_START_VECTORS": "1",
     }.items():
         monkeypatch.setenv(name, value)
+    if basis_override:
+        monkeypatch.setenv("QLINKS_QDM_PRIMME_MAX_BASIS_SIZE", str(basis_override))
+    else:
+        monkeypatch.delenv("QLINKS_QDM_PRIMME_MAX_BASIS_SIZE", raising=False)
     solver = make_resumable_folded_solver(
         lambda *args, **kwargs: pytest.fail("cold ARPACK fallback")
     )
@@ -333,6 +360,8 @@ def test_same_budget_refinement_uses_all_vectors_and_preserves_both_sources(tmp_
     metadata = json.loads((destination / "metadata.json").read_text())
     assert metadata["solver"]["warm_start_vectors"] == 2  # Overrides the ordinary cap of one.
     assert metadata["solver"]["same_budget_warm_start"]
+    if basis_override:
+        assert metadata["solver"]["max_basis_size"] == basis_override
     cached = solver(
         h, target_energy=12, subspace_size=2, tolerance=1e-11, refine_existing_budget=True
     )
