@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -91,6 +92,27 @@ def test_refinement_runner_tightens_only_the_folded_tolerance(tmp_path):
     protocol.write_text("{}")
     result = _run("L12-refine", data, run_id="existing_run")
     assert result.returncode == 0
+    assert "--refine-cached-budget --budgets 4096 --tolerance 1e-11" in result.stdout
+    assert "--residual-tolerance 1e-6" in result.stdout
+
+
+def test_solver_tuning_overrides_reach_the_container_without_changing_acceptance(tmp_path):
+    data = tmp_path / "data"
+    protocol = data / "evidence_jobs" / "existing_run" / PROTOCOL_NAME
+    protocol.parent.mkdir(parents=True)
+    protocol.write_text("{}")
+    overrides = {
+        "QLINKS_QDM_PRIMME_METHOD": "PRIMME_GD_plusK",
+        "QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE": "32",
+        "QLINKS_QDM_PRIMME_MIN_RESTART_SIZE": "128",
+        "QLINKS_QDM_PRIMME_MAX_PREV_RETAIN": "8",
+    }
+    result = _run("L12-refine", data, run_id="existing_run", extra_env=overrides)
+    assert result.returncode == 0
+    command = shlex.split(result.stdout.splitlines()[-1])
+    environment = [command[i + 1] for i, arg in enumerate(command) if arg == "--env"]
+    for name, value in overrides.items():
+        assert f"{name}={value}" in environment
     assert "--refine-cached-budget --budgets 4096 --tolerance 1e-11" in result.stdout
     assert "--residual-tolerance 1e-6" in result.stdout
 

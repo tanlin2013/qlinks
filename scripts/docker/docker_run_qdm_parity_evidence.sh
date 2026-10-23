@@ -78,6 +78,15 @@ if [[ "${DETACH}" == "1" ]]; then
     # Retain an exited container so its logs, exit code and OOM flag survive.
     LIFECYCLE=(--detach --name "${CONTAINER_NAME}")
 fi
+# Preserve the solver's defaults unless a tuning override was explicitly set.
+# Host environment variables do not otherwise reach the Docker process.
+PRIMME_OVERRIDES=()
+for VARIABLE in QLINKS_QDM_PRIMME_METHOD QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE \
+    QLINKS_QDM_PRIMME_MIN_RESTART_SIZE QLINKS_QDM_PRIMME_MAX_PREV_RETAIN; do
+    if [[ -n "${!VARIABLE:-}" ]]; then
+        PRIMME_OVERRIDES+=(--env "${VARIABLE}=${!VARIABLE}")
+    fi
+done
 DOCKER_COMMAND=(docker run "${LIFECYCLE[@]}" --init
   --cpus "${QLINKS_DOCKER_CPUS:-${THREADS}}" --memory "${MEMORY}"
   --env MPLBACKEND=Agg --env PYTHONUNBUFFERED=1
@@ -87,6 +96,7 @@ DOCKER_COMMAND=(docker run "${LIFECYCLE[@]}" --init
   --env QLINKS_QDM_PRIMME_WARM_START_VECTORS="${QLINKS_QDM_PRIMME_WARM_START_VECTORS:-512}"
   --env QLINKS_QDM_PRIMME_PRINT_LEVEL="${QLINKS_QDM_PRIMME_PRINT_LEVEL:-2}"
   --env QLINKS_QDM_PRIMME_PROGRESS_SECONDS="${QLINKS_QDM_PRIMME_PROGRESS_SECONDS:-300}"
+  "${PRIMME_OVERRIDES[@]}"
   --env OMP_NUM_THREADS="${THREADS}" --env OPENBLAS_NUM_THREADS="${THREADS}"
   --env MKL_NUM_THREADS="${THREADS}"
   --volume "${REPO_ROOT}:/workspace/qlinks:ro"

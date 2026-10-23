@@ -305,6 +305,8 @@ def _primme_folded_spectrum(
         report = {"primme": "matrix_callback_progress", "elapsed_seconds": now - started}
         getter = getattr(primme, "get_eigsh_param", None)
         if getter is not None:
+            # timeDense covers Num_update_VWXR, not every dense operation.
+            # In PRIMME 3.2.3, projected LAPACK eigensolves are not included.
             for field in (
                 "stats_numMatvecs",
                 "stats_numOuterIterations",
@@ -383,6 +385,10 @@ def _primme_folded_spectrum(
             "warm_start_vectors": int(v0.shape[1]),
             "raw_tolerance": float(tolerance),
             "max_basis_size": max_basis_size,
+            "method": kwargs["method"],
+            "max_block_size": kwargs.get("maxBlockSize"),
+            "min_restart_size": kwargs.get("minRestartSize"),
+            "max_prev_retain": kwargs.get("maxPrevRetain"),
             "print_level": kwargs["printLevel"],
             "matrix_callback_report_seconds": report_interval,
         },
@@ -416,6 +422,10 @@ def _primme_folded_spectrum(
         "num_outer_iterations": scalar_stat("numOuterIterations"),
         "primme_elapsed_time": scalar_stat("elapsedTime"),
         "method": kwargs["method"],
+        "max_basis_size": max_basis_size,
+        "max_block_size": kwargs.get("maxBlockSize"),
+        "min_restart_size": kwargs.get("minRestartSize"),
+        "max_prev_retain": kwargs.get("maxPrevRetain"),
         "warm_start_vectors": int(v0.shape[1]),
         "returned_eigenpairs": int(partial.energies.size),
         "reconstruction_source_commit": os.environ.get("QLINKS_EVIDENCE_SOURCE_COMMIT"),

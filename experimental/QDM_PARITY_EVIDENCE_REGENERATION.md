@@ -108,6 +108,49 @@ The existing numerical smoke test still checks physical residuals and cache
 preservation. Provider selection is not a performance benchmark or a promise of
 parallel scaling; some LAPACK phases remain serial.
 
+### Collect progress and a current native stack
+
+Use the host checkout's diagnostic script with a running or retained container:
+
+```bash
+QDM_CONTAINER=$(cat experimental/data/evidence_jobs/qdm_parity_submission_20261009/L12-refine.container-id)
+bash scripts/docker/diagnose_qdm_primme.sh "${QDM_CONTAINER}" --native-stack \
+  2>&1 | tee L12-refine-diagnosis.log
+```
+
+The script records image identity, container state, resource use, process times,
+the latest progress counters and recent non-progress log messages. It computes
+the observed seconds per outer iteration over the recent samples, without
+treating iteration or matrix-product counts as converged eigenpair counts or
+an ETA. It reads at most the last 5000 log lines; absence of a convergence
+message in that tail does not establish zero convergence.
+
+`--native-stack` requires host `gdb` and uses `sudo` when needed. GDB briefly
+stops Python, reads each thread's stack and detaches to resume it. Its sysroot
+points into the running container to find the matching libraries. Omit that
+option to collect the other diagnostics without a debugger. The script does
+not launch, pause, stop or restart the solver, or write to its evidence cache.
+
+PRIMME 3.2.3's `stats_timeDense` measures `Num_update_VWXR_Sprimme`, not all
+dense linear algebra. In particular, the projected eigensolve in
+`solve_projection.c` calls the LAPACK wrapper without adding that time to
+`timeDense`. The three displayed matrix/orthogonalization/dense clocks do not
+account for the full solve. Small values do not rule out a dominant projected
+eigensolve. A single native stack identifies the sampled phase, not the
+fraction of the whole run spent there.
+
+For a future controlled solver experiment, the launcher forwards explicitly set
+`QLINKS_QDM_PRIMME_METHOD`, `QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE`,
+`QLINKS_QDM_PRIMME_MIN_RESTART_SIZE` and `QLINKS_QDM_PRIMME_MAX_PREV_RETAIN`.
+Previously these overrides worked only inside the Python process and were
+dropped at the Docker boundary. Unset variables retain PRIMME's defaults.
+The start log and checkpoint solver metadata record the requested settings;
+`null` means no explicit override, not a queried effective PRIMME default.
+No block size or method is promoted as faster without a measured comparison.
+These controls do not alter the spectral problem, the `1e-11` refinement
+tolerance or the `1e-6` physical-residual acceptance threshold. They take effect
+only for a new solver process; they cannot retune an already running solve.
+
 ### Pull the tested PRIMME image from CI
 
 The `PRIMME smoke` workflow publishes the **same** linux/amd64 image that passed

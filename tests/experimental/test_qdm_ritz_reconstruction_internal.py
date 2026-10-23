@@ -40,8 +40,9 @@ def _mixed_pair():
 
 
 @pytest.mark.parametrize("interval", ["0", "1e-12"])
+@pytest.mark.parametrize("tuned", [False, True])
 def test_solver_reports_progress_without_changing_the_spectral_problem(
-    tmp_path, monkeypatch, capsys, interval
+    tmp_path, monkeypatch, capsys, interval, tuned
 ):
     h, _ = _mixed_pair()
 
@@ -49,6 +50,11 @@ def test_solver_reports_progress_without_changing_the_spectral_problem(
         assert kwargs["printLevel"] == 2
         assert kwargs["tol"] == 1e-11
         assert "monitor" not in kwargs and "return_history" not in kwargs
+        if tuned:
+            assert kwargs["method"] == "PRIMME_GD_plusK"
+            assert kwargs["maxBlockSize"] == 2
+            assert kwargs["minRestartSize"] == 3
+            assert kwargs["maxPrevRetain"] == 1
         vectors = np.eye(6, dtype=complex)[:, :2]
         action = operator.matmat(vectors)
         np.testing.assert_allclose(action, vectors * np.array([0.2**2, 0.200004**2]))
@@ -72,6 +78,16 @@ def test_solver_reports_progress_without_changing_the_spectral_problem(
         "QLINKS_QDM_PRIMME_PRINT_LEVEL": "2",
     }.items():
         monkeypatch.setenv(name, value)
+    for name, value in {
+        "QLINKS_QDM_PRIMME_METHOD": "PRIMME_GD_plusK",
+        "QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE": "2",
+        "QLINKS_QDM_PRIMME_MIN_RESTART_SIZE": "3",
+        "QLINKS_QDM_PRIMME_MAX_PREV_RETAIN": "1",
+    }.items():
+        if tuned:
+            monkeypatch.setenv(name, value)
+        else:
+            monkeypatch.delenv(name, raising=False)
     result = make_resumable_folded_solver(lambda *a, **kw: pytest.fail("cold fallback"))(
         h, target_energy=12, subspace_size=2, tolerance=1e-11
     )
@@ -79,6 +95,7 @@ def test_solver_reports_progress_without_changing_the_spectral_problem(
     assert result.maximum_residual < 1e-12
     output = capsys.readouterr().out
     assert "'primme': 'starting'" in output and "'primme': 'returned'" in output
+    assert f"'max_block_size': {2 if tuned else None}" in output
     assert ("matrix_callback_progress" in output) == (interval != "0")
     if interval != "0":
         assert "'stats_numMatvecs': 12" in output
