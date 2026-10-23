@@ -47,7 +47,7 @@ if samples:
     last = samples[-1]
     print(f"Latest elapsed hours: {last['elapsed_seconds'] / 3600:.3f}")
     for key, value in last.items():
-        if key.startswith("stats_"):
+        if key.startswith(("stats_", "active_", "primme_init_")):
             print(f"{key}: {value}")
     recent = [s for s in samples if s["elapsed_seconds"] >= last["elapsed_seconds"] - 6 * 3600]
     if len(recent) < 2:
@@ -64,6 +64,7 @@ if samples:
                 if field == "stats_numOuterIterations" and delta > 0:
                     print(f"Seconds per outer iteration: {elapsed / delta:.3f}")
     print("Outer iterations and matrix products are not converged-eigenpair counts.")
+    print("primme_init_size_last_restart is a restart snapshot, not a live convergence count.")
     print("PRIMME 3.2.3 timeDense does not include projected eigensolves; these timers are incomplete.")
 else:
     print("No parseable matrix-callback progress samples in the captured log tail.")
@@ -82,10 +83,37 @@ if [[ "${2:-}" == "--native-stack" ]]; then
     }
     DEBUGGER=(gdb)
     if (( EUID != 0 )); then DEBUGGER=(sudo gdb); fi
+    # An absolute symlink under /proc/PID/root can escape into the host root.
+    # Resolve dependency paths inside the container, then search their canonical
+    # directories while disabling GDB's default host-library lookup.
+    LIBRARY_PATH="$(docker exec -i "${CONTAINER}" python - "${PYTHON_PID}" <<'PY'
+import os
+import subprocess
+import sys
+
+import numpy
+import primme
+import scipy
+
+directories = []
+linked = subprocess.run(["ldd", primme.__file__], check=True, capture_output=True, text=True)
+for line in linked.stdout.splitlines():
+    words = line.partition("=>")[2].split() if "=>" in line else line.split()
+    if words and words[0].startswith("/"):
+        directories.append(os.path.dirname(os.path.realpath(words[0])))
+directories.append(os.path.dirname(os.path.realpath(primme.__file__)))
+for module, name in ((numpy, "numpy.libs"), (scipy, "scipy.libs")):
+    directories.append(os.path.realpath(os.path.join(os.path.dirname(module.__file__), "..", name)))
+print(":".join(f"/proc/{sys.argv[1]}/root{path}" for path in dict.fromkeys(directories)))
+PY
+)"
+    [[ -n "${LIBRARY_PATH}" ]] || { echo "Could not resolve container libraries." >&2; exit 2; }
     echo "Collecting a native stack; GDB briefly stops Python and detaches to resume it."
     "${DEBUGGER[@]}" -q -nx -batch \
       -ex 'set pagination off' \
-      -ex "set sysroot /proc/${PYTHON_PID}/root" \
+      -ex "set sysroot ${LOG_FILE}.no-host-libraries" \
+      -ex "set solib-search-path ${LIBRARY_PATH}" \
+      -ex "file /proc/${PYTHON_PID}/exe" \
       -ex "attach ${PYTHON_PID}" \
       -ex 'thread apply all bt 20' \
       -ex detach

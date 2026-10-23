@@ -97,6 +97,36 @@ def main() -> None:
         if {path.name: path.read_bytes() for path in original.iterdir()} != preserved:
             raise AssertionError("refinement changed the original full-Ritz checkpoint")
 
+        # A basis smaller than k must still consume the full cached guess set
+        # through hard-locking restarts, rather than truncate the requested population.
+        os.environ["QLINKS_QDM_PRIMME_METHOD"] = "PRIMME_GD_plusK"
+        os.environ["QLINKS_QDM_PRIMME_MAX_BASIS_SIZE"] = "3"
+        os.environ["QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE"] = "1"
+        os.environ["QLINKS_QDM_PRIMME_MIN_RESTART_SIZE"] = "1"
+        os.environ["QLINKS_QDM_PRIMME_MAX_PREV_RETAIN"] = "1"
+        small_basis = solver(
+            matrix,
+            target_energy=5.25,
+            subspace_size=4,
+            tolerance=5e-12,
+            refine_existing_budget=True,
+        )
+        _assert_spectrum(small_basis, np.array([0.25, 0.75, 1.25, 1.75]))
+        small_destination = next(
+            Path(tmp).glob(
+                f"qdm/checkerboard_large_strip/*/{refinement_backend(5e-12)}/budget_00000004"
+            )
+        )
+        small_metadata = json.loads((small_destination / "metadata.json").read_text())["solver"]
+        if (
+            small_metadata["warm_start_vectors"] != 4
+            or small_metadata["max_basis_size"] != 3
+            or small_metadata["locking"] != 1
+        ):
+            raise AssertionError("bounded basis must retain all warm guesses with hard locking")
+        if {path.name: path.read_bytes() for path in original.iterdir()} != preserved:
+            raise AssertionError("small-basis refinement changed the original checkpoint")
+
         print(
             {
                 "primme_version": getattr(primme, "__version__", "unknown"),

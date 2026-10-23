@@ -299,7 +299,10 @@ def test_primme_wrapper_reconstructs_then_reuses_the_versioned_cache(tmp_path, m
     assert REFINED_BACKEND in second.method
 
 
-def test_same_budget_refinement_uses_all_vectors_and_preserves_both_sources(tmp_path, monkeypatch):
+@pytest.mark.parametrize("basis_override", [None, 3])
+def test_same_budget_refinement_uses_all_vectors_and_preserves_both_sources(
+    tmp_path, monkeypatch, basis_override
+):
     h, vectors = _mixed_pair()
     h = h.astype(np.complex128)
     vectors[2, 0] = 1e-4  # A sane Gram matrix with genuine off-subspace error.
@@ -316,7 +319,10 @@ def test_same_budget_refinement_uses_all_vectors_and_preserves_both_sources(tmp_
         calls.append(kwargs)
         assert kwargs["v0"].shape == (6, 2)
         assert kwargs["tol"] == 1e-11
-        assert kwargs["ncv"] >= 4
+        if basis_override:
+            assert kwargs["ncv"] == basis_override
+        else:
+            assert kwargs["ncv"] >= 4
         assert "lock" not in kwargs
         return np.array([0.04, 0.200004**2]), np.eye(6, dtype=complex)[:, :2], {}
 
@@ -337,6 +343,10 @@ def test_same_budget_refinement_uses_all_vectors_and_preserves_both_sources(tmp_
         "QLINKS_QDM_PRIMME_WARM_START_VECTORS": "1",
     }.items():
         monkeypatch.setenv(name, value)
+    if basis_override:
+        monkeypatch.setenv("QLINKS_QDM_PRIMME_MAX_BASIS_SIZE", str(basis_override))
+    else:
+        monkeypatch.delenv("QLINKS_QDM_PRIMME_MAX_BASIS_SIZE", raising=False)
     solver = make_resumable_folded_solver(
         lambda *args, **kwargs: pytest.fail("cold ARPACK fallback")
     )
@@ -350,6 +360,8 @@ def test_same_budget_refinement_uses_all_vectors_and_preserves_both_sources(tmp_
     metadata = json.loads((destination / "metadata.json").read_text())
     assert metadata["solver"]["warm_start_vectors"] == 2  # Overrides the ordinary cap of one.
     assert metadata["solver"]["same_budget_warm_start"]
+    if basis_override:
+        assert metadata["solver"]["max_basis_size"] == basis_override
     cached = solver(
         h, target_energy=12, subspace_size=2, tolerance=1e-11, refine_existing_budget=True
     )

@@ -126,8 +126,12 @@ an ETA. It reads at most the last 5000 log lines; absence of a convergence
 message in that tail does not establish zero convergence.
 
 `--native-stack` requires host `gdb` and uses `sudo` when needed. GDB briefly
-stops Python, reads each thread's stack and detaches to resume it. Its sysroot
-points into the running container to find the matching libraries. Omit that
+stops Python, reads each thread's stack and detaches to resume it. Library paths
+are resolved inside the container, then GDB searches their canonical directories
+through `/proc/PID/root` with host-library fallback disabled. Merely prefixing
+the sysroot is insufficient when absolute alternatives symlinks escape into
+the host filesystem. The Python executable is read through `/proc/PID/exe`.
+Omit that
 option to collect the other diagnostics without a debugger. The script does
 not launch, pause, stop or restart the solver, or write to its evidence cache.
 
@@ -140,7 +144,8 @@ eigensolve. A single native stack identifies the sampled phase, not the
 fraction of the whole run spent there.
 
 For a future controlled solver experiment, the launcher forwards explicitly set
-`QLINKS_QDM_PRIMME_METHOD`, `QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE`,
+`QLINKS_QDM_PRIMME_METHOD`, `QLINKS_QDM_PRIMME_MAX_BASIS_SIZE`,
+`QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE`,
 `QLINKS_QDM_PRIMME_MIN_RESTART_SIZE` and `QLINKS_QDM_PRIMME_MAX_PREV_RETAIN`.
 Previously these overrides worked only inside the Python process and were
 dropped at the Docker boundary. Unset variables retain PRIMME's defaults.
@@ -150,6 +155,61 @@ No block size or method is promoted as faster without a measured comparison.
 These controls do not alter the spectral problem, the `1e-11` refinement
 tolerance or the `1e-6` physical-residual acceptance threshold. They take effect
 only for a new solver process; they cannot retune an already running solve.
+
+### Bounded trial for the large projected-eigensolve bottleneck
+
+The 2026-10-23 server sample showed `solve_H_RR_zprimme` diagonalizing a
+6176-dimensional projected problem, with `numConverged=52`, after approximately
+171 hours. The recent rate was 391.5 seconds per outer iteration and one matrix
+product per iteration. The wrapper's default refinement basis cap was 8397.
+The debugger reported mismatched system-library symbols, so the leaf routine
+name and distorted low-level arguments must not be treated as reliable.
+The consistent PRIMME frames establish the sampled projected-eigensolve path;
+the internal convergence count is not physical-H acceptance or a linear ETA.
+
+An explicit `QLINKS_QDM_PRIMME_MAX_BASIS_SIZE` overrides the refinement cap.
+For a cap smaller than the requested eigenpair count, the wrapper enables hard
+locking. PRIMME retains the complete supplied warm-start matrix, initializes
+only part of it into the active basis, and brings in remaining guesses during
+restarts as completed pairs are deflated. This follows PRIMME 3.2.3's `init.c`
+and `main_iter.c`; it does not request fewer eigenpairs or loosen tolerance.
+The runtime smoke test exercises four cached guesses with a three-vector basis
+and verifies the complete spectrum, residuals, orthogonality and source bytes.
+
+Use a bounded trial before adopting this configuration for production. Pause
+the previous writer first; retain its process state and original checkpoint.
+Do not unpause it while a replacement writes to the same run/cache.
+After updating the checkout, the existing tested PRIMME image can run:
+
+```bash
+QLINKS_EVIDENCE_RUN_ID=qdm_parity_submission_20261009 \
+QLINKS_DOCKER_IMAGE=tanlin2013/qlinks:notebook-primme \
+QLINKS_DOCKER_DETACH=1 \
+QLINKS_NUM_THREADS=4 \
+QLINKS_DOCKER_MEMORY_LIMIT=128g \
+QLINKS_QDM_PARITY_BUDGETS=4096 \
+QLINKS_QDM_PRIMME_METHOD=PRIMME_GD_plusK \
+QLINKS_QDM_PRIMME_MAX_BASIS_SIZE=512 \
+QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE=32 \
+QLINKS_QDM_PRIMME_MIN_RESTART_SIZE=256 \
+QLINKS_QDM_PRIMME_MAX_PREV_RETAIN=32 \
+QLINKS_QDM_PRIMME_WALLTIME_SECONDS=7200 \
+scripts/docker/docker_run_qdm_parity_evidence.sh L12-refine
+```
+
+The walltime limit runs **inside** the container and covers context construction,
+the eigensolve and reconstruction. It sends TERM at 7200 seconds and KILL after
+another 30 seconds if needed. An ordinary timeout exits 124 and is not evidence
+of convergence. Unset the variable for an unrestricted production run only
+after evaluating the trial. A forced interruption does not preserve in-solve
+progress; previously completed checkpoints remain reusable. No production
+12x4 speedup or completion time has yet been established for these settings.
+
+Progress now includes `stats_numRestarts`, the effective basis/block limits,
+and `primme_init_size_last_restart`. The last field is PRIMME's `initSize`
+snapshot at restart boundaries, not a continuously updated convergence count.
+Compare completed restart snapshots and physical acceptance when the solve
+returns; a faster outer-iteration rate alone does not certify a better solve.
 
 ### Pull the tested PRIMME image from CI
 

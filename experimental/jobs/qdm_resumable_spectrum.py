@@ -310,11 +310,16 @@ def _primme_folded_spectrum(
             for field in (
                 "stats_numMatvecs",
                 "stats_numOuterIterations",
+                "stats_numRestarts",
                 "stats_timeMatvec",
                 "stats_timeOrtho",
                 "stats_timeDense",
             ):
                 report[field] = getter(field)
+            # initSize is updated at restart boundaries, not every iteration.
+            report["primme_init_size_last_restart"] = getter("initSize")
+            report["active_max_basis_size"] = getter("maxBasisSize")
+            report["active_max_block_size"] = getter("maxBlockSize")
         print(report, flush=True)
 
     h = sp.csr_array(hamiltonian, dtype=np.complex128)
@@ -365,6 +370,16 @@ def _primme_folded_spectrum(
         raise ValueError("QLINKS_QDM_PRIMME_PRINT_LEVEL must be between 0 and 5")
     if max_basis_size is not None:
         kwargs["ncv"] = int(max_basis_size)
+    basis_override = int(os.environ.get("QLINKS_QDM_PRIMME_MAX_BASIS_SIZE", "0"))
+    if basis_override < 0 or (basis_override and not 3 <= basis_override <= n):
+        raise ValueError("QLINKS_QDM_PRIMME_MAX_BASIS_SIZE must be 0 or between 3 and dimension")
+    if basis_override:
+        kwargs["ncv"] = basis_override
+        if basis_override < k:
+            # PRIMME can retain all k warm guesses while activating a smaller
+            # basis. Hard locking deflates completed pairs and brings remaining
+            # guesses into the basis at subsequent restarts (init.c/main_iter.c).
+            kwargs["locking"] = 1
     if maxiter is not None:
         kwargs["maxiter"] = int(maxiter)
     max_block_size = int(os.environ.get("QLINKS_QDM_PRIMME_MAX_BLOCK_SIZE", "0"))
@@ -384,7 +399,8 @@ def _primme_folded_spectrum(
             "requested_eigenpairs": k,
             "warm_start_vectors": int(v0.shape[1]),
             "raw_tolerance": float(tolerance),
-            "max_basis_size": max_basis_size,
+            "max_basis_size": kwargs.get("ncv"),
+            "locking": kwargs.get("locking"),
             "method": kwargs["method"],
             "max_block_size": kwargs.get("maxBlockSize"),
             "min_restart_size": kwargs.get("minRestartSize"),
@@ -422,7 +438,8 @@ def _primme_folded_spectrum(
         "num_outer_iterations": scalar_stat("numOuterIterations"),
         "primme_elapsed_time": scalar_stat("elapsedTime"),
         "method": kwargs["method"],
-        "max_basis_size": max_basis_size,
+        "max_basis_size": kwargs.get("ncv"),
+        "locking": kwargs.get("locking"),
         "max_block_size": kwargs.get("maxBlockSize"),
         "min_restart_size": kwargs.get("minRestartSize"),
         "max_prev_retain": kwargs.get("maxPrevRetain"),

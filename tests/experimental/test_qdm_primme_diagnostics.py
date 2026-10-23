@@ -35,6 +35,7 @@ def test_diagnosis_preserves_native_events_and_never_changes_container_state(
         '  inspect|stats) printf "%s\\n" "$1 snapshot" ;;\n'
         '  top) printf "PID COMMAND\\n12345 python\\n" ;;\n'
         '  logs) cat "$SOLVER_LOG" ;;\n'
+        '  exec) cat >/dev/null; printf "/proc/12345/root/container/canonical-libraries\\n" ;;\n'
         "  *) exit 99 ;;\n"
         "esac\n"
     )
@@ -67,10 +68,17 @@ def test_diagnosis_preserves_native_events_and_never_changes_container_state(
     assert "CONVERGED 17 residual 1e-12" in result.stdout
     assert "not converged-eigenpair counts" in result.stdout
     assert "does not include projected eigensolves" in result.stdout
-    assert set(calls.read_text().splitlines()) == {"inspect", "stats", "top", "logs"}
+    expected_calls = {"inspect", "stats", "top", "logs"}
+    if native_stack:
+        expected_calls.add("exec")
+    assert set(calls.read_text().splitlines()) == expected_calls
     assert gdb_args.exists() == native_stack
     if native_stack:
         args = gdb_args.read_text().splitlines()
-        assert "set sysroot /proc/12345/root" in args
+        assert any(
+            arg.startswith("set sysroot ") and arg.endswith(".no-host-libraries") for arg in args
+        )
+        assert "set solib-search-path /proc/12345/root/container/canonical-libraries" in args
+        assert "file /proc/12345/exe" in args
         assert "attach 12345" in args
         assert args[-1] == "detach"
