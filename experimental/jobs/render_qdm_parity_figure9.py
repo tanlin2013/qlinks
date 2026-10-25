@@ -1,4 +1,4 @@
-"""Render the frozen 8x4 target-parity comparison without eigensolves or 12x4 data."""
+"""Render target-parity Fig. 9 in its original style, optionally including 12x4."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from qdm_figure9_l12_evidence import load_l12_evidence
 from qdm_parity_protocol import PROTOCOL
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -112,9 +113,14 @@ def render(
     *,
     use_tex: bool = False,
     formats: tuple[str, ...] = ("pdf", "svg", "png"),
+    include_l12: bool = False,
 ):
     """Feed target-parity evidence into the pre-PR157 Fig. 9 presentation."""
     scatter, table, sources = load_evidence(data)
+    l12, l12_controls, l12_report = None, None, None
+    if include_l12:
+        l12, l12_controls, l12_sources, l12_report = load_l12_evidence(data)
+        sources.update(l12_sources)
     set_revtex_matplotlib_style(base_font_size=9.0, prefer_tex=use_tex)
     if use_tex and not plt.rcParams["text.usetex"]:
         raise RuntimeError("--use-tex requires LaTeX; refusing a font substitution")
@@ -158,6 +164,39 @@ def render(
             }
         ]
     )
+    if l12 is not None:
+        l12_b = []
+        for name in COLORS:
+            for ensemble, source in (("raw_microcanonical", "mc_raw"), ("canonical", "can")):
+                l12_b.append(
+                    {
+                        "Lx": 12,
+                        "witness": name,
+                        "ensemble": ensemble,
+                        "value": float(l12[f"tau_{name}_{source}"]),
+                        # Only phi=0.05 is available at 12x4. Window controls
+                        # are not a compatible-phase scan or a phase range.
+                        "value_min": np.nan,
+                        "value_max": np.nan,
+                        "method": "canonical_typicality"
+                        if source == "can"
+                        else "cached_target_parity",
+                        "stderr": float(l12[f"tau_{name}_can_stderr"]) if source == "can" else 0.0,
+                    }
+                )
+        panel_b = pd.concat([panel_b, pd.DataFrame(l12_b)], ignore_index=True)
+        panel_d = pd.concat(
+            [
+                panel_d,
+                pd.DataFrame(
+                    [{"Lx": 12, "w_star": float(l12.w_raw), "w_min": np.nan, "w_max": np.nan}]
+                ),
+            ],
+            ignore_index=True,
+        )
+    sizes = [8, 12] if include_l12 else [8]
+    size_limits = (6, 14) if include_l12 else (6, 10)
+    scan_label = r"$\varphi$ scan ($L_x=8$)" if include_l12 else r"$\varphi$ scan"
 
     fig = plt.figure(figsize=(style.FULL_WIDTH_IN, style.FIG_HEIGHT_IN))
     outer = style._base._outer_grid(fig)
@@ -195,11 +234,9 @@ def render(
     gsb = outer[0, 1].subgridspec(2, 1, hspace=0.10)
     axes_b = [fig.add_subplot(gsb[index]) for index in range(2)]
     style._draw_qdm_panel_b(axes_b, panel_b)
-    # Only one nontrivial completed target-parity thermal size remains.
-    # Keep the original size axes and range glyph widths without inventing points.
     for ax in axes_b:
-        ax.set_xticks([8])
-        ax.set_xlim(6, 10)
+        ax.set_xticks(sizes)
+        ax.set_xlim(*size_limits)
     style._top_legend(
         axes_b[0],
         handles=[
@@ -217,26 +254,26 @@ def render(
         ax.yaxis.labelpad = 0
 
     axd = fig.add_subplot(outer[1, 1])
-    row = panel_d.iloc[0]
-    style._range_box(
-        axd,
-        x=8,
-        center=float(row.w_star),
-        minimum=float(row.w_min),
-        maximum=float(row.w_max),
-        color=COLORS["A"],
-        width=0.34,
-    )
+    for row in panel_d.itertuples():
+        style._range_box(
+            axd,
+            x=float(row.Lx),
+            center=float(row.w_star),
+            minimum=float(row.w_min),
+            maximum=float(row.w_max),
+            color=COLORS["A"],
+            width=0.34,
+        )
     axd.set_xlabel(r"Strip length $L_x$")
     axd.set_ylabel(r"$w_{L_x}^{\rm raw}$")
-    axd.set_xticks([8])
-    axd.set_xlim(6, 10)
-    axd.set_ylim(0.0, 1.08 * float(row.w_max))
+    axd.set_xticks(sizes)
+    axd.set_xlim(*size_limits)
+    axd.set_ylim(0.0, 1.08 * float(panel_d[["w_star", "w_max"]].max().max()))
     axd.grid(alpha=0.13)
     axd.legend(
         handles=style._range_semantics_handles(
             r"$\varphi_\star$",
-            r"$\varphi$ scan",
+            scan_label,
             color=COLORS["A"],
         ),
         loc="upper right",
@@ -295,14 +332,45 @@ def render(
             "c": "raw/canonical A/Z means versus phase",
             "d": "raw stripe width versus Lx (8 only)",
         },
-        "size_axes_are_single_points": True,
+        "size_axes_are_single_points": not include_l12,
         "native_tex": bool(plt.rcParams["text.usetex"]),
         "claim_boundary": (
             "Finite-size local witness mismatch and phase/window checks; "
             "no thermodynamic extrapolation."
         ),
     }
-    (output / "figure9_8x4_provenance.json").write_text(json.dumps(report, indent=2) + "\n")
+    provenance = "figure9_8x4_provenance.json"
+    if l12 is not None:
+        l12_controls.to_csv(output / "figure9_l12_window_source.csv", index=False)
+        provenance = "figure9_parity_provenance.json"
+        for key in ("Lx", "Sy", "sector_dimension", "primary_values"):
+            report.pop(key)
+        report.update(
+            scope="8x4 and accepted 12x4 target-parity finite-size figure",
+            thermal_sizes=[8, 12],
+            target_sectors={"8": {"Sy": 1, "dimension": 875}, "12": {"Sy": -1, "dimension": 39667}},
+            scatter_Lx=8,
+            phase_scan_Lx=8,
+            twelve_by_four_plotted=True,
+            source_means_reconciled={
+                "8": "full eigensystem",
+                "12": "accepted budget/canonical certificates",
+            },
+            l12_evidence=l12_report,
+            primary_values_by_size={
+                str(length): {
+                    key: None if pd.isna(value) else value for key, value in row.to_dict().items()
+                }
+                for length, row in ((8, representative), (12, l12))
+            },
+            panel_roles={
+                "a": "8x4 eigenstate A/Z scatter",
+                "b": "raw/canonical A/Z means versus Lx (8,12)",
+                "c": "8x4 raw/canonical A/Z means versus phase",
+                "d": "raw stripe width versus Lx (8,12)",
+            },
+        )
+    (output / provenance).write_text(json.dumps(report, indent=2) + "\n")
     return report
 
 
@@ -311,11 +379,23 @@ if __name__ == "__main__":
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--use-tex", action="store_true")
+    parser.add_argument(
+        "--include-l12", action="store_true", help="Require accepted 12x4 numerical inputs"
+    )
     parser.add_argument("--figure-formats", default="pdf,svg,png")
     args = parser.parse_args()
     formats = tuple(value.strip() for value in args.figure_formats.split(",") if value.strip())
     if not formats or not set(formats).issubset({"pdf", "svg", "png"}):
         parser.error("--figure-formats must select pdf, svg and/or png")
     print(
-        json.dumps(render(args.data, args.output, use_tex=args.use_tex, formats=formats), indent=2)
+        json.dumps(
+            render(
+                args.data,
+                args.output,
+                use_tex=args.use_tex,
+                formats=formats,
+                include_l12=args.include_l12,
+            ),
+            indent=2,
+        )
     )

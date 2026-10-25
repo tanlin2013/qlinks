@@ -7,6 +7,8 @@ blue/green witness colors, orange star, filled raw/open canonical circles,
 solid/dashed phase curves, legends and literal phase-range glyphs are retained.
 The figure is generated from code for a separate Overleaf upload. This command
 does not edit the manuscript, launch an eigensolve or depend on PR #157.
+The default remains the original 8x4-only export. The accepted 12x4 extension
+below adds the second finite-size point without changing the layout.
 
 ## Render on the server
 
@@ -85,19 +87,65 @@ numerical corrections; a figure replacement alone does not update them.
 The earlier window-panel manuscript patch describes a different figure and
 must not be applied as the caption for this restored presentation.
 
-## Optional 12x4 continuation after PR #157
+## Include the accepted 12x4 point
 
-Merging PR #157 does not modify the paused PRIMME process or its loaded native
-libraries. `docker unpause` resumes that same process. To use the optimized
-provider and logging, update the checkout, build and verify a separately tagged
-PRIMME image, then launch a new refinement container with that image. Reuse the
-same run ID and cache root to warm-start from the saved 4096-vector cache.
-Unsaved progress inside the interrupted PRIMME call is not checkpointed, so a
-new launch repeats that refinement call. Rebuilding a tag does not update an
-existing container, and `docker restart` retains the old image. Do not change
-live libraries. No current job is stopped by this renderer.
+After updating the checkout, use the existing tested image and run directory:
 
-A future 12x4 figure upgrade still requires physical-H residuals, full Gram
-quality, two distinct covered budgets, stable counts/observables across all
-prescribed windows and matched-parity canonical evidence. It is independent
-of the present finite-size figure.
+```bash
+QLINKS_EVIDENCE_RUN_ID=qdm_parity_submission_20261009 \
+QLINKS_DOCKER_IMAGE=tanlin2013/qlinks:notebook-primme \
+QLINKS_DOCKER_DETACH=1 \
+QLINKS_DOCKER_MEMORY_LIMIT=8g \
+QLINKS_QDM_PRIMME_WALLTIME_SECONDS= \
+scripts/docker/docker_run_qdm_parity_evidence.sh L12-figure9
+```
+
+The empty walltime setting clears an inherited eigensolver-only deadline.
+The retained container is independent of SSH. This stage checks the accepted
+figure inputs, assembles the parity sequence, closes the numerical submission
+gate, and renders with native LaTeX. It uses the small persisted tables/reports;
+it does not load the large eigenvector caches, build a Hamiltonian or call an
+eigensolver. The image already includes the plotting/LaTeX runtime, so no image
+rebuild is required.
+
+Upload the resulting file to Overleaf:
+
+```text
+experimental/data/evidence_jobs/qdm_parity_submission_20261009/figures/qdm_checkerboard_figure9_prx.pdf
+```
+
+The same folder contains SVG/PNG, panel source tables,
+`figure9_l12_window_source.csv` and `figure9_parity_provenance.json`. All plotted
+input tables and numerical acceptance reports are hashed. NaN beta uncertainty
+is exported as JSON null; it is not plotted as an error estimate.
+
+The original 7.05 by 5.75 inch canvas, stacked axes, witness colors, raw/open
+canonical markers, phase curves and range glyph styles are retained. Panels
+(a,c) continue to show the full 8x4 eigensystem and its complete positive-phase
+scan. Panels (b,d) show Lx=8 and Lx=12 at phi=0.05, with literal phase ranges
+only at Lx=8. The 12x4 canonical markers include their reported conditional
+typicality errors. No phase range is inferred from the energy-window controls;
+the unmeasured 12x4 min/max cells remain blank. There is no 4x4 thermal point,
+size fit or extrapolation.
+
+The caption should explicitly say that the positive-phase scan/ranges apply
+to 8x4, whereas 12x4 is evaluated only at phi=0.05. The 12x4 canonical error
+bars are conditional ratio-jackknife errors; grid and independent-sample
+refinement are checked by the separate canonical acceptance report. The new
+figure supports a two-size finite-size comparison.
+
+For a direct render from already accepted inputs (without assembling the
+sequence or updating the submission gate), the renderer also supports:
+
+```bash
+python experimental/jobs/render_qdm_parity_figure9.py \
+  --data experimental/data/evidence_jobs/qdm_parity_submission_20261009 \
+  --output output/qdm_figure9_parity --include-l12 --use-tex
+```
+
+`--include-l12` requires closed canonical, spectral and observable reports,
+the full primary/neighbor-window grid at two accepted budgets, consistent
+physical-H/Gram certificates, and agreement with the persisted canonical
+source. Missing or inconsistent inputs fail before a figure is written; there
+is no automatic fallback to an 8x4-only export. The renderer reconciles 12x4
+certificates and tables without repeating numerical validation on the vectors.

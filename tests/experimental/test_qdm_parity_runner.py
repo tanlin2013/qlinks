@@ -30,7 +30,15 @@ def _run(stage, data_dir, *, run_id=None, extra_env=None):
 
 @pytest.mark.parametrize(
     "stage",
-    ["L12-spectrum", "L12-reconstruct", "L12-refine", "L12-canonical", "L12-observables", "gate"],
+    [
+        "L12-spectrum",
+        "L12-reconstruct",
+        "L12-refine",
+        "L12-canonical",
+        "L12-observables",
+        "L12-figure9",
+        "gate",
+    ],
 )
 def test_followup_without_run_id_fails_before_creating_a_folder(tmp_path, stage):
     data = tmp_path / "data"
@@ -63,6 +71,19 @@ def test_existing_run_id_is_preserved_in_the_docker_command(tmp_path):
     assert "--sy-character target" in result.stdout
     assert "export QLINKS_EVIDENCE_RUN_ID=existing_run" in result.stdout
     assert sorted(p.name for p in (data / "evidence_jobs").iterdir()) == ["existing_run"]
+
+
+def test_figure_runner_uses_the_accepted_data_finalizer_without_a_spectrum_command(tmp_path):
+    data = tmp_path / "data"
+    protocol = data / "evidence_jobs" / "existing_run" / PROTOCOL_NAME
+    protocol.parent.mkdir(parents=True)
+    protocol.write_text("{}")
+    result = _run("L12-figure9", data, run_id="existing_run")
+    assert result.returncode == 0
+    assert "experimental/jobs/finalize_qdm_parity_figure9.py" in result.stdout
+    assert "evidence_jobs/existing_run" in result.stdout
+    assert "qdm_sec7_fixed_o1_l12_spectrum.py" not in result.stdout
+    assert "--refine-cached-budget" not in result.stdout
 
 
 def test_exact_stage_can_still_initialize_a_run(tmp_path):
