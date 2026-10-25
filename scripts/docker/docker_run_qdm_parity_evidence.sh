@@ -30,7 +30,7 @@ if [[ -n "${WALLTIME}" ]]; then
 fi
 DATA_DIR="${QLINKS_DATA_DIR:-${REPO_ROOT}/experimental/data}"
 case "${STAGE}" in
-    L12-spectrum|L12-reconstruct|L12-refine|L12-observables|sequence)
+    L12-spectrum|L12-reconstruct|L12-refine|L12-observables|L12-figure9|sequence)
         PROTOCOL_FILE="${DATA_DIR}/evidence_jobs/${RUN_ID}/qdm_checkerboard_fixed_O1_window_recommendation.json"
         if [[ ! -f "${PROTOCOL_FILE}" ]]; then
             echo "Missing parity window protocol: ${PROTOCOL_FILE}" >&2
@@ -74,6 +74,10 @@ case "${STAGE}" in
           --output-dir "${OUTPUT}" --cache-root "${CACHE}" --sy-character target
           --primme-data-dir "${OUTPUT}" --residual-tolerance 1e-6
           --observable-budget-tolerance 5e-5)
+        ;;
+    L12-figure9)
+        IMAGE="${QLINKS_DOCKER_IMAGE:-tanlin2013/qlinks:notebook-primme}"
+        COMMAND=(python experimental/jobs/finalize_qdm_parity_figure9.py --output-dir "${OUTPUT}")
         ;;
     sequence)
         COMMAND=(python experimental/jobs/qdm_sec7_fixed_o1_sequence.py
