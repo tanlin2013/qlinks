@@ -254,6 +254,17 @@ def render(
         ax.yaxis.labelpad = 0
 
     axd = fig.add_subplot(outer[1, 1])
+    if len(panel_d) > 1:
+        guide = panel_d.sort_values("Lx")
+        axd.plot(
+            guide["Lx"],
+            guide["w_star"],
+            color=COLORS["A"],
+            linewidth=style.GUIDE_LINE_WIDTH,
+            linestyle="--",
+            alpha=0.72,
+            zorder=1,
+        )
     for row in panel_d.itertuples():
         style._range_box(
             axd,
@@ -270,17 +281,14 @@ def render(
     axd.set_xlim(*size_limits)
     axd.set_ylim(0.0, 1.08 * float(panel_d[["w_star", "w_max"]].max().max()))
     axd.grid(alpha=0.13)
-    axd.legend(
+    style._top_legend(
+        axd,
         handles=style._range_semantics_handles(
             r"$\varphi_\star$",
             scan_label,
             color=COLORS["A"],
         ),
-        loc="upper right",
-        frameon=False,
-        fontsize=6.8,
-        handletextpad=0.45,
-        borderaxespad=0.3,
+        ncol=2,
     )
     for ax, label in zip(
         [axes_a[0], axes_b[0], axes_c[0], axd], ["(a)", "(b)", "(c)", "(d)"], strict=True
@@ -321,6 +329,10 @@ def render(
         "four_by_four_thermal_point_plotted": False,
         "twelve_by_four_plotted": False,
         "size_fit_performed": False,
+        "panel_b_y_axis": "tau_{alpha,Lx}",
+        "panel_c_y_axis": "tau_alpha",
+        "panel_d_legend": "above axes",
+        "panel_d_guide_line": "dashed" if include_l12 else None,
         "eigensolver_called": False,
         "source_means_reconciled": True,
         "primary_values": representative.to_dict(),
