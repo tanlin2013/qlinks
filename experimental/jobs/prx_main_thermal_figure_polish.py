@@ -291,7 +291,7 @@ def _draw_spin1_panel_b(axes: list, panel_b: pd.DataFrame) -> None:
                 width=0.26,
             )
         ax.axhline(target, color=TARGET_COLOR, ls="--", lw=0.9, zorder=2)
-        ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_{{\rm mc}}$")
+        ax.set_ylabel(rf"$\tau_{{{key},L}}^{{\mathrm{{mc,raw}}}}$")
         ax.set_ylim(*ylim)
         _clean_y_ticks(ax)
         ax.grid(alpha=0.13)
@@ -302,7 +302,9 @@ def _draw_spin1_panel_b(axes: list, panel_b: pd.DataFrame) -> None:
         else:
             ax.set_xlabel(r"System size $L$")
     handles = _range_semantics_handles(r"$\kappa_\star$", r"$\kappa$ scan")
-    handles.append(Line2D([0], [0], color=TARGET_COLOR, ls="--", lw=0.9, label=r"$\beta=0$"))
+    handles.append(
+        Line2D([0], [0], color=TARGET_COLOR, ls="--", lw=0.9, label=r"$\beta=0,\ L\to\infty$")
+    )
     _top_legend(axes[0], handles=handles, ncol=3)
 
 
@@ -323,7 +325,7 @@ def _draw_spin1_panel_c(axes: list, scan: pd.DataFrame, length: int) -> None:
             linewidth=0.9,
         )
         ax.axhline(target, color=TARGET_COLOR, ls="--", lw=0.9, zorder=2)
-        ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle_{{\rm mc}}$")
+        ax.set_ylabel(rf"$\tau_{{{key}}}^{{\mathrm{{mc,raw}}}}$", labelpad=1.0)
         ax.set_ylim(*ylim)
         _clean_y_ticks(ax)
         ax.grid(alpha=0.13)
@@ -335,7 +337,7 @@ def _draw_spin1_panel_c(axes: list, scan: pd.DataFrame, length: int) -> None:
         axes[0],
         handles=[
             Line2D([0], [0], color="0.35", marker="o", lw=0.9, label=rf"$L={length}$"),
-            Line2D([0], [0], color=TARGET_COLOR, ls="--", lw=0.9, label=r"$\beta=0$"),
+            Line2D([0], [0], color=TARGET_COLOR, ls="--", lw=0.9, label=r"$\beta=0,\ L\to\infty$"),
         ],
         ncol=2,
     )
@@ -440,17 +442,14 @@ def render_spin1_figure6(
     use_integer_ticks(axd, axis="x")
     axd.set_xticks([8, 10, 12, 14])
     axd.grid(alpha=0.13)
-    axd.legend(
+    _top_legend(
+        axd,
         handles=_range_semantics_handles(
             r"$\kappa_\star$",
             r"$\kappa$ scan",
             color=WITNESS_COLORS["A"],
         ),
-        loc="upper right",
-        frameon=False,
-        fontsize=6.8,
-        handletextpad=0.45,
-        borderaxespad=0.3,
+        ncol=2,
     )
     _panel_label(axd, "(d)")
 
@@ -461,10 +460,14 @@ def render_spin1_figure6(
         "witness_colors": WITNESS_COLORS,
         "panel_b_role": "finite size plus compatible-kappa range",
         "panel_b_includes_L14_representative_without_range": True,
-        "panel_b_legend": "above axes; kappa_star, kappa scan, beta=0",
+        "panel_b_legend": "above axes; kappa_star, kappa scan, beta=0, L->infinity",
+        "panel_b_y_axis": "tau_{alpha,L}^{mc,raw}",
         "panel_c_role": "witness versus compatible kappa",
         "panel_c_scan_L": scan_length,
         "panel_c_legend": "above axes",
+        "panel_c_y_axis": "tau_alpha^{mc,raw}",
+        "beta0_guide_limit": "L->infinity at fixed M=-2",
+        "panel_d_legend": "above axes",
         "panel_d_legend_color": WITNESS_COLORS["A"],
         "panel_d_marker": "literal_range_box_with_representative_line",
         "panel_d_guide_line": "dashed",
@@ -716,7 +719,7 @@ def _draw_qdm_panel_b(axes: list, panel_b: pd.DataFrame) -> None:
                 elinewidth=TYPICALITY_LINE_WIDTH,
                 zorder=8,
             )
-        ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle$")
+        ax.set_ylabel(rf"$\tau_{{{key},L_x}}$")
         ax.set_ylim(*ylim)
         _clean_y_ticks(ax)
         ax.grid(alpha=0.13)
@@ -752,7 +755,7 @@ def _draw_qdm_panel_c(axes: list, scan: pd.DataFrame, length: int) -> None:
                 linestyle=linestyle,
                 linewidth=0.9,
             )
-        ax.set_ylabel(rf"$\langle \widehat Q_R^{{{key}}}\rangle$")
+        ax.set_ylabel(rf"$\tau_{{{key}}}$")
         ax.set_ylim(*ylim)
         _clean_y_ticks(ax)
         ax.grid(alpha=0.13)
@@ -937,17 +940,14 @@ def render_qdm_figure9(
     axd.grid(alpha=0.13)
     use_integer_ticks(axd, axis="x")
     axd.set_xticks(sorted(set(panel_d["Lx"].astype(int))))
-    axd.legend(
+    _top_legend(
+        axd,
         handles=_range_semantics_handles(
             r"$\varphi_\star$",
             r"$\varphi$ scan",
             color=WITNESS_COLORS["A"],
         ),
-        loc="upper right",
-        frameon=False,
-        fontsize=6.8,
-        handletextpad=0.45,
-        borderaxespad=0.3,
+        ncol=2,
     )
     _panel_label(axd, "(d)")
 
@@ -978,10 +978,13 @@ def render_qdm_figure9(
         "panel_b_ensemble_encoding": "raw filled solid circle; canonical open dashed circle",
         "panel_b_horizontal_displacement": False,
         "panel_b_legend": "above axes",
+        "panel_b_y_axis": "tau_{alpha,Lx}",
         "panel_c_role": "witness versus compatible phase",
         "panel_c_scan_Lx": scan_length,
         "panel_c_ensemble_encoding": "raw filled solid; canonical open dashed",
         "panel_c_legend": "above axes",
+        "panel_c_y_axis": "tau_alpha",
+        "panel_d_legend": "above axes",
         "panel_d_marker": "literal_range_box_with_representative_line",
         "panel_d_box_width": 0.34,
         "panel_d_guide_line": "dashed",

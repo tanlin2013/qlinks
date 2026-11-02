@@ -112,8 +112,8 @@ def test_legends_are_outside_and_compact_panel_ticks_are_cleaned() -> None:
     assert "from matplotlib.ticker import MaxNLocator, ScalarFormatter" in source
     assert "MaxNLocator(nbins=nbins, steps=[1, 2, 5, 10], min_n_ticks=2)" in source
     assert source.count("_clean_y_ticks(ax)") >= 4
-    assert 'label=r"$\\beta=0$"' in source
-    assert '"panel_b_legend": "above axes; kappa_star, kappa scan, beta=0"' in source
+    assert 'label=r"$\\beta=0,\\ L\\to\\infty$"' in source
+    assert '"panel_b_legend": "above axes; kappa_star, kappa scan, beta=0, L->infinity"' in source
     assert '"panel_c_legend": "above axes"' in source
 
 
